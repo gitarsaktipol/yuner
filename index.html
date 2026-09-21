@@ -1,0 +1,1314 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Yuner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#241610">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Yuner">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#E6EAE2; --panel:#F6F8F3; --ink:#1E1712; --muted:#5F574F; --line:#C4CBBF;
+  --track:#D5DBD0; --brass:#8F6D1E; --brassText:#FFFFFF;
+  --ok:#1B7F4D; --okText:#FFFFFF; --okSoft:rgba(27,127,77,.22);
+  --warn:#9A6A12; --bad:#B23F28; --hl:rgba(143,109,30,.20);
+  --headstock:#2A1B14; --peg:#3A2A20; --pegText:#F1E8D4; --nut:#E3D7BC;
+  --white:#FFFFFF; --black:#241610;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1A110C; --panel:#251811; --ink:#F1E8D4; --muted:#A89A86; --line:#3B2B21;
+    --track:#33241A; --brass:#D2AC55; --brassText:#1A110C;
+    --ok:#5DBB85; --okText:#0F0806; --okSoft:rgba(93,187,133,.22);
+    --warn:#D2AC55; --bad:#E5704F; --hl:rgba(210,172,85,.24);
+    --headstock:#0F0806; --peg:#33241A; --pegText:#F1E8D4; --nut:#C9BC9F;
+    --white:#EDE3CC; --black:#0F0806;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1A110C; --panel:#251811; --ink:#F1E8D4; --muted:#A89A86; --line:#3B2B21;
+  --track:#33241A; --brass:#D2AC55; --brassText:#1A110C;
+  --ok:#5DBB85; --okText:#0F0806; --okSoft:rgba(93,187,133,.22);
+  --warn:#D2AC55; --bad:#E5704F; --hl:rgba(210,172,85,.24);
+  --headstock:#0F0806; --peg:#33241A; --pegText:#F1E8D4; --nut:#C9BC9F;
+  --white:#EDE3CC; --black:#0F0806;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{
+  margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font-family:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent;
+}
+button,select,input{font:inherit;color:inherit}
+.app{max-width:460px;margin:0 auto;padding:16px 18px 104px}
+.tab{display:flex;flex-direction:column;gap:16px}
+
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
+.sel select{
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:10px 12px;max-width:190px;font-size:15px;
+}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- tuner ---------- */
+.reader{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:14px 18px 18px}
+.noteRow{display:flex;align-items:baseline;justify-content:center;gap:4px;height:136px;padding-top:6px}
+#noteName{font-size:clamp(96px,32vw,132px);font-weight:800;line-height:1;letter-spacing:-.03em;transition:color .2s}
+#noteName.idle{color:var(--line);font-weight:600}
+#noteOct{font-size:28px;font-weight:600;color:var(--muted)}
+.readout{display:flex;justify-content:center;gap:18px;color:var(--muted);font-size:15px;min-height:22px;font-variant-numeric:tabular-nums}
+.track{position:relative;height:52px;border-radius:12px;background:var(--track);margin-top:16px}
+.band{position:absolute;left:45%;width:10%;top:0;bottom:0;background:var(--okSoft);border-radius:8px;transition:background-color .2s}
+.tick{position:absolute;bottom:0;width:2px;margin-left:-1px;height:10px;background:var(--muted);opacity:.45}
+.tick.major{height:18px;opacity:.6}
+.tick.zero{height:30px;opacity:.9}
+.needle{
+  position:absolute;top:-6px;bottom:-6px;left:50%;width:6px;margin-left:-3px;border-radius:3px;
+  background:var(--muted);opacity:.35;transition:opacity .2s,background-color .2s;
+}
+.scale{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:10px}
+.verdict{text-align:center;font-size:22px;font-weight:700;margin-top:12px;min-height:32px}
+.reader[data-state="ok"] #noteName,.reader[data-state="ok"] .verdict{color:var(--ok)}
+.reader[data-state="ok"] .needle{background:var(--ok);opacity:1}
+.reader[data-state="ok"] .band{background:var(--ok);opacity:.35}
+.reader[data-state="near"] .needle{background:var(--warn);opacity:1}
+.reader[data-state="far"] .needle{background:var(--bad);opacity:1}
+
+.start{
+  background:var(--brass);color:var(--brassText);border:0;border-radius:16px;
+  padding:17px;font-size:18px;font-weight:700;cursor:pointer;
+}
+.start.on{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.start:disabled{opacity:.45;cursor:default}
+.msg{color:var(--bad);font-size:14px;margin:0 2px}
+.msg:empty{display:none}
+
+.head{display:grid;grid-template-columns:1fr 112px 1fr;align-items:center}
+.col{display:flex;flex-direction:column;gap:14px}
+.col.left{align-items:flex-start}
+.col.right{align-items:flex-end}
+.head svg{display:block;width:112px;height:250px}
+.peg{
+  width:68px;height:68px;border-radius:50%;border:2px solid transparent;background:var(--peg);color:var(--pegText);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  transition:background-color .2s,box-shadow .2s,border-color .2s;
+}
+.peg .pn{font-size:12px;opacity:.75;line-height:1}
+.peg .pt{font-size:24px;font-weight:800;line-height:1.05}
+.peg .pt sub{font-size:11px;font-weight:600;vertical-align:baseline;margin-left:1px}
+.peg.live{border-color:var(--brass)}
+.peg.locked{box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--brass)}
+.peg.tuned{background:var(--ok);color:var(--okText)}
+.peg.tuned .pn::after{content:" ✓"}
+.hint{text-align:center;color:var(--muted);font-size:14px;margin:0 6px}
+
+.row{display:flex;gap:12px;align-items:stretch}
+.stepper{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:8px 10px}
+.stepper output{font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:78px;text-align:center}
+.ctl{
+  width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--bg);
+  font-size:20px;line-height:1;cursor:pointer;
+}
+.sound{
+  flex:1;border-radius:16px;border:1.5px solid var(--brass);background:transparent;padding:10px 12px;
+  font-size:15px;font-weight:600;cursor:pointer;text-align:center;
+}
+.sound:disabled{opacity:.45;cursor:default;border-color:var(--line)}
+.sound.on{background:var(--brass);color:var(--brassText)}
+.peg:focus-visible,.start:focus-visible,.ctl:focus-visible,.sound:focus-visible,select:focus-visible,input:focus-visible,.tabs button:focus-visible,.seg button:focus-visible,.key:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+
+/* ---------- navigasi bawah ---------- */
+.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--panel);border-top:1px solid var(--line);
+  padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px));
+}
+.tabs .in{max-width:460px;margin:0 auto;display:flex;gap:6px}
+.tabs button{
+  flex:1;border:0;background:transparent;border-radius:14px;padding:7px 4px;display:flex;flex-direction:column;
+  align-items:center;gap:2px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;
+}
+.tabs button[aria-current="page"]{color:var(--ink);background:var(--bg)}
+.tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- umum: segmen, kartu, papan partitur ---------- */
+.seg{display:flex;background:var(--track);border-radius:14px;padding:4px;gap:4px}
+.seg button{flex:1;padding:9px;border:0;border-radius:11px;background:transparent;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.18)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:12px 14px}
+.board{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:10px 8px 12px}
+.scorehost{width:100%;min-height:90px}
+.sv{display:block;color:var(--ink)}
+.sv text{fill:currentColor;font-family:'Bricolage Grotesque',system-ui,sans-serif}
+.sv .stf{stroke:var(--muted);stroke-width:1.2}
+.sv .bar{stroke:var(--ink);stroke-width:1.6}
+.n{color:var(--ink);cursor:pointer}
+.n .hl{fill:var(--hl);opacity:0;transition:opacity .15s}
+.n.st-cur .hl,.n.st-sel .hl{opacity:1}
+.n.st-ok{color:var(--ok)}
+.n.st-bad{color:var(--bad)}
+.pstatus{text-align:center;font-size:19px;font-weight:700;min-height:30px;margin:6px 8px 0}
+.pstatus.ok{color:var(--ok)}
+.pstatus.bad{color:var(--bad)}
+.level{height:6px;border-radius:3px;background:var(--track);margin:10px 10px 0;overflow:hidden}
+.level i{display:block;height:100%;width:0;background:var(--brass);transition:width .06s linear}
+.cfg summary{cursor:pointer;font-weight:600;padding:2px 0}
+.cfg .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.cfg label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.cfg select,.txt,.fields input,.fields select{
+  background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:15px;color:var(--ink);width:100%;
+}
+.cfg .chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:14px}
+.cfg .chk input{width:20px;height:20px}
+.sum{background:var(--panel);border:1.5px solid var(--ok);border-radius:18px;padding:14px 16px;text-align:center}
+.sum b{display:block;font-size:20px;margin-bottom:4px}
+
+/* ---------- editor partitur ---------- */
+.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.fields label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{
+  flex:1;min-width:52px;padding:9px 6px;border-radius:12px;border:1px solid var(--line);background:var(--panel);
+  font-weight:600;font-size:14px;cursor:pointer;text-align:center;
+}
+.chip[aria-pressed="true"]{background:var(--brass);color:var(--brassText);border-color:var(--brass)}
+.kb{position:relative;height:120px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.kb .w{display:flex;height:100%;gap:2px}
+.key{
+  flex:1;border:1px solid var(--line);border-radius:0 0 10px 10px;background:var(--white);color:#4A3F35;
+  display:flex;align-items:flex-end;justify-content:center;padding:0 0 8px;font-size:12px;cursor:pointer;
+}
+.key:active{background:var(--track)}
+.bk{
+  position:absolute;top:0;height:64%;width:7.5%;border:0;border-radius:0 0 7px 7px;background:var(--black);cursor:pointer;
+  box-shadow:0 2px 3px rgba(0,0,0,.35);
+}
+.bk:active{background:var(--brass)}
+.imgpanel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:10px}
+.imgpanel img{display:block;max-width:100%;max-height:340px;margin:0 auto;border-radius:8px;background:#fff}
+.empty{text-align:center;color:var(--muted);font-size:14px;padding:8px 14px 2px}
+
+@media (prefers-reduced-motion: reduce){
+  *{transition:none !important}
+}
+</style>
+</head>
+<body>
+<main class="app">
+
+<!-- ================= TUNER GITAR ================= -->
+<section class="tab" id="tab-tuner">
+  <header>
+    <h1>Tuner gitar</h1>
+    <label class="sel"><span class="sr">Pilih tuning</span><select id="tuning"></select></label>
+  </header>
+
+  <section class="reader" id="reader" data-state="idle" aria-live="polite">
+    <div class="noteRow"><span id="noteName" class="idle">♪</span><span id="noteOct"></span></div>
+    <div class="readout"><span id="hz"></span><span id="cents"></span></div>
+    <div class="track" role="img" aria-label="Penunjuk selisih nada">
+      <div class="band"></div>
+      <div id="ticks"></div>
+      <div class="needle" id="needle"></div>
+    </div>
+    <div class="scale"><span>Terlalu rendah</span><span>Pas</span><span>Terlalu tinggi</span></div>
+    <div class="verdict" id="verdict">Aktifkan mikrofon untuk mulai</div>
+  </section>
+
+  <button class="start" id="start" type="button">Aktifkan mikrofon</button>
+  <div class="msg" id="msg" role="alert"></div>
+
+  <section class="head" aria-label="Senar gitar">
+    <div class="col left" id="colL"></div>
+    <svg viewBox="0 0 112 250" aria-hidden="true">
+      <path d="M14 6 Q56 -2 98 6 Q104 8 102 20 L92 214 Q90 226 78 226 L34 226 Q22 226 20 214 L10 20 Q8 8 14 6 Z" fill="var(--headstock)"/>
+      <text transform="translate(60 118) rotate(-90)" text-anchor="middle" fill="var(--brass)" font-size="20" font-weight="800" style="font-family:'Bricolage Grotesque',system-ui,sans-serif">Yuner</text>
+      <rect x="30" y="224" width="52" height="5" rx="1.5" fill="var(--nut)"/>
+      <g stroke="var(--muted)" stroke-width="1.4" opacity=".8">
+        <line x1="34" y1="229" x2="34" y2="250"/><line x1="43" y1="229" x2="43" y2="250"/>
+        <line x1="52" y1="229" x2="52" y2="250"/><line x1="60" y1="229" x2="60" y2="250"/>
+        <line x1="69" y1="229" x2="69" y2="250"/><line x1="78" y1="229" x2="78" y2="250"/>
+      </g>
+    </svg>
+    <div class="col right" id="colR"></div>
+  </section>
+  <p class="hint" id="hint"></p>
+
+  <div class="row">
+    <div class="stepper">
+      <button class="ctl" id="a4dn" type="button" aria-label="Turunkan acuan A4">−</button>
+      <output id="a4val" aria-live="polite">A4 440 Hz</output>
+      <button class="ctl" id="a4up" type="button" aria-label="Naikkan acuan A4">+</button>
+    </div>
+    <button class="sound" id="sound" type="button" disabled>Bunyikan nada</button>
+  </div>
+</section>
+
+<!-- ================= LATIHAN BACA NOT ================= -->
+<section class="tab" id="tab-latih" hidden>
+  <header><h1>Latihan baca not</h1></header>
+
+  <div class="seg" role="group" aria-label="Jenis notasi">
+    <button type="button" data-mode="staff" aria-pressed="true">Not balok</button>
+    <button type="button" data-mode="num" aria-pressed="false">Not angka</button>
+  </div>
+
+  <details class="card cfg" id="pcfg">
+    <summary>Pengaturan latihan</summary>
+    <div class="grid">
+      <label>Sumber
+        <select id="psrc"><option value="random">Acak</option><option value="score">Partitur saya</option></select>
+      </label>
+      <label>Kunci
+        <select id="pclef"><option value="treble">Kunci G (tangan kanan)</option><option value="bass">Kunci F (tangan kiri)</option></select>
+      </label>
+      <label>Rentang nada
+        <select id="prange"><option value="narrow">Sempit</option><option value="mid" selected>Sedang</option><option value="wide">Luas</option></select>
+      </label>
+      <label>Jumlah not
+        <select id="plen"><option value="4">4</option><option value="8" selected>8</option><option value="12">12</option><option value="16">16</option></select>
+      </label>
+      <label class="chk"><input type="checkbox" id="psharp"> Sertakan nada ♯</label>
+      <label class="chk"><input type="checkbox" id="poct"> Abaikan oktaf</label>
+    </div>
+  </details>
+
+  <section class="board" aria-live="polite">
+    <div class="scorehost" id="pscore"></div>
+    <div class="pstatus" id="pstatus">Aktifkan mikrofon, lalu mainkan not yang disorot.</div>
+    <div class="level" aria-hidden="true"><i id="plevel"></i></div>
+  </section>
+
+  <div class="sum" id="psum" hidden><b id="psumT"></b><span id="psumD"></span></div>
+
+  <button class="start" id="pstart" type="button">Aktifkan mikrofon</button>
+  <div class="msg" id="pmsg" role="alert"></div>
+  <div class="row">
+    <button class="sound" id="pnew" type="button">Soal baru</button>
+    <button class="sound" id="prepeat" type="button">Ulangi soal</button>
+    <button class="sound" id="ppeek" type="button">Bunyikan nada</button>
+  </div>
+</section>
+
+<!-- ================= PARTITUR ================= -->
+<section class="tab" id="tab-score" hidden>
+  <header>
+    <h1>Partitur</h1>
+    <label class="sel"><span class="sr">Pilih partitur</span><select id="slist"></select></label>
+  </header>
+
+  <div class="card">
+    <label class="sr" for="stitle">Judul</label>
+    <input class="txt" id="stitle" type="text" placeholder="Judul lagu" maxlength="60" autocomplete="off">
+    <div class="fields">
+      <label>Tempo
+        <input id="sbpm" type="number" min="30" max="240" value="90" inputmode="numeric">
+      </label>
+      <label>Birama
+        <select id="sts"><option value="4/4">4/4</option><option value="3/4">3/4</option><option value="2/4">2/4</option><option value="6/8">6/8</option></select>
+      </label>
+      <label>Kunci
+        <select id="sclef"><option value="treble">Kunci G</option><option value="bass">Kunci F</option></select>
+      </label>
+    </div>
+  </div>
+
+  <div class="seg" role="group" aria-label="Jenis notasi">
+    <button type="button" data-mode="staff" aria-pressed="true">Not balok</button>
+    <button type="button" data-mode="num" aria-pressed="false">Not angka</button>
+  </div>
+
+  <section class="board">
+    <div class="scorehost" id="sscore"></div>
+    <div class="empty" id="sempty">Belum ada not. Pilih nilai not, lalu ketuk tuts piano di bawah.</div>
+  </section>
+
+  <div class="row">
+    <button class="start" id="splay" type="button" style="flex:1.4">▶ Putar</button>
+    <button class="sound" id="sprac" type="button">Latih dengan mikrofon</button>
+  </div>
+
+  <div class="card">
+    <div class="chips" id="sdur" role="group" aria-label="Nilai not">
+      <button class="chip" type="button" data-d="4" aria-pressed="false">Penuh</button>
+      <button class="chip" type="button" data-d="2" aria-pressed="false">½</button>
+      <button class="chip" type="button" data-d="1" aria-pressed="true">¼</button>
+      <button class="chip" type="button" data-d="0.5" aria-pressed="false">⅛</button>
+      <button class="chip" type="button" data-d="0.25" aria-pressed="false">1/16</button>
+    </div>
+    <div class="chips" style="margin-top:8px">
+      <button class="chip" type="button" id="sdot" aria-pressed="false">Titik (×1,5)</button>
+      <button class="chip" type="button" id="sflat" aria-pressed="false">Hitam: ♯</button>
+      <button class="chip" type="button" id="srest">Rehat</button>
+    </div>
+    <div class="row" style="margin-top:10px;align-items:center">
+      <div class="stepper" style="flex:1;justify-content:space-between">
+        <button class="ctl" id="soctdn" type="button" aria-label="Oktaf lebih rendah">−</button>
+        <output id="soctval" aria-live="polite">Oktaf 4</output>
+        <button class="ctl" id="soctup" type="button" aria-label="Oktaf lebih tinggi">+</button>
+      </div>
+      <button class="sound" id="sdelnote" type="button" style="flex:.8">Hapus not</button>
+    </div>
+    <div class="kb" id="kb" style="margin-top:10px"></div>
+  </div>
+
+  <div class="row">
+    <label class="sound" style="cursor:pointer">Unggah gambar partitur
+      <input type="file" accept="image/*" id="simg" hidden>
+    </label>
+    <button class="sound" id="snew" type="button">Partitur baru</button>
+    <button class="sound" id="sdel" type="button">Hapus partitur</button>
+  </div>
+
+  <section class="imgpanel" id="simgpanel" hidden>
+    <img id="simgview" alt="Gambar partitur yang diunggah">
+    <div class="row" style="margin-top:10px">
+      <button class="start" id="sai" type="button" style="flex:1.4;padding:12px;font-size:16px" hidden>Baca otomatis dengan AI</button>
+      <button class="sound" id="sclose" type="button">Tutup gambar</button>
+    </div>
+    <p class="hint" id="saimsg" style="margin-top:10px"></p>
+  </section>
+</section>
+
+</main>
+
+<nav class="tabs" aria-label="Menu utama"><div class="in">
+  <button type="button" data-tab="tuner" aria-current="page">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 17l4-7"/><path d="M3 20h18"/></svg>Tuner
+  </button>
+  <button type="button" data-tab="latih">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>Latihan
+  </button>
+  <button type="button" data-tab="score">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18M3 11h18M3 15h18M3 19h18"/><circle cx="9" cy="15" r="2" fill="currentColor"/><path d="M11 15V6"/></svg>Partitur
+  </button>
+</div></nav>
+
+<script>
+(function(){
+'use strict';
+var $ = function(s){ return document.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+var clamp = function(v,a,b){ return Math.min(b,Math.max(a,v)); };
+
+var NAMES_S = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+var NAMES_F = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+var store = {
+  get:function(k,d){ try{ var v=localStorage.getItem(k); return v===null?d:v; }catch(e){ return d; } },
+  set:function(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+
+var app = { tab:'tuner', mode: store.get('yg.mode','staff')==='num' ? 'num' : 'staff' };
+var A4 = clamp(parseInt(store.get('yg.a4','440'),10) || 440, 430, 450);
+function freqOf(m){ return A4 * Math.pow(2,(m-69)/12); }
+function noteInfo(m,flat){ return { name:(flat?NAMES_F:NAMES_S)[m%12], oct:Math.floor(m/12)-1 }; }
+function fmt(n){ return n.toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1}); }
+function setText(n,t){ if(n.textContent!==t) n.textContent=t; }
+
+/* =====================================================================
+   Deteksi nada (YIN) dan mesin mikrofon bersama
+   ===================================================================== */
+function yin(buf,sr){
+  var W=buf.length>>1;
+  var tauMax=Math.min(W,Math.floor(sr/60));
+  var tauMin=Math.floor(sr/1400);
+  var d=new Float32Array(tauMax+1);
+  var tau,j,sum,diff;
+  for(tau=1;tau<=tauMax;tau++){
+    sum=0;
+    for(j=0;j<W;j++){ diff=buf[j]-buf[j+tau]; sum+=diff*diff; }
+    d[tau]=sum;
+  }
+  var running=0; d[0]=1;
+  for(tau=1;tau<=tauMax;tau++){ running+=d[tau]; d[tau]=running?d[tau]*tau/running:1; }
+  var found=-1;
+  for(tau=tauMin;tau<tauMax;tau++){
+    if(d[tau]<0.12){
+      while(tau+1<tauMax && d[tau+1]<d[tau]) tau++;
+      found=tau; break;
+    }
+  }
+  if(found<1) return null;
+  var x0=d[found-1], x1=d[found], x2=d[found+1];
+  var den=x0+x2-2*x1;
+  var shift=den?(x0-x2)/(2*den):0;
+  return sr/(found+shift);
+}
+
+var mic = { active:false, ctx:null, stream:null, analyser:null, buf:null, raf:0, last:0, wl:null, onData:[], onTick:[] };
+function setMicErr(t){ $('#msg').textContent=t||''; $('#pmsg').textContent=t||''; }
+function syncMic(){
+  ['#start','#pstart'].forEach(function(s){
+    var b=$(s); b.textContent = mic.active ? 'Matikan mikrofon' : 'Aktifkan mikrofon';
+    b.classList.toggle('on',mic.active);
+  });
+  refreshTuner(); refreshPractice();
+}
+function micLoop(){
+  mic.raf=requestAnimationFrame(micLoop);
+  var now=performance.now();
+  if(now-mic.last>=40){
+    mic.last=now;
+    mic.analyser.getFloatTimeDomainData(mic.buf);
+    var s=0,i; for(i=0;i<mic.buf.length;i++) s+=mic.buf[i]*mic.buf[i];
+    var rms=Math.sqrt(s/mic.buf.length);
+    var f = rms<0.008 ? null : yin(mic.buf,mic.ctx.sampleRate);
+    for(i=0;i<mic.onData.length;i++) mic.onData[i](f,rms,now);
+  }
+  for(var k=0;k<mic.onTick.length;k++) mic.onTick[k]();
+}
+async function requestWake(){
+  try{ if('wakeLock' in navigator) mic.wl=await navigator.wakeLock.request('screen'); }catch(e){}
+}
+function micCleanup(){
+  if(mic.raf) cancelAnimationFrame(mic.raf); mic.raf=0;
+  if(mic.stream){ mic.stream.getTracks().forEach(function(t){t.stop();}); mic.stream=null; }
+  if(mic.ctx){ try{mic.ctx.close();}catch(e){} mic.ctx=null; }
+  if(mic.wl){ try{mic.wl.release();}catch(e){} mic.wl=null; }
+  mic.active=false;
+}
+async function micStart(){
+  setMicErr('');
+  try{
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw {name:'Unsupported'};
+    mic.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    var AC=window.AudioContext||window.webkitAudioContext;
+    mic.ctx=new AC(); if(mic.ctx.resume) await mic.ctx.resume();
+    var src=mic.ctx.createMediaStreamSource(mic.stream);
+    mic.analyser=mic.ctx.createAnalyser(); mic.analyser.fftSize=4096; mic.analyser.smoothingTimeConstant=0;
+    src.connect(mic.analyser);
+    mic.buf=new Float32Array(mic.analyser.fftSize);
+    mic.active=true; requestWake(); micLoop();
+  }catch(e){
+    micCleanup();
+    var n=e&&e.name;
+    if(n==='NotAllowedError'||n==='SecurityError') setMicErr('Akses mikrofon ditolak. Izinkan mikrofon untuk situs ini di pengaturan browser, lalu tekan Aktifkan mikrofon lagi.');
+    else if(n==='NotFoundError') setMicErr('Mikrofon tidak ditemukan di perangkat ini.');
+    else setMicErr('Mikrofon tidak bisa dipakai di sini. Coba buka halaman ini langsung di browser.');
+  }
+  syncMic();
+}
+function micStop(){ micCleanup(); syncMic(); }
+function micToggle(){ mic.active ? micStop() : micStart(); }
+
+/* Suara: nada acuan dan pemutar partitur (satu AudioContext bersama) */
+var actx=null;
+function ac(){
+  var AC=window.AudioContext||window.webkitAudioContext;
+  actx=actx||new AC();
+  if(actx.state==='suspended' && actx.resume) actx.resume();
+  return actx;
+}
+function pluck(m,when,dur,dest){
+  var c=ac(), f=freqOf(m);
+  var o1=c.createOscillator(), o2=c.createOscillator(), g=c.createGain(), g2=c.createGain();
+  o1.type='triangle'; o1.frequency.value=f;
+  o2.type='sine'; o2.frequency.value=f*2; g2.gain.value=0.3;
+  var len=Math.max(0.35,Math.min(dur,3)*1.05);
+  g.gain.setValueAtTime(0.0001,when);
+  g.gain.linearRampToValueAtTime(0.3,when+0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001,when+len);
+  o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(dest||c.destination);
+  o1.start(when); o2.start(when); o1.stop(when+len+0.05); o2.stop(when+len+0.05);
+}
+
+/* =====================================================================
+   1) TUNER GITAR
+   ===================================================================== */
+var TUNINGS = [
+  {id:'std',    name:'Standar (E A D G B E)',    midi:[40,45,50,55,59,64]},
+  {id:'dropd',  name:'Drop D',                   midi:[38,45,50,55,59,64]},
+  {id:'half',   name:'Turun setengah nada (E♭)', midi:[39,44,49,54,58,63], flat:true},
+  {id:'full',   name:'Turun satu nada (D)',      midi:[38,43,48,53,57,62]},
+  {id:'dadgad', name:'DADGAD',                   midi:[38,45,50,55,57,62]},
+  {id:'openg',  name:'Open G',                   midi:[38,43,50,55,59,62]},
+  {id:'opend',  name:'Open D',                   midi:[38,45,50,54,57,62]}
+];
+var tn = {
+  tuning: TUNINGS.filter(function(t){ return t.id===store.get('yg.tuning','std'); })[0] || TUNINGS[0],
+  locked: null, tuned: {}
+};
+var el = {
+  note:$('#noteName'), oct:$('#noteOct'), hz:$('#hz'), cents:$('#cents'), verdict:$('#verdict'),
+  needle:$('#needle'), reader:$('#reader'), colL:$('#colL'), colR:$('#colR'), tuning:$('#tuning'),
+  a4:$('#a4val'), sound:$('#sound'), hint:$('#hint'), ticks:$('#ticks')
+};
+function stringNo(i){ return 6-i; }
+
+var pegEls=[], liveIdx=null;
+function buildTuningSelect(){
+  el.tuning.innerHTML='';
+  TUNINGS.forEach(function(t){
+    var o=document.createElement('option'); o.value=t.id; o.textContent=t.name;
+    if(t===tn.tuning) o.selected=true;
+    el.tuning.appendChild(o);
+  });
+}
+function buildPegs(){
+  el.colL.innerHTML=''; el.colR.innerHTML=''; pegEls=[];
+  [[0,el.colL],[1,el.colL],[2,el.colL],[5,el.colR],[4,el.colR],[3,el.colR]].forEach(function(p){
+    var i=p[0], n=noteInfo(tn.tuning.midi[i],tn.tuning.flat);
+    var b=document.createElement('button');
+    b.type='button'; b.className='peg';
+    b.setAttribute('aria-label','Senar '+stringNo(i)+', nada '+n.name+n.oct);
+    b.innerHTML='<span class="pn">'+stringNo(i)+'</span><span class="pt">'+n.name+'<sub>'+n.oct+'</sub></span>';
+    b.addEventListener('click',function(){ toggleLock(i); });
+    p[1].appendChild(b); pegEls[i]=b;
+  });
+  updatePegs();
+}
+function updatePegs(){
+  pegEls.forEach(function(b,i){
+    b.classList.toggle('locked',tn.locked===i);
+    b.classList.toggle('tuned',!!tn.tuned[i]);
+    b.classList.toggle('live',liveIdx===i);
+    b.setAttribute('aria-pressed',tn.locked===i?'true':'false');
+  });
+  if(tn.locked===null){
+    el.hint.textContent='Petik senar mana saja. Ketuk senar di kepala gitar untuk mengunci dan mendengar nadanya.';
+    el.sound.disabled=true; el.sound.textContent='Bunyikan nada';
+  } else {
+    el.hint.textContent='Terkunci di senar '+stringNo(tn.locked)+'. Ketuk lagi untuk kembali ke otomatis.';
+    el.sound.disabled=false; el.sound.textContent='Bunyikan nada senar '+stringNo(tn.locked);
+  }
+}
+function buildTicks(){
+  var h='';
+  for(var v=-50;v<=50;v+=5){
+    h+='<div class="tick'+(v===0?' zero':(v%10===0?' major':''))+'" style="left:'+(50+v)+'%"></div>';
+  }
+  el.ticks.innerHTML=h;
+}
+
+var hist=[], reading=null, lastHit=0, inTuneSince=null, toneUntil=0, shown=0;
+var RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+var EASE = RM ? 1 : 0.22;
+
+function toggleLock(i){
+  tn.locked = tn.locked===i ? null : i;
+  hist.length=0; reading=null; liveIdx=null; inTuneSince=null;
+  updatePegs(); renderTuner();
+}
+function tunerData(f,now){
+  if(now<toneUntil) return;
+  if(f){
+    if(hist.length && Math.abs(1200*Math.log2(f/hist[hist.length-1]))>150) hist.length=0;
+    hist.push(f); if(hist.length>5) hist.shift();
+    var sorted=hist.slice().sort(function(a,b){return a-b;});
+    var med=sorted[sorted.length>>1];
+    lastHit=now;
+    var idx=tn.locked, freqs=tn.tuning.midi.map(freqOf);
+    if(idx===null){
+      var best=1e9;
+      freqs.forEach(function(fr,i){ var dd=Math.abs(1200*Math.log2(med/fr)); if(dd<best){best=dd;idx=i;} });
+    }
+    var c=1200*Math.log2(med/freqs[idx]);
+    reading={idx:idx,f:med,c:c};
+    if(Math.abs(c)<=5){
+      if(inTuneSince===null) inTuneSince=now;
+      else if(now-inTuneSince>700 && !tn.tuned[idx]){ tn.tuned[idx]=true; updatePegs(); }
+    } else {
+      inTuneSince=null;
+      if(Math.abs(c)>12 && tn.tuned[idx]){ delete tn.tuned[idx]; updatePegs(); }
+    }
+  } else if(now-lastHit>800){
+    reading=null; hist.length=0; inTuneSince=null;
+  }
+}
+function renderTuner(){
+  var r=reading;
+  var idx=r?r.idx:tn.locked;
+  if(idx===null){ setText(el.note,'♪'); setText(el.oct,''); el.note.classList.add('idle'); }
+  else {
+    var n=noteInfo(tn.tuning.midi[idx],tn.tuning.flat);
+    setText(el.note,n.name); setText(el.oct,String(n.oct)); el.note.classList.remove('idle');
+  }
+  var state='idle', targetC=0;
+  if(r){
+    var ac_=Math.abs(r.c);
+    state = ac_<=5 ? 'ok' : (ac_<=15 ? 'near' : 'far');
+    targetC = clamp(r.c,-50,50);
+    var rc=Math.round(r.c);
+    setText(el.hz,fmt(r.f)+' Hz');
+    setText(el.cents,(rc>0?'+':(rc<0?'−':''))+Math.abs(rc)+' cent');
+    setText(el.verdict, ac_<=5 ? 'Pas' : (r.c<0 ? 'Kencangkan senar' : 'Kendurkan senar'));
+  } else {
+    setText(el.cents,'');
+    setText(el.hz, tn.locked!==null ? 'Target '+fmt(freqOf(tn.tuning.midi[tn.locked]))+' Hz' : '');
+    if(!mic.active) setText(el.verdict,'Aktifkan mikrofon untuk mulai');
+    else setText(el.verdict, tn.locked!==null ? 'Petik senar '+stringNo(tn.locked) : 'Petik satu senar');
+  }
+  if(el.reader.getAttribute('data-state')!==state) el.reader.setAttribute('data-state',state);
+  shown += (targetC-shown)*EASE;
+  el.needle.style.left=(50+shown)+'%';
+  var nl = r ? r.idx : null;
+  if(nl!==liveIdx){ liveIdx=nl; updatePegs(); }
+}
+function refreshTuner(){ if(!mic.active){ reading=null; hist.length=0; liveIdx=null; shown=0; updatePegs(); } renderTuner(); }
+
+function playTunerTone(){
+  if(tn.locked===null) return;
+  pluck(tn.tuning.midi[tn.locked],ac().currentTime,2.2);
+  toneUntil=performance.now()+2500;
+  hist.length=0; reading=null;
+}
+el.tuning.addEventListener('change',function(){
+  tn.tuning=TUNINGS.filter(function(t){return t.id===el.tuning.value;})[0]||TUNINGS[0];
+  tn.locked=null; tn.tuned={}; hist.length=0; reading=null; liveIdx=null;
+  store.set('yg.tuning',tn.tuning.id);
+  buildPegs(); renderTuner();
+});
+function setA4(v){
+  A4=clamp(v,430,450); store.set('yg.a4',String(A4));
+  el.a4.textContent='A4 '+A4+' Hz';
+  if(!mic.active) renderTuner();
+}
+$('#a4dn').addEventListener('click',function(){ setA4(A4-1); });
+$('#a4up').addEventListener('click',function(){ setA4(A4+1); });
+el.sound.addEventListener('click',playTunerTone);
+$('#start').addEventListener('click',micToggle);
+
+/* =====================================================================
+   Notasi: model data, tata letak, dan gambar SVG
+   Not = {m: nomor MIDI atau null (rehat), d: durasi dalam ketukan seperempat, a: '#' | 'b' | ''}
+   ===================================================================== */
+var S = 10;
+var NATLET = {0:0,2:1,4:2,5:3,7:4,9:5,11:6};
+var PCS = [0,2,4,5,7,9,11];
+var BLACK = [1,3,6,8,10];
+function letterIdx(m,a){ var pc=m%12; if(NATLET[pc]!==undefined) return NATLET[pc]; return a==='b' ? NATLET[(pc+1)%12] : NATLET[pc-1]; }
+function diaOf(n){ return 7*(Math.floor(n.m/12)-1)+letterIdx(n.m,n.a); }
+function midiFromDia(dia){ var oct=Math.floor(dia/7); return (oct+1)*12+PCS[dia-oct*7]; }
+function baseDur(d){ return d>=4?4:(d>=2?2:(d>=1?1:(d>=0.5?0.5:0.25))); }
+function isBlack(m){ return BLACK.indexOf(m%12)>=0; }
+function nameOf(m,a){ return (a==='b'?NAMES_F:NAMES_S)[m%12]+(Math.floor(m/12)-1); }
+function jianpu(n){
+  var pc=n.m%12, nat={0:1,2:2,4:3,5:4,7:5,9:6,11:7}, num, acc='';
+  if(nat[pc]) num=nat[pc];
+  else if(n.a==='b'){ num=nat[(pc+1)%12]; acc='b'; }
+  else { num=nat[pc-1]; acc='#'; }
+  return {num:num,acc:acc,oct:Math.floor(n.m/12)-1};
+}
+function labelOf(m,a){
+  if(app.mode==='num'){ var j=jianpu({m:m,a:a}); return (j.acc==='#'?'♯':(j.acc==='b'?'♭':''))+j.num+(j.oct!==4?' (oktaf '+j.oct+')':''); }
+  return nameOf(m,a);
+}
+function accSvg(type,x,y,k){
+  var t='transform="translate('+x+' '+y+') scale('+k+')"';
+  if(type==='#') return '<g '+t+'><path d="M-2 -8V9M2 -9V8" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M-5 2.2L5 -0.8M-5 6.2L5 3.2" stroke="currentColor" stroke-width="2.4" fill="none"/></g>';
+  return '<g '+t+'><path d="M-2 -10V4M-2 4C6 -1 5 -7 -2 -3" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>';
+}
+function advOf(n,mode){
+  if(mode==='num') return Math.max(24,26*n.d);
+  return 14+7*Math.sqrt(4*n.d)+(n.a&&n.m!==null?10:0);
+}
+function buildMeasures(notes,barBeats){
+  var ms=[], cur=[], acc=0;
+  notes.forEach(function(n,i){
+    cur.push(i); acc+=n.d;
+    if(acc>=barBeats-1e-6){ ms.push(cur); cur=[]; acc=0; }
+  });
+  if(cur.length) ms.push(cur);
+  return ms;
+}
+function restSvg(d,x,y0){
+  var bd=baseDur(d), o='';
+  if(bd===4) o+='<rect x="'+(x-6)+'" y="'+(y0+S)+'" width="12" height="5" fill="currentColor"/>';
+  else if(bd===2) o+='<rect x="'+(x-6)+'" y="'+(y0+2*S-5)+'" width="12" height="5" fill="currentColor"/>';
+  else if(bd===1) o+='<path d="M'+(x-2)+' '+(y0+S)+' L'+(x+3)+' '+(y0+S+7)+' L'+(x-2)+' '+(y0+S+13)+' C'+(x+4)+' '+(y0+S+13)+' '+(x+4)+' '+(y0+S+22)+' '+(x-2)+' '+(y0+S+22)+'" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linejoin="round" stroke-linecap="round"/>';
+  else {
+    o+='<circle cx="'+(x-2)+'" cy="'+(y0+S+8)+'" r="2.4" fill="currentColor"/><path d="M'+(x+3)+' '+(y0+S+6)+' L'+(x-3)+' '+(y0+S+22)+'" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
+    if(bd===0.25) o+='<circle cx="'+(x-4)+'" cy="'+(y0+S+16)+'" r="2.4" fill="currentColor"/>';
+  }
+  if(d>bd) o+='<circle cx="'+(x+9)+'" cy="'+(y0+2*S-3)+'" r="1.9" fill="currentColor"/>';
+  return o;
+}
+function noteSvg(n,x,y0,base,i,cls){
+  var o='<g class="n'+cls+'" data-i="'+i+'">';
+  o+='<rect class="hl" x="'+(x-15)+'" y="'+(y0-18)+'" width="30" height="'+(4*S+36)+'" rx="9"/>';
+  if(n.m===null){ o+=restSvg(n.d,x,y0)+'</g>'; return o; }
+  var step=diaOf(n)-base, y=y0+4*S-step*S/2, bd=baseDur(n.d), s;
+  if(step<=-2) for(s=-2;s>=step;s-=2){ var ly=y0+4*S-s*S/2; o+='<line x1="'+(x-10)+'" x2="'+(x+10)+'" y1="'+ly+'" y2="'+ly+'" stroke="currentColor" stroke-width="1.4"/>'; }
+  if(step>=10) for(s=10;s<=step;s+=2){ var ly2=y0+4*S-s*S/2; o+='<line x1="'+(x-10)+'" x2="'+(x+10)+'" y1="'+ly2+'" y2="'+ly2+'" stroke="currentColor" stroke-width="1.4"/>'; }
+  if(n.a) o+=accSvg(n.a,x-14,y,0.95);
+  if(bd===4) o+='<ellipse cx="'+x+'" cy="'+y+'" rx="6.8" ry="4.6" fill="none" stroke="currentColor" stroke-width="2"/>';
+  else if(bd===2) o+='<ellipse cx="'+x+'" cy="'+y+'" rx="5.8" ry="4.2" fill="none" stroke="currentColor" stroke-width="1.9" transform="rotate(-20 '+x+' '+y+')"/>';
+  else o+='<ellipse cx="'+x+'" cy="'+y+'" rx="5.8" ry="4.3" fill="currentColor" transform="rotate(-20 '+x+' '+y+')"/>';
+  if(bd<4){
+    var up = step<4, sx = up ? x+5.4 : x-5.4, y2 = up ? y-3.5*S : y+3.5*S;
+    o+='<line x1="'+sx+'" x2="'+sx+'" y1="'+y+'" y2="'+y2+'" stroke="currentColor" stroke-width="1.5"/>';
+    var fl = bd===0.5 ? 1 : (bd===0.25 ? 2 : 0);
+    for(var k=0;k<fl;k++){
+      var oy = up ? y2+k*7 : y2-k*7;
+      o+= up
+        ? '<path d="M'+sx+' '+oy+' C'+(sx+9)+' '+(oy+8)+' '+(sx+10)+' '+(oy+15)+' '+(sx+4)+' '+(oy+21)+'" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>'
+        : '<path d="M'+sx+' '+oy+' C'+(sx+9)+' '+(oy-8)+' '+(sx+10)+' '+(oy-15)+' '+(sx+4)+' '+(oy-21)+'" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>';
+    }
+  }
+  if(n.d>bd){
+    var onLine = (((step%2)+2)%2)===0;
+    o+='<circle cx="'+(x+11)+'" cy="'+(y-(onLine?S/2:0))+'" r="1.9" fill="currentColor"/>';
+  }
+  return o+'</g>';
+}
+function ulSvg(x,yb,lvl,bm){
+  var cl = bm && (lvl===0?bm.L1:bm.L2), cr = bm && (lvl===0?bm.R1:bm.R2);
+  var x1 = cl ? x-bm.gL/2 : x-9, x2 = cr ? x+bm.gR/2 : x+9, y = yb+14+lvl*4;
+  return '<line x1="'+x1+'" x2="'+x2+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" stroke-width="1.8"/>';
+}
+function numSvg(n,x,yb,i,cls,bm){
+  var CELL=26, bd=baseDur(n.d), o='<g class="n'+cls+'" data-i="'+i+'">';
+  o+='<rect class="hl" x="'+(x-15)+'" y="'+(yb-34)+'" width="30" height="74" rx="9"/>';
+  var k, beats=Math.max(1,Math.floor(n.d));
+  if(n.m===null){
+    o+='<text x="'+x+'" y="'+(yb+8)+'" font-size="24" font-weight="700" text-anchor="middle">0</text>';
+    for(k=1;k<beats && bd>=1;k++) o+='<text x="'+(x+CELL*k)+'" y="'+(yb+8)+'" font-size="24" font-weight="700" text-anchor="middle">0</text>';
+    var rul = bd===0.5?1:(bd===0.25?2:0);
+    for(k=0;k<rul;k++) o+=ulSvg(x,yb,k,bm);
+    return o+'</g>';
+  }
+  var j=jianpu(n), ul = bd===0.5?1:(bd===0.25?2:0);
+  o+='<text x="'+x+'" y="'+(yb+8)+'" font-size="24" font-weight="700" text-anchor="middle">'+j.num+'</text>';
+  if(j.acc) o+=accSvg(j.acc,x-14,yb-2,0.85);
+  for(k=0;k<ul;k++) o+=ulSvg(x,yb,k,bm);
+  var up=j.oct-4, i2;
+  for(i2=0;i2<up;i2++) o+='<circle cx="'+x+'" cy="'+(yb-17-i2*6)+'" r="2.2" fill="currentColor"/>';
+  for(i2=0;i2<-up;i2++) o+='<circle cx="'+x+'" cy="'+(yb+15+ul*4+i2*6)+'" r="2.2" fill="currentColor"/>';
+  if(bd<2 && n.d>bd) o+='<circle cx="'+(x+14)+'" cy="'+(yb+2)+'" r="2" fill="currentColor"/>';
+  if(bd>=2) for(k=1;k<beats;k++) o+='<circle cx="'+(x+CELL*k)+'" cy="'+(yb+1)+'" r="2.3" fill="currentColor"/>';
+  return o+'</g>';
+}
+var CLEF_TREBLE = '<path d="M14 -13 L12 50 C12 60 4 62 4 56" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 -13 C24 -6 22 8 12 16 C2 24 -1 36 6 42 C12 47 22 44 22 35 C22 27 12 24 8 30 C5 35 10 39 14 37" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
+var CLEF_BASS = '<path d="M6 10 C6 4 20 4 22 14 C24 26 14 38 2 44" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="6" cy="10" r="3.6" fill="currentColor"/><circle cx="30" cy="5" r="1.9" fill="currentColor"/><circle cx="30" cy="15" r="1.9" fill="currentColor"/>';
+
+function drawScore(host,score,mode,stateFn){
+  var W=Math.max(240,Math.floor(host.clientWidth||320));
+  var notes=score.notes, num=(mode==='num');
+  var barBeats=score.ts[0]*4/score.ts[1];
+  var ms=buildMeasures(notes,barBeats);
+  if(!notes.length){ host.innerHTML=''; return; }
+  var margin=num?6:4, clefW=num?0:34, tsW=num?0:20;
+  var base = score.clef==='bass' ? 18 : 30;
+
+  var minStep=0, maxStep=8;
+  if(!num) notes.forEach(function(n){ if(n.m!==null){ var st=diaOf(n)-base; if(st<minStep) minStep=st; if(st>maxStep) maxStep=st; } });
+  var topM = num ? 44 : 30+Math.max(0,(maxStep-8)*S/2);
+  var botM = num ? 40 : Math.max(34,-minStep*S/2+18);
+  var sysH = num ? topM+botM : topM+4*S+botM;
+
+  var systems=[], cur={ms:[],w:0};
+  ms.forEach(function(m){
+    var w=10+m.reduce(function(s,i){ return s+advOf(notes[i],mode); },0)+6;
+    var avail=W-margin*2-clefW-(systems.length===0?tsW:0);
+    if(cur.ms.length && cur.w+w>avail){ systems.push(cur); cur={ms:[],w:0}; }
+    cur.ms.push({idx:m,w:w}); cur.w+=w;
+  });
+  if(cur.ms.length) systems.push(cur);
+
+  var head = num ? 26 : 0;
+  var H = head + systems.length*sysH + 6;
+  var out='', si, mi, ni;
+  if(num) out+='<text x="'+margin+'" y="18" font-size="15" font-weight="600">1 = C   '+score.ts[0]+'/'+score.ts[1]+'</text>';
+
+  systems.forEach(function(sys,si){
+    var yTop=head+si*sysH, y0=yTop+topM;
+    var avail=W-margin*2-clefW-(si===0?tsW:0);
+    var isLast=(si===systems.length-1);
+    var k = sys.w>avail ? avail/sys.w : ((isLast && systems.length>1) ? 1 : Math.min(avail/sys.w,1.5));
+    var x=margin+clefW+(si===0?tsW:0), i;
+    if(!num){
+      for(i=0;i<5;i++){ var ly=y0+i*S; out+='<line class="stf" x1="'+margin+'" x2="'+(W-margin)+'" y1="'+ly+'" y2="'+ly+'"/>'; }
+      out+='<line class="bar" x1="'+margin+'" x2="'+margin+'" y1="'+y0+'" y2="'+(y0+4*S)+'"/>';
+      out+='<g transform="translate('+(margin+6)+' '+y0+')" style="color:var(--ink)">'+(score.clef==='bass'?CLEF_BASS:CLEF_TREBLE)+'</g>';
+      if(si===0){
+        var tx=margin+clefW+10;
+        out+='<text x="'+tx+'" y="'+(y0+19)+'" font-size="22" font-weight="800" text-anchor="middle">'+score.ts[0]+'</text>';
+        out+='<text x="'+tx+'" y="'+(y0+39)+'" font-size="22" font-weight="800" text-anchor="middle">'+score.ts[1]+'</text>';
+      }
+    }
+    sys.ms.forEach(function(m,mi){
+      var wk=m.w*k, px=x+10*k;
+      var beatLen = (score.ts[1]===8 && score.ts[0]%3===0) ? 1.5 : 1;
+      var tt=0, cells=[], lv=[];
+      m.idx.forEach(function(q){ var b=baseDur(notes[q].d); cells.push(Math.floor(tt/beatLen+1e-6)); lv.push(b<1?(b<0.5?2:1):0); tt+=notes[q].d; });
+      m.idx.forEach(function(ni,j){
+        var n=notes[ni], adv=advOf(n,mode)*k, cls=stateFn?stateFn(ni):'';
+        var bm=null;
+        if(num){
+          var pOk = j>0 && lv[j]>0 && lv[j-1]>0 && cells[j]===cells[j-1];
+          var nOk = j<m.idx.length-1 && lv[j]>0 && lv[j+1]>0 && cells[j]===cells[j+1];
+          bm={ L1:pOk, R1:nOk, L2:pOk&&lv[j]>1&&lv[j-1]>1, R2:nOk&&lv[j]>1&&lv[j+1]>1,
+               gL: j>0 ? advOf(notes[m.idx[j-1]],mode)*k : 0, gR: adv };
+        }
+        cls = cls ? ' '+cls.split(' ').filter(Boolean).map(function(c){return 'st-'+c;}).join(' ') : '';
+        var extra = (!num && n.a && n.m!==null) ? 10*k : 0;
+        if(num) out+=numSvg(n,px+12,y0+0,ni,cls,bm);
+        else out+=noteSvg(n,px+extra+(adv-extra)/2,y0,base,ni,cls);
+        px+=adv;
+      });
+      var bx=x+wk-2, lastM=(isLast && mi===sys.ms.length-1);
+      var by1= num ? y0-22 : y0, by2 = num ? y0+22 : y0+4*S;
+      out+='<line class="bar" x1="'+bx+'" x2="'+bx+'" y1="'+by1+'" y2="'+by2+'"/>';
+      if(lastM && notes.length && buildMeasures(notes,barBeats).length && true){
+        out+='<line class="bar" x1="'+(bx+4)+'" x2="'+(bx+4)+'" y1="'+by1+'" y2="'+by2+'" style="stroke-width:3.2"/>';
+      }
+      x+=wk;
+    });
+  });
+  host.innerHTML='<svg class="sv" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Partitur">'+out+'</svg>';
+}
+
+/* =====================================================================
+   2) LATIHAN BACA NOT (deteksi suara piano)
+   ===================================================================== */
+var pr = { src:'random', clef:'treble', range:'mid', len:8, sharps:false, anyOct:false,
+           score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0 };
+var RANGES = {
+  treble:{narrow:[28,32], mid:[28,35], wide:[26,40]},
+  bass:{narrow:[21,25], mid:[18,28], wide:[16,30]}
+};
+function genRandom(){
+  var r=RANGES[pr.clef][pr.range], lo=r[0], hi=r[1], notes=[], d=lo+Math.floor(Math.random()*(hi-lo+1)), i;
+  for(i=0;i<pr.len;i++){
+    var m=midiFromDia(d), a='';
+    if(pr.sharps && [0,2,5,7,9].indexOf(m%12)>=0 && Math.random()<0.3){ m+=1; a='#'; }
+    notes.push({m:m,d:1,a:a});
+    var opts=[-3,-2,-1,1,2,3].filter(function(s){ return d+s>=lo && d+s<=hi; });
+    d+=opts[Math.floor(Math.random()*opts.length)];
+  }
+  return notes;
+}
+function curScoreCopy(){
+  var s=curScore();
+  return {title:s.title,ts:s.ts.slice(),clef:s.clef,notes:s.notes.map(function(n){ return {m:n.m,d:n.d,a:n.a||''}; })};
+}
+function newRound(keep){
+  if(!keep){
+    if(pr.src==='score') pr.score=curScoreCopy();
+    else pr.score={title:'',ts:[4,4],clef:pr.clef,notes:genRandom()};
+  }
+  pr.idx=[]; pr.score.notes.forEach(function(n,i){ if(n.m!==null) pr.idx.push(i); });
+  pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null;
+  pd.armed=false; pd.cand=null; pd.count=0;
+  $('#psum').hidden=true;
+  renderPractice();
+}
+var pd = { armed:false, cand:null, count:0, lastOnset:0, rms:[] };
+function pdFeed(f,rms,now){
+  pd.rms.push(rms); if(pd.rms.length>6) pd.rms.shift();
+  if(pd.rms.length>=4){
+    var prev=pd.rms.slice(0,-1), mn=Math.min.apply(null,prev);
+    if(rms>0.012 && rms>2*mn+0.006 && now-pd.lastOnset>200){ pd.armed=true; pd.lastOnset=now; pd.cand=null; pd.count=0; }
+  }
+  if(!pd.armed) return null;
+  if(now-pd.lastOnset>1000){ pd.armed=false; return null; }
+  if(!f){ pd.cand=null; pd.count=0; return null; }
+  var m=Math.round(69+12*Math.log2(f/A4));
+  if(m===pd.cand) pd.count++; else { pd.cand=m; pd.count=1; }
+  if(pd.count>=3){ pd.armed=false; pd.cand=null; pd.count=0; return m; }
+  return null;
+}
+function practiceData(f,rms,now){
+  $('#plevel').style.width=Math.min(100,Math.round(rms*1200))+'%';
+  if(now<pr.mute){ pd.armed=false; return; }
+  var m=pdFeed(f,rms,now);
+  if(m!==null) practiceHit(m);
+}
+function practiceHit(m){
+  if(pr.done || !pr.idx.length) return;
+  if(!pr.t0) pr.t0=performance.now();
+  var ni=pr.idx[pr.pos], n=pr.score.notes[ni];
+  var ok = pr.anyOct ? (m%12===n.m%12) : (m===n.m);
+  pr.tries++;
+  if(ok){
+    pr.marks[ni]='ok'; pr.pos++;
+    pr.lastMsg={t:'Benar!',c:'ok'};
+    if(pr.pos>=pr.idx.length) finishRound();
+  } else {
+    pr.marks[ni]='bad'; pr.wrong++;
+    var a = (isBlack(m) && n.a==='b') ? 'b' : '';
+    pr.lastMsg={t:'Belum tepat, yang terdengar: '+labelOf(m,a),c:'bad'};
+  }
+  renderPractice();
+}
+function finishRound(){
+  pr.done=true;
+  var secs=Math.max(1,Math.round((performance.now()-pr.t0)/1000));
+  var pct=Math.round(100*pr.idx.length/Math.max(1,pr.tries));
+  $('#psumT').textContent='Selesai! Ketepatan '+pct+'%';
+  $('#psumD').textContent=pr.idx.length+' not benar dari '+pr.tries+' percobaan, waktu '+secs+' detik.';
+  $('#psum').hidden=false;
+}
+function renderPractice(){
+  var sc=pr.score; if(!sc) return;
+  var cur = pr.done ? -1 : pr.idx[pr.pos];
+  drawScore($('#pscore'),sc,app.mode,function(i){
+    var s = pr.marks[i] || '';
+    if(i===cur) s+=' cur';
+    return s;
+  });
+  var st=$('#pstatus'), t, c='';
+  if(!pr.idx.length){ t='Partitur ini belum punya not. Tambahkan not di menu Partitur.'; }
+  else if(pr.done){ t='Bagus sekali!'; c='ok'; }
+  else if(pr.lastMsg){ t=pr.lastMsg.t; c=pr.lastMsg.c; }
+  else if(!mic.active){ t='Aktifkan mikrofon, lalu mainkan not yang disorot.'; }
+  else { t='Mainkan not yang disorot.'; }
+  st.textContent=t; st.className='pstatus'+(c?' '+c:'');
+}
+function refreshPractice(){
+  if(!pr.score) return;
+  if(!mic.active) pr.lastMsg=null;
+  $('#plevel').style.width='0';
+  renderPractice();
+}
+function syncPracticeOpts(){
+  $('#psrc').value=pr.src; $('#pclef').value=pr.clef; $('#prange').value=pr.range; $('#plen').value=String(pr.len);
+  $('#psharp').checked=pr.sharps; $('#poct').checked=pr.anyOct;
+  var fromScore = pr.src==='score';
+  ['#pclef','#prange','#plen','#psharp'].forEach(function(s){ $(s).disabled=fromScore; });
+}
+function bindPracticeOpts(){
+  $('#psrc').addEventListener('change',function(e){ pr.src=e.target.value; syncPracticeOpts(); newRound(); });
+  $('#pclef').addEventListener('change',function(e){ pr.clef=e.target.value; newRound(); });
+  $('#prange').addEventListener('change',function(e){ pr.range=e.target.value; newRound(); });
+  $('#plen').addEventListener('change',function(e){ pr.len=parseInt(e.target.value,10); newRound(); });
+  $('#psharp').addEventListener('change',function(e){ pr.sharps=e.target.checked; newRound(); });
+  $('#poct').addEventListener('change',function(e){ pr.anyOct=e.target.checked; });
+  $('#pstart').addEventListener('click',micToggle);
+  $('#pnew').addEventListener('click',function(){ newRound(); });
+  $('#prepeat').addEventListener('click',function(){ if(pr.score) newRound(true); });
+  $('#ppeek').addEventListener('click',function(){
+    if(!pr.score || pr.done || !pr.idx.length) return;
+    var n=pr.score.notes[pr.idx[pr.pos]];
+    pluck(n.m,ac().currentTime,1.2);
+    pr.mute=performance.now()+1500;
+  });
+}
+
+/* =====================================================================
+   3) PARTITUR (buat sendiri, unggah gambar, putar)
+   ===================================================================== */
+var ALLOWED=[0.25,0.5,0.75,1,1.5,2,3,4,6];
+function snapDur(d){
+  d=Number(d); if(!isFinite(d)||d<=0) return 1;
+  var best=ALLOWED[0], bd=1e9;
+  ALLOWED.forEach(function(a){ var x=Math.abs(a-d); if(x<bd){bd=x;best=a;} });
+  return best;
+}
+function twinkle(){
+  var P=[60,60,67,67,69,69,67,65,65,64,64,62,62,60], D=[1,1,1,1,1,1,2,1,1,1,1,1,1,2];
+  return {id:'s0',title:'Contoh: Twinkle Twinkle',ts:[4,4],bpm:100,clef:'treble',
+    notes:P.map(function(m,i){ return {m:m,d:D[i],a:''}; })};
+}
+var scores=[], curId=null, sel=-1, playing=false, playIdx=-1, playTimers=[], playGain=null;
+function loadScores(){
+  try{ scores=JSON.parse(store.get('yg.scores','[]')); }catch(e){ scores=[]; }
+  if(!Array.isArray(scores)||!scores.length) scores=[twinkle()];
+  curId=store.get('yg.curScore',scores[0].id);
+  if(!scores.some(function(s){return s.id===curId;})) curId=scores[0].id;
+}
+function saveScores(){ store.set('yg.scores',JSON.stringify(scores)); store.set('yg.curScore',curId); }
+function curScore(){ return scores.filter(function(s){return s.id===curId;})[0]||scores[0]; }
+
+function buildScoreList(){
+  var sl=$('#slist'); sl.innerHTML='';
+  scores.forEach(function(s){
+    var o=document.createElement('option'); o.value=s.id; o.textContent=s.title||'Tanpa judul';
+    if(s.id===curId) o.selected=true; sl.appendChild(o);
+  });
+}
+function syncScoreFields(){
+  var s=curScore();
+  $('#stitle').value=s.title||''; $('#sbpm').value=s.bpm; $('#sts').value=s.ts[0]+'/'+s.ts[1]; $('#sclef').value=s.clef;
+}
+function renderScoreView(){
+  var s=curScore();
+  drawScore($('#sscore'),s,app.mode,function(i){
+    var c=''; if(i===playIdx) c='cur'; else if(i===sel) c='sel'; return c;
+  });
+  $('#sempty').hidden = s.notes.length>0;
+  $('#splay').textContent = playing ? '■ Berhenti' : '▶ Putar';
+  $('#splay').disabled = !s.notes.some(function(n){return n.m!==null;}) && !playing;
+  $('#sprac').disabled = !s.notes.some(function(n){return n.m!==null;});
+}
+var inp = { dur:1, dot:false, flat:false, oct:4 };
+function buildKeyboard(){
+  var kb=$('#kb'), W=[0,2,4,5,7,9,11,12], lab=['C','D','E','F','G','A','B','C'], h='<div class="w">', i;
+  for(i=0;i<8;i++){
+    var m=(inp.oct+1)*12+W[i];
+    h+='<button type="button" class="key" data-m="'+m+'" aria-label="Nada '+lab[i]+(inp.oct+(i===7?1:0))+'">'+lab[i]+(i===0||i===7?(inp.oct+(i===7?1:0)):'')+'</button>';
+  }
+  h+='</div>';
+  [[1,0.7],[3,1.7],[6,3.7],[8,4.7],[10,5.7]].forEach(function(b){
+    var m=(inp.oct+1)*12+b[0];
+    h+='<button type="button" class="bk" style="left:'+(b[1]*12.5)+'%" data-m="'+m+'" data-black="1" aria-label="Nada hitam '+nameOf(m,inp.flat?'b':'#')+'"></button>';
+  });
+  kb.innerHTML=h;
+  $('#soctval').textContent='Oktaf '+inp.oct;
+}
+function addNote(m){
+  var s=curScore(), d=inp.dur*(inp.dot&&inp.dur>0.25?1.5:1);
+  var a = isBlack(m) ? (inp.flat?'b':'#') : '';
+  var at = sel>=0 ? sel+1 : s.notes.length;
+  s.notes.splice(at,0,{m:m,d:d,a:a}); sel=at; saveScores(); renderScoreView();
+  pluck(m,ac().currentTime,0.7);
+}
+function addRest(){
+  var s=curScore(), d=inp.dur*(inp.dot&&inp.dur>0.25?1.5:1);
+  var at = sel>=0 ? sel+1 : s.notes.length;
+  s.notes.splice(at,0,{m:null,d:d,a:''}); sel=at; saveScores(); renderScoreView();
+}
+function delNote(){
+  var s=curScore(); if(!s.notes.length) return;
+  var at = sel>=0 ? sel : s.notes.length-1;
+  s.notes.splice(at,1); sel = s.notes.length ? Math.min(at,s.notes.length-1) : -1;
+  if(at===s.notes.length && s.notes.length) sel=s.notes.length-1;
+  saveScores(); renderScoreView();
+}
+function stopPlay(){
+  playTimers.forEach(clearTimeout); playTimers=[];
+  if(playGain){ try{playGain.disconnect();}catch(e){} playGain=null; }
+  playing=false; playIdx=-1; renderScoreView();
+}
+function playScore(){
+  if(playing){ stopPlay(); return; }
+  var s=curScore(); if(!s.notes.length) return;
+  var c=ac(), spb=60/clamp(s.bpm||90,30,240), t=c.currentTime+0.15, acc=0;
+  playGain=c.createGain(); playGain.gain.value=1; playGain.connect(c.destination);
+  playing=true;
+  s.notes.forEach(function(n,i){
+    var at=acc*spb, dur=n.d*spb;
+    if(n.m!==null) pluck(n.m,t+at,dur,playGain);
+    playTimers.push(setTimeout(function(){ playIdx=i; renderScoreView(); },150+at*1000));
+    acc+=n.d;
+  });
+  playTimers.push(setTimeout(stopPlay,150+acc*spb*1000+200));
+  renderScoreView();
+}
+function newScore(){
+  stopPlay();
+  var s={id:'s'+Date.now(),title:'Partitur baru',ts:[4,4],bpm:90,clef:'treble',notes:[]};
+  scores.push(s); curId=s.id; sel=-1; saveScores();
+  buildScoreList(); syncScoreFields(); renderScoreView();
+}
+var delArmed=false, delTimer=0;
+function delScore(){
+  var b=$('#sdel');
+  if(!delArmed){
+    delArmed=true; b.textContent='Yakin hapus?';
+    delTimer=setTimeout(function(){ delArmed=false; b.textContent='Hapus partitur'; },3000);
+    return;
+  }
+  clearTimeout(delTimer); delArmed=false; b.textContent='Hapus partitur';
+  stopPlay();
+  scores=scores.filter(function(s){return s.id!==curId;});
+  if(!scores.length) scores=[{id:'s'+Date.now(),title:'Partitur baru',ts:[4,4],bpm:90,clef:'treble',notes:[]}];
+  curId=scores[0].id; sel=-1; saveScores();
+  buildScoreList(); syncScoreFields(); renderScoreView();
+}
+function bindScore(){
+  $('#slist').addEventListener('change',function(e){ stopPlay(); curId=e.target.value; sel=-1; saveScores(); syncScoreFields(); renderScoreView(); });
+  $('#stitle').addEventListener('input',function(e){
+    var s=curScore(); s.title=e.target.value; saveScores();
+    var o=$('#slist').querySelector('option[value="'+s.id+'"]'); if(o) o.textContent=s.title||'Tanpa judul';
+  });
+  $('#sbpm').addEventListener('change',function(e){ var s=curScore(); s.bpm=clamp(parseInt(e.target.value,10)||90,30,240); e.target.value=s.bpm; saveScores(); });
+  $('#sts').addEventListener('change',function(e){ var s=curScore(), p=e.target.value.split('/'); s.ts=[parseInt(p[0],10),parseInt(p[1],10)]; saveScores(); renderScoreView(); });
+  $('#sclef').addEventListener('change',function(e){ curScore().clef=e.target.value; saveScores(); renderScoreView(); });
+  $('#sscore').addEventListener('click',function(e){
+    var g=e.target.closest ? e.target.closest('.n') : null; if(!g) return;
+    var i=parseInt(g.getAttribute('data-i'),10); sel = sel===i ? -1 : i; renderScoreView();
+  });
+  $('#sdur').addEventListener('click',function(e){
+    var b=e.target.closest('.chip'); if(!b) return;
+    inp.dur=parseFloat(b.getAttribute('data-d'));
+    $$('#sdur .chip').forEach(function(x){ x.setAttribute('aria-pressed',x===b?'true':'false'); });
+  });
+  $('#sdot').addEventListener('click',function(e){ inp.dot=!inp.dot; e.currentTarget.setAttribute('aria-pressed',inp.dot?'true':'false'); });
+  $('#sflat').addEventListener('click',function(e){
+    inp.flat=!inp.flat; e.currentTarget.setAttribute('aria-pressed',inp.flat?'true':'false');
+    e.currentTarget.textContent='Hitam: '+(inp.flat?'♭':'♯'); buildKeyboard();
+  });
+  $('#srest').addEventListener('click',addRest);
+  $('#sdelnote').addEventListener('click',delNote);
+  $('#soctdn').addEventListener('click',function(){ inp.oct=clamp(inp.oct-1,1,6); buildKeyboard(); });
+  $('#soctup').addEventListener('click',function(){ inp.oct=clamp(inp.oct+1,1,6); buildKeyboard(); });
+  $('#kb').addEventListener('click',function(e){
+    var b=e.target.closest('[data-m]'); if(!b) return; addNote(parseInt(b.getAttribute('data-m'),10));
+  });
+  $('#splay').addEventListener('click',playScore);
+  $('#snew').addEventListener('click',newScore);
+  $('#sdel').addEventListener('click',delScore);
+  $('#sprac').addEventListener('click',function(){
+    stopPlay(); pr.src='score'; syncPracticeOpts(); showTab('latih'); newRound();
+  });
+  $('#simg').addEventListener('change',onImage);
+  $('#sclose').addEventListener('click',function(){ $('#simgpanel').hidden=true; });
+  $('#sai').addEventListener('click',readWithAI);
+}
+
+/* ---------- gambar partitur + baca otomatis (jika tersedia) ---------- */
+var imgFile=null, imgUrl=null, AI=null, aiCtl=null;
+async function initAI(){
+  try{
+    if(!window.claude || !window.claude.use) return;
+    var s=await window.claude.use('sample'); if(!s) return;
+    var lim=await s.limits().catch(function(){return null;});
+    if(lim && lim.images){ AI={sample:s,limits:lim}; updateImgUI(); }
+  }catch(e){}
+}
+function updateImgUI(){
+  var has=!!imgFile;
+  $('#sai').hidden = !(AI && has);
+  $('#saimsg').textContent = !has ? '' : (AI
+    ? 'Baca otomatis memakai Claude dan hanya cocok untuk melodi satu baris. Hasilnya bisa keliru, jadi cocokkan dengan gambar lalu perbaiki.'
+    : 'Baca otomatis hanya tersedia bila halaman ini dibuka dari tautan Claude. Sementara itu, lihat gambar di atas sambil mengetik notnya di piano.');
+}
+function onImage(e){
+  var f=e.target.files && e.target.files[0]; if(!f) return;
+  imgFile=f; if(imgUrl) URL.revokeObjectURL(imgUrl);
+  imgUrl=URL.createObjectURL(f);
+  $('#simgview').src=imgUrl; $('#simgpanel').hidden=false; updateImgUI();
+  e.target.value='';
+}
+function parsePitch(str){
+  var m=/^([A-Ga-g])([#b♯♭]?)(-?\d)$/.exec(String(str).trim()); if(!m) return null;
+  var base={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1].toUpperCase()];
+  var acc = m[2]==='♯'?'#':(m[2]==='♭'?'b':m[2]);
+  var midi=(parseInt(m[3],10)+1)*12+base+(acc==='#'?1:(acc==='b'?-1:0));
+  midi=clamp(midi,21,108);
+  return {m:midi,a:isBlack(midi)?(acc==='b'?'b':'#'):''};
+}
+function aiError(e){
+  var c=e&&e.code;
+  if(c==='cancelled') return 'Dibatalkan.';
+  if(c==='not_granted'||c==='sampling_disabled'||c==='not_declared') return 'Izin memakai Claude belum diberikan, jadi baca otomatis tidak bisa dijalankan.';
+  if(c==='rate_limited') return 'Terlalu sering atau batas pemakaian habis. Coba lagi nanti.';
+  if(c==='image_rejected') return 'Gambar tidak bisa dibaca. Coba foto lain yang lebih jelas.';
+  if(c==='invalid_json') return 'Hasil bacaan tidak bisa diproses. Coba lagi, atau pakai foto yang lebih jelas dan lurus.';
+  return 'Gagal membaca gambar. Coba lagi.';
+}
+async function readWithAI(){
+  var btn=$('#sai'), msg=$('#saimsg');
+  if(!AI || !imgFile) return;
+  if(aiCtl){ aiCtl.abort(); return; }
+  aiCtl=new AbortController();
+  btn.textContent='Berhenti'; btn.classList.add('on');
+  msg.textContent='Membaca gambar. Ini bisa memakan waktu 30 sampai 90 detik.';
+  var prompt=[
+    'You are an expert music transcriber. The attached image is sheet music, either standard staff notation or Indonesian numbered notation (not angka).',
+    'Transcribe ONLY the top melody line: single notes, take the highest note of any chord, ignore lyrics, chord symbols and the lower staff.',
+    'For numbered notation use the stated "do" key (1 = C when nothing is stated) and return real pitches.',
+    'Apply the key signature and any accidentals so that every pitch you return is the actual sounding pitch.',
+    'Reply with ONLY one JSON object, no other text:',
+    '{"title": string, "clef": "treble" | "bass", "timeSignature": [beats, unit], "tempo": number, "notes": [[pitch, duration], ...]}',
+    'pitch: scientific pitch name such as "C4", "F#4", "Bb3", or "R" for a rest.',
+    'duration: in quarter-note units: 4 whole, 2 half, 1 quarter, 0.5 eighth, 0.25 sixteenth; a dotted note is 1.5 times its base (dotted quarter 1.5, dotted half 3). For tied notes, add the durations into one note.',
+    'Use tempo 90 if none is printed. Return at most 120 notes, in reading order.',
+    'If the image is not readable sheet music, reply {"error": "short reason"}.'
+  ].join('\n');
+  try{
+    var r=await AI.sample.json(prompt,{images:imgFile,modelTier:'complex',cache:false,signal:aiCtl.signal});
+    if(!r || r.error) throw {code:'invalid_json',message:String(r&&r.error||'')};
+    var list=Array.isArray(r.notes)?r.notes:[];
+    var notes=[];
+    list.slice(0,200).forEach(function(x){
+      var p,d;
+      if(Array.isArray(x)){ p=x[0]; d=x[1]; } else if(x){ p=x.p||x.pitch; d=x.d||x.duration; }
+      d=snapDur(d);
+      if(String(p).trim().toUpperCase()==='R') notes.push({m:null,d:d,a:''});
+      else { var pp=parsePitch(p); if(pp) notes.push({m:pp.m,d:d,a:pp.a}); }
+    });
+    if(!notes.length) throw {code:'invalid_json',message:'no notes'};
+    var ts=Array.isArray(r.timeSignature)?[parseInt(r.timeSignature[0],10),parseInt(r.timeSignature[1],10)]:[4,4];
+    if(!(ts[0]>=1&&ts[0]<=12&&[2,4,8].indexOf(ts[1])>=0)) ts=[4,4];
+    var s={id:'s'+Date.now(),title:String(r.title||'Dari gambar').slice(0,60),ts:ts,
+      bpm:clamp(Math.round(Number(r.tempo))||90,40,200),clef:r.clef==='bass'?'bass':'treble',notes:notes};
+    scores.push(s); curId=s.id; sel=-1; saveScores();
+    buildScoreList(); syncScoreFields(); renderScoreView();
+    msg.textContent='Selesai: '+notes.length+' not terbaca. Cocokkan dengan gambar, lalu perbaiki yang keliru (ketuk not untuk memilih, lalu Hapus not).';
+  }catch(e){
+    msg.textContent=aiError(e);
+  }finally{
+    aiCtl=null; btn.textContent='Baca otomatis dengan AI'; btn.classList.remove('on');
+  }
+}
+
+/* =====================================================================
+   Navigasi, mode notasi, dan mulai
+   ===================================================================== */
+function showTab(name){
+  if(name==='score' && mic.active) micStop();
+  if(name!=='score') stopPlay();
+  app.tab=name;
+  $$('.tab').forEach(function(t){ t.hidden = (t.id!=='tab-'+name); });
+  $$('.tabs button').forEach(function(b){
+    if(b.getAttribute('data-tab')===name) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+  });
+  window.scrollTo(0,0);
+  if(name==='tuner'){ reading=null; hist.length=0; renderTuner(); }
+  if(name==='latih'){ if(!pr.score) newRound(); else renderPractice(); }
+  if(name==='score'){ renderScoreView(); }
+}
+function setMode(m){
+  app.mode=m; store.set('yg.mode',m);
+  $$('.seg button').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-mode')===m?'true':'false'); });
+  if(app.tab==='latih') renderPractice();
+  if(app.tab==='score') renderScoreView();
+}
+var rsT=0;
+window.addEventListener('resize',function(){
+  clearTimeout(rsT);
+  rsT=setTimeout(function(){
+    if(app.tab==='latih' && pr.score) renderPractice();
+    if(app.tab==='score') renderScoreView();
+  },120);
+});
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible' && mic.active){
+    if(mic.ctx && mic.ctx.state==='suspended' && mic.ctx.resume) mic.ctx.resume();
+    requestWake();
+  }
+});
+
+mic.onData.push(function(f,rms,now){
+  if(app.tab==='tuner') tunerData(f,now);
+  else if(app.tab==='latih') practiceData(f,rms,now);
+});
+mic.onTick.push(function(){ if(app.tab==='tuner') renderTuner(); });
+
+$$('.tabs button').forEach(function(b){ b.addEventListener('click',function(){ showTab(b.getAttribute('data-tab')); }); });
+$$('.seg button').forEach(function(b){ b.addEventListener('click',function(){ setMode(b.getAttribute('data-mode')); }); });
+
+buildTicks(); buildTuningSelect(); buildPegs(); setA4(A4); renderTuner();
+bindPracticeOpts(); syncPracticeOpts();
+loadScores(); buildScoreList(); syncScoreFields(); buildKeyboard(); bindScore();
+setMode(app.mode);
+initAI();
+
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(e){ console.warn('SW gagal:',e); });
+  });
+}
+</script>
+</body>
+</html>
