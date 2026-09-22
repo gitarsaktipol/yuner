@@ -939,7 +939,7 @@ function genRandom(){
     var m=midiFromDia(d), a='';
     if(pr.sharps && [0,2,5,7,9].indexOf(m%12)>=0 && Math.random()<0.3){ m+=1; a='#'; }
     notes.push({m:m,d:1,a:a});
-    var opts=[-3,-2,-1,1,2,3].filter(function(s){ return d+s>=lo && d+s<=hi; });
+    var opts=[-3,-2,-1,0,1,2,3].filter(function(s){ return d+s>=lo && d+s<=hi; });
     d+=opts[Math.floor(Math.random()*opts.length)];
   }
   return notes;
@@ -962,7 +962,7 @@ function arcadeMeasures(letterIdx){
 }
 function arcLevelParams(letterIdx,subLv){
   var total=ARC_LETTERS.length*9, prog=letterIdx*9+(subLv-1), p=prog/(total-1);
-  var stepPool=[[-1,1],[-2,-1,1,2],[-3,-2,-1,1,2,3]];
+  var stepPool=[[-1,0,1],[-2,-1,0,1,2],[-3,-2,-1,0,1,2,3]];
   var steps = stepPool[p<0.35?0:(p<0.7?1:2)];
   var durPool=[[1],[1,0.5],[1,1,0.5,0.5,0.25],[1,0.5,0.5,0.25,1.5]];
   var durs = durPool[p<0.2?0:(p<0.45?1:(p<0.75?2:3))];
@@ -1003,11 +1003,9 @@ function genArcade(letterIdx,subLv){
 var CUST_LO=48, CUST_HI=83; /* C3 - B5, 3 oktaf */
 function genCustom(){
   var pool = (pr.custNotes && pr.custNotes.length>=2) ? pr.custNotes.slice() : [60,62,64,65,67,69,71,72];
-  var total=(pr.custMeasures||2)*4, notes=[], prevIdx=-1, i;
+  var total=(pr.custMeasures||2)*4, notes=[], i;
   for(i=0;i<total;i++){
-    var idx; do{ idx=Math.floor(Math.random()*pool.length); }while(pool.length>1 && idx===prevIdx);
-    prevIdx=idx;
-    var m=pool[idx];
+    var m=pool[Math.floor(Math.random()*pool.length)];
     notes.push({m:m,d:1,a:isBlack(m)?'#':''});
   }
   return notes;
@@ -1105,7 +1103,7 @@ function renderPractice(){
     return s;
   });
   var st=$('#pstatus'), t, c='';
-  if(!pr.idx.length){ t='Partitur ini belum punya not. Tambahkan not di menu Partitur.'; }
+  if(!pr.idx.length){ t = pr.src==='custom' ? 'Pilih minimal 2 nada dulu di atas.' : 'Partitur ini belum punya not. Tambahkan not di menu Partitur.'; }
   else if(pr.done){ t='Bagus sekali!'; c='ok'; }
   else if(pr.lastMsg){ t=pr.lastMsg.t; c=pr.lastMsg.c; }
   else if(!mic.active){ t='Aktifkan mikrofon, lalu mainkan not yang disorot.'; }
@@ -1183,7 +1181,11 @@ function bindPracticeOpts(){
   $('#parcSub').addEventListener('change',function(e){ pr.arcSub=parseInt(e.target.value,10); store.set('yg.arcSub',String(pr.arcSub)); syncPracticeOpts(); newRound(); });
   $('#custMeasures').addEventListener('change',function(e){ pr.custMeasures=parseInt(e.target.value,10); store.set('yg.custMeasures',String(pr.custMeasures)); newRound(); });
   $('#custAll').addEventListener('click',function(){ pr.custNotes=[]; for(var m=CUST_LO;m<=CUST_HI;m++) pr.custNotes.push(m); store.set('yg.custNotes',JSON.stringify(pr.custNotes)); syncPracticeOpts(); newRound(); });
-  $('#custNone').addEventListener('click',function(){ pr.custNotes=[]; store.set('yg.custNotes','[]'); syncPracticeOpts(); });
+  $('#custNone').addEventListener('click',function(){
+    pr.custNotes=[]; store.set('yg.custNotes','[]');
+    pr.score={title:'',ts:[4,4],clef:pr.clef,notes:[]}; pr.idx=[]; pr.pos=0; pr.marks={}; pr.lastMsg=null;
+    syncPracticeOpts(); renderPractice();
+  });
   $('#pclef').addEventListener('change',function(e){ pr.clef=e.target.value; newRound(); });
   $('#prange').addEventListener('change',function(e){ pr.range=e.target.value; newRound(); });
   $('#plen').addEventListener('change',function(e){ pr.len=parseInt(e.target.value,10); newRound(); });
