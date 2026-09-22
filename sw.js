@@ -1,6 +1,6 @@
 // Yuner service worker — supaya bisa jalan offline.
 // Setiap kali kamu mengubah index.html, naikkan angka versi ini (v1 -> v2, dst).
-const CACHE = 'fertun-v1';
+const CACHE = 'fertun-v2';
 const PRECACHE = [
   './',
   './index.html',
