@@ -833,6 +833,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
   var out='', si, mi, ni;
   var hasCursor = (cursorAfter!==undefined && cursorAfter!==null);
   var targetNi = hasCursor ? (cursorAfter>=0 ? cursorAfter : notes.length-1) : -2;
+  var cursorOnSlot = hasCursor && cursorAfter>=0 && notes[cursorAfter] && notes[cursorAfter].m===null;
   var cx=null, cy=null;
   if(num) out+='<text x="'+margin+'" y="18" font-size="15" font-weight="600">1 = C   '+score.ts[0]+'/'+score.ts[1]+'</text>';
 
@@ -868,10 +869,12 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
         }
         cls = cls ? ' '+cls.split(' ').filter(Boolean).map(function(c){return 'st-'+c;}).join(' ') : '';
         var extra = (!num && n.a && n.m!==null) ? 10*k : 0;
+        var noteCX = num ? (px+12) : (px+extra+(adv-extra)/2);
         if(num) out+=numSvg(n,px+12,y0+0,ni,cls,bm);
-        else out+=noteSvg(n,px+extra+(adv-extra)/2,y0,base,ni,cls);
+        else out+=noteSvg(n,noteCX,y0,base,ni,cls);
+        if(ni===targetNi && cursorOnSlot){ cx=noteCX; cy=y0; }
         px+=adv;
-        if(ni===targetNi){ cx=px+12; cy=y0; }
+        if(ni===targetNi && !cursorOnSlot){ cx=px+12; cy=y0; }
       });
       var bx=x+wk-2, lastM=(isLast && mi===sys.ms.length-1);
       var by1= num ? y0-22 : y0, by2 = num ? y0+22 : y0+4*S;
@@ -1046,6 +1049,11 @@ function snapDur(d){
   ALLOWED.forEach(function(a){ var x=Math.abs(a-d); if(x<bd){bd=x;best=a;} });
   return best;
 }
+function blankMeasures(ts,count){
+  var barBeats=ts[0]*4/ts[1], perBar=Math.max(1,Math.round(barBeats)), notes=[], i,j;
+  for(i=0;i<count;i++) for(j=0;j<perBar;j++) notes.push({m:null,d:barBeats/perBar,a:''});
+  return notes;
+}
 function twinkle(){
   var P=[60,60,67,67,69,69,67,65,65,64,64,62,62,60], D=[1,1,1,1,1,1,2,1,1,1,1,1,1,2];
   return {id:'s0',title:'Contoh: Twinkle Twinkle',ts:[4,4],bpm:100,clef:'treble',
@@ -1097,23 +1105,41 @@ function buildKeyboard(){
   kb.innerHTML=h;
   $('#soctval').textContent='Oktaf '+inp.oct;
 }
+function fillOrInsert(item){
+  var s=curScore();
+  if(sel>=0 && s.notes[sel] && s.notes[sel].m===null){
+    s.notes[sel]=item;
+    sel = (sel+1<s.notes.length) ? sel+1 : -1;
+  } else {
+    var at = sel>=0 ? sel+1 : s.notes.length;
+    s.notes.splice(at,0,item); sel=at;
+  }
+  saveScores(); renderScoreView();
+}
 function addNote(m){
-  var s=curScore(), d=inp.dur*(inp.dot&&inp.dur>0.25?1.5:1);
+  var d=inp.dur*(inp.dot&&inp.dur>0.25?1.5:1);
   var a = isBlack(m) ? (inp.flat?'b':'#') : '';
-  var at = sel>=0 ? sel+1 : s.notes.length;
-  s.notes.splice(at,0,{m:m,d:d,a:a}); sel=at; saveScores(); renderScoreView();
+  fillOrInsert({m:m,d:d,a:a});
   pluck(m,ac().currentTime,0.7);
 }
 function addRest(){
-  var s=curScore(), d=inp.dur*(inp.dot&&inp.dur>0.25?1.5:1);
-  var at = sel>=0 ? sel+1 : s.notes.length;
-  s.notes.splice(at,0,{m:null,d:d,a:''}); sel=at; saveScores(); renderScoreView();
+  var d=inp.dur*(inp.dot&&inp.dur>0.25?1.5:1);
+  fillOrInsert({m:null,d:d,a:''});
 }
 function delNote(){
   var s=curScore(); if(!s.notes.length) return;
   var at = sel>=0 ? sel : s.notes.length-1;
-  s.notes.splice(at,1); sel = s.notes.length ? Math.min(at,s.notes.length-1) : -1;
-  if(at===s.notes.length && s.notes.length) sel=s.notes.length-1;
+  /* Kalau kursor sedang di slot kosong hasil geser otomatis setelah mengisi not,
+     yang dimaksud "Hapus" adalah not TERAKHIR yang baru diisi, bukan slot kosong ini. */
+  if(s.notes[at] && s.notes[at].m===null && at>0 && s.notes[at-1] && s.notes[at-1].m!==null) at=at-1;
+  if(!s.notes[at] || s.notes[at].m===null){
+    /* Sudah kosong: coba hapus rehat ini sungguhan (bukan bagian grid tetap) hanya kalau bukan satu-satunya isi. */
+    if(s.notes.length>1 && s.notes[at]){ s.notes.splice(at,1); sel=Math.min(at,s.notes.length-1); saveScores(); renderScoreView(); }
+    return;
+  }
+  /* Kembalikan jadi rehat kosong di tempat yang sama, agar jumlah birama tidak ikut bergeser. */
+  s.notes[at]={m:null,d:s.notes[at].d,a:''};
+  sel=at;
   saveScores(); renderScoreView();
 }
 function stopPlay(){
@@ -1138,8 +1164,9 @@ function playScore(){
 }
 function newScore(){
   stopPlay();
-  var s={id:'s'+Date.now(),title:'Partitur baru',ts:[4,4],bpm:90,clef:'treble',notes:[]};
-  scores.push(s); curId=s.id; sel=-1; saveScores();
+  var ts=[4,4];
+  var s={id:'s'+Date.now(),title:'Partitur baru',ts:ts,bpm:90,clef:'treble',notes:blankMeasures(ts,4)};
+  scores.push(s); curId=s.id; sel=0; saveScores();
   buildScoreList(); syncScoreFields(); renderScoreView();
 }
 var delArmed=false, delTimer=0;
@@ -1164,7 +1191,11 @@ function bindScore(){
     var o=$('#slist').querySelector('option[value="'+s.id+'"]'); if(o) o.textContent=s.title||'Tanpa judul';
   });
   $('#sbpm').addEventListener('change',function(e){ var s=curScore(); s.bpm=clamp(parseInt(e.target.value,10)||90,30,240); e.target.value=s.bpm; saveScores(); });
-  $('#sts').addEventListener('change',function(e){ var s=curScore(), p=e.target.value.split('/'); s.ts=[parseInt(p[0],10),parseInt(p[1],10)]; saveScores(); renderScoreView(); });
+  $('#sts').addEventListener('change',function(e){
+    var s=curScore(), p=e.target.value.split('/'); s.ts=[parseInt(p[0],10),parseInt(p[1],10)];
+    if(s.notes.every(function(n){ return n.m===null; })){ s.notes=blankMeasures(s.ts,4); sel=0; }
+    saveScores(); renderScoreView();
+  });
   $('#sclef').addEventListener('change',function(e){ curScore().clef=e.target.value; saveScores(); renderScoreView(); });
   $('#sscore').addEventListener('click',function(e){
     var g=e.target.closest ? e.target.closest('.n') : null; if(!g) return;
