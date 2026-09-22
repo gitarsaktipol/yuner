@@ -159,6 +159,7 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
 .sv .bar{stroke:var(--ink);stroke-width:1.6}
 .n{color:var(--ink);cursor:pointer}
 .n .hl{fill:var(--hl);opacity:0;transition:opacity .15s}
+.inscur{fill:var(--hl);opacity:1;rx:9}
 .n.st-cur .hl,.n.st-sel .hl{opacity:1}
 .n.st-ok{color:var(--ok)}
 .n.st-bad{color:var(--bad)}
@@ -803,7 +804,7 @@ function numSvg(n,x,yb,i,cls,bm){
 var CLEF_TREBLE = '<path d="M14 -13 L12 50 C12 60 4 62 4 56" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 -13 C24 -6 22 8 12 16 C2 24 -1 36 6 42 C12 47 22 44 22 35 C22 27 12 24 8 30 C5 35 10 39 14 37" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
 var CLEF_BASS = '<path d="M6 10 C6 4 20 4 22 14 C24 26 14 38 2 44" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="6" cy="10" r="3.6" fill="currentColor"/><circle cx="30" cy="5" r="1.9" fill="currentColor"/><circle cx="30" cy="15" r="1.9" fill="currentColor"/>';
 
-function drawScore(host,score,mode,stateFn){
+function drawScore(host,score,mode,stateFn,cursorAfter){
   var W=Math.max(240,Math.floor(host.clientWidth||320));
   var notes=score.notes, num=(mode==='num');
   var barBeats=score.ts[0]*4/score.ts[1];
@@ -830,6 +831,9 @@ function drawScore(host,score,mode,stateFn){
   var head = num ? 26 : 0;
   var H = head + systems.length*sysH + 6;
   var out='', si, mi, ni;
+  var hasCursor = (cursorAfter!==undefined && cursorAfter!==null);
+  var targetNi = hasCursor ? (cursorAfter>=0 ? cursorAfter : notes.length-1) : -2;
+  var cx=null, cy=null;
   if(num) out+='<text x="'+margin+'" y="18" font-size="15" font-weight="600">1 = C   '+score.ts[0]+'/'+score.ts[1]+'</text>';
 
   systems.forEach(function(sys,si){
@@ -867,6 +871,7 @@ function drawScore(host,score,mode,stateFn){
         if(num) out+=numSvg(n,px+12,y0+0,ni,cls,bm);
         else out+=noteSvg(n,px+extra+(adv-extra)/2,y0,base,ni,cls);
         px+=adv;
+        if(ni===targetNi){ cx=px+12; cy=y0; }
       });
       var bx=x+wk-2, lastM=(isLast && mi===sys.ms.length-1);
       var by1= num ? y0-22 : y0, by2 = num ? y0+22 : y0+4*S;
@@ -877,6 +882,10 @@ function drawScore(host,score,mode,stateFn){
       x+=wk;
     });
   });
+  if(hasCursor && cx!==null){
+    if(num) out+='<rect class="inscur" x="'+(cx-15)+'" y="'+(cy-34)+'" width="30" height="74" rx="9"/>';
+    else out+='<rect class="inscur" x="'+(cx-15)+'" y="'+(cy-18)+'" width="30" height="'+(4*S+36)+'" rx="9"/>';
+  }
   host.innerHTML='<svg class="sv" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Partitur">'+out+'</svg>';
 }
 
@@ -1066,8 +1075,8 @@ function syncScoreFields(){
 function renderScoreView(){
   var s=curScore();
   drawScore($('#sscore'),s,app.mode,function(i){
-    var c=''; if(i===playIdx) c='cur'; else if(i===sel) c='sel'; return c;
-  });
+    return i===playIdx ? 'cur' : '';
+  }, playing ? null : sel);
   $('#sempty').hidden = s.notes.length>0;
   $('#splay').textContent = playing ? '■ Berhenti' : '▶ Putar';
   $('#splay').disabled = !s.notes.some(function(n){return n.m!==null;}) && !playing;
