@@ -176,6 +176,10 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
 }
 .cfg .chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:14px}
 .cfg .chk input{width:20px;height:20px}
+.noteGrid{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:8px}
+.noteGrid button{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 0;font-size:11px;color:var(--muted);cursor:pointer}
+.noteGrid button[aria-pressed="true"]{background:var(--hl);color:var(--ink);border-color:var(--brass);font-weight:700}
+.octLabel{font-size:12px;color:var(--muted);margin:8px 0 2px;grid-column:1/-1}
 .sum{background:var(--panel);border:1.5px solid var(--ok);border-radius:18px;padding:14px 16px;text-align:center}
 .sum b{display:block;font-size:20px;margin-bottom:4px}
 
@@ -279,7 +283,7 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
     <summary>Pengaturan latihan</summary>
     <div class="grid">
       <label>Sumber
-        <select id="psrc"><option value="random">Acak</option><option value="score">Partitur saya</option></select>
+        <select id="psrc"><option value="random">Acak</option><option value="arcade">Arcade</option><option value="custom">Custom</option><option value="score">Partitur saya</option></select>
       </label>
       <label>Kunci
         <select id="pclef"><option value="treble">Kunci G (tangan kanan)</option><option value="bass">Kunci F (tangan kiri)</option></select>
@@ -293,7 +297,27 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
       <label class="chk"><input type="checkbox" id="psharp"> Sertakan nada ♯</label>
       <label class="chk"><input type="checkbox" id="poct"> Abaikan oktaf</label>
     </div>
+    <div class="grid" id="pArcadeOpts" hidden>
+      <label>Level
+        <select id="parcLetter"></select>
+      </label>
+      <label>Sub-level
+        <select id="parcSub"></select>
+      </label>
+    </div>
+    <div id="pCustomOpts" hidden>
+      <div class="noteGrid" id="custGrid"></div>
+      <div class="row">
+        <button type="button" class="sound" id="custAll">Pilih semua</button>
+        <button type="button" class="sound" id="custNone">Kosongkan</button>
+      </div>
+      <label>Jumlah birama
+        <select id="custMeasures"></select>
+      </label>
+      <p class="hint" id="custHint"></p>
+    </div>
   </details>
+  <p class="hint" id="parcInfo" hidden></p>
 
   <section class="board" aria-live="polite">
     <div class="scorehost" id="pscore"></div>
@@ -895,7 +919,13 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
 /* =====================================================================
    2) LATIHAN BACA NOT (deteksi suara piano)
    ===================================================================== */
+function loadCustNotes(){
+  try{ var v=JSON.parse(store.get('yg.custNotes','[]')); if(Array.isArray(v)&&v.length) return v; }catch(e){}
+  return [60,62,64,65,67,69,71,72];
+}
 var pr = { inst: store.get('yg.inst','piano')==='guitar' ? 'guitar' : 'piano', src:'random', clef:'treble', range:'mid', len:8, sharps:false, anyOct:false,
+           arcLetter: parseInt(store.get('yg.arcLetter','0'),10)||0, arcSub: parseInt(store.get('yg.arcSub','1'),10)||1,
+           custNotes: loadCustNotes(), custMeasures: parseInt(store.get('yg.custMeasures','2'),10)||2,
            score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0, missStreak:0 };
 var RANGES = {
   treble:{narrow:[28,32], mid:[28,35], wide:[26,40]},
@@ -914,6 +944,74 @@ function genRandom(){
   }
   return notes;
 }
+
+/* =====================================================================
+   MODE ARCADE: 26 level (A-Z) x 9 sub-level, kesulitan naik bertahap.
+   A-C tetap 2 birama; D dst bertambah birama sampai 9 di level V-Z.
+   ===================================================================== */
+var ARC_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+function arcadeMeasures(letterIdx){
+  if(letterIdx<=2) return 2;   // A,B,C
+  if(letterIdx<=5) return 3;   // D,E,F
+  if(letterIdx<=8) return 4;   // G,H,I
+  if(letterIdx<=11) return 5;  // J,K,L
+  if(letterIdx<=14) return 6;  // M,N,O
+  if(letterIdx<=17) return 7;  // P,Q,R
+  if(letterIdx<=20) return 8;  // S,T,U
+  return 9;                    // V,W,X,Y,Z
+}
+function arcLevelParams(letterIdx,subLv){
+  var total=ARC_LETTERS.length*9, prog=letterIdx*9+(subLv-1), p=prog/(total-1);
+  var stepPool=[[-1,1],[-2,-1,1,2],[-3,-2,-1,1,2,3]];
+  var steps = stepPool[p<0.35?0:(p<0.7?1:2)];
+  var durPool=[[1],[1,0.5],[1,1,0.5,0.5,0.25],[1,0.5,0.5,0.25,1.5]];
+  var durs = durPool[p<0.2?0:(p<0.45?1:(p<0.75?2:3))];
+  var rangeKey = p<0.5?'narrow':(p<0.8?'mid':'wide');
+  return { measures:arcadeMeasures(letterIdx), steps:steps, durs:durs, sharpProb:Math.min(0.5,p*0.55), rangeKey:rangeKey };
+}
+function genMeasureRhythm(allowedDurs,beatsPerBar){
+  var out=[], remaining=beatsPerBar, guard=0;
+  while(remaining>0.001 && guard<50){
+    guard++;
+    var choices=allowedDurs.filter(function(d){ return d<=remaining+1e-6; });
+    var d = choices.length ? choices[Math.floor(Math.random()*choices.length)] : remaining;
+    out.push(d); remaining=+(remaining-d).toFixed(4);
+  }
+  return out;
+}
+function genArcade(letterIdx,subLv){
+  var pm=arcLevelParams(letterIdx,subLv);
+  var r=(pr.inst==='guitar'?RANGES_GUITAR:RANGES[pr.clef])[pm.rangeKey], lo=r[0], hi=r[1];
+  var notes=[], d=lo+Math.floor(Math.random()*(hi-lo+1)), bar;
+  for(bar=0; bar<pm.measures; bar++){
+    genMeasureRhythm(pm.durs,4).forEach(function(dur){
+      var m=midiFromDia(d), a='';
+      if(pm.sharpProb>0 && [0,2,5,7,9].indexOf(m%12)>=0 && Math.random()<pm.sharpProb){ m+=1; a='#'; }
+      notes.push({m:m,d:dur,a:a});
+      var opts=pm.steps.filter(function(s){ return d+s>=lo && d+s<=hi; });
+      if(!opts.length) opts=[0];
+      d+=opts[Math.floor(Math.random()*opts.length)];
+    });
+  }
+  return notes;
+}
+
+/* =====================================================================
+   MODE CUSTOM: pilih sendiri nada mana saja yang boleh muncul (hingga 3
+   oktaf), dan berapa birama (maks 9).
+   ===================================================================== */
+var CUST_LO=48, CUST_HI=83; /* C3 - B5, 3 oktaf */
+function genCustom(){
+  var pool = (pr.custNotes && pr.custNotes.length>=2) ? pr.custNotes.slice() : [60,62,64,65,67,69,71,72];
+  var total=(pr.custMeasures||2)*4, notes=[], prevIdx=-1, i;
+  for(i=0;i<total;i++){
+    var idx; do{ idx=Math.floor(Math.random()*pool.length); }while(pool.length>1 && idx===prevIdx);
+    prevIdx=idx;
+    var m=pool[idx];
+    notes.push({m:m,d:1,a:isBlack(m)?'#':''});
+  }
+  return notes;
+}
 function curScoreCopy(){
   var s=curScore();
   return {title:s.title,ts:s.ts.slice(),clef:s.clef,notes:s.notes.map(function(n){ return {m:n.m,d:n.d,a:n.a||''}; })};
@@ -921,6 +1019,8 @@ function curScoreCopy(){
 function newRound(keep){
   if(!keep){
     if(pr.src==='score') pr.score=curScoreCopy();
+    else if(pr.src==='arcade') pr.score={title:'',ts:[4,4],clef:pr.clef,notes:genArcade(pr.arcLetter,pr.arcSub)};
+    else if(pr.src==='custom') pr.score={title:'',ts:[4,4],clef:pr.clef,notes:genCustom()};
     else pr.score={title:'',ts:[4,4],clef:pr.clef,notes:genRandom()};
   }
   pr.idx=[]; pr.score.notes.forEach(function(n,i){ if(n.m!==null) pr.idx.push(i); });
@@ -1023,8 +1123,23 @@ function refreshPractice(){
 function syncPracticeOpts(){
   $('#psrc').value=pr.src; $('#pclef').value=pr.clef; $('#prange').value=pr.range; $('#plen').value=String(pr.len);
   $('#psharp').checked=pr.sharps; $('#poct').checked=pr.anyOct;
-  var fromScore = pr.src==='score';
-  ['#pclef','#prange','#plen','#psharp'].forEach(function(s){ $(s).disabled=fromScore; });
+  var fromScore = pr.src==='score', isArc = pr.src==='arcade', isCust = pr.src==='custom';
+  ['#pclef','#prange','#plen','#psharp'].forEach(function(s){ $(s).disabled=fromScore||isArc||isCust; });
+  $('#pArcadeOpts').hidden = !isArc; $('#parcInfo').hidden = !isArc;
+  $('#pCustomOpts').hidden = !isCust;
+  if(isArc){
+    $('#parcLetter').value=String(pr.arcLetter); $('#parcSub').value=String(pr.arcSub);
+    var pm=arcLevelParams(pr.arcLetter,pr.arcSub);
+    var leapTxt = pm.steps.length<=2?'langkah kecil':(pm.steps.length<=4?'lompatan sedang':'lompatan luas');
+    var rhTxt = pm.durs.length<=1?'not seperempat saja':(pm.durs.length===2?'seperempat & seperdelapan':'berbagai nilai not');
+    $('#parcInfo').textContent='Level '+ARC_LETTERS[pr.arcLetter]+String(pr.arcSub)+' • '+pm.measures+' birama • '+leapTxt+' • '+rhTxt+(pm.sharpProb>0.05?' • ada nada ♯':'');
+  }
+  if(isCust){
+    $$('#custGrid button').forEach(function(b){ b.setAttribute('aria-pressed', pr.custNotes.indexOf(parseInt(b.getAttribute('data-note'),10))>=0 ? 'true':'false'); });
+    $('#custMeasures').value=String(pr.custMeasures);
+    var n=pr.custNotes.length;
+    $('#custHint').textContent = n<2 ? 'Pilih minimal 2 nada.' : (n+' nada dipilih.');
+  }
   if(pr.inst==='guitar'){ pr.clef='treble'; $('#pclef').value='treble'; $('#pclef').disabled=true; }
   $$('#pinst button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-inst')===pr.inst ? 'true':'false'); });
   var ih=$('#pinsthint');
@@ -1038,9 +1153,37 @@ function setInst(v){
   store.set('yg.inst',pr.inst);
   syncPracticeOpts(); newRound();
 }
+var NOTE_NAMES_UI=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+function buildArcadeSelects(){
+  var lSel=$('#parcLetter'); lSel.innerHTML=ARC_LETTERS.map(function(L,i){ return '<option value="'+i+'">'+L+'</option>'; }).join('');
+  var sSel=$('#parcSub'); sSel.innerHTML=[1,2,3,4,5,6,7,8,9].map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
+  var mSel=$('#custMeasures'); mSel.innerHTML=[1,2,3,4,5,6,7,8,9].map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
+}
+function buildCustGrid(){
+  var g=$('#custGrid'), html='', m;
+  [3,4,5].forEach(function(oct){
+    html+='<div class="octLabel">Oktaf '+oct+'</div>';
+    for(var pc=0; pc<12; pc++){ m=(oct+1)*12+pc; html+='<button type="button" data-note="'+m+'">'+NOTE_NAMES_UI[pc]+'</button>'; }
+  });
+  g.innerHTML=html;
+  g.addEventListener('click',function(e){
+    var b=e.target.closest('button[data-note]'); if(!b) return;
+    var m=parseInt(b.getAttribute('data-note'),10), i=pr.custNotes.indexOf(m);
+    if(i>=0) pr.custNotes.splice(i,1); else pr.custNotes.push(m);
+    store.set('yg.custNotes',JSON.stringify(pr.custNotes));
+    syncPracticeOpts();
+    if(pr.custNotes.length>=2) newRound();
+  });
+}
 function bindPracticeOpts(){
+  buildArcadeSelects(); buildCustGrid();
   $$('#pinst button').forEach(function(b){ b.addEventListener('click',function(){ setInst(b.getAttribute('data-inst')); }); });
   $('#psrc').addEventListener('change',function(e){ pr.src=e.target.value; syncPracticeOpts(); newRound(); });
+  $('#parcLetter').addEventListener('change',function(e){ pr.arcLetter=parseInt(e.target.value,10); store.set('yg.arcLetter',String(pr.arcLetter)); syncPracticeOpts(); newRound(); });
+  $('#parcSub').addEventListener('change',function(e){ pr.arcSub=parseInt(e.target.value,10); store.set('yg.arcSub',String(pr.arcSub)); syncPracticeOpts(); newRound(); });
+  $('#custMeasures').addEventListener('change',function(e){ pr.custMeasures=parseInt(e.target.value,10); store.set('yg.custMeasures',String(pr.custMeasures)); newRound(); });
+  $('#custAll').addEventListener('click',function(){ pr.custNotes=[]; for(var m=CUST_LO;m<=CUST_HI;m++) pr.custNotes.push(m); store.set('yg.custNotes',JSON.stringify(pr.custNotes)); syncPracticeOpts(); newRound(); });
+  $('#custNone').addEventListener('click',function(){ pr.custNotes=[]; store.set('yg.custNotes','[]'); syncPracticeOpts(); });
   $('#pclef').addEventListener('change',function(e){ pr.clef=e.target.value; newRound(); });
   $('#prange').addEventListener('change',function(e){ pr.range=e.target.value; newRound(); });
   $('#plen').addEventListener('change',function(e){ pr.len=parseInt(e.target.value,10); newRound(); });
