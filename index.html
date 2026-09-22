@@ -263,6 +263,12 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
 <section class="tab" id="tab-latih" hidden>
   <header><h1>Latihan baca not</h1></header>
 
+  <div class="seg" id="pinst" role="group" aria-label="Alat musik">
+    <button type="button" data-inst="piano" aria-pressed="true">Piano</button>
+    <button type="button" data-inst="guitar" aria-pressed="false">Gitar</button>
+  </div>
+  <p class="hint" id="pinsthint" hidden></p>
+
   <div class="seg" role="group" aria-label="Jenis notasi">
     <button type="button" data-mode="staff" aria-pressed="true">Not balok</button>
     <button type="button" data-mode="num" aria-pressed="false">Not angka</button>
@@ -291,6 +297,7 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
   <section class="board" aria-live="polite">
     <div class="scorehost" id="pscore"></div>
     <div class="pstatus" id="pstatus">Aktifkan mikrofon, lalu mainkan not yang disorot.</div>
+    <div class="msg" id="pwarn" hidden>Ada not yang terlalu rendah untuk gitar (di bawah E2), jadi tidak bisa dimainkan.</div>
     <div class="level" aria-hidden="true"><i id="plevel"></i></div>
   </section>
 
@@ -876,14 +883,16 @@ function drawScore(host,score,mode,stateFn){
 /* =====================================================================
    2) LATIHAN BACA NOT (deteksi suara piano)
    ===================================================================== */
-var pr = { src:'random', clef:'treble', range:'mid', len:8, sharps:false, anyOct:false,
+var pr = { inst: store.get('yg.inst','piano')==='guitar' ? 'guitar' : 'piano', src:'random', clef:'treble', range:'mid', len:8, sharps:false, anyOct:false,
            score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0 };
 var RANGES = {
   treble:{narrow:[28,32], mid:[28,35], wide:[26,40]},
   bass:{narrow:[21,25], mid:[18,28], wide:[16,30]}
 };
+/* Rentang khusus gitar dalam not tertulis (satu oktaf di atas bunyi), disamakan dengan senar E2-E5 gitar standar */
+var RANGES_GUITAR = {narrow:[32,36], mid:[30,39], wide:[29,42]};
 function genRandom(){
-  var r=RANGES[pr.clef][pr.range], lo=r[0], hi=r[1], notes=[], d=lo+Math.floor(Math.random()*(hi-lo+1)), i;
+  var r=(pr.inst==='guitar'?RANGES_GUITAR:RANGES[pr.clef])[pr.range], lo=r[0], hi=r[1], notes=[], d=lo+Math.floor(Math.random()*(hi-lo+1)), i;
   for(i=0;i<pr.len;i++){
     var m=midiFromDia(d), a='';
     if(pr.sharps && [0,2,5,7,9].indexOf(m%12)>=0 && Math.random()<0.3){ m+=1; a='#'; }
@@ -929,8 +938,11 @@ function practiceData(f,rms,now){
   var m=pdFeed(f,rms,now);
   if(m!==null) practiceHit(m);
 }
+/* Gitar berbunyi satu oktaf lebih rendah dari not yang tertulis (aturan penulisan partitur gitar). */
+function instShift(){ return pr.inst==='guitar' ? 12 : 0; }
 function practiceHit(m){
   if(pr.done || !pr.idx.length) return;
+  m += instShift();
   if(!pr.t0) pr.t0=performance.now();
   var ni=pr.idx[pr.pos], n=pr.score.notes[ni];
   var ok = pr.anyOct ? (m%12===n.m%12) : (m===n.m);
@@ -969,6 +981,8 @@ function renderPractice(){
   else if(!mic.active){ t='Aktifkan mikrofon, lalu mainkan not yang disorot.'; }
   else { t='Mainkan not yang disorot.'; }
   st.textContent=t; st.className='pstatus'+(c?' '+c:'');
+  var tooLow = pr.inst==='guitar' && pr.idx.some(function(i){ return sc.notes[i].m-12<40; });
+  $('#pwarn').hidden = !tooLow;
 }
 function refreshPractice(){
   if(!pr.score) return;
@@ -981,8 +995,21 @@ function syncPracticeOpts(){
   $('#psharp').checked=pr.sharps; $('#poct').checked=pr.anyOct;
   var fromScore = pr.src==='score';
   ['#pclef','#prange','#plen','#psharp'].forEach(function(s){ $(s).disabled=fromScore; });
+  if(pr.inst==='guitar'){ pr.clef='treble'; $('#pclef').value='treble'; $('#pclef').disabled=true; }
+  $$('#pinst button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-inst')===pr.inst ? 'true':'false'); });
+  var ih=$('#pinsthint');
+  if(pr.inst==='guitar'){
+    ih.textContent='Not ditulis satu oktaf lebih tinggi dari bunyi gitar, seperti partitur gitar pada umumnya. Contoh: C tengah (C4) dipetik di senar 5 fret 3.';
+    ih.hidden=false;
+  } else { ih.textContent=''; ih.hidden=true; }
+}
+function setInst(v){
+  pr.inst = (v==='guitar') ? 'guitar' : 'piano';
+  store.set('yg.inst',pr.inst);
+  syncPracticeOpts(); newRound();
 }
 function bindPracticeOpts(){
+  $$('#pinst button').forEach(function(b){ b.addEventListener('click',function(){ setInst(b.getAttribute('data-inst')); }); });
   $('#psrc').addEventListener('change',function(e){ pr.src=e.target.value; syncPracticeOpts(); newRound(); });
   $('#pclef').addEventListener('change',function(e){ pr.clef=e.target.value; newRound(); });
   $('#prange').addEventListener('change',function(e){ pr.range=e.target.value; newRound(); });
@@ -995,7 +1022,7 @@ function bindPracticeOpts(){
   $('#ppeek').addEventListener('click',function(){
     if(!pr.score || pr.done || !pr.idx.length) return;
     var n=pr.score.notes[pr.idx[pr.pos]];
-    pluck(n.m,ac().currentTime,1.2);
+    pluck(n.m-instShift(),ac().currentTime,1.2);
     pr.mute=performance.now()+1500;
   });
 }
@@ -1267,7 +1294,7 @@ function showTab(name){
 }
 function setMode(m){
   app.mode=m; store.set('yg.mode',m);
-  $$('.seg button').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-mode')===m?'true':'false'); });
+  $$('.seg button[data-mode]').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-mode')===m?'true':'false'); });
   if(app.tab==='latih') renderPractice();
   if(app.tab==='score') renderScoreView();
 }
@@ -1293,7 +1320,7 @@ mic.onData.push(function(f,rms,now){
 mic.onTick.push(function(){ if(app.tab==='tuner') renderTuner(); });
 
 $$('.tabs button').forEach(function(b){ b.addEventListener('click',function(){ showTab(b.getAttribute('data-tab')); }); });
-$$('.seg button').forEach(function(b){ b.addEventListener('click',function(){ setMode(b.getAttribute('data-mode')); }); });
+$$('.seg button[data-mode]').forEach(function(b){ b.addEventListener('click',function(){ setMode(b.getAttribute('data-mode')); }); });
 
 buildTicks(); buildTuningSelect(); buildPegs(); setA4(A4); renderTuner();
 bindPracticeOpts(); syncPracticeOpts();

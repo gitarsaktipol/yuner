@@ -1,6 +1,6 @@
 // Yuner service worker — supaya bisa jalan offline.
 // Setiap kali kamu mengubah index.html, naikkan angka versi ini (v1 -> v2, dst).
-const CACHE = 'yuner-v2';
+const CACHE = 'yuner-v3';
 const PRECACHE = [
   './',
   './index.html',
