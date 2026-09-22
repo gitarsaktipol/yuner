@@ -800,7 +800,7 @@ function noteSvg(n,x,y0,base,i,cls){
 }
 function ulSvg(x,yb,lvl,bm){
   var cl = bm && (lvl===0?bm.L1:bm.L2), cr = bm && (lvl===0?bm.R1:bm.R2);
-  var x1 = cl ? x-bm.gL/2 : x-9, x2 = cr ? x+bm.gR/2 : x+9, y = yb+14+lvl*4;
+  var x1 = cl ? x-bm.gL/2 : x-9, x2 = cr ? x+bm.gR/2 : x+9, y = yb-14-lvl*4;
   return '<line x1="'+x1+'" x2="'+x2+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" stroke-width="1.8"/>';
 }
 function numSvg(n,x,yb,i,cls,bm){
@@ -819,8 +819,8 @@ function numSvg(n,x,yb,i,cls,bm){
   if(j.acc) o+=accSvg(j.acc,x-14,yb-2,0.85);
   for(k=0;k<ul;k++) o+=ulSvg(x,yb,k,bm);
   var up=j.oct-4, i2;
-  for(i2=0;i2<up;i2++) o+='<circle cx="'+x+'" cy="'+(yb-17-i2*6)+'" r="2.2" fill="currentColor"/>';
-  for(i2=0;i2<-up;i2++) o+='<circle cx="'+x+'" cy="'+(yb+15+ul*4+i2*6)+'" r="2.2" fill="currentColor"/>';
+  for(i2=0;i2<up;i2++) o+='<circle cx="'+x+'" cy="'+(yb-17-ul*4-i2*6)+'" r="2.2" fill="currentColor"/>';
+  for(i2=0;i2<-up;i2++) o+='<circle cx="'+x+'" cy="'+(yb+15+i2*6)+'" r="2.2" fill="currentColor"/>';
   if(bd<2 && n.d>bd) o+='<circle cx="'+(x+14)+'" cy="'+(yb+2)+'" r="2" fill="currentColor"/>';
   if(bd>=2) for(k=1;k<beats;k++) o+='<circle cx="'+(x+CELL*k)+'" cy="'+(yb+1)+'" r="2.3" fill="currentColor"/>';
   return o+'</g>';
