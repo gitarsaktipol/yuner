@@ -470,7 +470,7 @@ function syncMic(){
 function micLoop(){
   mic.raf=requestAnimationFrame(micLoop);
   var now=performance.now();
-  if(now-mic.last>=40){
+  if(now-mic.last>=25){
     mic.last=now;
     mic.analyser.getFloatTimeDomainData(mic.buf);
     var s=0,i; for(i=0;i<mic.buf.length;i++) s+=mic.buf[i]*mic.buf[i];
@@ -934,14 +934,14 @@ function pdFeed(f,rms,now){
   pd.rms.push(rms); if(pd.rms.length>6) pd.rms.shift();
   if(pd.rms.length>=4){
     var prev=pd.rms.slice(0,-1), mn=Math.min.apply(null,prev);
-    if(rms>0.012 && rms>2*mn+0.006 && now-pd.lastOnset>200){ pd.armed=true; pd.lastOnset=now; pd.cand=null; pd.count=0; }
+    if(rms>0.012 && rms>2*mn+0.006 && now-pd.lastOnset>90){ pd.armed=true; pd.lastOnset=now; pd.cand=null; pd.count=0; }
   }
   if(!pd.armed) return null;
   if(now-pd.lastOnset>1000){ pd.armed=false; return null; }
   if(!f){ pd.cand=null; pd.count=0; return null; }
   var m=Math.round(69+12*Math.log2(f/A4));
   if(m===pd.cand) pd.count++; else { pd.cand=m; pd.count=1; }
-  if(pd.count>=3){ pd.armed=false; pd.cand=null; pd.count=0; return m; }
+  if(pd.count>=2){ pd.armed=false; pd.cand=null; pd.count=0; return m; }
   return null;
 }
 function practiceData(f,rms,now){
