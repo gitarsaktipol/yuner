@@ -896,7 +896,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
    2) LATIHAN BACA NOT (deteksi suara piano)
    ===================================================================== */
 var pr = { inst: store.get('yg.inst','piano')==='guitar' ? 'guitar' : 'piano', src:'random', clef:'treble', range:'mid', len:8, sharps:false, anyOct:false,
-           score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0 };
+           score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0, missStreak:0 };
 var RANGES = {
   treble:{narrow:[28,32], mid:[28,35], wide:[26,40]},
   bass:{narrow:[21,25], mid:[18,28], wide:[16,30]}
@@ -924,7 +924,7 @@ function newRound(keep){
     else pr.score={title:'',ts:[4,4],clef:pr.clef,notes:genRandom()};
   }
   pr.idx=[]; pr.score.notes.forEach(function(n,i){ if(n.m!==null) pr.idx.push(i); });
-  pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null;
+  pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
   pd.armed=false; pd.cand=null; pd.count=0;
   $('#psum').hidden=true;
   renderPractice();
@@ -958,15 +958,23 @@ function practiceHit(m){
   if(!pr.t0) pr.t0=performance.now();
   var ni=pr.idx[pr.pos], n=pr.score.notes[ni];
   var ok = pr.anyOct ? (m%12===n.m%12) : (m===n.m);
-  pr.tries++;
   if(ok){
+    pr.tries++; pr.missStreak=0;
     pr.marks[ni]='ok'; pr.pos++;
     pr.lastMsg={t:'Benar!',c:'ok'};
     if(pr.pos>=pr.idx.length) finishRound();
   } else {
+    /* Toleransi: deteksi meleset 1-2x (sisa dengungan not sebelumnya, dsb) diabaikan diam-diam.
+       Baru pada percobaan ke-3 berturut-turut dianggap salah sungguhan, ditandai, dan lanjut
+       ke not berikutnya supaya tidak macet menunggu not yang sama diulang. */
+    pr.missStreak++;
+    if(pr.missStreak<3) return;
+    pr.tries++;
     pr.marks[ni]='bad'; pr.wrong++;
     var a = (isBlack(m) && n.a==='b') ? 'b' : '';
     pr.lastMsg={t:'Belum tepat, yang terdengar: '+labelOf(m,a),c:'bad'};
+    pr.missStreak=0;
+    /* Tetap di not yang sama; harus benar-benar dimainkan dengan benar sebelum lanjut. */
   }
   renderPractice();
 }
