@@ -925,23 +925,33 @@ function newRound(keep){
   }
   pr.idx=[]; pr.score.notes.forEach(function(n,i){ if(n.m!==null) pr.idx.push(i); });
   pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
-  pd.armed=false; pd.cand=null; pd.count=0;
+  pd.armed=false; pd.cand=null; pd.count=0; pd.last=null; pd.legCand=null; pd.legCount=0;
   $('#psum').hidden=true;
   renderPractice();
 }
-var pd = { armed:false, cand:null, count:0, lastOnset:0, rms:[] };
+var pd = { armed:false, cand:null, count:0, lastOnset:0, rms:[], last:null, legCand:null, legCount:0 };
 function pdFeed(f,rms,now){
   pd.rms.push(rms); if(pd.rms.length>6) pd.rms.shift();
   if(pd.rms.length>=4){
     var prev=pd.rms.slice(0,-1), mn=Math.min.apply(null,prev);
     if(rms>0.012 && rms>2*mn+0.006 && now-pd.lastOnset>90){ pd.armed=true; pd.lastOnset=now; pd.cand=null; pd.count=0; }
   }
-  if(!pd.armed) return null;
-  if(now-pd.lastOnset>1000){ pd.armed=false; return null; }
-  if(!f){ pd.cand=null; pd.count=0; return null; }
-  var m=Math.round(69+12*Math.log2(f/A4));
-  if(m===pd.cand) pd.count++; else { pd.cand=m; pd.count=1; }
-  if(pd.count>=2){ pd.armed=false; pd.cand=null; pd.count=0; return m; }
+  if(pd.armed){
+    if(now-pd.lastOnset>1000){ pd.armed=false; return null; }
+    if(!f){ pd.cand=null; pd.count=0; return null; }
+    var m=Math.round(69+12*Math.log2(f/A4));
+    if(m===pd.cand) pd.count++; else { pd.cand=m; pd.count=1; }
+    if(pd.count>=2){ pd.armed=false; pd.cand=null; pd.count=0; pd.last=m; pd.legCand=null; pd.legCount=0; return m; }
+    return null;
+  }
+  /* Legato (hammer-on/pull-off/slide/slur): nada berganti tanpa serangan/petikan baru,
+     selama bunyinya masih menyambung (tidak putus dulu ke sunyi). */
+  if(f && rms>0.013){
+    var lm=Math.round(69+12*Math.log2(f/A4));
+    if(lm===pd.last){ pd.legCand=null; pd.legCount=0; return null; }
+    if(lm===pd.legCand) pd.legCount++; else { pd.legCand=lm; pd.legCount=1; }
+    if(pd.legCount>=4){ pd.last=lm; pd.legCand=null; pd.legCount=0; return lm; }
+  } else { pd.legCand=null; pd.legCount=0; }
   return null;
 }
 function practiceData(f,rms,now){
