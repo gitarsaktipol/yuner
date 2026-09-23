@@ -176,6 +176,14 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
 }
 .cfg .chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:14px}
 .cfg .chk input{width:20px;height:20px}
+.clefSeg{display:flex;background:var(--track);border-radius:14px;padding:4px;gap:4px;margin-top:4px}
+.clefSeg button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 6px;border:0;border-radius:11px;background:transparent;cursor:pointer;color:var(--muted)}
+.clefSeg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.18)}
+.clefSeg button:disabled{opacity:.5}
+.clefSeg .clefIcon{font-size:24px;line-height:1;font-family:'Noto Music','Bravura Text','Segoe UI Symbol',serif}
+.clefSeg .clefText{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25}
+.clefSeg .clefText b{font-size:14px;font-weight:700}
+.clefSeg .clefText small{font-size:11px;font-weight:500;opacity:.72}
 .noteGrid{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:8px}
 .noteGrid button{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 0;font-size:11px;color:var(--muted);cursor:pointer}
 .noteGrid button[aria-pressed="true"]{background:var(--hl);color:var(--ink);border-color:var(--brass);font-weight:700}
@@ -280,14 +288,22 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
   </div>
 
   <details class="card cfg" id="pcfg">
-    <summary>Pengaturan latihan</summary>
+    <summary>Mode Latihan</summary>
+    <label>Berlatih secara
+      <select id="psrc"><option value="random">Acak</option><option value="arcade">Arcade</option><option value="custom">Custom</option><option value="score">Partitur saya</option></select>
+    </label>
+    <label>Kunci</label>
+    <div class="clefSeg" id="pclefSeg" role="group" aria-label="Kunci">
+      <button type="button" data-clef="treble" aria-pressed="true">
+        <span class="clefIcon" aria-hidden="true">𝄞</span>
+        <span class="clefText"><b>Kunci G</b><small>Tangan kanan</small></span>
+      </button>
+      <button type="button" data-clef="bass" aria-pressed="false">
+        <span class="clefIcon" aria-hidden="true">𝄢</span>
+        <span class="clefText"><b>Kunci F</b><small>Tangan kiri</small></span>
+      </button>
+    </div>
     <div class="grid">
-      <label>Sumber
-        <select id="psrc"><option value="random">Acak</option><option value="arcade">Arcade</option><option value="custom">Custom</option><option value="score">Partitur saya</option></select>
-      </label>
-      <label>Kunci
-        <select id="pclef"><option value="treble">Kunci G (tangan kanan)</option><option value="bass">Kunci F (tangan kiri)</option></select>
-      </label>
       <label>Rentang nada
         <select id="prange"><option value="narrow">Sempit</option><option value="mid" selected>Sedang</option><option value="wide">Luas</option></select>
       </label>
@@ -1119,10 +1135,13 @@ function refreshPractice(){
   renderPractice();
 }
 function syncPracticeOpts(){
-  $('#psrc').value=pr.src; $('#pclef').value=pr.clef; $('#prange').value=pr.range; $('#plen').value=String(pr.len);
+  $('#psrc').value=pr.src;
+  $$('#pclefSeg button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-clef')===pr.clef ? 'true':'false'); });
+  $('#prange').value=pr.range; $('#plen').value=String(pr.len);
   $('#psharp').checked=pr.sharps; $('#poct').checked=pr.anyOct;
   var fromScore = pr.src==='score', isArc = pr.src==='arcade', isCust = pr.src==='custom';
-  ['#pclef','#prange','#plen','#psharp'].forEach(function(s){ $(s).disabled=fromScore||isArc||isCust; });
+  ['#prange','#plen','#psharp'].forEach(function(s){ $(s).disabled=fromScore||isArc||isCust; });
+  $$('#pclefSeg button').forEach(function(b){ b.disabled=fromScore||isArc||isCust; });
   $('#pArcadeOpts').hidden = !isArc; $('#parcInfo').hidden = !isArc;
   $('#pCustomOpts').hidden = !isCust;
   if(isArc){
@@ -1138,7 +1157,7 @@ function syncPracticeOpts(){
     var n=pr.custNotes.length;
     $('#custHint').textContent = n<2 ? 'Pilih minimal 2 nada.' : (n+' nada dipilih.');
   }
-  if(pr.inst==='guitar'){ pr.clef='treble'; $('#pclef').value='treble'; $('#pclef').disabled=true; }
+  if(pr.inst==='guitar'){ pr.clef='treble'; $$('#pclefSeg button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-clef')==='treble'?'true':'false'); b.disabled=true; }); }
   $$('#pinst button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-inst')===pr.inst ? 'true':'false'); });
   var ih=$('#pinsthint');
   if(pr.inst==='guitar'){
@@ -1186,7 +1205,7 @@ function bindPracticeOpts(){
     pr.score={title:'',ts:[4,4],clef:pr.clef,notes:[]}; pr.idx=[]; pr.pos=0; pr.marks={}; pr.lastMsg=null;
     syncPracticeOpts(); renderPractice();
   });
-  $('#pclef').addEventListener('change',function(e){ pr.clef=e.target.value; newRound(); });
+  $$('#pclefSeg button').forEach(function(b){ b.addEventListener('click',function(){ if(b.disabled) return; pr.clef=b.getAttribute('data-clef'); syncPracticeOpts(); newRound(); }); });
   $('#prange').addEventListener('change',function(e){ pr.range=e.target.value; newRound(); });
   $('#plen').addEventListener('change',function(e){ pr.len=parseInt(e.target.value,10); newRound(); });
   $('#psharp').addEventListener('change',function(e){ pr.sharps=e.target.checked; newRound(); });
