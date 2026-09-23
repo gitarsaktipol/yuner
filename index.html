@@ -168,7 +168,13 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
 .pstatus.bad{color:var(--bad)}
 .level{height:6px;border-radius:3px;background:var(--track);margin:10px 10px 0;overflow:hidden}
 .level i{display:block;height:100%;width:0;background:var(--brass);transition:width .06s linear}
-.cfg summary{cursor:pointer;font-weight:600;padding:2px 0}
+.board.glow{animation:boardGlow 1.4s ease-out}
+@keyframes boardGlow{
+  0%{box-shadow:0 0 0 0 rgba(210,172,85,0)}
+  18%{box-shadow:0 0 28px 8px var(--brass)}
+  100%{box-shadow:0 0 0 0 rgba(210,172,85,0)}
+}
+.cfg summary{cursor:pointer;font-weight:600;padding:2px 0;text-align:center;list-style-position:inside}
 .cfg .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .cfg label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
 .cfg select,.txt,.fields input,.fields select{
@@ -335,7 +341,7 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
   </details>
   <p class="hint" id="parcInfo" hidden></p>
 
-  <section class="board" aria-live="polite">
+  <section class="board" id="pboard" aria-live="polite">
     <div class="scorehost" id="pscore"></div>
     <div class="pstatus" id="pstatus">Aktifkan mikrofon, lalu mainkan not yang disorot.</div>
     <div class="msg" id="pwarn" hidden>Ada not yang terlalu rendah untuk gitar (di bawah E2), jadi tidak bisa dimainkan.</div>
@@ -573,6 +579,10 @@ function pluck(m,when,dur,dest){
   g.gain.exponentialRampToValueAtTime(0.0001,when+len);
   o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(dest||c.destination);
   o1.start(when); o2.start(when); o1.stop(when+len+0.05); o2.stop(when+len+0.05);
+}
+
+function successChime(){
+  try{ var c=ac(), t=c.currentTime; [72,76,79,84].forEach(function(m,i){ pluck(m,t+i*0.09,0.5); }); }catch(e){}
 }
 
 /* =====================================================================
@@ -1102,6 +1112,11 @@ function practiceHit(m){
   }
   renderPractice();
 }
+function advanceArcadeLevel(){
+  pr.arcSub++;
+  if(pr.arcSub>9){ pr.arcSub=1; pr.arcLetter=Math.min(pr.arcLetter+1,ARC_LETTERS.length-1); }
+  store.set('yg.arcLetter',String(pr.arcLetter)); store.set('yg.arcSub',String(pr.arcSub));
+}
 function finishRound(){
   pr.done=true;
   var secs=Math.max(1,Math.round((performance.now()-pr.t0)/1000));
@@ -1109,6 +1124,18 @@ function finishRound(){
   $('#psumT').textContent='Selesai! Ketepatan '+pct+'%';
   $('#psumD').textContent=pr.idx.length+' not benar dari '+pr.tries+' percobaan, waktu '+secs+' detik.';
   $('#psum').hidden=false;
+  var board=$('#pboard');
+  if(pct>=100){
+    board.classList.add('glow'); successChime();
+    setTimeout(function(){ board.classList.remove('glow'); },1400);
+    if(pr.src==='arcade'){
+      $('#psumD').textContent+=' Naik ke level berikutnya...';
+      setTimeout(function(){ advanceArcadeLevel(); syncPracticeOpts(); newRound(); },1600);
+    }
+  } else if(pr.src==='arcade'){
+    $('#psumD').textContent+=' Ulangi level ini dulu ya.';
+    setTimeout(function(){ newRound(); },1600);
+  }
 }
 function renderPractice(){
   var sc=pr.score; if(!sc) return;
