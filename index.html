@@ -165,6 +165,7 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
 .n .hl{fill:var(--hl);opacity:0;transition:opacity .15s}
 .inscur{fill:var(--hl);opacity:1;rx:9}
 .n.st-cur .hl,.n.st-sel .hl{opacity:1}
+.n.st-curGhost .hl{opacity:1;fill:none;stroke:var(--brass);stroke-width:2;stroke-dasharray:4 3}
 .n.st-ok{color:var(--ok)}
 .n.st-bad{color:var(--bad)}
 .pstatus{text-align:center;font-size:19px;font-weight:700;min-height:30px;margin:6px 8px 0}
@@ -957,7 +958,8 @@ function loadCustNotes(){
 var pr = { inst: store.get('yg.inst','piano')==='guitar' ? 'guitar' : 'piano', src:'random', clef:'treble', range:'mid', len:8, sharps:false, anyOct:false,
            arcLetter: parseInt(store.get('yg.arcLetter','0'),10)||0, arcSub: parseInt(store.get('yg.arcSub','1'),10)||1,
            custNotes: loadCustNotes(), custMeasures: parseInt(store.get('yg.custMeasures','2'),10)||2,
-           score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0, missStreak:0 };
+           score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0, missStreak:0,
+           lastAdvanceT:0, fast:false };
 var RANGES = {
   treble:{narrow:[28,32], mid:[28,35], wide:[26,40]},
   bass:{narrow:[21,25], mid:[18,28], wide:[16,30]}
@@ -1054,6 +1056,7 @@ function newRound(keep){
   }
   pr.idx=[]; pr.score.notes.forEach(function(n,i){ if(n.m!==null) pr.idx.push(i); });
   pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
+  pr.lastAdvanceT=0; pr.fast=false;
   pd.armed=false; pd.cand=null; pd.count=0; pd.last=null; pd.legCand=null; pd.legCount=0;
   $('#psum').hidden=true;
   renderPractice();
@@ -1099,6 +1102,9 @@ function practiceHit(m){
   var ok = pr.anyOct ? (m%12===n.m%12) : (m===n.m);
   if(ok){
     pr.tries++; pr.missStreak=0;
+    var nowT=performance.now();
+    pr.fast = pr.lastAdvanceT>0 && (nowT-pr.lastAdvanceT<350);
+    pr.lastAdvanceT=nowT;
     pr.marks[ni]='ok'; pr.pos++;
     pr.lastMsg={t:'Benar!',c:'ok'};
     if(pr.pos>=pr.idx.length) finishRound();
@@ -1145,9 +1151,11 @@ function finishRound(){
 function renderPractice(){
   var sc=pr.score; if(!sc) return;
   var cur = pr.done ? -1 : pr.idx[pr.pos];
+  var lookahead = (!pr.done && pr.fast && pr.pos+1<pr.idx.length) ? pr.idx[pr.pos+1] : -1;
   drawScore($('#pscore'),sc,app.mode,function(i){
     var s = pr.marks[i] || '';
-    if(i===cur) s+=' cur';
+    if(i===cur) s += lookahead>=0 ? ' curGhost' : ' cur';
+    if(i===lookahead) s+=' cur';
     return s;
   });
   var st=$('#pstatus'), t, c='';
