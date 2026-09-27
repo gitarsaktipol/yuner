@@ -94,9 +94,15 @@ Mekanisme penilaian not yang dimainkan (fungsi `practiceHit`):
 
 ## Desain visual
 
-Tema **cerah, ceria, ala Apple** (diminta redesign total dari tema lama yang gelap coklat kayu gitar): latar lavender lembut (`--bg:#F4F6FF`), kartu putih bersih dengan bayangan halus, aksen warna merah muda/coral cerah (`--brass:#FF6F91`), animasi fade-in saat pindah tab, efek tekan (scale down) di semua tombol, tab aktif di navigasi bawah terangkat dengan warna aksen. Mode gelap otomatis mengikuti sistem OS **sengaja dimatikan** (dihapus dari CSS) supaya tema cerah ini yang selalu tampil, apa pun pengaturan HP penggunanya.
+Tema **ceria, lucu, pastel untuk anak-anak** (pengguna utama anak-anak). Sebelumnya tema cerah ala Apple, sebelumnya lagi gelap coklat kayu. Mode gelap otomatis mengikuti OS **sengaja dimatikan** supaya tema cerah ini selalu tampil.
 
-Semua warna didefinisikan sebagai CSS custom properties di `:root` (token seperti `--bg`, `--panel`, `--ink`, `--muted`, `--line`, `--brass`, `--ok`, `--bad`, `--warn`, `--hl`, dst) — kalau mau ubah palet warna, ubah di situ, jangan hardcode warna baru di tempat lain.
+- Warna: latar krem-pink `--bg:#FFF7FB` dengan gumpalan gradasi pastel di belakang; aksen utama pink permen `--brass:#FF6FA8` (+ `--brassDeep` untuk bayangan 3D, `--peach`). Palet pastel berpasangan: `--pPink/--dPink`, `--pSky/--dSky`, `--pMint/--dMint`, `--pLemon/--dLemon`, `--pLilac/--dLilac`, `--pPeach/--dPeach` (p = muda untuk latar tombol, d = lebih tua untuk bayangan 3D/aksen).
+- Tombol "jelly" 3D: bayangan bawah padat (`box-shadow:0 5px 0 ...`), saat ditekan turun & mengecil lalu memantul balik (`--bounce` cubic-bezier). Tombol `.sound` dalam satu `.row` otomatis beda warna (pink, biru, kuning, mint via nth-child). Tombol utama `.start` gradasi pink→peach dengan kilau yang menyapu; saat mikrofon aktif (`.on`) jadi mint dengan cincin berdenyut.
+- Navigasi bawah: dok gelembung melayang; tab aktif berwarna sendiri (Tuner pink, Latihan biru, Partitur mint) dan ikonnya melompat.
+- Tuts piano pelangi (warna per nada C-B), pasak senar tuner berwarna pastel berbeda, maskot not musik tersenyum (`.mascot`, SVG inline) di tiap judul, not musik melayang pelan di latar (`.sky`).
+- Animasi umpan balik: "Benar!" melompat (`yay`), salah bergoyang (`nope`) lewat kelas `.bump` di `renderPractice`; `confetti()` dipanggil dari `successChime()` (senar pas / soal 100% benar). Semua animasi mati jika pengguna memilih kurangi gerakan (`prefers-reduced-motion`).
+
+Semua warna didefinisikan sebagai CSS custom properties di `:root` — kalau mau ubah palet warna, ubah di situ, jangan hardcode warna baru di tempat lain.
 
 ## Gaya kerja & preferensi Ferdi
 
