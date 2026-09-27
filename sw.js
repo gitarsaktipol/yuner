@@ -1,6 +1,6 @@
 // Yuner service worker — supaya bisa jalan offline.
 // Setiap kali kamu mengubah index.html, naikkan angka versi ini (v1 -> v2, dst).
-const CACHE = 'fertune-v5';
+const CACHE = 'fertune-v6';
 const PRECACHE = [
   './',
   './index.html',
@@ -12,7 +12,13 @@ const PRECACHE = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
+  // cache:'reload' = selalu ambil dari server, jangan dari cache HTTP browser (GitHub Pages
+  // menyimpan file ±10 menit), supaya versi baru tidak tersimpan dengan ikon/file lama.
+  e.waitUntil(
+    caches.open(CACHE)
+      .then((c) => c.addAll(PRECACHE.map((u) => new Request(u, { cache: 'reload' }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (e) => {
@@ -31,10 +37,15 @@ self.addEventListener('fetch', (e) => {
   const fontHost = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
   if (!sameOrigin && !fontHost) return;
 
+  // File sendiri dicek ulang ke server (no-cache) supaya pembaruan cepat terlihat.
+  const netReq = !sameOrigin ? req
+    : (req.mode === 'navigate' ? new Request(req.url, { cache: 'no-cache', credentials: 'same-origin' })
+                               : new Request(req, { cache: 'no-cache' }));
+
   // Cache dulu, lalu perbarui diam-diam di belakang layar.
   e.respondWith(
     caches.match(req, { ignoreSearch: true }).then((hit) => {
-      const net = fetch(req).then((res) => {
+      const net = fetch(netReq).then((res) => {
         if (res && (res.ok || res.type === 'opaque')) {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(req, copy));

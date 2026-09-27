@@ -30,6 +30,8 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - Live di: **https://gitarsaktipol.github.io/yuner/** via GitHub Pages (branch `main`, folder root)
 - Tidak ada CI/CD, tidak ada build. Push ke `main` = otomatis live dalam 1-3 menit.
 - **Setiap kali mengubah `index.html`, `manifest.webmanifest`, atau `sw.js`, WAJIB naikkan nomor versi `CACHE` di `sw.js`** (contoh: `const CACHE = 'fertune-v2';` -> `'fertune-v3';`), kalau tidak, HP yang sudah pernah install PWA-nya tidak akan mengambil perubahan (service worker akan terus menyajikan versi lama dari cache).
+- Service worker: precache diambil dengan `cache:'reload'` dan file sendiri dicek ulang dengan `no-cache`, supaya versi baru tidak tersimpan dengan file lama dari cache HTTP GitHub Pages (±10 menit). Saat service worker baru mengambil alih, halaman otomatis dimuat ulang sekali (`controllerchange` di `index.html`), jadi pembaruan langsung terlihat.
+- Ikon di layar utama (aplikasi terpasang) diperbarui oleh Android sendiri, bisa sampai ±1 hari; cara cepat: hapus ikon lalu pasang ulang.
 - Ferdi mengerjakan lewat PowerShell Windows di folder lokal `D:\YUNER\yuner-pwa`, pakai `git add . && git commit -m "..." && git push` untuk deploy.
 
 ## Ajakan pasang aplikasi (install)

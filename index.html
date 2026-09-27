@@ -2038,6 +2038,13 @@ if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
     navigator.serviceWorker.register('sw.js').catch(function(e){ console.warn('SW gagal:',e); });
   });
+  /* Versi baru sudah terpasang: muat ulang halaman sekali supaya langsung tampil
+     (tanpa ini, versi baru baru terlihat setelah aplikasi dibuka 2-3 kali). */
+  var hadSW=!!navigator.serviceWorker.controller, reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',function(){
+    if(!hadSW || reloaded) return;
+    reloaded=true; window.location.reload();
+  });
 }
 </script>
 </body>
