@@ -60,6 +60,13 @@ Empat sumber soal (dropdown "Berlatih secara"):
 - **Custom** — pemain pilih sendiri nada mana saja yang boleh muncul lewat grid 36 tombol (3 oktaf, C3-B5), minimal 2 nada harus dipilih, plus pilihan jumlah birama 1-9.
 - **Partitur saya** — soal diambil dari partitur yang dibuat sendiri di menu Partitur.
 
+**Tangga nada** (dropdown "Tangga nada" di Mode Latihan, disimpan di `yg.key`, berlaku untuk Acak/Arcade/Custom; untuk "Partitur saya" ikut kunci partiturnya):
+- Disimpan sebagai `key` = jumlah ♯ (1..7) atau ♭ (-1..-7), 0 = C. Label pilihan mengikuti jenis notasi: not balok "♯", "♯♯", ... / "♭", "♭♭", ...; not angka "Tangga nada A (1 = A)".
+- Not balok: tanda kunci digambar setelah kunci G/F di setiap baris (`drawScore`); ♯/♭ yang sudah diatur tanda kunci tidak digambar lagi di not, nada yang menyimpang dapat ♯/♭/♮ (`accShown`).
+- Not angka: angka relatif terhadap nada dasar (`jianpu(n,key)`), "1" tanpa titik = nada dasar di oktaf 4. Header "1 = A".
+- Soal Acak/Arcade: huruf not dibuat diatonis lalu dinaikkan/diturunkan sesuai tanda kunci (`keyNote`); opsi ♯ tambahan hanya pada huruf yang tidak diubah tanda kunci. Custom: nada pilihan tetap, ejaannya disesuaikan (`spellIn`).
+- Ejaan not: `n.a` = '#'/'b' menentukan huruf (E♯ = F dieja sebagai huruf E, C♭ = B sebagai huruf C) lewat `letterIdx`/`diaOf`.
+
 Mekanisme penilaian not yang dimainkan (fungsi `practiceHit`):
 - Mikrofon dianalisis tiap 25ms; onset (serangan nada baru) butuh jeda minimum 90ms dari onset sebelumnya; butuh 2x pembacaan pitch stabil berturut baru dikonfirmasi.
 - Legato (hammer-on/pull-off/slur tanpa serangan baru) terdeteksi lewat jalur kedua: kalau pitch berubah sementara bunyi masih menyambung (rms di atas ambang), itu juga dianggap not baru.
