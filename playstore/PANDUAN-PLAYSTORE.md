@@ -14,7 +14,7 @@ dengan teknologi resmi Google bernama **Trusted Web Activity (TWA)**. Cara termu
 | Jalan tanpa internet (service worker) | ✅ Sudah |
 | Tidak menghubungi server pihak ketiga (font disimpan di aplikasi) | ✅ Sudah |
 | Tombol **kembali** Android berfungsi wajar (ke Tuner dulu, baru keluar) | ✅ Sudah |
-| Halaman **Kebijakan Privasi** + tautan di aplikasi | ✅ Sudah (`privacy.html`), **email kontak masih perlu diisi** |
+| Halaman **Kebijakan Privasi** + tautan di aplikasi | ✅ Sudah (`privacy.html`, kontak: leslesku@gmail.com) |
 | Screenshot HP, gambar fitur 1024×500, ikon 512×512 | ✅ Sudah (folder `playstore/`) |
 | Teks halaman toko (nama, deskripsi singkat & lengkap) | ✅ Sudah (`deskripsi-toko.md`) |
 | Jawaban formulir Keamanan Data & rating konten | ✅ Sudah (di bawah) |
@@ -25,10 +25,10 @@ dengan teknologi resmi Google bernama **Trusted Web Activity (TWA)**. Cara termu
 
 ---
 
-## Langkah 1 — Isi email kontak di Kebijakan Privasi
+## Langkah 1 — Email kontak ✅
 
-Buka `privacy.html`, cari `[EMAIL KONTAK PENGEMBANG]`, ganti dengan email yang boleh dilihat publik
-(Google mewajibkan kontak di kebijakan privasi). Setelah itu naikkan versi `CACHE` di `sw.js`, lalu push.
+Sudah diisi di `privacy.html` dan `deskripsi-toko.md`: **leslesku@gmail.com**.
+Pakai email yang sama di Play Console (Listingan toko → Detail kontak).
 
 ## Langkah 2 — Pastikan versi terbaru sudah live
 

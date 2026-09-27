@@ -64,7 +64,7 @@ Selamat bermain musik! 🎶
 
 ## Kontak
 
-- **Email:** isi dengan email yang ingin ditampilkan ke publik (wajib)
+- **Email:** `leslesku@gmail.com`
 - **Situs web:** `https://gitarsaktipol.github.io/yuner/`
 - **Kebijakan privasi:** `https://gitarsaktipol.github.io/yuner/privacy.html`
 
