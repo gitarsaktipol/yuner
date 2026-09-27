@@ -29,6 +29,11 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - **Setiap kali mengubah `index.html`, `manifest.webmanifest`, atau `sw.js`, WAJIB naikkan nomor versi `CACHE` di `sw.js`** (contoh: `const CACHE = 'fertune-v2';` -> `'fertune-v3';`), kalau tidak, HP yang sudah pernah install PWA-nya tidak akan mengambil perubahan (service worker akan terus menyajikan versi lama dari cache).
 - Ferdi mengerjakan lewat PowerShell Windows di folder lokal `D:\YUNER\yuner-pwa`, pakai `git add . && git commit -m "..." && git push` untuk deploy.
 
+## Ajakan pasang aplikasi (install)
+- Kartu "Pasang FerTune di HP" di atas halaman (script kecil terpisah di bawah `index.html`, sebelum registrasi service worker). Muncul saat browser mengirim event `beforeinstallprompt` (Chrome/Edge Android & PC); tombol "Pasang" memunculkan dialog install bawaan browser.
+- Di iPhone/iPad (tidak ada event itu) kartu berisi petunjuk: Bagikan → "Tambah ke Layar Utama".
+- Tidak tampil kalau app sudah dibuka sebagai aplikasi terpasang (`display-mode: standalone`). "Nanti saja" menyembunyikannya 7 hari (`yg.installSnooze`).
+
 ## Tiga menu utama (navigasi tab di bawah)
 
 ### 1. Tuner gitar
