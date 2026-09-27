@@ -1,7 +1,9 @@
 {
+  "id": "./",
   "name": "FerTune",
   "short_name": "FerTune",
-  "description": "Tuner gitar, latihan baca not, dan partitur.",
+  "description": "Tuner gitar, latihan baca not, partitur, dan keyboard MIDI.",
+  "categories": ["music", "education"],
   "lang": "id",
   "start_url": "./",
   "scope": "./",
