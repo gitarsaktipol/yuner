@@ -17,6 +17,9 @@ sw.js                 <- service worker untuk cache offline; CACHE name di dalam
                           dinaikkan versinya (mis. fertune-v2 -> fertune-v3) setiap kali
                           index.html/manifest/sw.js diubah, supaya HP mengambil versi baru
 icon-192.png, icon-512.png, icon-512-maskable.png, apple-touch-icon.png  <- ikon PWA
+                          (desain "FT" gradasi ungu-pink-biru dengan motif not musik;
+                          icon-192/512 = sudut membulat transparan, maskable = huruf diperkecil
+                          ke zona aman 80% di atas latar gradasi, apple-touch = kotak penuh)
 ```
 
 Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIFE besar di bagian bawah file). Tidak ada build step, tidak ada bundler — file `index.html` inilah yang langsung di-serve oleh GitHub Pages.
@@ -109,5 +112,4 @@ Semua warna didefinisikan sebagai CSS custom properties di `:root` (token sepert
 - Deteksi akor / pitch polifonik dari suara (mikrofon/kabel). Lewat MIDI sudah bisa.
 - Partitur dengan akor (beberapa not dalam satu ketukan) + latihan akor lewat MIDI — model not saat ini masih satu nada per slot
 - Versi native (plugin VST / aplikasi desktop & Android asli, mis. pakai JUCE) untuk latensi audio lebih rendah lagi — PWA sudah jalan di Android & PC lewat Chrome/Edge
-- Ikon aplikasi (`icon-*.png`, `apple-touch-icon.png`) belum didesain ulang menyesuaikan tema cerah baru — masih desain lama nuansa tuner coklat
 - Halaman Tuner di HP kadang perlu di-scroll karena kontennya lebih tinggi dari layar — sedang dalam proses dipersempit ukurannya (headstock gitar, tuts, dll) supaya muat satu layar tanpa scroll di kebanyakan ukuran HP
