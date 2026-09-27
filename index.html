@@ -228,6 +228,16 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
 .imgpanel img{display:block;max-width:100%;max-height:340px;margin:0 auto;border-radius:8px;background:#fff}
 .empty{text-align:center;color:var(--muted);font-size:14px;padding:8px 14px 2px}
 
+/* ---------- koneksi alat musik (kabel/jack & MIDI) ---------- */
+.conn .cstat{font-size:13px;color:var(--muted);margin:6px 2px 0;text-align:center}
+.conn .cstat.ok{color:var(--ok);font-weight:600}
+.conn .row{margin-top:10px}
+.conn .sub{font-size:13px;font-weight:700;color:var(--ink);margin:12px 2px 0}
+.held{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:5px;min-height:30px;margin:8px 8px 0}
+.held .hk{background:var(--hl);color:var(--ink);border:1px solid var(--brass);border-radius:9px;padding:3px 8px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;animation:popIn .12s ease-out}
+.held .chord{flex-basis:100%;text-align:center;font-size:18px;font-weight:800;color:var(--brass)}
+.held .idle{color:var(--muted);font-size:13px}
+
 @media (prefers-reduced-motion: reduce){
   *{transition:none !important}
 }
@@ -347,8 +357,26 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
   </details>
   <p class="hint" id="parcInfo" hidden></p>
 
+  <details class="card cfg conn" id="pconn">
+    <summary>Sambungkan alat musik</summary>
+    <p class="sub">Keyboard / controller MIDI (tanpa delay, bisa 10 nada sekaligus)</p>
+    <div class="row">
+      <button class="sound" id="midiBtn" type="button">Hubungkan MIDI</button>
+    </div>
+    <p class="cstat" id="midiStat">Colok keyboard MIDI lewat kabel USB (di HP pakai kabel OTG), lalu tekan Hubungkan MIDI.</p>
+    <label class="chk"><input type="checkbox" id="midiSynth" checked> Bunyikan suara piano dari aplikasi saat tuts ditekan</label>
+
+    <p class="sub">Kabel / jack audio (gitar, keyboard biasa)</p>
+    <label>Input suara
+      <select id="audIn"><option value="">Bawaan perangkat</option></select>
+    </label>
+    <label class="chk"><input type="checkbox" id="audDirect"> Mode kabel (latensi rendah)</label>
+    <p class="cstat" id="audStat">Colok alat musik lewat kabel jack (adaptor TRRS / soundcard USB), aktifkan Mode kabel, lalu aktifkan mikrofon.</p>
+  </details>
+
   <section class="board" id="pboard" aria-live="polite">
     <div class="scorehost" id="pscore"></div>
+    <div class="held" id="pheld" hidden></div>
     <div class="pstatus" id="pstatus">Aktifkan mikrofon, lalu mainkan not yang disorot.</div>
     <div class="msg" id="pwarn" hidden>Ada not yang terlalu rendah untuk gitar (di bawah E2), jadi tidak bisa dimainkan.</div>
     <div class="level" aria-hidden="true"><i id="plevel"></i></div>
@@ -396,11 +424,12 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
   <section class="board">
     <div class="scorehost" id="sscore"></div>
     <div class="empty" id="sempty">Belum ada not. Pilih nilai not, lalu ketuk tuts piano di bawah.</div>
+    <div class="held" id="sheld" hidden></div>
   </section>
 
   <div class="row">
     <button class="start" id="splay" type="button" style="flex:1.4">▶ Putar</button>
-    <button class="sound" id="sprac" type="button">Latih dengan mikrofon</button>
+    <button class="sound" id="sprac" type="button">Latih lagu ini</button>
   </div>
 
   <div class="card">
@@ -434,6 +463,13 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
     <button class="sound" id="snew" type="button">Partitur baru</button>
     <button class="sound" id="sdel" type="button">Hapus partitur</button>
   </div>
+  <div class="row">
+    <label class="sound" style="cursor:pointer">Impor file MIDI
+      <input type="file" accept=".mid,.midi,audio/midi,audio/x-midi" id="smidiIn" hidden>
+    </label>
+    <button class="sound" id="smidiOut" type="button">Ekspor ke MIDI</button>
+  </div>
+  <p class="hint" id="smidiMsg"></p>
 
   <section class="imgpanel" id="simgpanel" hidden>
     <img id="simgview" alt="Gambar partitur yang diunggah">
@@ -510,19 +546,20 @@ function yin(buf,sr){
   return sr/(found+shift);
 }
 
-var mic = { active:false, ctx:null, stream:null, analyser:null, buf:null, raf:0, last:0, wl:null, onData:[], onTick:[] };
+var mic = { active:false, ctx:null, stream:null, analyser:null, buf:null, raf:0, last:0, wl:null, onData:[], onTick:[],
+            deviceId: store.get('yg.audIn',''), direct: store.get('yg.direct','0')==='1', interval:25 };
 function setMicErr(t){ $('#msg').textContent=t||''; $('#pmsg').textContent=t||''; }
 function syncMic(){
   ['#start','#pstart'].forEach(function(s){
     var b=$(s); b.textContent = mic.active ? 'Matikan mikrofon' : 'Aktifkan mikrofon';
     b.classList.toggle('on',mic.active);
   });
-  refreshTuner(); refreshPractice();
+  syncAudStat(); refreshTuner(); refreshPractice();
 }
 function micLoop(){
   mic.raf=requestAnimationFrame(micLoop);
   var now=performance.now();
-  if(now-mic.last>=25){
+  if(now-mic.last>=mic.interval){
     mic.last=now;
     mic.analyser.getFloatTimeDomainData(mic.buf);
     var s=0,i; for(i=0;i<mic.buf.length;i++) s+=mic.buf[i]*mic.buf[i];
@@ -546,14 +583,28 @@ async function micStart(){
   setMicErr('');
   try{
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw {name:'Unsupported'};
-    mic.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    var cons={echoCancellation:false,noiseSuppression:false,autoGainControl:false};
+    if(mic.deviceId) cons.deviceId={exact:mic.deviceId};
+    /* Mode kabel: minta jalur audio dengan latensi serendah mungkin (dipakai kalau alat musik dicolok langsung). */
+    if(mic.direct){ cons.latency=0; cons.channelCount=1; }
+    try{ mic.stream=await navigator.mediaDevices.getUserMedia({audio:cons}); }
+    catch(e1){
+      /* Input yang dipilih sudah dicabut: kembali ke input bawaan. */
+      if(mic.deviceId && (e1.name==='OverconstrainedError'||e1.name==='NotFoundError')){ delete cons.deviceId; mic.stream=await navigator.mediaDevices.getUserMedia({audio:cons}); }
+      else throw e1;
+    }
     var AC=window.AudioContext||window.webkitAudioContext;
-    mic.ctx=new AC(); if(mic.ctx.resume) await mic.ctx.resume();
+    try{ mic.ctx=new AC({latencyHint:'interactive'}); }catch(e2){ mic.ctx=new AC(); }
+    if(mic.ctx.resume) await mic.ctx.resume();
     var src=mic.ctx.createMediaStreamSource(mic.stream);
-    mic.analyser=mic.ctx.createAnalyser(); mic.analyser.fftSize=4096; mic.analyser.smoothingTimeConstant=0;
+    /* Jendela analisis: 4096 sampel (~85 ms) untuk mikrofon biasa supaya stabil di ruangan berisik;
+       sinyal kabel jauh lebih bersih, jadi cukup 2048 sampel (~43 ms) dan dianalisis tiap 12 ms. */
+    mic.interval = mic.direct ? 12 : 25;
+    mic.analyser=mic.ctx.createAnalyser(); mic.analyser.fftSize=mic.direct?2048:4096; mic.analyser.smoothingTimeConstant=0;
     src.connect(mic.analyser);
     mic.buf=new Float32Array(mic.analyser.fftSize);
     mic.active=true; requestWake(); micLoop();
+    listAudioInputs();
   }catch(e){
     micCleanup();
     var n=e&&e.name;
@@ -564,6 +615,37 @@ async function micStart(){
   syncMic();
 }
 function micStop(){ micCleanup(); syncMic(); }
+function micRestart(){ if(mic.active){ micCleanup(); micStart(); } else syncAudStat(); }
+/* Daftar input suara (mikrofon bawaan, headset/adaptor jack, soundcard USB). Nama perangkat baru
+   terlihat setelah izin mikrofon diberikan. */
+async function listAudioInputs(){
+  try{
+    if(!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+    var devs=(await navigator.mediaDevices.enumerateDevices()).filter(function(d){ return d.kind==='audioinput' && d.deviceId && d.deviceId!=='default' && d.deviceId!=='communications'; });
+    var s=$('#audIn'), h='<option value="">Bawaan perangkat</option>';
+    devs.forEach(function(d,i){
+      var lab=(d.label||('Input '+(i+1))).replace(/[<>&"]/g,'');
+      h+='<option value="'+d.deviceId.replace(/"/g,'')+'">'+lab+'</option>';
+    });
+    s.innerHTML=h;
+    s.value = devs.some(function(d){ return d.deviceId===mic.deviceId; }) ? mic.deviceId : '';
+  }catch(e){}
+  syncAudStat();
+}
+function syncAudStat(){
+  var st=$('#audStat'), t;
+  if(mic.active && mic.stream){
+    var tr=mic.stream.getAudioTracks()[0], lab=(tr&&tr.label)||'input bawaan';
+    var lat = mic.ctx && mic.ctx.baseLatency ? Math.round(mic.ctx.baseLatency*1000) : null;
+    t='Aktif: '+lab+(mic.direct?' • mode kabel':'')+(lat?' • latensi dasar ±'+lat+' ms':'');
+    st.className='cstat ok';
+  } else {
+    t = mic.direct ? 'Mode kabel siap. Colok alat musik, pilih inputnya, lalu tekan Aktifkan mikrofon.'
+                   : 'Colok alat musik lewat kabel jack (adaptor TRRS / soundcard USB), aktifkan Mode kabel, lalu aktifkan mikrofon.';
+    st.className='cstat';
+  }
+  st.textContent=t;
+}
 function micToggle(){ mic.active ? micStop() : micStart(); }
 
 /* Suara: nada acuan dan pemutar partitur (satu AudioContext bersama) */
@@ -589,6 +671,171 @@ function pluck(m,when,dur,dest){
 
 function successChime(){
   try{ var c=ac(), t=c.currentTime; [72,76,79,84].forEach(function(m,i){ pluck(m,t+i*0.09,0.5); }); }catch(e){}
+}
+
+/* =====================================================================
+   MIDI: keyboard / controller MIDI lewat kabel USB (Web MIDI API).
+   Nada dibaca langsung sebagai angka dari alat musik, jadi tidak ada delay
+   analisis suara dan bisa membaca banyak nada sekaligus (akor, 10 jari).
+   ===================================================================== */
+var midi = { access:null, inputs:[], held:{}, sustain:false, voices:{}, lastT:0,
+             synth: store.get('yg.midiSynth','1')!=='0', lastOn:{} };
+function midiSupported(){ return !!navigator.requestMIDIAccess; }
+async function midiConnect(){
+  var st=$('#midiStat');
+  if(!midiSupported()){
+    st.className='cstat';
+    st.textContent='Browser ini belum mendukung MIDI. Pakai Google Chrome atau Microsoft Edge (Android, Windows, Mac, Linux). Safari/iPhone belum bisa.';
+    return;
+  }
+  try{
+    midi.access=await navigator.requestMIDIAccess({sysex:false});
+    midi.access.onstatechange=midiBindInputs;
+    store.set('yg.midi','1');
+    midiBindInputs();
+  }catch(e){
+    st.className='cstat';
+    st.textContent='Akses MIDI ditolak. Izinkan "perangkat MIDI" untuk situs ini di pengaturan browser, lalu coba lagi.';
+  }
+}
+function midiBindInputs(){
+  if(!midi.access) return;
+  midi.inputs=[];
+  midi.access.inputs.forEach(function(inp){
+    inp.onmidimessage=midiMessage;
+    if(inp.state!=='disconnected') midi.inputs.push(inp);
+  });
+  if(!midi.inputs.length){ midi.held={}; midiReleaseAll(); }
+  syncMidiUI();
+}
+function midiConnected(){ return midi.inputs.length>0; }
+function syncMidiUI(){
+  var st=$('#midiStat'), b=$('#midiBtn');
+  if(midi.access){
+    if(midiConnected()){
+      st.className='cstat ok';
+      st.textContent='Terhubung: '+midi.inputs.map(function(i){ return i.name||'Perangkat MIDI'; }).join(', ');
+    } else {
+      st.className='cstat';
+      st.textContent='MIDI siap, tapi belum ada alat terdeteksi. Colok keyboard MIDI (di HP pakai kabel OTG); akan tersambung otomatis.';
+    }
+    b.textContent='Cari ulang alat MIDI'; b.classList.toggle('on',midiConnected());
+  }
+  renderHeld(); if(pr.score) renderPractice();
+}
+function midiMessage(e){
+  var d=e.data; if(!d || d.length<2) return;
+  var cmd=d[0]&0xF0, n=d[1], v=d.length>2?d[2]:0;
+  if(cmd===0x90 && v>0) midiNoteOn(n,v);
+  else if(cmd===0x80 || (cmd===0x90 && v===0)) midiNoteOff(n);
+  else if(cmd===0xB0 && n===64){ midi.sustain = v>=64; if(!midi.sustain) midiSustainRelease(); }
+  else if(cmd===0xB0 && (n===123 || n===120)){ midi.held={}; midiReleaseAll(); renderHeld(); }
+}
+function midiNoteOn(n,v){
+  var now=performance.now();
+  /* Beberapa alat mengirim not yang sama dua kali dalam sekejap; abaikan pantulan < 25 ms. */
+  if(midi.lastOn[n] && now-midi.lastOn[n]<25) return;
+  midi.lastOn[n]=now; midi.lastT=now;
+  midi.held[n]=v;
+  if(midi.synth) synthOn(n,v);
+  renderHeld();
+  if(app.tab==='latih') practiceHit(n,true);
+  else if(app.tab==='score' && !playing) addNote(n,midi.synth);
+  else if(app.tab==='tuner') midiTunerShow(n);
+}
+function midiNoteOff(n){
+  delete midi.held[n];
+  if(!midi.sustain) synthOff(n);
+  renderHeld();
+}
+/* Synth sederhana polifonik: satu "suara" per tuts, bisa ditahan dengan pedal sustain. */
+function synthOn(n,v){
+  synthOff(n,true);
+  var c=ac(), t=c.currentTime, f=freqOf(n), vel=0.08+0.22*(v/127);
+  var o1=c.createOscillator(), o2=c.createOscillator(), g=c.createGain(), g2=c.createGain();
+  o1.type='triangle'; o1.frequency.value=f;
+  o2.type='sine'; o2.frequency.value=f*2; g2.gain.value=0.25;
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.linearRampToValueAtTime(vel,t+0.005);
+  g.gain.exponentialRampToValueAtTime(vel*0.35,t+0.6);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+6);
+  o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(c.destination);
+  o1.start(t); o2.start(t); o1.stop(t+6.1); o2.stop(t+6.1);
+  midi.voices[n]={g:g,o:[o1,o2]};
+}
+function synthOff(n,fast){
+  var vc=midi.voices[n]; if(!vc) return;
+  delete midi.voices[n];
+  try{
+    var c=ac(), t=c.currentTime, rel=fast?0.02:0.18, gn=vc.g.gain;
+    if(gn.cancelAndHoldAtTime) gn.cancelAndHoldAtTime(t); else { gn.cancelScheduledValues(t); gn.setValueAtTime(gn.value,t); }
+    gn.linearRampToValueAtTime(0.0001,t+rel);
+    vc.o.forEach(function(o){ try{ o.stop(t+rel+0.02); }catch(e){} });
+  }catch(e){}
+}
+function midiSustainRelease(){ Object.keys(midi.voices).forEach(function(k){ if(!(k in midi.held)) synthOff(+k); }); }
+function midiReleaseAll(){ Object.keys(midi.voices).forEach(function(k){ synthOff(+k,true); }); }
+
+/* Nama akor dari nada-nada yang sedang ditekan. */
+var CHORDS = [
+  [[0,4,7],''],[[0,3,7],'m'],[[0,3,6],'dim'],[[0,4,8],'aug'],[[0,5,7],'sus4'],[[0,2,7],'sus2'],
+  [[0,4,7,10],'7'],[[0,4,7,11],'maj7'],[[0,3,7,10],'m7'],[[0,3,6,10],'m7♭5'],[[0,3,6,9],'dim7'],
+  [[0,3,7,11],'m(maj7)'],[[0,4,7,9],'6'],[[0,3,7,9],'m6'],[[0,2,4,7],'add9'],[[0,4,7,10,2],'9'],
+  [[0,4,7,11,2],'maj9'],[[0,3,7,10,2],'m9'],[[0,5,7,10],'7sus4'],[[0,7],'5']
+];
+function chordName(notes){
+  if(notes.length<2) return '';
+  var bass=notes[0]%12, pcs=[];
+  notes.forEach(function(m){ if(pcs.indexOf(m%12)<0) pcs.push(m%12); });
+  if(pcs.length<2) return notes.length>1 ? 'Oktaf '+NAMES_S[bass] : '';
+  var best=null;
+  pcs.forEach(function(root){
+    var rel=pcs.map(function(p){ return (p-root+12)%12; }).sort(function(a,b){return a-b;});
+    CHORDS.forEach(function(ch){
+      var tpl=ch[0].slice().sort(function(a,b){return a-b;});
+      if(tpl.length!==rel.length) return;
+      for(var i=0;i<tpl.length;i++) if(tpl[i]!==rel[i]) return;
+      var score=(root===bass?2:0);
+      if(!best || score>best.score) best={root:root,suf:ch[1],score:score};
+    });
+  });
+  if(!best) return '';
+  var nm=NAMES_S[best.root]+best.suf;
+  if(best.root!==bass) nm+='/'+NAMES_S[bass];
+  return nm;
+}
+function renderHeld(){
+  var ns=Object.keys(midi.held).map(Number).sort(function(a,b){return a-b;});
+  ['#pheld','#sheld'].forEach(function(sel){
+    var h=$(sel); if(!h) return;
+    h.hidden = !midiConnected();
+    if(h.hidden) return;
+    if(!ns.length){ h.innerHTML='<span class="idle">MIDI siap — tekan tuts di keyboard MIDI</span>'; return; }
+    var ch=chordName(ns), out='';
+    if(ch) out+='<span class="chord">'+ch+'</span>';
+    out+=ns.slice(0,10).map(function(m){ return '<span class="hk">'+(app.mode==='num'?labelOf(m,''):nameOf(m,''))+'</span>'; }).join('');
+    if(ns.length>10) out+='<span class="hk">+'+(ns.length-10)+'</span>';
+    h.innerHTML=out;
+  });
+}
+function midiTunerShow(n){
+  /* Di halaman tuner, MIDI hanya menampilkan nama nada (alat MIDI tidak perlu disetem). */
+  var ni=noteInfo(n,false);
+  setText(el.note,ni.name); setText(el.oct,String(ni.oct)); el.note.classList.remove('idle');
+  setText(el.verdict,'Nada dari MIDI');
+}
+function bindMidi(){
+  $('#midiBtn').addEventListener('click',midiConnect);
+  $('#midiSynth').checked=midi.synth;
+  $('#midiSynth').addEventListener('change',function(e){ midi.synth=e.target.checked; store.set('yg.midiSynth',midi.synth?'1':'0'); if(!midi.synth) midiReleaseAll(); });
+  $('#audDirect').checked=mic.direct;
+  $('#audDirect').addEventListener('change',function(e){ mic.direct=e.target.checked; store.set('yg.direct',mic.direct?'1':'0'); micRestart(); });
+  $('#audIn').addEventListener('change',function(e){ mic.deviceId=e.target.value; store.set('yg.audIn',mic.deviceId); micRestart(); });
+  if(!midiSupported()){ $('#midiStat').textContent='Browser ini belum mendukung MIDI. Pakai Google Chrome atau Microsoft Edge.'; $('#midiBtn').disabled=true; }
+  /* Kalau sebelumnya sudah pernah dihubungkan, sambungkan lagi otomatis. */
+  else if(store.get('yg.midi','0')==='1') midiConnect();
+  if(navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange',listAudioInputs);
+  listAudioInputs();
 }
 
 /* =====================================================================
@@ -1089,12 +1336,14 @@ function pdFeed(f,rms,now){
 function practiceData(f,rms,now){
   $('#plevel').style.width=Math.min(100,Math.round(rms*1200))+'%';
   if(now<pr.mute){ pd.armed=false; return; }
+  /* Sedang main lewat MIDI: abaikan mikrofon supaya bunyi synth dari speaker tidak terhitung dua kali. */
+  if(midi.lastT && now-midi.lastT<2500){ pd.armed=false; return; }
   var m=pdFeed(f,rms,now);
   if(m!==null) practiceHit(m);
 }
 /* Gitar berbunyi satu oktaf lebih rendah dari not yang tertulis (aturan penulisan partitur gitar). */
 function instShift(){ return pr.inst==='guitar' ? 12 : 0; }
-function practiceHit(m){
+function practiceHit(m,exact){
   if(pr.done || !pr.idx.length) return;
   m += instShift();
   if(!pr.t0) pr.t0=performance.now();
@@ -1112,8 +1361,9 @@ function practiceHit(m){
     /* Toleransi: deteksi meleset 1-2x (sisa dengungan not sebelumnya, dsb) diabaikan diam-diam.
        Baru pada percobaan ke-3 berturut-turut dianggap salah sungguhan, ditandai, dan lanjut
        ke not berikutnya supaya tidak macet menunggu not yang sama diulang. */
+    /* Dari MIDI nadanya pasti (bukan tebakan dari suara), jadi langsung dinilai tanpa toleransi. */
     pr.missStreak++;
-    if(pr.missStreak<3) return;
+    if(!exact && pr.missStreak<3) return;
     pr.tries++;
     pr.marks[ni]='bad'; pr.wrong++;
     var a = (isBlack(m) && n.a==='b') ? 'b' : '';
@@ -1162,6 +1412,7 @@ function renderPractice(){
   if(!pr.idx.length){ t = pr.src==='custom' ? 'Pilih minimal 2 nada dulu di atas.' : 'Partitur ini belum punya not. Tambahkan not di menu Partitur.'; }
   else if(pr.done){ t='Bagus sekali!'; c='ok'; }
   else if(pr.lastMsg){ t=pr.lastMsg.t; c=pr.lastMsg.c; }
+  else if(midiConnected()){ t='Mainkan not yang disorot di keyboard MIDI.'; }
   else if(!mic.active){ t='Aktifkan mikrofon, lalu mainkan not yang disorot.'; }
   else { t='Mainkan not yang disorot.'; }
   st.textContent=t; st.className='pstatus'+(c?' '+c:'');
@@ -1338,11 +1589,11 @@ function fillOrInsert(item){
   }
   saveScores(); renderScoreView();
 }
-function addNote(m){
+function addNote(m,silent){
   var d=inp.dur*(inp.dot&&inp.dur>0.25?1.5:1);
   var a = isBlack(m) ? (inp.flat?'b':'#') : '';
   fillOrInsert({m:m,d:d,a:a});
-  pluck(m,ac().currentTime,0.7);
+  if(!silent) pluck(m,ac().currentTime,0.7);
 }
 function addRest(){
   var d=inp.dur*(inp.dot&&inp.dur>0.25?1.5:1);
@@ -1449,6 +1700,148 @@ function bindScore(){
   $('#simg').addEventListener('change',onImage);
   $('#sclose').addEventListener('click',function(){ $('#simgpanel').hidden=true; });
   $('#sai').addEventListener('click',readWithAI);
+  $('#smidiOut').addEventListener('click',exportMidi);
+  $('#smidiIn').addEventListener('change',importMidi);
+}
+
+/* ---------- file MIDI (.mid): ekspor partitur & impor lagu untuk latihan ---------- */
+var PPQ=480;
+function vlq(n){
+  var b=[n&0x7F]; n>>=7;
+  while(n>0){ b.unshift((n&0x7F)|0x80); n>>=7; }
+  return b;
+}
+function strBytes(t){ var u=unescape(encodeURIComponent(t)), b=[]; for(var i=0;i<u.length;i++) b.push(u.charCodeAt(i)&0xFF); return b; }
+function u32(n){ return [(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255]; }
+function scoreToMidi(sc){
+  var ev=[], bpm=clamp(sc.bpm||90,30,240), us=Math.round(60000000/bpm), name=strBytes(sc.title||'FerTune');
+  ev=ev.concat([0,0xFF,0x03],vlq(name.length),name);
+  ev=ev.concat([0,0xFF,0x51,0x03,(us>>16)&255,(us>>8)&255,us&255]);
+  ev=ev.concat([0,0xFF,0x58,0x04,sc.ts[0],Math.round(Math.log2(sc.ts[1])),24,8]);
+  ev=ev.concat([0,0xC0,0]); /* program 0: piano */
+  var wait=0;
+  sc.notes.forEach(function(n){
+    var len=Math.round(n.d*PPQ);
+    if(n.m===null){ wait+=len; return; }
+    var m=clamp(n.m,0,127);
+    ev=ev.concat(vlq(wait),[0x90,m,90]);
+    ev=ev.concat(vlq(len),[0x80,m,0]);
+    wait=0;
+  });
+  ev=ev.concat(vlq(wait),[0xFF,0x2F,0x00]);
+  var head=[0x4D,0x54,0x68,0x64].concat(u32(6),[0,0,0,1,(PPQ>>8)&255,PPQ&255]);
+  var trk=[0x4D,0x54,0x72,0x6B].concat(u32(ev.length),ev);
+  return new Uint8Array(head.concat(trk));
+}
+function exportMidi(){
+  var sc=curScore(), msg=$('#smidiMsg');
+  if(!sc.notes.some(function(n){ return n.m!==null; })){ msg.textContent='Partitur ini belum punya not untuk diekspor.'; return; }
+  var blob=new Blob([scoreToMidi(sc)],{type:'audio/midi'});
+  var fname=((sc.title||'partitur').replace(/[^\w\- ]+/g,'').trim()||'partitur')+'.mid';
+  var url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=fname; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); },4000);
+  msg.textContent='File "'+fname+'" sudah diunduh. Bisa dibuka di MuseScore, FL Studio, GarageBand, dll.';
+}
+/* Membaca file MIDI standar (format 0/1). Hasilnya daftar not {s,e,m} dalam ketukan, plus tempo & birama. */
+function parseMidi(buf){
+  var d=new Uint8Array(buf), p=0;
+  function rd(n){ var v=0; for(var i=0;i<n;i++) v=v*256+d[p++]; return v; }
+  function rv(){ var v=0, b; do{ b=d[p++]; v=v*128+(b&0x7F); }while(b&0x80 && p<d.length); return v; }
+  function tag(){ var t=String.fromCharCode(d[p],d[p+1],d[p+2],d[p+3]); p+=4; return t; }
+  if(tag()!=='MThd') throw new Error('bukan file MIDI');
+  var hl=rd(4), fmt=rd(2), ntr=rd(2), div=rd(2); p+=hl-6;
+  if(div&0x8000) throw new Error('format waktu SMPTE belum didukung');
+  var notes=[], tempo=0, ts=null, title='', t;
+  for(t=0;t<ntr && p<d.length;t++){
+    var id=tag(), len=rd(4), end=p+len;
+    if(id!=='MTrk'){ p=end; continue; }
+    var tick=0, run=0, open={};
+    while(p<end){
+      tick+=rv();
+      var st=d[p];
+      if(st&0x80){ p++; if(st<0xF0) run=st; } else st=run;
+      if(st===0xFF){
+        var ty=d[p++], ml=rv(), md=d.subarray(p,p+ml); p+=ml;
+        if(ty===0x51 && !tempo && ml===3) tempo=(md[0]<<16)|(md[1]<<8)|md[2];
+        else if(ty===0x58 && !ts && ml>=2) ts=[md[0],Math.pow(2,md[1])];
+        else if((ty===0x03||ty===0x01) && !title && ml) title=Array.prototype.map.call(md,function(c){ return String.fromCharCode(c); }).join('');
+        if(ty===0x2F) break;
+        continue;
+      }
+      if(st===0xF0 || st===0xF7){ p+=rv(); continue; }
+      var hi=st&0xF0, ch=st&0x0F, a=d[p++], b=(hi===0xC0||hi===0xD0)?0:d[p++];
+      var key=ch*128+a;
+      if(hi===0x90 && b>0){
+        if(open[key]) notes.push({s:open[key].s/div,e:tick/div,m:a,ch:ch});
+        open[key]={s:tick};
+      } else if(hi===0x80 || (hi===0x90 && b===0)){
+        if(open[key]){ notes.push({s:open[key].s/div,e:tick/div,m:a,ch:ch}); delete open[key]; }
+      }
+    }
+    p=end;
+  }
+  return {notes:notes,bpm:tempo?Math.round(60000000/tempo):120,ts:ts,title:title,format:fmt};
+}
+/* Ubah not MIDI (bisa berupa akor) menjadi melodi satu baris: ambil nada tertinggi di setiap
+   ketukan 1/16, lalu susun ulang jadi not + rehat yang pas dengan garis birama. */
+var STEP_DURS=[4,3,2,1.5,1,0.75,0.5,0.25];
+function midiToScore(pm,fname){
+  var Q=0.25, src=pm.notes.filter(function(n){ return n.ch!==9 && n.e>n.s; });
+  if(!src.length) return null;
+  var byStart={};
+  src.forEach(function(n){
+    var q=Math.round(n.s/Q);
+    if(!byStart[q] || n.m>byStart[q].m) byStart[q]={q:q,m:n.m,e:Math.max(q+1,Math.round(n.e/Q))};
+  });
+  var line=Object.keys(byStart).map(function(k){ return byStart[k]; }).sort(function(a,b){ return a.q-b.q; });
+  var ts=(pm.ts && pm.ts[0]>0 && [2,4,8].indexOf(pm.ts[1])>=0) ? pm.ts : [4,4];
+  if(['4/4','3/4','2/4','6/8'].indexOf(ts[0]+'/'+ts[1])<0) ts=[4,4];
+  var bar=Math.round(ts[0]*4/ts[1]/Q), out=[], pos=0, LIMIT=600, cut=false;
+  var startQ=Math.floor(line[0].q/bar)*bar; /* buang birama kosong di awal lagu */
+  pos=startQ;
+  function room(){ return bar-((pos-startQ)%bar); }
+  function pushRest(len){
+    while(len>0){
+      var r=Math.min(len,room()), dd=STEP_DURS.filter(function(x){ return x/Q<=r; })[0];
+      out.push({m:null,d:dd,a:''}); len-=dd/Q; pos+=dd/Q;
+    }
+  }
+  for(var i=0;i<line.length;i++){
+    if(out.length>=LIMIT){ cut=true; break; }
+    var n=line[i], next=i+1<line.length ? line[i+1].q : Infinity;
+    if(n.q<pos) continue;
+    pushRest(n.q-pos);
+    var want=Math.max(1,Math.min(n.e,next)-n.q), r=Math.min(want,room());
+    var dd=STEP_DURS.filter(function(x){ return x/Q<=r; })[0];
+    out.push({m:n.m,d:dd,a:isBlack(n.m)?'#':''}); pos+=dd/Q;
+    if(next!==Infinity) pushRest(Math.max(0,Math.min(next,n.q+want)-pos));
+  }
+  var left=room(); if(left<bar) pushRest(left);
+  var title=(pm.title||fname.replace(/\.midi?$/i,'')||'Lagu MIDI').slice(0,60);
+  var tsn=ts[0]+'/'+ts[1];
+  return {score:{id:'s'+Date.now(),title:title,ts:[ts[0],ts[1]],bpm:clamp(pm.bpm,30,240),clef:'treble',notes:out},cut:cut,
+          chords:src.length>line.length, tsn:tsn};
+}
+function importMidi(e){
+  var f=e.target.files && e.target.files[0], msg=$('#smidiMsg'); e.target.value='';
+  if(!f) return;
+  var rdr=new FileReader();
+  rdr.onload=function(){
+    try{
+      var res=midiToScore(parseMidi(rdr.result),f.name);
+      if(!res){ msg.textContent='File MIDI ini tidak berisi not melodi yang bisa dibaca.'; return; }
+      var sc=res.score, low=0, cnt=0;
+      sc.notes.forEach(function(n){ if(n.m!==null){ low+=n.m; cnt++; } });
+      if(cnt && low/cnt<57) sc.clef='bass';
+      stopPlay(); scores.push(sc); curId=sc.id; sel=-1; saveScores();
+      buildScoreList(); syncScoreFields(); renderScoreView();
+      msg.textContent='Berhasil diimpor: '+cnt+' not'+(res.chords?' (akor diambil nada teratasnya saja sebagai melodi)':'')+(res.cut?', lagu dipotong karena terlalu panjang':'')+'. Tekan Putar untuk mendengar, atau Latih untuk berlatih.';
+    }catch(err){
+      msg.textContent='File tidak bisa dibaca: '+(err&&err.message?err.message:'format tidak dikenal')+'.';
+    }
+  };
+  rdr.readAsArrayBuffer(f);
 }
 
 /* ---------- gambar partitur + baca otomatis (jika tersedia) ---------- */
@@ -1561,6 +1954,7 @@ function setMode(m){
   $$('.seg button[data-mode]').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-mode')===m?'true':'false'); });
   if(app.tab==='latih') renderPractice();
   if(app.tab==='score') renderScoreView();
+  renderHeld();
 }
 var rsT=0;
 window.addEventListener('resize',function(){
@@ -1589,6 +1983,7 @@ $$('.seg button[data-mode]').forEach(function(b){ b.addEventListener('click',fun
 buildTicks(); buildTuningSelect(); buildPegs(); setA4(A4); renderTuner();
 bindPracticeOpts(); syncPracticeOpts();
 loadScores(); buildScoreList(); syncScoreFields(); buildKeyboard(); bindScore();
+bindMidi();
 setMode(app.mode);
 initAI();
 
