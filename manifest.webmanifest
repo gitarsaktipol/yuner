@@ -2,8 +2,11 @@
   "id": "./",
   "name": "FerTune",
   "short_name": "FerTune",
-  "description": "Tuner gitar, latihan baca not, partitur, dan keyboard MIDI.",
-  "categories": ["music", "education"],
+  "description": "Belajar musik untuk anak & pemula: tuner gitar, latihan baca not balok & not angka dengan tangga nada, tulis partitur, dan sambungkan keyboard MIDI.",
+  "categories": [
+    "music",
+    "education"
+  ],
   "lang": "id",
   "start_url": "./",
   "scope": "./",
@@ -12,8 +15,79 @@
   "background_color": "#FFF7FB",
   "theme_color": "#FFF7FB",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "playstore/raw/1-tuner.png",
+      "sizes": "1080x2160",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tuner gitar"
+    },
+    {
+      "src": "playstore/raw/2-latihan-balok.png",
+      "sizes": "1080x2160",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Latihan baca not balok"
+    },
+    {
+      "src": "playstore/raw/4-partitur.png",
+      "sizes": "1080x2160",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tulis partitur"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Tuner gitar",
+      "url": "./?tab=tuner",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Latihan baca not",
+      "url": "./?tab=latih",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Partitur",
+      "url": "./?tab=score",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }
