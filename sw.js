@@ -1,6 +1,6 @@
 // Yuner service worker — supaya bisa jalan offline.
 // Setiap kali kamu mengubah index.html, naikkan angka versi ini (v1 -> v2, dst).
-const CACHE = 'fertune-v8';
+const CACHE = 'fertune-v9';
 const PRECACHE = [
   './',
   './index.html',
@@ -8,7 +8,9 @@ const PRECACHE = [
   './icon-192.png',
   './icon-512.png',
   './icon-512-maskable.png',
-  './apple-touch-icon.png'
+  './apple-touch-icon.png',
+  './privacy.html',
+  './fonts/bricolage-grotesque-latin.woff2'
 ];
 
 self.addEventListener('install', (e) => {
@@ -34,19 +36,17 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   const sameOrigin = url.origin === self.location.origin;
-  const fontHost = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
-  if (!sameOrigin && !fontHost) return;
+  if (!sameOrigin) return;
 
   // File sendiri dicek ulang ke server (no-cache) supaya pembaruan cepat terlihat.
-  const netReq = !sameOrigin ? req
-    : (req.mode === 'navigate' ? new Request(req.url, { cache: 'no-cache', credentials: 'same-origin' })
-                               : new Request(req, { cache: 'no-cache' }));
+  const netReq = req.mode === 'navigate' ? new Request(req.url, { cache: 'no-cache', credentials: 'same-origin' })
+                                         : new Request(req, { cache: 'no-cache' });
 
   // Cache dulu, lalu perbarui diam-diam di belakang layar.
   e.respondWith(
     caches.match(req, { ignoreSearch: true }).then((hit) => {
       const net = fetch(netReq).then((res) => {
-        if (res && (res.ok || res.type === 'opaque')) {
+        if (res && res.ok) {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(req, copy));
         }

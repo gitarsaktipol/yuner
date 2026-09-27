@@ -16,6 +16,13 @@ manifest.webmanifest  <- metadata PWA (nama, warna tema, ikon)
 sw.js                 <- service worker untuk cache offline; CACHE name di dalamnya HARUS
                           dinaikkan versinya (mis. fertune-v2 -> fertune-v3) setiap kali
                           index.html/manifest/sw.js diubah, supaya HP mengambil versi baru
+privacy.html          <- Kebijakan Privasi (wajib untuk Play Store); ditautkan dari footer aplikasi
+fonts/                <- font Bricolage Grotesque (woff2, subset latin) + OFL.txt; disimpan sendiri,
+                          TIDAK memakai Google Fonts (aplikasi anak di Play Store sebaiknya tanpa server pihak ketiga)
+playstore/            <- bahan Play Store: PANDUAN-PLAYSTORE.md (langkah upload via PWABuilder/TWA),
+                          deskripsi-toko.md, ikon 512, feature graphic 1024x500, screenshot/ (berbingkai),
+                          raw/ (screenshot polos, juga dipakai di manifest), assetlinks-template/
+                          (isi untuk repo gitarsaktipol.github.io, verifikasi domain TWA)
 icon-192.png, icon-512.png, icon-512-maskable.png, apple-touch-icon.png  <- ikon PWA
                           (desain "FT" gradasi ungu-pink-biru dengan motif not musik;
                           icon-192/512 = sudut membulat transparan, maskable = huruf diperkecil
@@ -33,6 +40,14 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - Service worker: precache diambil dengan `cache:'reload'` dan file sendiri dicek ulang dengan `no-cache`, supaya versi baru tidak tersimpan dengan file lama dari cache HTTP GitHub Pages (±10 menit). Saat service worker baru mengambil alih, halaman otomatis dimuat ulang sekali (`controllerchange` di `index.html`), jadi pembaruan langsung terlihat.
 - Ikon di layar utama (aplikasi terpasang) diperbarui oleh Android sendiri, bisa sampai ±1 hari; cara cepat: hapus ikon lalu pasang ulang.
 - Ferdi mengerjakan lewat PowerShell Windows di folder lokal `D:\YUNER\yuner-pwa`, pakai `git add . && git commit -m "..." && git push` untuk deploy.
+
+## Google Play Store (TWA)
+- Rencana: dibungkus jadi aplikasi Android lewat PWABuilder (Trusted Web Activity), package ID `io.github.gitarsaktipol.fertune`. Langkah lengkap & status di `playstore/PANDUAN-PLAYSTORE.md`.
+- Isi aplikasi tetap diambil dari GitHub Pages, jadi update biasa cukup push (tidak perlu upload .aab baru).
+- Verifikasi domain butuh `https://gitarsaktipol.github.io/.well-known/assetlinks.json` → repo terpisah `gitarsaktipol.github.io` (belum dibuat; butuh SHA-256 kunci dari PWABuilder & Play Console).
+- Aturan untuk aplikasi anak (Families policy): jangan tambahkan iklan, analitik, SDK/CDN pihak ketiga, atau tautan keluar tanpa memperbarui `privacy.html` dan jawaban Data Safety.
+- Kunci tanda tangan (`*.keystore`) tidak boleh masuk repo (sudah di `.gitignore`).
+- Tombol kembali Android: `goTab()` memakai history (pushState/replaceState) supaya dari Latihan/Partitur "kembali" ke Tuner dulu, baru keluar. Pintasan ikon (manifest `shortcuts`) membuka `./?tab=latih` / `./?tab=score`.
 
 ## Ajakan pasang aplikasi (install)
 - Kartu "Pasang FerTune di HP" di atas halaman (script kecil terpisah di bawah `index.html`, sebelum registrasi service worker). Muncul saat browser mengirim event `beforeinstallprompt` (Chrome/Edge Android & PC); tombol "Pasang" memunculkan dialog install bawaan browser.

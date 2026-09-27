@@ -1,0 +1,6 @@
+# Kunci tanda tangan aplikasi Android: JANGAN di-upload ke GitHub
+*.keystore
+*.jks
+signing-key-info.txt
+*.aab
+*.apk
