@@ -740,6 +740,9 @@ function micCleanup(){
 }
 async function micStart(){
   setMicErr('');
+  /* Nyalakan suara saat tombol ditekan: browser HP hanya mengizinkan bunyi yang dimulai dari sentuhan,
+     jadi "ting" tuner nanti (yang muncul otomatis) bisa terdengar. */
+  try{ ac(); }catch(e){}
   try{
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw {name:'Unsupported'};
     var cons={echoCancellation:false,noiseSuppression:false,autoGainControl:false};
@@ -828,6 +831,19 @@ function pluck(m,when,dur,dest){
   o1.start(when); o2.start(when); o1.stop(when+len+0.05); o2.stop(when+len+0.05);
 }
 
+/* Bunyi "ting" seperti lonceng kecil: nada dasar + nada atas tak-harmonis (khas lonceng), cepat meredup. */
+function ting(m,when,vol){
+  var c=ac(), t=when||c.currentTime, f=freqOf(m), out=c.createGain();
+  out.gain.value=vol||0.5; out.connect(c.destination);
+  [[1,1,1.6],[2.76,0.45,0.9],[5.4,0.22,0.5],[2,0.3,1.2]].forEach(function(p){
+    var o=c.createOscillator(), g=c.createGain();
+    o.type='sine'; o.frequency.value=f*p[0];
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.linearRampToValueAtTime(p[1],t+0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+p[2]);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t+p[2]+0.05);
+  });
+}
 function successChime(){
   try{ var c=ac(), t=c.currentTime; [72,76,79,84].forEach(function(m,i){ pluck(m,t+i*0.09,0.5); }); }catch(e){}
   confetti();
@@ -1079,7 +1095,20 @@ function buildTicks(){
   el.ticks.innerHTML=h;
 }
 
-var hist=[], reading=null, lastHit=0, inTuneSince=null, toneUntil=0, shown=0;
+var hist=[], reading=null, lastHit=0, inTuneSince=null, toneUntil=0, shown=0, cheer=null;
+/* Senar baru saja pas: ting + getar + tulisan; semua senar pas: lagu kecil + confetti. */
+function stringTuned(idx){
+  var all = tn.tuning.midi.every(function(_,i){ return tn.tuned[i]; });
+  try{ ting(tn.tuning.midi[idx]+24,0,0.45); }catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate(all ? [60,60,60,60,120] : 60); }catch(e){}
+  var now=performance.now();
+  if(all){
+    setTimeout(successChime,350);
+    cheer={t:'Semua senar sudah pas! 🎉',until:now+3500};
+  } else cheer={t:'Senar '+stringNo(idx)+' sudah pas! ✓',until:now+1600};
+  /* Jangan sampai bunyi ting sendiri terbaca mikrofon sebagai nada gitar. */
+  toneUntil=now+(all?1600:900); hist.length=0;
+}
 var RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 var EASE = RM ? 1 : 0.22;
 
@@ -1105,7 +1134,7 @@ function tunerData(f,now){
     reading={idx:idx,f:med,c:c};
     if(Math.abs(c)<=5){
       if(inTuneSince===null) inTuneSince=now;
-      else if(now-inTuneSince>700 && !tn.tuned[idx]){ tn.tuned[idx]=true; updatePegs(); }
+      else if(now-inTuneSince>700 && !tn.tuned[idx]){ tn.tuned[idx]=true; updatePegs(); stringTuned(idx); }
     } else {
       inTuneSince=null;
       if(Math.abs(c)>12 && tn.tuned[idx]){ delete tn.tuned[idx]; updatePegs(); }
@@ -1137,6 +1166,7 @@ function renderTuner(){
     if(!mic.active) setText(el.verdict,'Aktifkan mikrofon untuk mulai');
     else setText(el.verdict, tn.locked!==null ? 'Petik senar '+stringNo(tn.locked) : 'Petik satu senar');
   }
+  if(cheer && performance.now()<cheer.until){ setText(el.verdict,cheer.t); state='ok'; } else cheer=null;
   if(el.reader.getAttribute('data-state')!==state) el.reader.setAttribute('data-state',state);
   shown += (targetC-shown)*EASE;
   el.needle.style.left=(50+shown)+'%';
