@@ -64,6 +64,7 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - 7 pilihan tuning: Standar, Drop D, turun ½ nada, turun 1 nada, DADGAD, Open G, Open D.
 - A4 referensi bisa diatur 430-450 Hz.
 - Ada efek suara chime + penanda "sudah pas" setelah nada stabil di zona hijau selama >=1 detik.
+- **Muat satu layar tanpa scroll** (diuji 360x640 s/d 412x915): ukuran huruf nada, jarum, tombol, pasak senar (`--pg`) & kepala gitar memakai `clamp(..vh..)` mengikuti tinggi layar. Di layar < 700 px tinggi (`@media (max-height:700px)`) label "Terlalu rendah/Pas/Terlalu tinggi" disembunyikan & judul diperkecil. Teks petunjuk dan tombol dibuat pendek (1 baris / 2 baris) — kalau menambah elemen di Tuner, cek ulang supaya tetap muat.
 - Smoothing pitch pakai median dari histori beberapa sampel + logika penolakan outlier (butuh 2x sampel menyimpang berturut baru dianggap ganti nada, bukan langsung reset di 1 sampel liar) — ini untuk mencegah jarum "lari-lari" karena noise sesaat.
 
 ### 2. Latihan baca not
@@ -142,4 +143,3 @@ Semua warna didefinisikan sebagai CSS custom properties di `:root` — kalau mau
 - Deteksi akor / pitch polifonik dari suara (mikrofon/kabel). Lewat MIDI sudah bisa.
 - Partitur dengan akor (beberapa not dalam satu ketukan) + latihan akor lewat MIDI — model not saat ini masih satu nada per slot
 - Versi native (plugin VST / aplikasi desktop & Android asli, mis. pakai JUCE) untuk latensi audio lebih rendah lagi — PWA sudah jalan di Android & PC lewat Chrome/Edge
-- Halaman Tuner di HP kadang perlu di-scroll karena kontennya lebih tinggi dari layar — sedang dalam proses dipersempit ukurannya (headstock gitar, tuts, dll) supaya muat satu layar tanpa scroll di kebanyakan ukuran HP
