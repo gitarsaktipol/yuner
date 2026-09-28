@@ -63,7 +63,7 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - Tombol bunyikan nada acuan (referensi) per senar.
 - 7 pilihan tuning: Standar, Drop D, turun ½ nada, turun 1 nada, DADGAD, Open G, Open D.
 - A4 referensi bisa diatur 430-450 Hz.
-- Ada efek suara chime + penanda "sudah pas" setelah nada stabil di zona hijau selama >=1 detik.
+- **Senar pas** (stabil di ±5 cent selama >0,7 detik, `stringTuned()`): bunyi "ting" lonceng (`ting()`, nada senar +2 oktaf), getar HP 60 ms, tulisan "Senar N sudah pas! ✓", pasak jadi hijau. **Keenam senar pas**: lagu kecil (`successChime`) + confetti + getar panjang + "Semua senar sudah pas! 🎉". Selama bunyi ting, analisis mikrofon dijeda (`toneUntil`) supaya ting tidak terbaca sebagai nada gitar. AudioContext dinyalakan di tombol "Aktifkan mikrofon" (`micStart` → `ac()`), karena browser HP memblokir bunyi yang tidak dimulai dari sentuhan.
 - **Muat satu layar tanpa scroll** (diuji 360x640 s/d 412x915): ukuran huruf nada, jarum, tombol, pasak senar (`--pg`) & kepala gitar memakai `clamp(..vh..)` mengikuti tinggi layar. Di layar < 700 px tinggi (`@media (max-height:700px)`) label "Terlalu rendah/Pas/Terlalu tinggi" disembunyikan & judul diperkecil. Teks petunjuk dan tombol dibuat pendek (1 baris / 2 baris) — kalau menambah elemen di Tuner, cek ulang supaya tetap muat.
 - Smoothing pitch pakai median dari histori beberapa sampel + logika penolakan outlier (butuh 2x sampel menyimpang berturut baru dianggap ganti nada, bukan langsung reset di 1 sampel liar) — ini untuk mencegah jarum "lari-lari" karena noise sesaat.
 
