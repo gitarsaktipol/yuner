@@ -1357,8 +1357,8 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
 
   var minStep=0, maxStep=8;
   if(!num) notes.forEach(function(n){ if(n.m!==null){ var st=diaOf(n)-base; if(st<minStep) minStep=st; if(st>maxStep) maxStep=st; } });
-  var topM = num ? 44 : 30+Math.max(0,(maxStep-8)*S/2);
-  var botM = num ? 40 : Math.max(34,-minStep*S/2+18);
+  var topM = num ? 44 : 22+Math.max(0,(maxStep-8)*S/2);
+  var botM = num ? 40 : Math.max(26,-minStep*S/2+14);
   var sysH = num ? topM+botM : topM+4*S+botM;
 
   var systems=[], cur={ms:[],w:0};
