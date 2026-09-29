@@ -382,6 +382,11 @@ body{
   100%{transform:translate(var(--dx),105vh) rotate(var(--rot));opacity:.9}
 }
 
+/* HP dimiringkan (landscape): isi memenuhi lebar layar supaya partitur/not lebih lega */
+@media (orientation:landscape) and (max-height:600px){
+  .app{max-width:none;padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
+  .tabs .in{max-width:none}
+}
 @media (prefers-reduced-motion: reduce){
   *{transition:none !important;animation:none !important}
   .confetti{display:none}
