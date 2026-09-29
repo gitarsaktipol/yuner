@@ -1594,7 +1594,7 @@ function pdFeed(f,rms,now){
   pd.rms.push(rms); if(pd.rms.length>6) pd.rms.shift();
   if(pd.rms.length>=4){
     var prev=pd.rms.slice(0,-1), mn=Math.min.apply(null,prev);
-    if(rms>0.012 && rms>2*mn+0.006 && now-pd.lastOnset>90){ pd.armed=true; pd.lastOnset=now; pd.cand=null; pd.count=0; }
+    if(rms>0.016 && rms>2*mn+0.006 && now-pd.lastOnset>90){ pd.armed=true; pd.lastOnset=now; pd.cand=null; pd.count=0; }
   }
   if(pd.armed){
     if(now-pd.lastOnset>1000){ pd.armed=false; return null; }
@@ -1606,7 +1606,7 @@ function pdFeed(f,rms,now){
   }
   /* Legato (hammer-on/pull-off/slide/slur): nada berganti tanpa serangan/petikan baru,
      selama bunyinya masih menyambung (tidak putus dulu ke sunyi). */
-  if(f && rms>0.013){
+  if(f && rms>0.016){
     var lm=Math.round(69+12*Math.log2(f/A4));
     if(lm===pd.last){ pd.legCand=null; pd.legCount=0; return null; }
     if(lm===pd.legCand) pd.legCount++; else { pd.legCand=lm; pd.legCount=1; }
@@ -1619,6 +1619,13 @@ function practiceData(f,rms,now){
   if(now<pr.mute){ pd.armed=false; return; }
   /* Sedang main lewat MIDI: abaikan mikrofon supaya bunyi synth dari speaker tidak terhitung dua kali. */
   if(midi.lastT && now-midi.lastT<2500){ pd.armed=false; return; }
+  /* Penyaring suara bukan alat musik (sama seperti Tuner): nada harus murni dan dalam rentang not soal (±7 nada). */
+  if(f && yin.conf>0.1) f=null;
+  if(f && pr.idx && pr.idx.length){
+    var fm=Math.round(69+12*Math.log2(f/A4))+instShift(), lo=1e9, hi=-1e9;
+    pr.idx.forEach(function(q){ var nm=pr.score.notes[q].m; if(nm!==null){ if(nm<lo) lo=nm; if(nm>hi) hi=nm; } });
+    if(lo<=hi && (fm<lo-7 || fm>hi+7)) f=null;
+  }
   var m=pdFeed(f,rms,now);
   if(m!==null) practiceHit(m);
 }
