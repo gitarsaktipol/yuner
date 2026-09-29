@@ -704,6 +704,7 @@ function yin(buf,sr){
     }
   }
   if(found<1) return null;
+  yin.conf=d[found];
   var x0=d[found-1], x1=d[found], x2=d[found+1];
   var den=x0+x2-2*x1;
   var shift=den?(x0-x2)/(2*den):0;
@@ -728,6 +729,7 @@ function micLoop(){
     mic.analyser.getFloatTimeDomainData(mic.buf);
     var s=0,i; for(i=0;i<mic.buf.length;i++) s+=mic.buf[i]*mic.buf[i];
     var rms=Math.sqrt(s/mic.buf.length);
+    mic.lastRms=rms;
     var f = rms<0.008 ? null : yin(mic.buf,mic.ctx.sampleRate);
     for(i=0;i<mic.onData.length;i++) mic.onData[i](f,rms,now);
   }
@@ -1124,9 +1126,26 @@ function toggleLock(i){
 }
 function tunerData(f,now){
   if(now<toneUntil) return;
+  /* Penyaring suara bukan gitar: harus cukup keras, nadanya murni (yin.conf kecil), dan dalam rentang senar gitar
+     (mode kunci: dekat senar yang dipilih). Selain itu diabaikan, jarum tidak ikut loncat. */
+  if(f && (mic.lastRms<0.015 || yin.conf>0.1)) f=null;
   if(f){
-    if(hist.length && Math.abs(1200*Math.log2(f/hist[hist.length-1]))>150) hist.length=0;
-    hist.push(f); if(hist.length>5) hist.shift();
+    var fr0=tn.tuning.midi.map(freqOf), lo=Math.min.apply(null,fr0), hi=Math.max.apply(null,fr0);
+    if(tn.locked!==null){ lo=hi=fr0[tn.locked]; }
+    if(f<lo*0.75 || f>hi*1.35) f=null;
+  }
+  if(f){
+    if(hist.length>=3){
+      var hs=hist.slice().sort(function(a,b){return a-b;}), hm=hs[hs.length>>1];
+      if(Math.abs(1200*Math.log2(f/hm))>100){
+        /* nada menyimpang: baru dianggap ganti nada kalau 3x berturut-turut konsisten, kalau tidak dibuang sebagai gangguan */
+        if(tn.odd && Math.abs(1200*Math.log2(f/tn.odd))<60) tn.oddN++; else { tn.odd=f; tn.oddN=1; }
+        if(tn.oddN<3){ lastHit=now; return; }
+        hist.length=0;
+      }
+    }
+    tn.odd=0; tn.oddN=0;
+    hist.push(f); if(hist.length>7) hist.shift();
     var sorted=hist.slice().sort(function(a,b){return a-b;});
     var med=sorted[sorted.length>>1];
     lastHit=now;
