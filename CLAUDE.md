@@ -41,6 +41,18 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - Ikon di layar utama (aplikasi terpasang) diperbarui oleh Android sendiri, bisa sampai ±1 hari; cara cepat: hapus ikon lalu pasang ulang.
 - Ferdi mengerjakan lewat PowerShell Windows di folder lokal `D:\YUNER\yuner-pwa`, pakai `git add . && git commit -m "..." && git push` untuk deploy.
 
+## Orientasi layar (Portrait & Landscape)
+
+- Manifest `orientation` diatur `portrait-primary` untuk memungkinkan kedua mode, bukan terkunci portrait saja.
+- **Portrait** (standar): layout vertikal, semua elemen berjajar vertikal.
+- **Landscape**: layout responsif dengan media query `@media (orientation:landscape)`:
+  - `.app` tanpa `max-width`, padding berkurang supaya lebih lebar
+  - `.scorehost` (papan partitur) `min-height:180px` (lebih besar dari portrait's `90px`)
+  - **Menu Latihan**: tab berubah `flex-direction:row` (bukan column), score di kiri (`flex:1`) dan kontrol (tombol, detail) di kanan dengan ordering via `order` CSS
+  - **Menu Partitur**: lebih lebar untuk editor
+  - **Tuner**: huruf nada `#noteName` disesuaikan ukurannya, pasak `--pg` lebih kecil
+- Ketika user rotate device dari portrait ke landscape, score langsung membesar dan kontrol bergerak ke samping — lebih nyaman untuk latihan dengan layar landscape yang lebih lebar.
+
 ## Google Play Store (TWA)
 - Rencana: dibungkus jadi aplikasi Android lewat PWABuilder (Trusted Web Activity), package ID `io.github.gitarsaktipol.fertune`. Langkah lengkap & status di `playstore/PANDUAN-PLAYSTORE.md`.
 - Isi aplikasi tetap diambil dari GitHub Pages, jadi update biasa cukup push (tidak perlu upload .aab baru).
