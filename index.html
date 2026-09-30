@@ -2177,7 +2177,8 @@ function changeDur(at,newD){
   var delta=newD-it.d, left=[];
   function mk(d){ var o={m:null,d:d,a:''}; if(it.e) o.e=true; return o; }
   if(delta<0){
-    left=splitDur(-delta).map(mk);
+    /* di ujung partitur: sisa ruang di sebelah kanan tetap kosong (tanpa rehat); kalau masih ada not/rehat sesudahnya, sisanya jadi rehat agar tidak menggeser */
+    left = (at===N.length-1) ? [] : splitDur(-delta).map(mk);
     it.d=newD; it.tie=false;
     N.splice.apply(N,[at+1,0].concat(left));
   } else {
