@@ -2232,8 +2232,21 @@ function changeDur(at,newD){
         swallowed+=need; need=0;
       }
     }
+    /* masih kurang: pakai juga rehat/kosong terdekat di sebelah KIRI dalam birama yang sama (not di antaranya bergeser ke kiri, ujung akhir tetap) */
+    var k0=meas?meas[0]:0, kk;
+    for(kk=at-1; kk>=k0 && need>1e-6; kk--){
+      if(!N[kk] || N[kk].m!==null) continue;
+      if(N[kk].d<=need+1e-6){ need-=N[kk].d; swallowed+=N[kk].d; edits.push({j:kk,repl:[]}); }
+      else {
+        var rem2=N[kk].d-need, ee2=N[kk].e;
+        edits.push({j:kk,repl:splitDur(rem2).map(function(d){ var o={m:null,d:d,a:''}; if(ee2) o.e=true; return o; })});
+        swallowed+=need; need=0;
+      }
+    }
     if(barSum+delta-swallowed>bb+1e-6){ showScoreAlert('Tidak cukup ruang di birama ini untuk not yang lebih panjang.'); return; }
-    for(j=edits.length-1;j>=0;j--) N.splice.apply(N,[edits[j].j,1].concat(edits[j].repl));
+    edits.sort(function(a,b){ return b.j-a.j; });
+    for(j=0;j<edits.length;j++) N.splice.apply(N,[edits[j].j,1].concat(edits[j].repl));
+    sel=N.indexOf(it);
     it.d=newD; it.tie=false;
   }
   saveScores(); renderScoreView();
