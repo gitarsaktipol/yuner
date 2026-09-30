@@ -232,6 +232,9 @@ header .sel select{max-width:100%;min-width:0}
 .n{color:var(--ink);cursor:pointer}
 .n .hl{fill:var(--hl);opacity:0;transition:opacity .15s}
 .inscur{fill:var(--hl);opacity:1;rx:9}
+.caret{stroke:var(--brass);stroke-width:3;stroke-linecap:round;animation:blink 1s steps(1,end) infinite}
+@keyframes blink{ 0%,55%{opacity:1} 56%,100%{opacity:0} }
+.tie{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
 .n.st-cur .hl,.n.st-sel .hl{opacity:1}
 .n.st-curGhost .hl{opacity:1;fill:none;stroke:var(--brass);stroke-width:2;stroke-dasharray:4 3}
 .n.st-ok{color:var(--ok)}
@@ -588,6 +591,7 @@ body{
 
   <section class="board">
     <div class="scorehost" id="sscore"></div>
+    <div class="pstatus bad" id="salert" role="alert" hidden style="font-size:15px;min-height:0;margin:8px 8px 2px"></div>
     <div class="empty" id="sempty">Belum ada not. Pilih nilai not, lalu ketuk tuts piano di bawah.</div>
     <div class="held" id="sheld" hidden></div>
   </section>
@@ -1286,6 +1290,9 @@ function advOf(n,mode,key){
   if(mode==='num') return Math.max(24,26*n.d);
   return 14+7*Math.sqrt(4*n.d)+(accShown(n,key)?10:0);
 }
+/* Not bertanda tie (n.tie) tersambung ke not sesudahnya yang nadanya sama: not sambungan tidak dibunyikan/dinilai lagi. */
+function tieFrom(notes,i){ return i>0 && notes[i-1].tie && notes[i].m!==null && notes[i-1].m===notes[i].m; }
+function tieLen(notes,i){ var d=notes[i].d; while(notes[i].tie && notes[i+1] && notes[i+1].m===notes[i].m){ i++; d+=notes[i].d; } return d; }
 function buildMeasures(notes,barBeats){
   var ms=[], cur=[], acc=0;
   notes.forEach(function(n,i){
@@ -1370,7 +1377,8 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
   var notes=score.notes, num=(mode==='num');
   var barBeats=score.ts[0]*4/score.ts[1];
   var ms=buildMeasures(notes,barBeats);
-  if(!notes.length){ host.innerHTML=''; return; }
+  if(!ms.length) ms=[[]];
+  var unit = num ? 26 : 28, pos={};
   var key=score.key||0, nAcc=Math.abs(key);
   /* lebar tanda kunci (♯/♭ setelah kunci G/F), digambar di awal setiap baris */
   var ksW = (num||!nAcc) ? 0 : nAcc*9+6;
@@ -1384,8 +1392,11 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
   var sysH = num ? topM+botM : topM+4*S+botM;
 
   var systems=[], cur={ms:[],w:0};
-  ms.forEach(function(m){
+  ms.forEach(function(m,mIdx){
     var w=10+m.reduce(function(s,i){ return s+advOf(notes[i],mode,key); },0)+6;
+    /* birama terakhir yang belum penuh tetap diberi ruang untuk sisa ketuknya */
+    var usedB=m.reduce(function(s,i){ return s+notes[i].d; },0);
+    if(mIdx===ms.length-1 && usedB<barBeats-1e-6) w+=(barBeats-usedB)*unit;
     var avail=W-margin*2-clefW-(systems.length===0?tsW:0);
     if(cur.ms.length && cur.w+w>avail){ systems.push(cur); cur={ms:[],w:0}; }
     cur.ms.push({idx:m,w:w}); cur.w+=w;
@@ -1398,7 +1409,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
   var hasCursor = (cursorAfter!==undefined && cursorAfter!==null);
   var targetNi = hasCursor ? (cursorAfter>=0 ? cursorAfter : notes.length-1) : -2;
   var cursorOnSlot = hasCursor && cursorAfter>=0 && notes[cursorAfter] && notes[cursorAfter].m===null;
-  var cx=null, cy=null;
+  var cx=null, cy=null, startX=null, startY=null;
   if(num) out+='<text x="'+margin+'" y="18" font-size="15" font-weight="700">1 = '+KEY_NAMES[String(key)]+'   '+score.ts[0]+'/'+score.ts[1]+'</text>';
 
   systems.forEach(function(sys,si){
@@ -1407,6 +1418,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
     var isLast=(si===systems.length-1);
     var k = sys.w>avail ? avail/sys.w : ((isLast && systems.length>1) ? 1 : Math.min(avail/sys.w,1.5));
     var x=margin+clefW+(si===0?tsW:0), i;
+    if(si===0){ startX=x+10; startY=y0; }
     if(!num){
       for(i=0;i<5;i++){ var ly=y0+i*S; out+='<line class="stf" x1="'+margin+'" x2="'+(W-margin)+'" y1="'+ly+'" y2="'+ly+'"/>'; }
       out+='<line class="bar" x1="'+margin+'" x2="'+margin+'" y1="'+y0+'" y2="'+(y0+4*S)+'"/>';
@@ -1444,22 +1456,36 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
         var noteCX = num ? (px+12) : (px+extra+(adv-extra)/2);
         if(num) out+=numSvg(n,px+12,y0+0,ni,cls,bm,key);
         else out+=noteSvg(n,noteCX,y0,base,ni,cls,key);
-        if(ni===targetNi && cursorOnSlot){ cx=noteCX; cy=y0; }
+        if(n.m!==null) pos[ni]={x:noteCX,y:(num?y0:y0+4*S-(diaOf(n)-base)*S/2),si:si,up:(num?false:(diaOf(n)-base)<4),xe:W-margin};
+        if(ni===targetNi && cursorOnSlot){ cx=noteCX+16; cy=y0; }
         px+=adv;
-        if(ni===targetNi && !cursorOnSlot){ cx=px+12; cy=y0; }
+        if(ni===targetNi && !cursorOnSlot){ cx=px+(num?4:2); cy=y0; }
       });
       var bx=x+wk-2, lastM=(isLast && mi===sys.ms.length-1);
       var by1= num ? y0-22 : y0, by2 = num ? y0+22 : y0+4*S;
       out+='<line class="bar" x1="'+bx+'" x2="'+bx+'" y1="'+by1+'" y2="'+by2+'"/>';
-      if(lastM && notes.length && buildMeasures(notes,barBeats).length && true){
+      var lastFull = notes.length && ms[ms.length-1].reduce(function(s,i){ return s+notes[i].d; },0)>=barBeats-1e-6;
+      if(lastM && lastFull){
         out+='<line class="bar" x1="'+(bx+4)+'" x2="'+(bx+4)+'" y1="'+by1+'" y2="'+by2+'" style="stroke-width:3.2"/>';
       }
       x+=wk;
     });
   });
+  /* Tie (busur penyambung) antara not bernada sama */
+  Object.keys(pos).forEach(function(k){
+    var a=pos[k], ni2=parseInt(k,10), b=pos[ni2+1];
+    if(!notes[ni2].tie || notes[ni2+1]===undefined || notes[ni2+1].m!==notes[ni2].m) return;
+    var dy = a.up ? 8 : -8, cd = a.up ? 8 : -8, x1=a.x+8, y1=a.y+dy, x2, y2;
+    if(b && b.si===a.si){ x2=b.x-8; y2=b.y+dy; }
+    else { x2=a.xe-4; y2=y1; }
+    out+='<path class="tie" d="M'+x1+' '+y1+' Q'+((x1+x2)/2)+' '+(Math.max(y1,y2)+cd)+' '+x2+' '+y2+'"/>';
+    if(b && b.si!==a.si) out+='<path class="tie" d="M'+(b.x-34)+' '+(b.y+dy)+' Q'+(b.x-21)+' '+(b.y+dy+cd)+' '+(b.x-8)+' '+(b.y+dy)+'"/>';
+  });
+  if(hasCursor && cx===null && !notes.length && startX!==null){ cx=startX; cy=startY; }
   if(hasCursor && cx!==null){
-    if(num) out+='<rect class="inscur" x="'+(cx-15)+'" y="'+(cy-34)+'" width="30" height="74" rx="9"/>';
-    else out+='<rect class="inscur" x="'+(cx-15)+'" y="'+(cy-18)+'" width="30" height="'+(4*S+36)+'" rx="9"/>';
+    /* kursor seperti di Word: garis tipis berkedip di sebelah kanan not terakhir */
+    if(num) out+='<line class="caret" x1="'+cx+'" x2="'+cx+'" y1="'+(cy-24)+'" y2="'+(cy+24)+'"/>';
+    else out+='<line class="caret" x1="'+cx+'" x2="'+cx+'" y1="'+(cy-10)+'" y2="'+(cy+4*S+10)+'"/>';
   }
   host.innerHTML='<svg class="sv" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Partitur">'+out+'</svg>';
 }
@@ -1584,7 +1610,7 @@ function newRound(keep){
     else if(pr.src==='custom') pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genCustom()};
     else pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genRandom()};
   }
-  pr.idx=[]; pr.score.notes.forEach(function(n,i){ if(n.m!==null) pr.idx.push(i); });
+  pr.idx=[]; pr.score.notes.forEach(function(n,i){ if(n.m!==null && !tieFrom(pr.score.notes,i)) pr.idx.push(i); });
   pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
   pr.lastAdvanceT=0; pr.fast=false;
   pd.armed=false; pd.cand=null; pd.count=0; pd.last=null; pd.legCand=null; pd.legCount=0;
@@ -1848,6 +1874,7 @@ function twinkle(){
   return {id:'s0',title:'Contoh: Twinkle Twinkle',ts:[4,4],bpm:100,clef:'treble',
     notes:P.map(function(m,i){ return {m:m,d:D[i],a:''}; })};
 }
+var flashIdx={}, flashT=0, alertT=0;
 var scores=[], curId=null, sel=-1, playing=false, playIdx=-1, playTimers=[], playGain=null;
 function loadScores(){
   try{ scores=JSON.parse(store.get('yg.scores','[]')); }catch(e){ scores=[]; }
@@ -1872,7 +1899,7 @@ function syncScoreFields(){
 function renderScoreView(){
   var s=curScore();
   drawScore($('#sscore'),s,app.mode,function(i){
-    return i===playIdx ? 'cur' : '';
+    return i===playIdx ? 'cur' : (flashIdx[i] ? 'bad' : '');
   }, playing ? null : sel);
   $('#sempty').hidden = s.notes.length>0;
   $('#splay').textContent = playing ? '■ Berhenti' : '▶ Putar';
@@ -1894,14 +1921,65 @@ function buildKeyboard(){
   kb.innerHTML=h;
   $('#soctval').textContent='Oktaf '+inp.oct;
 }
+var DURS=[4,3,2,1.5,1,0.75,0.5,0.375,0.25];
+function splitDur(x){
+  var out=[];
+  while(x>1e-6){
+    var pick=null, i;
+    for(i=0;i<DURS.length;i++) if(DURS[i]<=x+1e-6){ pick=DURS[i]; break; }
+    if(pick===null) break;
+    out.push(pick); x-=pick;
+  }
+  return out;
+}
+/* Sisa ketuk di birama tempat not baru akan masuk (indeks 'at'). */
+function barRemain(s,at){
+  var bb=s.ts[0]*4/s.ts[1], acc=0, i;
+  for(i=0;i<at && i<s.notes.length;i++){ acc+=s.notes[i].d; if(acc>=bb-1e-6) acc=0; }
+  return bb-acc;
+}
+function fmtBeat(x){ return String(Math.round(x*100)/100).replace('.',','); }
+function showScoreAlert(msg){
+  var el=$('#salert'); el.textContent=msg; el.hidden=false;
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  clearTimeout(alertT); alertT=setTimeout(function(){ el.hidden=true; },6000);
+}
 function fillOrInsert(item){
-  var s=curScore();
-  if(sel>=0 && s.notes[sel] && s.notes[sel].m===null){
-    s.notes[sel]=item;
-    sel = (sel+1<s.notes.length) ? sel+1 : -1;
+  var s=curScore(), bb=s.ts[0]*4/s.ts[1], N=s.notes;
+  /* 1) kursor di rehat (slot kosong): not menggantikan rehat itu, sisa ketuknya tetap rehat */
+  if(sel>=0 && N[sel] && N[sel].m===null){
+    var r=N[sel], repl=null, cnt=1;
+    if(item.d<=r.d+1e-6){
+      repl=[item]; splitDur(r.d-item.d).forEach(function(d){ repl.push({m:null,d:d,a:''}); });
+    } else {
+      var need=item.d-r.d, j=sel+1;
+      while(need>1e-6 && N[j] && N[j].m===null){ need-=N[j].d; j++; }
+      if(need<=1e-6){ repl=[item]; splitDur(-need).forEach(function(d){ repl.push({m:null,d:d,a:''}); }); cnt=j-sel; }
+    }
+    if(repl){
+      N.splice.apply(N,[sel,cnt].concat(repl));
+      sel = (sel+1<N.length) ? sel+1 : -1;
+      saveScores(); renderScoreView(); return;
+    }
+  }
+  /* 2) sisipkan setelah kursor / di akhir */
+  var at = sel>=0 ? sel+1 : N.length, rem=barRemain(s,at);
+  if(item.d<=rem+1e-6){
+    N.splice(at,0,item); sel=at;
   } else {
-    var at = sel>=0 ? sel+1 : s.notes.length;
-    s.notes.splice(at,0,item); sel=at;
+    /* Melebihi sisa ketuk birama: tampilkan peringatan, not dipecah dan disambung dengan tie ke birama berikutnya. */
+    var pieces=splitDur(rem), left=item.d-rem;
+    while(left>1e-6){ var chunk=Math.min(left,bb); pieces=pieces.concat(splitDur(chunk)); left-=chunk; }
+    var newN=pieces.map(function(d,i){
+      var o={m:item.m,d:d,a:item.a};
+      if(item.m!==null && i<pieces.length-1) o.tie=true;
+      return o;
+    });
+    N.splice.apply(N,[at,0].concat(newN));
+    sel=at+newN.length-1;
+    flashIdx={}; for(var q=at;q<at+newN.length;q++) flashIdx[q]=true;
+    clearTimeout(flashT); flashT=setTimeout(function(){ flashIdx={}; renderScoreView(); },1800);
+    showScoreAlert('Penulisan tidak sesuai dengan sisa nilai nada ('+fmtBeat(rem)+' ketuk tersisa di birama ini). '+(item.m!==null?'Not dipecah dan disambung dengan tie ke birama berikutnya.':'Rehat dipecah ke birama berikutnya.'));
   }
   saveScores(); renderScoreView();
 }
@@ -1926,8 +2004,13 @@ function delNote(){
     if(s.notes.length>1 && s.notes[at]){ s.notes.splice(at,1); sel=Math.min(at,s.notes.length-1); saveScores(); renderScoreView(); }
     return;
   }
-  /* Kembalikan jadi rehat kosong di tempat yang sama, agar jumlah birama tidak ikut bergeser. */
+  /* Not terakhir: hapus sungguhan (birama terakhir kembali kosong). Selain itu jadi rehat di tempat yang sama, agar birama tidak bergeser. */
+  if(at===s.notes.length-1){
+    s.notes.pop(); if(s.notes.length) s.notes[s.notes.length-1].tie=false;
+    sel=-1; saveScores(); renderScoreView(); return;
+  }
   s.notes[at]={m:null,d:s.notes[at].d,a:''};
+  if(at>0) s.notes[at-1].tie=false;
   sel=at;
   saveScores(); renderScoreView();
 }
@@ -1944,7 +2027,7 @@ function playScore(){
   playing=true;
   s.notes.forEach(function(n,i){
     var at=acc*spb, dur=n.d*spb;
-    if(n.m!==null) pluck(n.m,t+at,dur,playGain);
+    if(n.m!==null && !tieFrom(s.notes,i)) pluck(n.m,t+at,tieLen(s.notes,i)*spb,playGain);
     playTimers.push(setTimeout(function(){ playIdx=i; renderScoreView(); },150+at*1000));
     acc+=n.d;
   });
@@ -1954,8 +2037,8 @@ function playScore(){
 function newScore(){
   stopPlay();
   var ts=[4,4];
-  var s={id:'s'+Date.now(),title:'Partitur baru',ts:ts,bpm:90,clef:'treble',notes:blankMeasures(ts,4)};
-  scores.push(s); curId=s.id; sel=0; saveScores();
+  var s={id:'s'+Date.now(),title:'Partitur baru',ts:ts,bpm:90,clef:'treble',notes:[]};
+  scores.push(s); curId=s.id; sel=-1; saveScores();
   buildScoreList(); syncScoreFields(); renderScoreView();
 }
 var delArmed=false, delTimer=0;
@@ -1982,7 +2065,7 @@ function bindScore(){
   $('#sbpm').addEventListener('change',function(e){ var s=curScore(); s.bpm=clamp(parseInt(e.target.value,10)||90,30,240); e.target.value=s.bpm; saveScores(); });
   $('#sts').addEventListener('change',function(e){
     var s=curScore(), p=e.target.value.split('/'); s.ts=[parseInt(p[0],10),parseInt(p[1],10)];
-    if(s.notes.every(function(n){ return n.m===null; })){ s.notes=blankMeasures(s.ts,4); sel=0; }
+    if(s.notes.every(function(n){ return n.m===null; })){ s.notes=[]; sel=-1; }
     saveScores(); renderScoreView();
   });
   $('#sclef').addEventListener('change',function(e){ curScore().clef=e.target.value; saveScores(); renderScoreView(); });
@@ -2069,9 +2152,11 @@ function scoreToMidi(sc){
   ev=ev.concat([0,0xFF,0x58,0x04,sc.ts[0],Math.round(Math.log2(sc.ts[1])),24,8]);
   ev=ev.concat([0,0xC0,0]); /* program 0: piano */
   var wait=0;
-  sc.notes.forEach(function(n){
+  sc.notes.forEach(function(n,i){
     var len=Math.round(n.d*PPQ);
     if(n.m===null){ wait+=len; return; }
+    if(tieFrom(sc.notes,i)) return;
+    len=Math.round(tieLen(sc.notes,i)*PPQ);
     var m=clamp(n.m,0,127);
     ev=ev.concat(vlq(wait),[0x90,m,90]);
     ev=ev.concat(vlq(len),[0x80,m,0]);
