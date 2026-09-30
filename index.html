@@ -1465,7 +1465,8 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
     var yTop=head+si*sysH, y0=yTop+topM;
     var avail=W-margin*2-clefW-(si===0?tsW:0);
     var isLast=(si===systems.length-1);
-    var k = sys.w>avail ? avail/sys.w : ((isLast && systems.length>1) ? 1 : Math.min(avail/sys.w,1.5));
+    /* Baris direnggangkan memenuhi lebar layar (layar miring/lebar); baris terakhir dari banyak baris tetap rapat */
+    var k = sys.w>avail ? avail/sys.w : ((isLast && systems.length>1) ? 1 : Math.min(avail/sys.w, systems.length===1 ? 4 : 2.5));
     var x=margin+clefW+(si===0?tsW:0), i;
     if(si===0){ startX=x+10; startY=y0; }
     if(!num){
