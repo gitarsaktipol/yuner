@@ -2192,13 +2192,19 @@ function changeDur(at,newD){
     for(q=0;q<ms.length;q++) if(ms[q].indexOf(at)>=0){ meas=ms[q]; break; }
     var lastIdx = meas ? meas[meas.length-1] : at, barSum=0;
     if(meas) meas.forEach(function(i){ barSum+=N[i].d; }); else barSum=it.d;
-    var need=delta, j=at+1, cnt=0, rest=null, swallowed=0;
-    while(need>1e-6 && j<=lastIdx && N[j] && N[j].m===null){
-      if(N[j].d<=need+1e-6){ need-=N[j].d; swallowed+=N[j].d; cnt++; j++; }
-      else { var rem=N[j].d-need, ee=N[j].e; rest=splitDur(rem).map(function(d){ var o={m:null,d:d,a:''}; if(ee) o.e=true; return o; }); swallowed+=need; cnt++; need=0; }
+    /* Ambil ruang dari rehat/kosong di sebelah kanan (yang terdekat dulu, boleh tidak berdampingan); not di antaranya bergeser ke kanan */
+    var need=delta, swallowed=0, edits=[], j;
+    for(j=at+1; j<=lastIdx && need>1e-6; j++){
+      if(!N[j] || N[j].m!==null) continue;
+      if(N[j].d<=need+1e-6){ need-=N[j].d; swallowed+=N[j].d; edits.push({j:j,repl:[]}); }
+      else {
+        var rem=N[j].d-need, ee=N[j].e;
+        edits.push({j:j,repl:splitDur(rem).map(function(d){ var o={m:null,d:d,a:''}; if(ee) o.e=true; return o; })});
+        swallowed+=need; need=0;
+      }
     }
     if(barSum+delta-swallowed>bb+1e-6){ showScoreAlert('Tidak cukup ruang di birama ini untuk not yang lebih panjang.'); return; }
-    N.splice.apply(N,[at+1,cnt].concat(rest||[]));
+    for(j=edits.length-1;j>=0;j--) N.splice.apply(N,[edits[j].j,1].concat(edits[j].repl));
     it.d=newD; it.tie=false;
   }
   saveScores(); renderScoreView();
