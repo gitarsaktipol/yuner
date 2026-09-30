@@ -877,6 +877,38 @@ function successChime(){
   try{ var c=ac(), t=c.currentTime; [72,76,79,84].forEach(function(m,i){ pluck(m,t+i*0.09,0.5); }); }catch(e){}
   confetti();
 }
+/* Tepuk tangan buatan: banyak "plok" derau singkat yang disaring + dengung penonton yang mengecil. */
+var noiseBuf=null;
+function applause(dur){
+  var c=ac(), t0=c.currentTime+0.05, i;
+  if(!noiseBuf){ noiseBuf=c.createBuffer(1,c.sampleRate*2,c.sampleRate); var d=noiseBuf.getChannelData(0); for(i=0;i<d.length;i++) d[i]=Math.random()*2-1; }
+  var master=c.createGain(); master.gain.value=0.9; master.connect(c.destination);
+  function burst(at,len,vol,f){
+    var src=c.createBufferSource(), bp=c.createBiquadFilter(), g=c.createGain();
+    src.buffer=noiseBuf; bp.type='bandpass'; bp.frequency.value=f; bp.Q.value=0.8;
+    g.gain.setValueAtTime(0.0001,at); g.gain.linearRampToValueAtTime(vol,at+0.004); g.gain.exponentialRampToValueAtTime(0.0001,at+len);
+    src.connect(bp); bp.connect(g); g.connect(master); src.start(at,Math.random()*1.5,len+0.05);
+  }
+  var n=Math.round(dur*22);
+  for(i=0;i<n;i++){
+    var x=Math.random(), at=t0+x*dur, fade=1-x*0.75;   /* makin ke belakang makin jarang & pelan */
+    if(Math.random()<fade) burst(at,0.04+Math.random()*0.05,(0.25+Math.random()*0.35)*fade,1200+Math.random()*2600);
+  }
+  /* dengung penonton */
+  var src=c.createBufferSource(), lp=c.createBiquadFilter(), g=c.createGain();
+  src.buffer=noiseBuf; lp.type='bandpass'; lp.frequency.value=1800; lp.Q.value=0.5;
+  g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(0.16,t0+0.25); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  src.connect(lp); lp.connect(g); g.connect(master); src.start(t0,0,dur+0.1);
+}
+/* Latihan selesai 100%: nada naik (rendah -> tinggi) + tepuk tangan + confetti. */
+function practiceWin(){
+  try{ var c=ac(), t=c.currentTime; [60,64,67,72,76,79,84].forEach(function(m,i){ pluck(m,t+i*0.08,0.6); }); ting(88,t+0.6,0.4); applause(1.7); }catch(e){}
+  confetti();
+}
+/* Latihan selesai tapi belum 100%: nada turun (tinggi -> rendah). */
+function practiceMiss(){
+  try{ var c=ac(), t=c.currentTime; [79,76,72,67,60].forEach(function(m,i){ pluck(m,t+i*0.13,0.5); }); }catch(e){}
+}
 /* Hujan confetti warna-warni saat berhasil (senar pas / soal 100% benar). */
 function confetti(){
   if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -1725,19 +1757,21 @@ function finishRound(){
   $('#psum').hidden=false;
   var board=$('#pboard');
   if(pct>=100){
-    board.classList.add('glow'); successChime();
+    board.classList.add('glow'); practiceWin();
     setTimeout(function(){ board.classList.remove('glow'); },1400);
     if(pr.src==='arcade'){
       $('#psumD').textContent+=' Naik ke level berikutnya...';
-      autoT=setTimeout(function(){ advanceArcadeLevel(); syncPracticeOpts(); newRound(); },1600);
+      autoT=setTimeout(function(){ advanceArcadeLevel(); syncPracticeOpts(); newRound(); },2200);
     } else {
       /* Semua mode: benar 100% -> otomatis ganti soal baru */
       $('#psumD').textContent+=' Soal baru...';
-      autoT=setTimeout(function(){ newRound(); },1600);
+      autoT=setTimeout(function(){ newRound(); },2200);
     }
-  } else if(pr.src==='arcade'){
-    $('#psumD').textContent+=' Ulangi level ini dulu ya.';
-    autoT=setTimeout(function(){ newRound(); },1600);
+  } else {
+    /* Belum 100%: bunyi nada turun, lalu otomatis ganti soal (Arcade mengulang level yang sama) */
+    practiceMiss();
+    $('#psumD').textContent+= pr.src==='arcade' ? ' Ulangi level ini dulu ya.' : ' Soal baru...';
+    autoT=setTimeout(function(){ newRound(); },1800);
   }
 }
 var shownMsg=null;
