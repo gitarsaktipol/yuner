@@ -278,6 +278,30 @@ header .sel select{max-width:100%;min-width:0}
 #pCustomOpts>.noteGrid{margin-top:6px}
 #pCustomOpts .octLabel{margin:12px 0 4px;text-align:center;font-weight:800;font-size:13px;letter-spacing:.35em;word-spacing:.5em;padding-left:.35em;color:var(--ink)}
 #pCustomOpts>.hint{margin-top:10px}
+/* ---- Layar berlatih (overlay layar penuh, landscape) ---- */
+.play{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;gap:6px;background:var(--bg);
+  padding:calc(6px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px))}
+.play[hidden]{display:none}
+body.playing{overflow:hidden}
+.playbar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px}
+.pclose{width:40px;height:40px;border-radius:50%;border:0;background:var(--pLilac);box-shadow:0 3px 0 var(--dLilac);font-size:18px;font-weight:800;color:var(--ink);cursor:pointer}
+.plast{font-size:15px;font-weight:700;color:var(--muted)}
+.plast b{color:var(--ink);font-size:18px}
+.pstage{flex:1;min-height:0;display:flex;flex-direction:column}
+.play .board{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:8px 10px}
+.play .scorehost{flex:1;min-height:0;overflow:auto;display:flex;align-items:center}
+.play .pstatus{font-size:clamp(20px,6vh,32px);min-height:0;margin:2px 8px}
+.prebtns{display:flex;gap:12px;justify-content:center;margin:6px 0 2px}
+.prebtns .start{flex:1;max-width:340px;padding:11px 12px;font-size:17px}
+.prebtns .alt{background:var(--pSky);color:var(--ink);text-shadow:none;box-shadow:0 6px 0 var(--dSky)}
+.play .sum{padding:6px 12px;font-size:14px;border-radius:18px}
+.play .sum b{display:inline;font-size:16px;margin:0 8px 0 0}
+.play .level{margin-top:4px}
+#pgo{width:100%;margin-top:4px}
+/* Jika layar masih tegak (kunci landscape tidak diizinkan browser), layar berlatih diputar 90° supaya HP tinggal dimiringkan */
+@media (orientation:portrait){
+  .play{inset:auto;top:0;left:0;width:100vh;height:100vw;transform-origin:top left;transform:rotate(90deg) translateY(-100%)}
+}
 .noteGrid{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:8px}
 .noteGrid button{background:var(--bg);border:0;border-radius:9px;padding:7px 0;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;box-shadow:0 2px 0 var(--line)}
 .noteGrid button[aria-pressed="true"]{background:var(--pPink);color:var(--ink);font-weight:800;box-shadow:0 2px 0 var(--dPink);animation:pop .35s var(--bounce)}
@@ -473,8 +497,27 @@ body{
 <section class="tab" id="tab-latih" hidden>
   <header><h1><svg class="mascot" viewBox="0 0 40 40" aria-hidden="true"><path class="mf" d="M25 29V6c4 1 8 4 9 9"/><ellipse class="mb" cx="17" cy="29" rx="10" ry="8"/><circle class="me" cx="13.5" cy="27.5" r="1.6"/><circle class="me" cx="20.5" cy="27.5" r="1.6"/><path d="M14 31.5q3 2.6 6 0" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/><circle class="mc" cx="10.5" cy="31" r="1.8"/><circle class="mc" cx="23.5" cy="31" r="1.8"/></svg>Latihan baca not</h1></header>
 
-  <button class="start" id="pstart" type="button">Aktifkan mikrofon</button>
-  <div class="msg" id="pmsg" role="alert"></div>
+  <div id="pboardHome">
+  <section class="board" id="pboard" aria-live="polite">
+    <div class="scorehost" id="pscore"></div>
+    <div class="prebtns" id="pprebtns" hidden>
+      <button class="start" id="pstart" type="button">Aktifkan mikrofon</button>
+      <button class="start alt" id="pmidiGo" type="button">Sambungkan alat musik</button>
+    </div>
+    <div class="msg" id="pmsg" role="alert"></div>
+    <div class="held" id="pheld" hidden></div>
+    <div class="pstatus" id="pstatus">Aktifkan mikrofon, lalu mainkan not yang disorot.</div>
+    <div class="msg" id="pwarn" hidden>Ada not yang terlalu rendah untuk gitar (di bawah E2), jadi tidak bisa dimainkan.</div>
+    <div class="level" aria-hidden="true"><i id="plevel"></i></div>
+  </section>
+
+  </div>
+  <button class="start" id="pgo" type="button">▶ Mulai berlatih</button>
+  <div class="row">
+    <button class="sound" id="pnew" type="button">Soal baru</button>
+    <button class="sound" id="ppeek" type="button">Bunyikan nada</button>
+  </div>
+
 
   <div class="seg" id="pinst" role="group" aria-label="Alat musik">
     <button type="button" data-inst="piano" aria-pressed="true">Piano</button>
@@ -555,22 +598,18 @@ body{
     <p class="cstat" id="audStat">Colok alat musik lewat kabel jack (adaptor TRRS / soundcard USB), aktifkan Mode kabel, lalu aktifkan mikrofon.</p>
   </details>
 
-  <section class="board" id="pboard" aria-live="polite">
-    <div class="scorehost" id="pscore"></div>
-    <div class="held" id="pheld" hidden></div>
-    <div class="pstatus" id="pstatus">Aktifkan mikrofon, lalu mainkan not yang disorot.</div>
-    <div class="msg" id="pwarn" hidden>Ada not yang terlalu rendah untuk gitar (di bawah E2), jadi tidak bisa dimainkan.</div>
-    <div class="level" aria-hidden="true"><i id="plevel"></i></div>
-  </section>
+</section>
 
+<!-- ================= LAYAR BERLATIH (layar penuh, landscape) ================= -->
+<div class="play" id="pplay" hidden role="dialog" aria-label="Berlatih baca not">
+  <div class="playbar">
+    <button class="pclose" id="pclose" type="button" aria-label="Keluar dari latihan">✕</button>
+    <span class="plast" id="plast" hidden>Skor terakhir: <b id="plastV"></b></span>
+  </div>
+  <div class="pstage" id="pstage"></div>
   <div class="sum" id="psum" hidden><b id="psumT"></b><span id="psumD"></span></div>
 
-  <div class="row">
-    <button class="sound" id="pnew" type="button">Soal baru</button>
-    <button class="sound" id="prepeat" type="button">Ulangi soal</button>
-    <button class="sound" id="ppeek" type="button">Bunyikan nada</button>
-  </div>
-</section>
+</div>
 
 <!-- ================= PARTITUR ================= -->
 <section class="tab" id="tab-score" hidden>
@@ -989,7 +1028,7 @@ function midiNoteOn(n,v){
   midi.held[n]=v;
   if(midi.synth) synthOn(n,v);
   renderHeld();
-  if(app.tab==='latih') practiceHit(n,true);
+  if(app.tab==='latih' && pr.playing) practiceHit(n,true);
   else if(app.tab==='score' && !playing) addNote(n,midi.synth);
   else if(app.tab==='tuner') midiTunerShow(n);
 }
@@ -1424,7 +1463,7 @@ var CLEF_BASS = '<path d="M6 10 C6 4 20 4 22 14 C24 26 14 38 2 44" fill="none" s
 function drawScore(host,score,mode,stateFn,cursorAfter){
   var Wpx=Math.max(240,Math.floor(host.clientWidth||320));
   /* Layar lebar/miring: seluruh not (garis, kepala not, jarak) diperbesar seragam, bukan hanya diregangkan ke samping. */
-  var scale = Wpx>600 ? Math.min(1.9, Wpx/520) : 1, W = Wpx/scale;
+  var scale = drawScore.force || (Wpx>600 ? Math.min(1.9, Wpx/520) : 1), W = Wpx/scale;
   var notes=score.notes, num=(mode==='num');
   var barBeats=score.ts[0]*4/score.ts[1];
   var ms=buildMeasures(notes,barBeats);
@@ -1553,7 +1592,7 @@ function loadCustNotes(){
   try{ var v=JSON.parse(store.get('yg.custNotes','[]')); if(Array.isArray(v)&&v.length) return v; }catch(e){}
   return [60,62,64,65,67,69,71,72];
 }
-var pr = { inst: store.get('yg.inst','piano')==='guitar' ? 'guitar' : 'piano', src:'random', clef:'treble', range:'mid', len:8, sharps:false, anyOct:false,
+var pr = { playing:false, inst: store.get('yg.inst','piano')==='guitar' ? 'guitar' : 'piano', src:'random', clef:'treble', range:'mid', len:8, sharps:false, anyOct:false,
            arcLetter: parseInt(store.get('yg.arcLetter','0'),10)||0, arcSub: parseInt(store.get('yg.arcSub','1'),10)||1,
            custNotes: loadCustNotes(), custMeasures: parseInt(store.get('yg.custMeasures','2'),10)||2,
            key: clamp(parseInt(store.get('yg.key','0'),10)||0,-7,7),
@@ -1703,6 +1742,7 @@ function pdFeed(f,rms,now){
   return null;
 }
 function practiceData(f,rms,now){
+  if(!pr.playing) return;
   $('#plevel').style.width=Math.min(100,Math.round(rms*1200))+'%';
   if(now<pr.mute){ pd.armed=false; return; }
   /* Sedang main lewat MIDI: abaikan mikrofon supaya bunyi synth dari speaker tidak terhitung dua kali. */
@@ -1761,6 +1801,7 @@ function finishRound(){
   $('#psumT').textContent='Selesai! Ketepatan '+pct+'%';
   $('#psumD').textContent=pr.idx.length+' not benar dari '+pr.tries+' percobaan, waktu '+secs+' detik.';
   $('#psum').hidden=false;
+  $('#plastV').textContent=pct+'%'; $('#plast').hidden=false;
   var board=$('#pboard');
   if(pct>=100){
     board.classList.add('glow'); practiceWin();
@@ -1780,23 +1821,80 @@ function finishRound(){
     autoT=setTimeout(function(){ newRound(); },1800);
   }
 }
+/* Pratinjau di menu: hanya 2 birama pertama */
+function previewScore(sc){
+  var bb=sc.ts[0]*4/sc.ts[1], ms=buildMeasures(sc.notes,bb), n=0, o={}, k;
+  ms.slice(0,2).forEach(function(m){ n+=m.length; });
+  for(k in sc) o[k]=sc[k];
+  o.notes=sc.notes.slice(0,n);
+  return o;
+}
+/* Gambar partitur sebesar mungkin yang masih muat di tinggi tempatnya (layar berlatih). */
+function drawFit(host,sc,fn){
+  var maxH=host.clientHeight, w=host.clientWidth, f;
+  if(maxH<60){ drawScore(host,sc,app.mode,fn); return; }
+  for(f=(w>600?Math.min(2.2,w/520):1); f>=0.7; f-=0.1){
+    drawScore.force=f; drawScore(host,sc,app.mode,fn);
+    var sv=host.firstChild;
+    if(!sv || parseFloat(sv.getAttribute('height'))<=maxH) break;
+  }
+  drawScore.force=0;
+}
+/* Mulai / selesai berlatih: layar penuh + kunci landscape */
+function goLandscape(){
+  try{
+    var el=document.documentElement, p=el.requestFullscreen ? el.requestFullscreen() : null;
+    Promise.resolve(p).catch(function(){}).then(function(){
+      if(screen.orientation && screen.orientation.lock) return screen.orientation.lock('landscape');
+    }).catch(function(){});
+  }catch(e){}
+}
+function startPractice(){
+  if(pr.playing) return;
+  pr.playing=true; document.body.classList.add('playing');
+  $('#plast').hidden=true;
+  $('#pstage').appendChild($('#pboard'));
+  $('#pplay').hidden=false;
+  try{ history.pushState({tab:'latih',play:1},''); }catch(e){}
+  goLandscape();
+  newRound(true);
+}
+function closePractice(fromPop){
+  if(!pr.playing) return;
+  clearTimeout(autoT);
+  pr.playing=false; document.body.classList.remove('playing');
+  if(mic.active) micStop();
+  $('#pplay').hidden=true; $('#psum').hidden=true;
+  $('#pboardHome').appendChild($('#pboard'));
+  try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+  try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
+  if(!fromPop){ try{ if(history.state && history.state.play) history.back(); }catch(e){} }
+  pr.lastMsg=null; renderPractice();
+}
 var shownMsg=null;
 function renderPractice(){
   var sc=pr.score; if(!sc) return;
   var cur = pr.done ? -1 : pr.idx[pr.pos];
   var lookahead = (!pr.done && pr.fast && pr.pos+1<pr.idx.length) ? pr.idx[pr.pos+1] : -1;
-  drawScore($('#pscore'),sc,app.mode,function(i){
-    var s = pr.marks[i] || '';
-    if(i===cur) s += lookahead>=0 ? ' curGhost' : ' cur';
-    if(i===lookahead) s+=' cur';
-    return s;
-  });
+  var host=$('#pscore');
+  if(pr.playing){
+    drawFit(host,sc,function(i){
+      var s = pr.marks[i] || '';
+      if(i===cur) s += lookahead>=0 ? ' curGhost' : ' cur';
+      if(i===lookahead) s+=' cur';
+      return s;
+    });
+  } else {
+    /* Menu Latihan: pratinjau 2 birama pertama saja */
+    drawScore(host,previewScore(sc),app.mode,function(){ return ''; });
+  }
+  $('#pprebtns').hidden = !(pr.playing && !(mic.active || midiConnected()));
   var st=$('#pstatus'), t, c='';
   if(!pr.idx.length){ t = pr.src==='custom' ? 'Pilih minimal 2 nada dulu di atas.' : 'Partitur ini belum punya not. Tambahkan not di menu Partitur.'; }
   else if(pr.done){ t='Bagus sekali!'; c='ok'; }
   else if(pr.lastMsg){ t=pr.lastMsg.t; c=pr.lastMsg.c; }
   else if(midiConnected()){ t='Mainkan not yang disorot di keyboard MIDI.'; }
-  else if(!mic.active){ t='Aktifkan mikrofon, lalu mainkan not yang disorot.'; }
+  else if(!mic.active){ t = pr.playing ? 'Pilih cara bermain: mikrofon atau alat musik.' : 'Ketuk Mulai berlatih untuk bermain.'; }
   else { t='Mainkan not yang disorot.'; }
   st.textContent=t; st.className='pstatus'+(c?' '+c:'');
   /* Pesan baru (benar/salah): ulangi animasi lompat/goyang. */
@@ -1909,8 +2007,17 @@ function bindPracticeOpts(){
   $('#psharp').addEventListener('change',function(e){ pr.sharps=e.target.checked; newRound(); });
   $('#poct').addEventListener('change',function(e){ pr.anyOct=e.target.checked; });
   $('#pstart').addEventListener('click',micToggle);
+  document.body.appendChild($('#pplay'));   /* di luar .app supaya menutupi menu bawah */
+  $('#pgo').addEventListener('click',startPractice);
+  $('#pclose').addEventListener('click',function(){ closePractice(); });
+  $('#pmidiGo').addEventListener('click',async function(){
+    var m=$('#pmsg'); m.textContent='';
+    await midiConnect();
+    if(!midiSupported()) m.textContent='Browser ini belum mendukung MIDI. Pakai Google Chrome atau Microsoft Edge.';
+    else if(!midiConnected()) m.textContent='Belum ada alat musik terdeteksi. Colok keyboard MIDI lewat kabel USB (di HP pakai kabel OTG), lalu tekan lagi.';
+    renderPractice();
+  });
   $('#pnew').addEventListener('click',function(){ newRound(); });
-  $('#prepeat').addEventListener('click',function(){ if(pr.score) newRound(true); });
   $('#ppeek').addEventListener('click',function(){
     if(!pr.score || pr.done || !pr.idx.length) return;
     var n=pr.score.notes[pr.idx[pr.pos]];
@@ -2533,8 +2640,12 @@ function goTab(name){
   }catch(e){}
   showTab(name);
 }
-window.addEventListener('popstate',function(e){ showTab((e.state && e.state.tab) || 'tuner'); });
+window.addEventListener('popstate',function(e){
+  if(pr.playing){ closePractice(true); return; }
+  showTab((e.state && e.state.tab) || 'tuner');
+});
 function showTab(name){
+  if(pr.playing && name!=='latih') closePractice(true);
   if(name==='score' && mic.active) micStop();
   if(name!=='score') stopPlay();
   app.tab=name;
