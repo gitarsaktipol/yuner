@@ -1469,7 +1469,9 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
     var x=margin+clefW+(si===0?tsW:0), i;
     if(si===0){ startX=x+10; startY=y0; }
     if(!num){
-      for(i=0;i<5;i++){ var ly=y0+i*S; out+='<line class="stf" x1="'+margin+'" x2="'+(W-margin)+'" y1="'+ly+'" y2="'+ly+'"/>'; }
+      /* garis paranada berhenti di garis birama terakhir (bukan sampai tepi layar), jadi tidak tampak ada birama kosong ekstra */
+      var lineEnd=Math.min(W-margin, x+sys.ms.reduce(function(t,m){ return t+m.w*k; },0)+(isLast?3:0));
+      for(i=0;i<5;i++){ var ly=y0+i*S; out+='<line class="stf" x1="'+margin+'" x2="'+lineEnd+'" y1="'+ly+'" y2="'+ly+'"/>'; }
       out+='<line class="bar" x1="'+margin+'" x2="'+margin+'" y1="'+y0+'" y2="'+(y0+4*S)+'"/>';
       out+='<g transform="translate('+(margin+6)+' '+y0+')" style="color:var(--ink)">'+(score.clef==='bass'?CLEF_BASS:CLEF_TREBLE)+'</g>';
       if(nAcc){
