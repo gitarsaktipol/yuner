@@ -95,6 +95,14 @@ Empat sumber soal (dropdown "Berlatih secara"):
 - Soal Acak/Arcade: huruf not dibuat diatonis lalu dinaikkan/diturunkan sesuai tanda kunci (`keyNote`); opsi ♯ tambahan hanya pada huruf yang tidak diubah tanda kunci. Custom: nada pilihan tetap, ejaannya disesuaikan (`spellIn`).
 - Ejaan not: `n.a` = '#'/'b' menentukan huruf (E♯ = F dieja sebagai huruf E, C♭ = B sebagai huruf C) lewat `letterIdx`/`diaOf`.
 
+**Navigasi kursor (koreksi soal manual)**:
+- Dua tombol baru: **◀ Mundur** dan **Maju ▶** untuk geser kursor ke not sebelumnya/berikutnya dalam soal.
+- Not yang di-highlight cursor berkedip (opacity 50-100%, periode 0.6s) pakai class `.st-edit`.
+- Tombol "Bunyikan nada" akan bunyi not yang di-cursor (bukan just the current position).
+- Setelah user tekan Mundur/Maju, `editCursor` mulai di-set; tetap di posisi itu sampai user tekan tombol navigasi lagi.
+- Reset otomatis saat soal baru dimulai (`editCursor=-1`).
+- Berguna kalau user salah main atau ingin dengarkan ulang not tertentu di tengah soal.
+
 Mekanisme penilaian not yang dimainkan (fungsi `practiceHit`):
 - Mikrofon dianalisis tiap 25ms; onset (serangan nada baru) butuh jeda minimum 90ms dari onset sebelumnya; butuh 2x pembacaan pitch stabil berturut baru dikonfirmasi.
 - Legato (hammer-on/pull-off/slur tanpa serangan baru) terdeteksi lewat jalur kedua: kalau pitch berubah sementara bunyi masih menyambung (rms di atas ambang), itu juga dianggap not baru.
