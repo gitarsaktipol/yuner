@@ -270,6 +270,14 @@ header .sel select{max-width:100%;min-width:0}
 .clefSeg .clefText{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25}
 .clefSeg .clefText b{font-size:14px;font-weight:700}
 .clefSeg .clefText small{font-size:11px;font-weight:500;opacity:.72}
+/* Kartu Mode Latihan: beri jarak antar bagian supaya tidak berhimpitan */
+#pcfg>*:not(summary){margin-top:14px}
+#pcfg>.clefSeg{margin-top:4px}
+#pcfg>.grid{margin-top:14px;row-gap:14px}
+#pCustomOpts>*{margin-top:12px}
+#pCustomOpts>.noteGrid{margin-top:6px}
+#pCustomOpts .octLabel{margin:12px 0 4px;text-align:center;font-weight:800;font-size:13px;letter-spacing:.35em;word-spacing:.5em;padding-left:.35em;color:var(--ink)}
+#pCustomOpts>.hint{margin-top:10px}
 .noteGrid{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:8px}
 .noteGrid button{background:var(--bg);border:0;border-radius:9px;padding:7px 0;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;box-shadow:0 2px 0 var(--line)}
 .noteGrid button[aria-pressed="true"]{background:var(--pPink);color:var(--ink);font-weight:800;box-shadow:0 2px 0 var(--dPink);animation:pop .35s var(--bounce)}
