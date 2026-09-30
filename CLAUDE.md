@@ -101,8 +101,11 @@ Mekanisme penilaian not yang dimainkan (fungsi `practiceHit`):
 
 ### 3. Partitur
 - Buat partitur sendiri lewat tuts piano di layar: nilai not penuh sampai 1/16, titik (dotted), ♯/♭, rehat, ganti oktaf, pilih & hapus not.
-- "Partitur baru" langsung membuat 4 birama berisi rehat kosong (meniru tampilan software notasi seperti MuseScore) dengan kursor menempel di slot kosong pertama. Mengisi not menggeser kursor ke slot kosong berikutnya secara otomatis; setelah 16 slot (4 birama x 4 ketukan) penuh, mode berubah jadi tambah-di-akhir seperti biasa.
-- Tombol "Hapus not": mengembalikan not terpilih jadi rehat kosong DI TEMPATNYA (tidak menggeser birama lain/splice array) — supaya struktur grid birama tidak berantakan. Kalau yang dipilih memang slot kosong yang sengaja ditunjuk, baru benar-benar dihapus dari array (mengecilkan birama).
+- "Partitur baru" dimulai kosong tapi sudah menampilkan satu birama selebar sukatnya (mis. 4 ketukan di 4/4) dengan kursor berkedip di awal. Birama terakhir yang belum penuh tetap diberi ruang untuk sisa ketuk, garis birama ada di ujungnya (tidak menempel ke not terakhir).
+- Kursor = garis tipis berkedip (`.caret`) di sisi kanan not terakhir/terpilih, seperti kursor Word.
+- **Aturan birama** (`fillOrInsert`, `barRemain`, `splitDur`): jumlah ketuk satu birama harus pas sesuai sukat. Birama penuh -> not berikutnya otomatis masuk birama baru. Kalau not melebihi sisa ketuk: muncul peringatan merah (`#salert`, "Penulisan tidak sesuai dengan sisa nilai nada"), not-not hasilnya berkedip merah ~1,8 detik, lalu not dipecah dan disambung dengan **tie** (`note.tie=true` = tersambung ke not berikutnya yang nadanya sama; `tieFrom`/`tieLen`). Not sambungan tidak dibunyikan ulang saat diputar, tidak diminta di Latihan, dan digabung jadi satu not panjang di ekspor MIDI. Rehat yang kelebihan dipecah tanpa tie.
+- Kursor di rehat (data lama/hasil "Hapus not") + not baru: rehat digantikan, sisa ketuk tetap rehat.
+- Tombol "Hapus not": not terakhir dihapus sungguhan; not di tengah dikembalikan jadi rehat DI TEMPATNYA (tidak menggeser birama lain).
 - Bisa diputar dengan suara sintesis, disimpan ke localStorage HP, dikirim ke menu Latihan sebagai sumber soal.
 - Bisa unggah gambar partitur sebagai acuan mengetik manual.
 - **Ekspor ke MIDI** (`scoreToMidi`, file .mid format 0, PPQ 480, tempo & birama ikut) dan **Impor file MIDI** (`parseMidi` + `midiToScore`): lagu MIDI diubah jadi melodi satu baris (nada tertinggi tiap 1/16, kanal drum 10 dibuang), dikuantisasi ke 1/16, dipotong rapi per birama (tidak ada ikatan/tie, jadi not yang melewati garis birama dipendekkan + rehat), maksimal 600 not. Hasilnya jadi partitur baru yang bisa diputar & dilatih.
