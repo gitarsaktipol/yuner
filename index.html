@@ -1443,7 +1443,7 @@ function noteSvg(n,x,y0,base,i,cls,key,bm){
 }
 function ulSvg(x,yb,lvl,bm){
   var cl = bm && (lvl===0?bm.L1:bm.L2), cr = bm && (lvl===0?bm.R1:bm.R2);
-  var x1 = cl ? x-bm.gL/2 : (bm && bm.dl ? x-bm.dl : x-9), x2 = cr ? x+bm.gR/2 : x+9, y = yb-14-lvl*4;
+  var x1 = cl ? x-bm.gL/2 : (bm && bm.dl ? x-bm.dl : x-9), x2 = cr ? x+bm.gR/2 : x+9, y = yb-18+lvl*4;
   return '<line x1="'+x1+'" x2="'+x2+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" stroke-width="1.8"/>';
 }
 function numSvg(n,x,yb,i,cls,bm,key){
