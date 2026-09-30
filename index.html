@@ -571,10 +571,6 @@ body{
   <button class="start" id="pstart" type="button">Aktifkan mikrofon</button>
   <div class="msg" id="pmsg" role="alert"></div>
   <div class="row">
-    <button class="sound" id="pmundur" type="button" title="Kursor mundur">◀ Mundur</button>
-    <button class="sound" id="pmaju" type="button" title="Kursor maju">Maju ▶</button>
-  </div>
-  <div class="row">
     <button class="sound" id="pnew" type="button">Soal baru</button>
     <button class="sound" id="prepeat" type="button">Ulangi soal</button>
     <button class="sound" id="ppeek" type="button">Bunyikan nada</button>
@@ -615,6 +611,10 @@ body{
     <div class="held" id="sheld" hidden></div>
   </section>
 
+  <div class="row">
+    <button class="sound" id="smundur" type="button" title="Kursor mundur">◀ Mundur</button>
+    <button class="sound" id="smaju" type="button" title="Kursor maju">Maju ▶</button>
+  </div>
   <div class="row">
     <button class="start" id="splay" type="button" style="flex:1.4">▶ Putar</button>
     <button class="sound" id="sprac" type="button">Latih lagu ini</button>
@@ -1479,7 +1479,7 @@ var pr = { inst: store.get('yg.inst','piano')==='guitar' ? 'guitar' : 'piano', s
            custNotes: loadCustNotes(), custMeasures: parseInt(store.get('yg.custMeasures','2'),10)||2,
            key: clamp(parseInt(store.get('yg.key','0'),10)||0,-7,7),
            score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0, missStreak:0,
-           lastAdvanceT:0, fast:false, editCursor:-1 };
+           lastAdvanceT:0, fast:false };
 var RANGES = {
   treble:{narrow:[28,32], mid:[28,35], wide:[26,40]},
   bass:{narrow:[21,25], mid:[18,28], wide:[16,30]}
@@ -1589,7 +1589,7 @@ function newRound(keep){
   }
   pr.idx=[]; pr.score.notes.forEach(function(n,i){ if(n.m!==null) pr.idx.push(i); });
   pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
-  pr.lastAdvanceT=0; pr.fast=false; pr.editCursor=-1;
+  pr.lastAdvanceT=0; pr.fast=false;
   pd.armed=false; pd.cand=null; pd.count=0; pd.last=null; pd.legCand=null; pd.legCount=0;
   $('#psum').hidden=true;
   buildKeySelect();
@@ -1690,10 +1690,8 @@ function renderPractice(){
   var sc=pr.score; if(!sc) return;
   var cur = pr.done ? -1 : pr.idx[pr.pos];
   var lookahead = (!pr.done && pr.fast && pr.pos+1<pr.idx.length) ? pr.idx[pr.pos+1] : -1;
-  var editIdx = pr.editCursor>=0 && pr.editCursor<pr.idx.length ? pr.idx[pr.editCursor] : -1;
   drawScore($('#pscore'),sc,app.mode,function(i){
     var s = pr.marks[i] || '';
-    if(i===editIdx && editIdx>=0) s += ' edit';
     if(i===cur) s += lookahead>=0 ? ' curGhost' : ' cur';
     if(i===lookahead) s+=' cur';
     return s;
@@ -1816,23 +1814,11 @@ function bindPracticeOpts(){
   $('#psharp').addEventListener('change',function(e){ pr.sharps=e.target.checked; newRound(); });
   $('#poct').addEventListener('change',function(e){ pr.anyOct=e.target.checked; });
   $('#pstart').addEventListener('click',micToggle);
-  $('#pmundur').addEventListener('click',function(){
-    if(!pr.score || pr.done || !pr.idx.length) return;
-    if(pr.editCursor<0) pr.editCursor=pr.pos;
-    if(pr.editCursor>0) pr.editCursor--;
-    renderPractice();
-  });
-  $('#pmaju').addEventListener('click',function(){
-    if(!pr.score || pr.done || !pr.idx.length) return;
-    if(pr.editCursor<0) pr.editCursor=pr.pos;
-    if(pr.editCursor<pr.idx.length-1) pr.editCursor++;
-    renderPractice();
-  });
   $('#pnew').addEventListener('click',function(){ newRound(); });
   $('#prepeat').addEventListener('click',function(){ if(pr.score) newRound(true); });
   $('#ppeek').addEventListener('click',function(){
     if(!pr.score || pr.done || !pr.idx.length) return;
-    var n=pr.score.notes[pr.idx[pr.editCursor>=0 ? pr.editCursor : pr.pos]];
+    var n=pr.score.notes[pr.idx[pr.pos]];
     pluck(n.m-instShift(),ac().currentTime,1.2);
     pr.mute=performance.now()+1500;
   });
@@ -1882,14 +1868,16 @@ function syncScoreFields(){
 function renderScoreView(){
   var s=curScore();
   drawScore($('#sscore'),s,app.mode,function(i){
-    return i===playIdx ? 'cur' : '';
+    var c = i===playIdx ? 'cur' : '';
+    if(i===inp.editCursor && inp.editCursor>=0) c += ' edit';
+    return c;
   }, playing ? null : sel);
   $('#sempty').hidden = s.notes.length>0;
   $('#splay').textContent = playing ? '■ Berhenti' : '▶ Putar';
   $('#splay').disabled = !s.notes.some(function(n){return n.m!==null;}) && !playing;
   $('#sprac').disabled = !s.notes.some(function(n){return n.m!==null;});
 }
-var inp = { dur:1, dot:false, flat:false, oct:4 };
+var inp = { dur:1, dot:false, flat:false, oct:4, editCursor:-1 };
 function buildKeyboard(){
   var kb=$('#kb'), W=[0,2,4,5,7,9,11,12], lab=['C','D','E','F','G','A','B','C'], h='<div class="w">', i;
   for(i=0;i<8;i++){
@@ -1965,7 +1953,7 @@ function newScore(){
   stopPlay();
   var ts=[4,4];
   var s={id:'s'+Date.now(),title:'Partitur baru',ts:ts,bpm:90,clef:'treble',notes:blankMeasures(ts,4)};
-  scores.push(s); curId=s.id; sel=0; saveScores();
+  scores.push(s); curId=s.id; sel=0; inp.editCursor=-1; saveScores();
   buildScoreList(); syncScoreFields(); renderScoreView();
 }
 var delArmed=false, delTimer=0;
@@ -1980,11 +1968,11 @@ function delScore(){
   stopPlay();
   scores=scores.filter(function(s){return s.id!==curId;});
   if(!scores.length) scores=[{id:'s'+Date.now(),title:'Partitur baru',ts:[4,4],bpm:90,clef:'treble',notes:[]}];
-  curId=scores[0].id; sel=-1; saveScores();
+  curId=scores[0].id; sel=-1; inp.editCursor=-1; saveScores();
   buildScoreList(); syncScoreFields(); renderScoreView();
 }
 function bindScore(){
-  $('#slist').addEventListener('change',function(e){ stopPlay(); curId=e.target.value; sel=-1; saveScores(); syncScoreFields(); renderScoreView(); });
+  $('#slist').addEventListener('change',function(e){ stopPlay(); curId=e.target.value; sel=-1; inp.editCursor=-1; saveScores(); syncScoreFields(); renderScoreView(); });
   $('#stitle').addEventListener('input',function(e){
     var s=curScore(); s.title=e.target.value; saveScores();
     var o=$('#slist').querySelector('option[value="'+s.id+'"]'); if(o) o.textContent=s.title||'Tanpa judul';
@@ -2022,6 +2010,20 @@ function bindScore(){
   $('#sdel').addEventListener('click',delScore);
   $('#sprac').addEventListener('click',function(){
     stopPlay(); pr.src='score'; syncPracticeOpts(); goTab('latih'); newRound();
+  });
+  $('#smundur').addEventListener('click',function(){
+    var s=curScore();
+    if(!s || !s.notes.length) return;
+    if(inp.editCursor<0) inp.editCursor=sel>=0?sel:0;
+    if(inp.editCursor>0) inp.editCursor--;
+    renderScoreView();
+  });
+  $('#smaju').addEventListener('click',function(){
+    var s=curScore();
+    if(!s || !s.notes.length) return;
+    if(inp.editCursor<0) inp.editCursor=sel>=0?sel:0;
+    if(inp.editCursor<s.notes.length-1) inp.editCursor++;
+    renderScoreView();
   });
   $('#simg').addEventListener('change',onImage);
   $('#sclose').addEventListener('click',function(){ $('#simgpanel').hidden=true; });
