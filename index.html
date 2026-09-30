@@ -260,6 +260,8 @@ header .sel select{max-width:100%;min-width:0}
 .n.st-curGhost .hl{opacity:1;fill:none;stroke:var(--brass);stroke-width:2;stroke-dasharray:4 3}
 .n.st-ok{color:var(--ok)}
 .n.st-bad{color:var(--bad)}
+.n.st-edit{animation:blink .6s ease-in-out infinite}
+@keyframes blink{ 0%,49%{opacity:1} 50%,100%{opacity:.35} }
 .pstatus{text-align:center;font-size:19px;font-weight:700;min-height:30px;margin:6px 8px 0}
 .pstatus.ok{color:var(--ok)}
 .pstatus.bad{color:var(--bad)}
@@ -568,6 +570,10 @@ body{
 
   <button class="start" id="pstart" type="button">Aktifkan mikrofon</button>
   <div class="msg" id="pmsg" role="alert"></div>
+  <div class="row">
+    <button class="sound" id="pmundur" type="button" title="Kursor mundur">◀ Mundur</button>
+    <button class="sound" id="pmaju" type="button" title="Kursor maju">Maju ▶</button>
+  </div>
   <div class="row">
     <button class="sound" id="pnew" type="button">Soal baru</button>
     <button class="sound" id="prepeat" type="button">Ulangi soal</button>
@@ -1473,7 +1479,7 @@ var pr = { inst: store.get('yg.inst','piano')==='guitar' ? 'guitar' : 'piano', s
            custNotes: loadCustNotes(), custMeasures: parseInt(store.get('yg.custMeasures','2'),10)||2,
            key: clamp(parseInt(store.get('yg.key','0'),10)||0,-7,7),
            score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0, missStreak:0,
-           lastAdvanceT:0, fast:false };
+           lastAdvanceT:0, fast:false, editCursor:-1 };
 var RANGES = {
   treble:{narrow:[28,32], mid:[28,35], wide:[26,40]},
   bass:{narrow:[21,25], mid:[18,28], wide:[16,30]}
@@ -1583,7 +1589,7 @@ function newRound(keep){
   }
   pr.idx=[]; pr.score.notes.forEach(function(n,i){ if(n.m!==null) pr.idx.push(i); });
   pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
-  pr.lastAdvanceT=0; pr.fast=false;
+  pr.lastAdvanceT=0; pr.fast=false; pr.editCursor=-1;
   pd.armed=false; pd.cand=null; pd.count=0; pd.last=null; pd.legCand=null; pd.legCount=0;
   $('#psum').hidden=true;
   buildKeySelect();
@@ -1684,8 +1690,10 @@ function renderPractice(){
   var sc=pr.score; if(!sc) return;
   var cur = pr.done ? -1 : pr.idx[pr.pos];
   var lookahead = (!pr.done && pr.fast && pr.pos+1<pr.idx.length) ? pr.idx[pr.pos+1] : -1;
+  var editIdx = pr.editCursor>=0 && pr.editCursor<pr.idx.length ? pr.idx[pr.editCursor] : -1;
   drawScore($('#pscore'),sc,app.mode,function(i){
     var s = pr.marks[i] || '';
+    if(i===editIdx && editIdx>=0) s += ' edit';
     if(i===cur) s += lookahead>=0 ? ' curGhost' : ' cur';
     if(i===lookahead) s+=' cur';
     return s;
@@ -1808,11 +1816,23 @@ function bindPracticeOpts(){
   $('#psharp').addEventListener('change',function(e){ pr.sharps=e.target.checked; newRound(); });
   $('#poct').addEventListener('change',function(e){ pr.anyOct=e.target.checked; });
   $('#pstart').addEventListener('click',micToggle);
+  $('#pmundur').addEventListener('click',function(){
+    if(!pr.score || pr.done || !pr.idx.length) return;
+    if(pr.editCursor<0) pr.editCursor=pr.pos;
+    if(pr.editCursor>0) pr.editCursor--;
+    renderPractice();
+  });
+  $('#pmaju').addEventListener('click',function(){
+    if(!pr.score || pr.done || !pr.idx.length) return;
+    if(pr.editCursor<0) pr.editCursor=pr.pos;
+    if(pr.editCursor<pr.idx.length-1) pr.editCursor++;
+    renderPractice();
+  });
   $('#pnew').addEventListener('click',function(){ newRound(); });
   $('#prepeat').addEventListener('click',function(){ if(pr.score) newRound(true); });
   $('#ppeek').addEventListener('click',function(){
     if(!pr.score || pr.done || !pr.idx.length) return;
-    var n=pr.score.notes[pr.idx[pr.pos]];
+    var n=pr.score.notes[pr.idx[pr.editCursor>=0 ? pr.editCursor : pr.pos]];
     pluck(n.m-instShift(),ac().currentTime,1.2);
     pr.mute=performance.now()+1500;
   });
