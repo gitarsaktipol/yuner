@@ -234,6 +234,8 @@ header .sel select{max-width:100%;min-width:0}
 .inscur{fill:var(--hl);opacity:1;rx:9}
 .caret{stroke:var(--brass);stroke-width:3;stroke-linecap:round;animation:blink 1s steps(1,end) infinite}
 @keyframes blink{ 0%,55%{opacity:1} 56%,100%{opacity:0} }
+.n.st-blink{animation:blink 1s steps(1,end) infinite}
+.n.st-sel .hl{fill:var(--hl)}
 .tie{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
 .n.st-cur .hl,.n.st-sel .hl{opacity:1}
 .n.st-curGhost .hl{opacity:1;fill:none;stroke:var(--brass);stroke-width:2;stroke-dasharray:4 3}
@@ -614,6 +616,10 @@ body{
       <button class="chip" type="button" id="sdot" aria-pressed="false">Titik (×1,5)</button>
       <button class="chip" type="button" id="sflat" aria-pressed="false">Hitam: ♯</button>
       <button class="chip" type="button" id="srest">Rehat</button>
+    </div>
+    <div class="chips" id="snav" role="group" aria-label="Pindah kursor" style="margin-top:8px">
+      <button class="chip" type="button" id="sleft" style="flex:1" aria-label="Kursor ke kiri">◀ Kiri</button>
+      <button class="chip" type="button" id="sright" style="flex:1" aria-label="Kursor ke kanan">Kanan ▶</button>
     </div>
     <div class="row" style="margin-top:10px;align-items:center">
       <div class="stepper" style="flex:1;justify-content:space-between">
@@ -1317,7 +1323,7 @@ function restSvg(d,x,y0){
 function noteSvg(n,x,y0,base,i,cls,key){
   var o='<g class="n'+cls+'" data-i="'+i+'">';
   o+='<rect class="hl" x="'+(x-15)+'" y="'+(y0-18)+'" width="30" height="'+(4*S+36)+'" rx="9"/>';
-  if(n.m===null){ o+=restSvg(n.d,x,y0)+'</g>'; return o; }
+  if(n.m===null){ if(!n.e) o+=restSvg(n.d,x,y0); return o+'</g>'; }
   var step=diaOf(n)-base, y=y0+4*S-step*S/2, bd=baseDur(n.d), s;
   if(step<=-2) for(s=-2;s>=step;s-=2){ var ly=y0+4*S-s*S/2; o+='<line x1="'+(x-10)+'" x2="'+(x+10)+'" y1="'+ly+'" y2="'+ly+'" stroke="currentColor" stroke-width="1.4"/>'; }
   if(step>=10) for(s=10;s<=step;s+=2){ var ly2=y0+4*S-s*S/2; o+='<line x1="'+(x-10)+'" x2="'+(x+10)+'" y1="'+ly2+'" y2="'+ly2+'" stroke="currentColor" stroke-width="1.4"/>'; }
@@ -1351,6 +1357,7 @@ function numSvg(n,x,yb,i,cls,bm,key){
   var CELL=26, bd=baseDur(n.d), o='<g class="n'+cls+'" data-i="'+i+'">';
   o+='<rect class="hl" x="'+(x-15)+'" y="'+(yb-34)+'" width="30" height="74" rx="9"/>';
   var k, beats=Math.max(1,Math.floor(n.d));
+  if(n.m===null && n.e) return o+'</g>';
   if(n.m===null){
     o+='<text x="'+x+'" y="'+(yb+8)+'" font-size="24" font-weight="700" text-anchor="middle">0</text>';
     for(k=1;k<beats && bd>=1;k++) o+='<text x="'+(x+CELL*k)+'" y="'+(yb+8)+'" font-size="24" font-weight="700" text-anchor="middle">0</text>';
@@ -1877,7 +1884,7 @@ function twinkle(){
   return {id:'s0',title:'Contoh: Twinkle Twinkle',ts:[4,4],bpm:100,clef:'treble',
     notes:P.map(function(m,i){ return {m:m,d:D[i],a:''}; })};
 }
-var flashIdx={}, flashT=0, alertT=0;
+var flashIdx={}, flashT=0, alertT=0, editing=false;
 var scores=[], curId=null, sel=-1, playing=false, playIdx=-1, playTimers=[], playGain=null;
 function loadScores(){
   try{ scores=JSON.parse(store.get('yg.scores','[]')); }catch(e){ scores=[]; }
@@ -1901,9 +1908,10 @@ function syncScoreFields(){
 }
 function renderScoreView(){
   var s=curScore();
+  if(sel<0 || sel>=s.notes.length){ if(sel>=s.notes.length) sel=-1; editing=false; }
   drawScore($('#sscore'),s,app.mode,function(i){
-    return i===playIdx ? 'cur' : (flashIdx[i] ? 'bad' : '');
-  }, playing ? null : sel);
+    return i===playIdx ? 'cur' : (flashIdx[i] ? 'bad' : ((editing && i===sel) ? 'sel blink' : ''));
+  }, (playing || editing) ? null : sel);
   $('#sempty').hidden = s.notes.length>0;
   $('#splay').textContent = playing ? '■ Berhenti' : '▶ Putar';
   $('#splay').disabled = !s.notes.some(function(n){return n.m!==null;}) && !playing;
@@ -1948,6 +1956,7 @@ function showScoreAlert(msg){
   clearTimeout(alertT); alertT=setTimeout(function(){ el.hidden=true; },6000);
 }
 function fillOrInsert(item){
+  editing=false;
   var s=curScore(), bb=s.ts[0]*4/s.ts[1], N=s.notes;
   /* 1) kursor di rehat (slot kosong): not menggantikan rehat itu, sisa ketuknya tetap rehat */
   if(sel>=0 && N[sel] && N[sel].m===null){
@@ -1986,35 +1995,108 @@ function fillOrInsert(item){
   }
   saveScores(); renderScoreView();
 }
+function curDur(){ return inp.dur*(inp.dot&&inp.dur>0.25?1.5:1); }
+/* Ubah lama (ketukan) not/rehat/kosong terpilih tanpa menggeser birama lain:
+   lebih pendek -> sisanya jadi rehat (atau kosong), lebih panjang -> memakai rehat/kosong sesudahnya. */
+function changeDur(at,newD){
+  var s=curScore(), N=s.notes, it=N[at];
+  if(!it || Math.abs(newD-it.d)<1e-6) return;
+  var delta=newD-it.d, left=[];
+  function mk(d){ var o={m:null,d:d,a:''}; if(it.e) o.e=true; return o; }
+  if(delta<0){
+    left=splitDur(-delta).map(mk);
+    it.d=newD; it.tie=false;
+    N.splice.apply(N,[at+1,0].concat(left));
+  } else {
+    if(newD>barRemain(s,at)+1e-6){ showScoreAlert('Tidak cukup ruang di birama ini untuk not yang lebih panjang.'); return; }
+    var need=delta, j=at+1, cnt=0, rest=null;
+    while(need>1e-6 && N[j] && N[j].m===null){
+      if(N[j].d<=need+1e-6){ need-=N[j].d; cnt++; j++; }
+      else { rest=splitDur(N[j].d-need).map(function(d){ var o={m:null,d:d,a:''}; if(N[j].e) o.e=true; return o; }); cnt++; need=0; }
+    }
+    if(need>1e-6){ showScoreAlert('Tidak cukup rehat/ruang kosong setelah not ini untuk memperpanjangnya.'); return; }
+    N.splice.apply(N,[at+1,cnt].concat(rest||[]));
+    it.d=newD; it.tie=false;
+  }
+  saveScores(); renderScoreView();
+}
+function syncInputFromNote(n){
+  var bd=baseDur(n.d);
+  inp.dur=bd; inp.dot=n.d>bd+1e-6;
+  if(n.m!==null){
+    if(isBlack(n.m)) inp.flat=(n.a==='b');
+    inp.oct=clamp(Math.floor(n.m/12)-1,1,6);
+  }
+  syncInputUI();
+}
+function syncInputUI(){
+  $$('#sdur .chip').forEach(function(x){ x.setAttribute('aria-pressed',parseFloat(x.getAttribute('data-d'))===inp.dur?'true':'false'); });
+  $('#sdot').setAttribute('aria-pressed',inp.dot?'true':'false');
+  var f=$('#sflat'); f.setAttribute('aria-pressed',inp.flat?'true':'false'); f.textContent='Hitam: '+(inp.flat?'♭':'♯');
+  buildKeyboard();
+}
+function selectAt(i){
+  var s=curScore();
+  if(i>=s.notes.length || i<0){ sel=-1; editing=false; renderScoreView(); return; }
+  sel=i; editing=true;
+  var n=s.notes[i]; syncInputFromNote(n);
+  if(n.m!==null){ try{ pluck(n.m,ac().currentTime,0.5); }catch(e){} }
+  renderScoreView();
+}
+/* Navigasi kursor: ◀ / ▶ pindah antar not (termasuk rehat & slot kosong). */
+function navMove(dir){
+  var s=curScore(), N=s.notes; if(!N.length || playing) return;
+  if(editing && sel>=0){
+    if(dir<0) selectAt(Math.max(0,sel-1));
+    else if(sel+1>=N.length){ sel=-1; editing=false; renderScoreView(); }   /* lewat not terakhir: kembali ke kursor ketik di akhir */
+    else selectAt(sel+1);
+    return;
+  }
+  /* dari kursor ketik: ◀ memilih not di sebelah kirinya, ▶ memilih not sesudahnya (kalau ada) */
+  var c = sel>=0 ? sel : N.length-1;
+  if(dir<0) selectAt(c);
+  else if(c+1<N.length) selectAt(c+1);
+}
 function addNote(m,silent){
-  var d=inp.dur*(inp.dot&&inp.dur>0.25?1.5:1);
+  var s=curScore(), N=s.notes;
   var a = isBlack(m) ? (inp.flat?'b':'#') : '';
-  fillOrInsert({m:m,d:d,a:a});
+  if(editing && sel>=0 && N[sel] && N[sel].m!==null){
+    /* Mode edit: ganti nada not terpilih (durasinya tetap); not yang tersambung tie ikut berganti nada */
+    var old=N[sel].m, k=sel, j;
+    N[sel].m=m; N[sel].a=a;
+    for(j=sel;N[j] && N[j].tie && N[j+1] && N[j+1].m===old;j++){ N[j+1].m=m; N[j+1].a=a; }
+    for(k=sel;k>0 && N[k-1].tie && N[k-1].m===old;k--){ N[k-1].m=m; N[k-1].a=a; }
+    saveScores(); renderScoreView();
+    if(!silent) pluck(m,ac().currentTime,0.7);
+    return;
+  }
+  fillOrInsert({m:m,d:curDur(),a:a});
   if(!silent) pluck(m,ac().currentTime,0.7);
 }
 function addRest(){
-  var d=inp.dur*(inp.dot&&inp.dur>0.25?1.5:1);
-  fillOrInsert({m:null,d:d,a:''});
+  var s=curScore(), N=s.notes;
+  if(editing && sel>=0 && N[sel] && N[sel].m!==null){
+    N[sel]={m:null,d:N[sel].d,a:''}; if(sel>0) N[sel-1].tie=false;
+    saveScores(); renderScoreView(); return;
+  }
+  fillOrInsert({m:null,d:curDur(),a:''});
 }
+/* Hapus bertahap: not -> rehat -> kosong (ruang tetap, tidak menggeser not di sampingnya) -> (kosong paling belakang) dibuang. */
 function delNote(){
-  var s=curScore(); if(!s.notes.length) return;
-  var at = sel>=0 ? sel : s.notes.length-1;
-  /* Kalau kursor sedang di slot kosong hasil geser otomatis setelah mengisi not,
-     yang dimaksud "Hapus" adalah not TERAKHIR yang baru diisi, bukan slot kosong ini. */
-  if(s.notes[at] && s.notes[at].m===null && at>0 && s.notes[at-1] && s.notes[at-1].m!==null) at=at-1;
-  if(!s.notes[at] || s.notes[at].m===null){
-    /* Sudah kosong: coba hapus rehat ini sungguhan (bukan bagian grid tetap) hanya kalau bukan satu-satunya isi. */
-    if(s.notes.length>1 && s.notes[at]){ s.notes.splice(at,1); sel=Math.min(at,s.notes.length-1); saveScores(); renderScoreView(); }
-    return;
+  var s=curScore(), N=s.notes; if(!N.length) return;
+  var at;
+  if(editing && sel>=0 && N[sel]) at=sel;
+  else {
+    at = sel>=0 ? sel : N.length-1;
+    /* Kursor ketik di slot kosong hasil geser otomatis setelah mengisi not: yang dimaksud not TERAKHIR yang baru diisi. */
+    if(N[at] && N[at].m===null && at>0 && N[at-1] && N[at-1].m!==null) at=at-1;
   }
-  /* Not terakhir: hapus sungguhan (birama terakhir kembali kosong). Selain itu jadi rehat di tempat yang sama, agar birama tidak bergeser. */
-  if(at===s.notes.length-1){
-    s.notes.pop(); if(s.notes.length) s.notes[s.notes.length-1].tie=false;
-    sel=-1; saveScores(); renderScoreView(); return;
-  }
-  s.notes[at]={m:null,d:s.notes[at].d,a:''};
-  if(at>0) s.notes[at-1].tie=false;
-  sel=at;
+  var it=N[at];
+  if(it.m!==null){ N[at]={m:null,d:it.d,a:''}; if(at>0) N[at-1].tie=false; }
+  else if(!it.e){ N[at]={m:null,d:it.d,a:'',e:true}; }
+  else if(at===N.length-1){ N.pop(); at=N.length-1; }
+  else { return; }
+  if(at<0){ sel=-1; editing=false; } else { sel=at; editing=true; }
   saveScores(); renderScoreView();
 }
 function stopPlay(){
@@ -2074,7 +2156,8 @@ function bindScore(){
   $('#sclef').addEventListener('change',function(e){ curScore().clef=e.target.value; saveScores(); renderScoreView(); });
   $('#sscore').addEventListener('click',function(e){
     var g=e.target.closest ? e.target.closest('.n') : null; if(!g) return;
-    var i=parseInt(g.getAttribute('data-i'),10); sel = sel===i ? -1 : i; renderScoreView();
+    var i=parseInt(g.getAttribute('data-i'),10);
+    if(editing && sel===i){ sel=-1; editing=false; renderScoreView(); } else selectAt(i);
   });
   var DUR_LABELS={
     name:['Penuh','½','¼','⅛','1/16'],
@@ -2113,11 +2196,25 @@ function bindScore(){
     var b=e.target.closest('.chip'); if(!b) return;
     inp.dur=parseFloat(b.getAttribute('data-d'));
     $$('#sdur .chip').forEach(function(x){ x.setAttribute('aria-pressed',x===b?'true':'false'); });
+    if(editing && sel>=0) changeDur(sel,curDur());
   });
-  $('#sdot').addEventListener('click',function(e){ inp.dot=!inp.dot; e.currentTarget.setAttribute('aria-pressed',inp.dot?'true':'false'); });
+  $('#sdot').addEventListener('click',function(e){
+    inp.dot=!inp.dot; e.currentTarget.setAttribute('aria-pressed',inp.dot?'true':'false');
+    if(editing && sel>=0) changeDur(sel,curDur());
+  });
   $('#sflat').addEventListener('click',function(e){
     inp.flat=!inp.flat; e.currentTarget.setAttribute('aria-pressed',inp.flat?'true':'false');
     e.currentTarget.textContent='Hitam: '+(inp.flat?'♭':'♯'); buildKeyboard();
+    var n=curScore().notes[sel];
+    if(editing && n && n.m!==null && isBlack(n.m)){ n.a=inp.flat?'b':'#'; saveScores(); renderScoreView(); }
+  });
+  $('#sleft').addEventListener('click',function(){ navMove(-1); });
+  $('#sright').addEventListener('click',function(){ navMove(1); });
+  document.addEventListener('keydown',function(e){
+    if(app.tab!=='score' || e.target.closest && e.target.closest('input,select,textarea')) return;
+    if(e.key==='ArrowLeft'){ e.preventDefault(); navMove(-1); }
+    else if(e.key==='ArrowRight'){ e.preventDefault(); navMove(1); }
+    else if(e.key==='Delete' || e.key==='Backspace'){ e.preventDefault(); delNote(); }
   });
   $('#srest').addEventListener('click',addRest);
   $('#sdelnote').addEventListener('click',delNote);
