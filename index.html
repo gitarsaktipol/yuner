@@ -280,6 +280,7 @@ header .sel select{max-width:100%;min-width:0}
   flex:1;min-width:52px;padding:9px 6px;border-radius:16px;border:0;background:var(--track);color:var(--ink);
   font-weight:700;font-size:14px;cursor:pointer;text-align:center;box-shadow:0 3px 0 var(--line);
 }
+#sdur.long .chip{flex:1 1 30%;font-size:13px;padding-left:6px;padding-right:6px}
 .chip:active{transform:translateY(2px) scale(.95);box-shadow:0 1px 0 var(--line)}
 .chip[aria-pressed="true"]{background:var(--brass);color:var(--brassText);box-shadow:0 3px 0 var(--brassDeep);animation:pop .4s var(--bounce)}
 .kb{position:relative;height:120px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
@@ -596,6 +597,12 @@ body{
   </div>
 
   <div class="card">
+    <div class="chips" id="sview" role="group" aria-label="Lihat berdasarkan" style="margin-bottom:8px;align-items:center">
+      <span style="font-size:13px;font-weight:700;color:var(--muted)">Lihat berdasarkan:</span>
+      <button class="chip" type="button" data-v="name" aria-pressed="true">Nama Nada</button>
+      <button class="chip" type="button" data-v="value" aria-pressed="false">Nilai Nada</button>
+      <button class="chip" type="button" data-v="symbol" aria-pressed="false">Nama Simbol</button>
+    </div>
     <div class="chips" id="sdur" role="group" aria-label="Nilai not">
       <button class="chip" type="button" data-d="4" aria-pressed="false">Penuh</button>
       <button class="chip" type="button" data-d="2" aria-pressed="false">½</button>
@@ -1987,6 +1994,22 @@ function bindScore(){
     var g=e.target.closest ? e.target.closest('.n') : null; if(!g) return;
     var i=parseInt(g.getAttribute('data-i'),10); sel = sel===i ? -1 : i; renderScoreView();
   });
+  var DUR_LABELS={
+    name:['Penuh','½','¼','⅛','1/16'],
+    value:['4 ketuk','2 ketuk','1 ketuk','½ ketuk','¼ ketuk'],
+    symbol:['Semibreve','Minim','Crotchet','Quaver','Semiquaver']
+  };
+  function setDurView(v){
+    if(!DUR_LABELS[v]) v='name';
+    store.set('yg.durView',v);
+    $$('#sdur .chip').forEach(function(b,i){ b.textContent=DUR_LABELS[v][i]; });
+    $('#sdur').classList.toggle('long',v!=='name');
+    $$('#sview .chip').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-v')===v?'true':'false'); });
+  }
+  $('#sview').addEventListener('click',function(e){
+    var b=e.target.closest('.chip'); if(b) setDurView(b.getAttribute('data-v'));
+  });
+  setDurView(store.get('yg.durView','name'));
   $('#sdur').addEventListener('click',function(e){
     var b=e.target.closest('.chip'); if(!b) return;
     inp.dur=parseFloat(b.getAttribute('data-d'));
