@@ -2292,8 +2292,12 @@ function playScore(){
   var s=curScore(); if(!s.notes.length) return;
   var c=ac(), spb=60/clamp(s.bpm||90,30,240), t=c.currentTime+0.15, acc=0;
   playGain=c.createGain(); playGain.gain.value=1; playGain.connect(c.destination);
+  /* Kalau ada not yang disorot (dipilih), putar mulai dari not itu (bukan dari awal) */
+  var startIdx = (editing && sel>=0 && sel<s.notes.length) ? sel : 0;
+  while(startIdx>0 && tieFrom(s.notes,startIdx)) startIdx--;
   playing=true;
   s.notes.forEach(function(n,i){
+    if(i<startIdx) return;
     var at=acc*spb, dur=n.d*spb;
     if(n.m!==null && !tieFrom(s.notes,i)) pluck(n.m,t+at,tieLen(s.notes,i)*spb,playGain);
     playTimers.push(setTimeout(function(){ playIdx=i; renderScoreView(); },150+at*1000));
