@@ -1422,7 +1422,9 @@ var CLEF_TREBLE = '<path d="M14 -13 L12 50 C12 60 4 62 4 56" fill="none" stroke=
 var CLEF_BASS = '<path d="M6 10 C6 4 20 4 22 14 C24 26 14 38 2 44" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="6" cy="10" r="3.6" fill="currentColor"/><circle cx="30" cy="5" r="1.9" fill="currentColor"/><circle cx="30" cy="15" r="1.9" fill="currentColor"/>';
 
 function drawScore(host,score,mode,stateFn,cursorAfter){
-  var W=Math.max(240,Math.floor(host.clientWidth||320));
+  var Wpx=Math.max(240,Math.floor(host.clientWidth||320));
+  /* Layar lebar/miring: seluruh not (garis, kepala not, jarak) diperbesar seragam, bukan hanya diregangkan ke samping. */
+  var scale = Wpx>600 ? Math.min(1.9, Wpx/520) : 1, W = Wpx/scale;
   var notes=score.notes, num=(mode==='num');
   var barBeats=score.ts[0]*4/score.ts[1];
   var ms=buildMeasures(notes,barBeats);
@@ -1541,7 +1543,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
     if(num) out+='<line class="caret" x1="'+cx+'" x2="'+cx+'" y1="'+(cy-24)+'" y2="'+(cy+24)+'"/>';
     else out+='<line class="caret" x1="'+cx+'" x2="'+cx+'" y1="'+(cy-10)+'" y2="'+(cy+4*S+10)+'"/>';
   }
-  host.innerHTML='<svg class="sv" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Partitur">'+out+'</svg>';
+  host.innerHTML='<svg class="sv" viewBox="0 0 '+W+' '+H+'" width="'+Wpx+'" height="'+Math.round(H*scale)+'" role="img" aria-label="Partitur">'+out+'</svg>';
 }
 
 /* =====================================================================
