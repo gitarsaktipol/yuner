@@ -2187,6 +2187,8 @@ function changeDur(at,newD){
       if(N[j].d<=need+1e-6){ need-=N[j].d; cnt++; j++; }
       else { rest=splitDur(N[j].d-need).map(function(d){ var o={m:null,d:d,a:''}; if(N[j].e) o.e=true; return o; }); cnt++; need=0; }
     }
+    /* sudah di ujung partitur: sisa ketuk birama ini masih ruang kosong (sudah dicek muat lewat barRemain) */
+    if(need>1e-6 && j>=N.length) need=0;
     if(need>1e-6){ showScoreAlert('Tidak cukup rehat/ruang kosong setelah not ini untuk memperpanjangnya.'); return; }
     N.splice.apply(N,[at+1,cnt].concat(rest||[]));
     it.d=newD; it.tie=false;
