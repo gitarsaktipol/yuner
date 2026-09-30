@@ -72,7 +72,7 @@ Tampil sebagai not balok ATAU not angka (notasi kepala not Indonesia/jianpu), bi
 
 Empat sumber soal (dropdown "Berlatih secara"):
 - **Acak** — soal acak dengan pengaturan kunci (G/F), rentang nada, jumlah not, opsi sertakan nada ♯, opsi abaikan oktaf.
-- **Arcade** — 26 huruf (A-Z) x 9 sub-level = 234 level progresif. Level A-C tetap 2 birama; makin ke Z birama bertambah sampai 9. Kesulitan lain (lebar lompatan interval, variasi ritme 1/4-1/8-1/16-titik, peluang nada ♯) ikut naik mengikuti level. Kalau selesai 100% benar: papan not berpendar + bunyi chime + otomatis naik ke sub-level berikutnya (~1.6 detik jeda). Kalau <100%: otomatis mengulang level yang sama.
+- **Arcade** — 26 huruf (A-Z) x 9 sub-level = 234 level progresif. Level A-C tetap 2 birama; makin ke Z birama bertambah sampai 10 (level Y-Z). Kesulitan lain (lebar lompatan interval, variasi ritme 1/4-1/8-1/16-titik, peluang nada ♯) ikut naik mengikuti level. Kalau selesai 100% benar: papan not berpendar + bunyi chime + otomatis naik ke sub-level berikutnya (~1.6 detik jeda). Kalau <100%: otomatis mengulang level yang sama.
 - **Custom** — pemain pilih sendiri nada mana saja yang boleh muncul lewat grid 36 tombol (3 oktaf, C3-B5), minimal 2 nada harus dipilih, plus pilihan jumlah birama 1-10.
 - **Partitur saya** — soal diambil dari partitur yang dibuat sendiri di menu Partitur.
 
