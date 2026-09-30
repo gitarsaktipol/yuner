@@ -2006,7 +2006,7 @@ function bindScore(){
     HEAD+'fill="currentColor"/><path d="M14.6 23V4c1 6 7 7 7 13M14.6 12c1 5 7 6 7 11" '+FL+'/>'
   ];
   function setDurView(v){
-    if(!DUR_LABELS[v] && v!=='icon') v='name';
+    if(!DUR_LABELS[v] && v!=='icon') v='icon';
     store.set('yg.durView',v);
     $$('#sdur .chip').forEach(function(b,i){
       if(v==='icon'){ b.innerHTML='<svg viewBox="0 0 28 28" width="26" height="26" aria-hidden="true">'+DUR_ICONS[i]+'</svg>'; b.setAttribute('aria-label',DUR_LABELS.symbol[i]); }
@@ -2022,7 +2022,7 @@ function bindScore(){
   $('#sview').addEventListener('click',function(){
     setDurView(VIEW_ORDER[(VIEW_ORDER.indexOf(durView)+1)%VIEW_ORDER.length]);
   });
-  setDurView(store.get('yg.durView','name'));
+  setDurView(store.get('yg.durView','icon'));
   $('#sdur').addEventListener('click',function(e){
     var b=e.target.closest('.chip'); if(!b) return;
     inp.dur=parseFloat(b.getAttribute('data-d'));
