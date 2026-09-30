@@ -297,7 +297,15 @@ body.playing{overflow:hidden}
 .play .sum{padding:6px 12px;font-size:14px;border-radius:18px}
 .play .sum b{display:inline;font-size:16px;margin:0 8px 0 0}
 .play .level{margin-top:4px}
-#pgo{width:100%;margin-top:4px}
+#pgo{width:100%}
+/* Menu Latihan: pratinjau partitur + tombol Mulai terpaku di bawah (tidak ikut menggulir) */
+.pdock{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:4;display:flex;flex-direction:column;gap:8px}
+.pdock[hidden]{display:none}
+.pdock .board{padding:8px 8px 6px}
+.pdock .pstatus,.pdock .level,.pdock .msg,.pdock .held{display:none}
+#tab-latih{padding-bottom:270px}
+.connSheet{position:absolute;left:calc(12px + env(safe-area-inset-left,0px));right:calc(12px + env(safe-area-inset-right,0px));top:52px;bottom:8px;z-index:3;overflow:auto;background:var(--bg);border:2px solid var(--line);border-radius:20px;padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 30px rgba(160,110,200,.28)}
+.connSheet[hidden]{display:none}
 /* Jika layar masih tegak (kunci landscape tidak diizinkan browser), layar berlatih diputar 90° supaya HP tinggal dimiringkan */
 @media (orientation:portrait){
   .play{inset:auto;top:0;left:0;width:100vh;height:100vw;transform-origin:top left;transform:rotate(90deg) translateY(-100%)}
@@ -497,6 +505,8 @@ body{
 <section class="tab" id="tab-latih" hidden>
   <header><h1><svg class="mascot" viewBox="0 0 40 40" aria-hidden="true"><path class="mf" d="M25 29V6c4 1 8 4 9 9"/><ellipse class="mb" cx="17" cy="29" rx="10" ry="8"/><circle class="me" cx="13.5" cy="27.5" r="1.6"/><circle class="me" cx="20.5" cy="27.5" r="1.6"/><path d="M14 31.5q3 2.6 6 0" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/><circle class="mc" cx="10.5" cy="31" r="1.8"/><circle class="mc" cx="23.5" cy="31" r="1.8"/></svg>Latihan baca not</h1></header>
 
+  <div class="pdock" id="pdock" hidden>
+  <button class="start" id="pgo" type="button">▶ Mulai berlatih</button>
   <div id="pboardHome">
   <section class="board" id="pboard" aria-live="polite">
     <div class="scorehost" id="pscore"></div>
@@ -512,10 +522,6 @@ body{
   </section>
 
   </div>
-  <button class="start" id="pgo" type="button">▶ Mulai berlatih</button>
-  <div class="row">
-    <button class="sound" id="pnew" type="button">Soal baru</button>
-    <button class="sound" id="ppeek" type="button">Bunyikan nada</button>
   </div>
 
 
@@ -581,7 +587,19 @@ body{
   </details>
   <p class="hint" id="parcInfo" hidden></p>
 
-  <details class="card cfg conn" id="pconn">
+
+</section>
+
+<!-- ================= LAYAR BERLATIH (layar penuh, landscape) ================= -->
+<div class="play" id="pplay" hidden role="dialog" aria-label="Berlatih baca not">
+  <div class="playbar">
+    <button class="pclose" id="pclose" type="button" aria-label="Keluar dari latihan">✕</button>
+    <span class="plast" id="plast" hidden>Skor terakhir: <b id="plastV"></b></span>
+  </div>
+  <div class="pstage" id="pstage"></div>
+  <div class="connSheet" id="pconnSheet" hidden>
+    <button class="sound" id="pconnClose" type="button">✕ Tutup</button>
+  <details class="card cfg conn" id="pconn" open>
     <summary>Sambungkan alat musik</summary>
     <p class="sub">Keyboard / controller MIDI (tanpa delay, bisa 10 nada sekaligus)</p>
     <div class="row">
@@ -597,16 +615,7 @@ body{
     <label class="chk"><input type="checkbox" id="audDirect"> Mode kabel (latensi rendah)</label>
     <p class="cstat" id="audStat">Colok alat musik lewat kabel jack (adaptor TRRS / soundcard USB), aktifkan Mode kabel, lalu aktifkan mikrofon.</p>
   </details>
-
-</section>
-
-<!-- ================= LAYAR BERLATIH (layar penuh, landscape) ================= -->
-<div class="play" id="pplay" hidden role="dialog" aria-label="Berlatih baca not">
-  <div class="playbar">
-    <button class="pclose" id="pclose" type="button" aria-label="Keluar dari latihan">✕</button>
-    <span class="plast" id="plast" hidden>Skor terakhir: <b id="plastV"></b></span>
   </div>
-  <div class="pstage" id="pstage"></div>
   <div class="sum" id="psum" hidden><b id="psumT"></b><span id="psumD"></span></div>
 
 </div>
@@ -1851,7 +1860,7 @@ function goLandscape(){
 }
 function startPractice(){
   if(pr.playing) return;
-  pr.playing=true; document.body.classList.add('playing');
+  pr.playing=true; document.body.classList.add('playing'); $('#pdock').hidden=true;
   $('#plast').hidden=true;
   $('#pstage').appendChild($('#pboard'));
   $('#pplay').hidden=false;
@@ -1862,7 +1871,7 @@ function startPractice(){
 function closePractice(fromPop){
   if(!pr.playing) return;
   clearTimeout(autoT);
-  pr.playing=false; document.body.classList.remove('playing');
+  pr.playing=false; document.body.classList.remove('playing'); $('#pconnSheet').hidden=true; $('#pdock').hidden=(app.tab!=='latih');
   if(mic.active) micStop();
   $('#pplay').hidden=true; $('#psum').hidden=true;
   $('#pboardHome').appendChild($('#pboard'));
@@ -2007,22 +2016,20 @@ function bindPracticeOpts(){
   $('#psharp').addEventListener('change',function(e){ pr.sharps=e.target.checked; newRound(); });
   $('#poct').addEventListener('change',function(e){ pr.anyOct=e.target.checked; });
   $('#pstart').addEventListener('click',micToggle);
+  document.body.appendChild($('#pdock'));
+  $('#pcfg').addEventListener('toggle',function(){ if(this.open) window.scrollTo({top:0,behavior:'smooth'}); });
+  $('#pconnClose').addEventListener('click',function(){ $('#pconnSheet').hidden=true; });
   document.body.appendChild($('#pplay'));   /* di luar .app supaya menutupi menu bawah */
   $('#pgo').addEventListener('click',startPractice);
   $('#pclose').addEventListener('click',function(){ closePractice(); });
   $('#pmidiGo').addEventListener('click',async function(){
     var m=$('#pmsg'); m.textContent='';
+    $('#pconnSheet').hidden=false;
     await midiConnect();
+    if(midiConnected()) $('#pconnSheet').hidden=true;
     if(!midiSupported()) m.textContent='Browser ini belum mendukung MIDI. Pakai Google Chrome atau Microsoft Edge.';
     else if(!midiConnected()) m.textContent='Belum ada alat musik terdeteksi. Colok keyboard MIDI lewat kabel USB (di HP pakai kabel OTG), lalu tekan lagi.';
     renderPractice();
-  });
-  $('#pnew').addEventListener('click',function(){ newRound(); });
-  $('#ppeek').addEventListener('click',function(){
-    if(!pr.score || pr.done || !pr.idx.length) return;
-    var n=pr.score.notes[pr.idx[pr.pos]];
-    pluck(n.m-instShift(),ac().currentTime,1.2);
-    pr.mute=performance.now()+1500;
   });
 }
 
@@ -2649,6 +2656,7 @@ function showTab(name){
   if(name==='score' && mic.active) micStop();
   if(name!=='score') stopPlay();
   app.tab=name;
+  var dk=$('#pdock'); if(dk) dk.hidden = !(name==='latih' && !pr.playing);
   $$('.tab').forEach(function(t){ t.hidden = (t.id!=='tab-'+name); });
   var activeTab=$('#tab-'+name);
   if(activeTab){ activeTab.classList.remove('tabIn'); void activeTab.offsetWidth; activeTab.classList.add('tabIn'); }
