@@ -1413,7 +1413,7 @@ function restSvg(d,x,y0){
   if(d>bd) o+='<circle cx="'+(x+9)+'" cy="'+(y0+2*S-3)+'" r="1.9" fill="currentColor"/>';
   return o;
 }
-function noteSvg(n,x,y0,base,i,cls,key){
+function noteSvg(n,x,y0,base,i,cls,key,bm){
   var o='<g class="n'+cls+'" data-i="'+i+'">';
   o+='<rect class="hl" x="'+(x-15)+'" y="'+(y0-18)+'" width="30" height="'+(4*S+36)+'" rx="9"/>';
   if(n.m===null){ if(!n.e) o+=restSvg(n.d,x,y0); return o+'</g>'; }
@@ -1425,9 +1425,9 @@ function noteSvg(n,x,y0,base,i,cls,key){
   else if(bd===2) o+='<ellipse cx="'+x+'" cy="'+y+'" rx="5.8" ry="4.2" fill="none" stroke="currentColor" stroke-width="1.9" transform="rotate(-20 '+x+' '+y+')"/>';
   else o+='<ellipse cx="'+x+'" cy="'+y+'" rx="5.8" ry="4.3" fill="currentColor" transform="rotate(-20 '+x+' '+y+')"/>';
   if(bd<4){
-    var up = step<4, sx = up ? x+5.4 : x-5.4, y2 = up ? y-3.5*S : y+3.5*S;
+    var up = bm ? bm.up : step<4, sx = up ? x+5.4 : x-5.4, y2 = bm ? bm.yb : (up ? y-3.5*S : y+3.5*S);
     o+='<line x1="'+sx+'" x2="'+sx+'" y1="'+y+'" y2="'+y2+'" stroke="currentColor" stroke-width="1.5"/>';
-    var fl = bd===0.5 ? 1 : (bd===0.25 ? 2 : 0);
+    var fl = bm ? 0 : (bd===0.5 ? 1 : (bd===0.25 ? 2 : 0));
     for(var k=0;k<fl;k++){
       var oy = up ? y2+k*7 : y2-k*7;
       o+= up
@@ -1551,6 +1551,24 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
       var beatLen = (score.ts[1]===8 && score.ts[0]%3===0) ? 1.5 : 1;
       var tt=0, cells=[], lv=[];
       m.idx.forEach(function(q){ var b=baseDur(notes[q].d); cells.push(Math.floor(tt/beatLen+1e-6)); lv.push(b<1?(b<0.5?2:1):0); tt+=notes[q].d; });
+      /* Not balok: not seperdelapan/seperenambelas yang berdekatan dalam satu ketukan digabung dengan balok (beam), bukan bendera terpisah */
+      var grp={}, gs=[];
+      if(!num){
+        var curG=null;
+        m.idx.forEach(function(q,j){
+          var ok = lv[j]>0 && notes[q].m!==null;
+          if(ok && curG && curG.last===j-1 && cells[j]===cells[j-1]){ curG.js.push(j); curG.last=j; }
+          else { curG = ok ? {js:[j],last:j} : null; if(curG) gs.push(curG); }
+        });
+        gs=gs.filter(function(g){ return g.js.length>=2; });
+        gs.forEach(function(g){
+          var st=g.js.map(function(j){ return diaOf(notes[m.idx[j]])-base; });
+          g.up = (st.reduce(function(a,b){ return a+b; },0)/st.length) < 4;
+          var ys=st.map(function(v){ return y0+4*S-v*S/2; });
+          g.yb = g.up ? Math.min.apply(null,ys)-3.5*S : Math.max.apply(null,ys)+3.5*S;
+          g.xs={}; g.js.forEach(function(j){ grp[j]=g; });
+        });
+      }
       m.idx.forEach(function(ni,j){
         var n=notes[ni], adv=advOf(n,mode,key)*k, cls=stateFn?stateFn(ni):'';
         var bm=null;
@@ -1566,11 +1584,22 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
         var extra = (!num && accShown(n,key)) ? 10*k : 0;
         var noteCX = num ? (px+12) : (px+extra+(adv-extra)/2);
         if(num) out+=numSvg(n,px+12,y0+0,ni,cls,bm,key);
-        else out+=noteSvg(n,noteCX,y0,base,ni,cls,key);
+        else out+=noteSvg(n,noteCX,y0,base,ni,cls,key,grp[j]?{up:grp[j].up,yb:grp[j].yb}:null);
+        if(grp[j]) grp[j].xs[j]=noteCX+(grp[j].up?5.4:-5.4);
         if(n.m!==null) pos[ni]={x:noteCX,y:(num?y0:y0+4*S-(diaOf(n)-base)*S/2),si:si,up:(num?false:(diaOf(n)-base)<4),xe:W-margin};
         if(ni===targetNi && cursorOnSlot){ cx=noteCX+16; cy=y0; }
         px+=adv;
         if(ni===targetNi && !cursorOnSlot){ cx=px+(num?4:2); cy=y0; }
+      });
+      gs.forEach(function(g){
+        var xs=g.js.map(function(j){ return g.xs[j]; }), dy=g.up?2.2:-2.2, sgn=g.up?1:-1, k2;
+        out+='<line x1="'+(xs[0]-0.8)+'" x2="'+(xs[xs.length-1]+0.8)+'" y1="'+(g.yb+dy)+'" y2="'+(g.yb+dy)+'" stroke="currentColor" stroke-width="4.6"/>';
+        for(k2=0;k2<g.js.length;k2++){
+          if(lv[g.js[k2]]<2) continue;
+          var y2b=g.yb+dy+sgn*6;
+          if(k2+1<g.js.length && lv[g.js[k2+1]]>=2) out+='<line x1="'+xs[k2]+'" x2="'+xs[k2+1]+'" y1="'+y2b+'" y2="'+y2b+'" stroke="currentColor" stroke-width="3.2"/>';
+          else if(k2===0 || lv[g.js[k2-1]]<2) out+='<line x1="'+(k2+1<g.js.length ? xs[k2] : xs[k2]-7)+'" x2="'+(k2+1<g.js.length ? xs[k2]+7 : xs[k2])+'" y1="'+y2b+'" y2="'+y2b+'" stroke="currentColor" stroke-width="3.2"/>';
+        }
       });
       var bx=x+wk-2, lastM=(isLast && mi===sys.ms.length-1);
       var by1= num ? y0-22 : y0, by2 = num ? y0+22 : y0+4*S;

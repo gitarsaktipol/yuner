@@ -119,6 +119,7 @@ Mekanisme penilaian not yang dimainkan (fungsi `practiceHit`):
 ## Detail rendering notasi
 
 - Not balok (staff notation) dan not angka (numbered/jianpu notation) **digambar sendiri sebagai SVG** dari nol (fungsi `drawScore`, `noteSvg`, `numSvg`) — tidak pakai library notasi musik pihak ketiga (bukan VexFlow/abcjs/dll).
+- Not balok: not seperdelapan/seperenambelas yang berurutan dalam SATU ketukan digabung dengan balok (beam) alih-alih bendera terpisah (`gs`/`grp` di `drawScore`; arah tangkai ikut rata-rata posisi nada, balok kedua untuk 1/16; rehat memutus kelompok; beam tidak ikut berubah warna saat state benar/salah).
 - Not angka: garis panjang (beam) untuk not 1/8 & 1/16 digambar **DI ATAS** angka (bukan di bawah — sempat diminta dipindah), garis-garis pendek yang berdekatan dalam satu ketukan disambung jadi satu garis menerus, bukan garis terpisah per not.
 - Not angka bertitik (mis. 3 bertitik + 2 seperdelapan, `numSvg`): titik dijauhkan dari angka, diletakkan di dekat not berikutnya sejajar dasar angka, dan garis di atas not seperdelapan yang mengikutinya diperpanjang ke kiri sampai tepat di atas titik (`bm.dl`), sesuai tulisan tangan standar not angka.
 - Layar lebar/miring (lebar > 600 px): `drawScore` menggambar dengan lebar virtual `W = lebar/scale` lalu SVG diperbesar seragam (`scale` maks 1,9) lewat viewBox — jadi garis, kepala not, dan jarak ikut membesar (bukan hanya melebar ke samping). Layar tegak tidak berubah.
