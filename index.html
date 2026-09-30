@@ -280,7 +280,6 @@ header .sel select{max-width:100%;min-width:0}
   flex:1;min-width:52px;padding:9px 6px;border-radius:16px;border:0;background:var(--track);color:var(--ink);
   font-weight:700;font-size:14px;cursor:pointer;text-align:center;box-shadow:0 3px 0 var(--line);
 }
-#sview .chip{flex:1 1 0;font-size:12px;padding-left:3px;padding-right:3px;white-space:nowrap}
 #sdur.icons .chip{flex:1 1 0;display:flex;justify-content:center;padding-top:6px;padding-bottom:6px}
 #sdur.long .chip{flex:1 1 30%;font-size:13px;padding-left:6px;padding-right:6px}
 .chip:active{transform:translateY(2px) scale(.95);box-shadow:0 1px 0 var(--line)}
@@ -599,13 +598,7 @@ body{
   </div>
 
   <div class="card">
-    <div class="chips" id="sview" role="group" aria-label="Lihat berdasarkan" style="margin-bottom:8px;align-items:center;gap:5px">
-      <span style="flex:1 0 100%;font-size:13px;font-weight:700;color:var(--muted)">Lihat berdasarkan:</span>
-      <button class="chip" type="button" data-v="name" aria-pressed="true">Nama Nada</button>
-      <button class="chip" type="button" data-v="value" aria-pressed="false">Nilai Nada</button>
-      <button class="chip" type="button" data-v="symbol" aria-pressed="false">Nama Simbol</button>
-      <button class="chip" type="button" data-v="icon" aria-pressed="false">Simbol</button>
-    </div>
+    <button class="chip" type="button" id="sview" style="width:100%;margin-bottom:8px" aria-label="Lihat berdasarkan"></button>
     <div class="chips" id="sdur" role="group" aria-label="Nilai not">
       <button class="chip" type="button" data-d="4" aria-pressed="false">Penuh</button>
       <button class="chip" type="button" data-d="2" aria-pressed="false">½</button>
@@ -2021,10 +2014,13 @@ function bindScore(){
     });
     $('#sdur').classList.toggle('long',v==='value'||v==='symbol');
     $('#sdur').classList.toggle('icons',v==='icon');
-    $$('#sview .chip').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-v')===v?'true':'false'); });
+    var VN={name:'Nama Nada',value:'Nilai Nada',symbol:'Nama Simbol',icon:'Simbol'};
+    $('#sview').textContent='Lihat berdasarkan: '+VN[v]+'  ⟳';
+    durView=v;
   }
-  $('#sview').addEventListener('click',function(e){
-    var b=e.target.closest('.chip'); if(b) setDurView(b.getAttribute('data-v'));
+  var durView='name', VIEW_ORDER=['name','value','symbol','icon'];
+  $('#sview').addEventListener('click',function(){
+    setDurView(VIEW_ORDER[(VIEW_ORDER.indexOf(durView)+1)%VIEW_ORDER.length]);
   });
   setDurView(store.get('yg.durView','name'));
   $('#sdur').addEventListener('click',function(e){
