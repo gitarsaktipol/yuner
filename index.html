@@ -679,8 +679,11 @@ body{
     </div>
     <div class="chips" id="snav" role="group" aria-label="Pindah kursor" style="margin-top:8px">
       <button class="chip" type="button" id="sleft" style="flex:1" aria-label="Kursor ke kiri">◀ Kiri</button>
+      <button class="chip" type="button" id="sup" style="flex:1" aria-label="Pilih nada di atasnya dalam akor">▲ Naik</button>
+      <button class="chip" type="button" id="sdown" style="flex:1" aria-label="Pilih nada di bawahnya dalam akor">▼ Turun</button>
       <button class="chip" type="button" id="sright" style="flex:1" aria-label="Kursor ke kanan">Kanan ▶</button>
     </div>
+    <div class="chips" style="margin-top:6px"><button class="chip" type="button" id="sauto" style="flex:1" aria-pressed="false">Maju otomatis: mati</button></div>
     <div class="row" style="margin-top:10px;align-items:center">
       <div class="stepper" style="flex:1;justify-content:space-between">
         <button class="ctl" id="soctdn" type="button" aria-label="Oktaf lebih rendah">−</button>
@@ -1041,7 +1044,7 @@ function midiNoteOn(n,v){
   if(midi.synth) synthOn(n,v);
   renderHeld();
   if(app.tab==='latih' && pr.playing) practiceHit(n,true);
-  else if(app.tab==='score' && !playing) addNote(n,midi.synth);
+  else if(app.tab==='score' && !playing) midiScoreNote(n,midi.synth);
   else if(app.tab==='tuner') midiTunerShow(n);
 }
 function midiNoteOff(n){
@@ -1388,6 +1391,9 @@ function advOf(n,mode,key){
   if(mode==='num') return Math.max(24,26*n.d);
   return 14+7*Math.sqrt(4*n.d)+(accShown(n,key)?10:0);
 }
+/* Akor: satu not bisa berisi beberapa nada. n.m/n.a = nada TERENDAH, n.x = nada-nada lain (naik) [{m,a}]. */
+function pitchList(n){ var l=[{m:n.m,a:n.a||''}], i; if(n.x) for(i=0;i<n.x.length;i++) l.push({m:n.x[i].m,a:n.x[i].a||''}); return l; }
+function setPitchList(n,l){ l.sort(function(a,b){ return a.m-b.m; }); n.m=l[0].m; n.a=l[0].a; if(l.length>1) n.x=l.slice(1).map(function(p){ return {m:p.m,a:p.a}; }); else delete n.x; }
 /* Not bertanda tie (n.tie) tersambung ke not sesudahnya yang nadanya sama: not sambungan tidak dibunyikan/dinilai lagi. */
 function tieFrom(notes,i){ return i>0 && notes[i-1].tie && notes[i].m!==null && notes[i-1].m===notes[i].m; }
 function tieLen(notes,i){ var d=notes[i].d; while(notes[i].tie && notes[i+1] && notes[i+1].m===notes[i].m){ i++; d+=notes[i].d; } return d; }
@@ -1412,20 +1418,44 @@ function restSvg(d,x,y0){
   if(d>bd) o+='<circle cx="'+(x+9)+'" cy="'+(y0+2*S-3)+'" r="1.9" fill="currentColor"/>';
   return o;
 }
-function noteSvg(n,x,y0,base,i,cls,key,bm){
+function noteSvg(n,x,y0,base,i,cls,key,bm,sp){
   var o='<g class="n'+cls+'" data-i="'+i+'">';
   o+='<rect class="hl" x="'+(x-15)+'" y="'+(y0-18)+'" width="30" height="'+(4*S+36)+'" rx="9"/>';
   if(n.m===null){ if(!n.e) o+=restSvg(n.d,x,y0); return o+'</g>'; }
-  var step=diaOf(n)-base, y=y0+4*S-step*S/2, bd=baseDur(n.d), s;
-  if(step<=-2) for(s=-2;s>=step;s-=2){ var ly=y0+4*S-s*S/2; o+='<line x1="'+(x-10)+'" x2="'+(x+10)+'" y1="'+ly+'" y2="'+ly+'" stroke="currentColor" stroke-width="1.4"/>'; }
-  if(step>=10) for(s=10;s<=step;s+=2){ var ly2=y0+4*S-s*S/2; o+='<line x1="'+(x-10)+'" x2="'+(x+10)+'" y1="'+ly2+'" y2="'+ly2+'" stroke="currentColor" stroke-width="1.4"/>'; }
-  var ac=accShown(n,key); if(ac) o+=accSvg(ac,x-14,y,0.95);
-  if(bd===4) o+='<ellipse cx="'+x+'" cy="'+y+'" rx="6.8" ry="4.6" fill="none" stroke="currentColor" stroke-width="2"/>';
-  else if(bd===2) o+='<ellipse cx="'+x+'" cy="'+y+'" rx="5.8" ry="4.2" fill="none" stroke="currentColor" stroke-width="1.9" transform="rotate(-20 '+x+' '+y+')"/>';
-  else o+='<ellipse cx="'+x+'" cy="'+y+'" rx="5.8" ry="4.3" fill="currentColor" transform="rotate(-20 '+x+' '+y+')"/>';
+  var pl=pitchList(n), bd=baseDur(n.d), hs=[], s, lo=1e9, hi=-1e9;
+  pl.forEach(function(p,pi){
+    var q={m:p.m,a:p.a}, st=diaOf(q)-base;
+    hs.push({q:q,pi:pi,step:st,y:y0+4*S-st*S/2,dx:0});
+    if(st<lo) lo=st; if(st>hi) hi=st;
+  });
+  var up = bm ? bm.up : ((4-lo)>(hi-4));
+  /* kepala not yang bersebelahan (sekon) digeser ke sisi lain tangkai */
+  var prev=null, dispR=false, dispL=false;
+  hs.slice().sort(function(a,b){ return up ? a.step-b.step : b.step-a.step; }).forEach(function(h){
+    if(prev && Math.abs(h.step-prev.step)===1 && prev.dx===0){ h.dx = up ? 11 : -11; if(up) dispR=true; else dispL=true; }
+    prev=h;
+  });
+  var lx1=x-10-(dispL?11:0), lx2=x+10+(dispR?11:0);
+  if(lo<=-2) for(s=-2;s>=lo;s-=2){ var ly=y0+4*S-s*S/2; o+='<line x1="'+lx1+'" x2="'+lx2+'" y1="'+ly+'" y2="'+ly+'" stroke="currentColor" stroke-width="1.4"/>'; }
+  if(hi>=10) for(s=10;s<=hi;s+=2){ var ly2=y0+4*S-s*S/2; o+='<line x1="'+lx1+'" x2="'+lx2+'" y1="'+ly2+'" y2="'+ly2+'" stroke="currentColor" stroke-width="1.4"/>'; }
+  var col=0;
+  hs.slice().sort(function(a,b){ return b.step-a.step; }).forEach(function(h){
+    var ac=accShown(h.q,key); if(ac){ o+=accSvg(ac,x-14-(dispL?11:0)-(col%2)*10,h.y,0.95); col++; }
+  });
+  hs.forEach(function(h){
+    var hx=x+h.dx, y=h.y;
+    if(bd===4) o+='<ellipse cx="'+hx+'" cy="'+y+'" rx="6.8" ry="4.6" fill="none" stroke="currentColor" stroke-width="2"/>';
+    else if(bd===2) o+='<ellipse cx="'+hx+'" cy="'+y+'" rx="5.8" ry="4.2" fill="none" stroke="currentColor" stroke-width="1.9" transform="rotate(-20 '+hx+' '+y+')"/>';
+    else o+='<ellipse cx="'+hx+'" cy="'+y+'" rx="5.8" ry="4.3" fill="currentColor" transform="rotate(-20 '+hx+' '+y+')"/>';
+    if(n.d>bd){
+      var onLine = (((h.step%2)+2)%2)===0;
+      o+='<circle cx="'+(hx+11)+'" cy="'+(y-(onLine?S/2:0))+'" r="1.9" fill="currentColor"/>';
+    }
+  });
   if(bd<4){
-    var up = bm ? bm.up : step<4, sx = up ? x+5.4 : x-5.4, y2 = bm ? bm.yb : (up ? y-3.5*S : y+3.5*S);
-    o+='<line x1="'+sx+'" x2="'+sx+'" y1="'+y+'" y2="'+y2+'" stroke="currentColor" stroke-width="1.5"/>';
+    var ys=hs.map(function(h){ return h.y; }), yMin=Math.min.apply(null,ys), yMax=Math.max.apply(null,ys);
+    var sx = up ? x+5.4 : x-5.4, yStart = up ? yMax : yMin, y2 = bm ? bm.yb : (up ? yMin-3.5*S : yMax+3.5*S);
+    o+='<line x1="'+sx+'" x2="'+sx+'" y1="'+yStart+'" y2="'+y2+'" stroke="currentColor" stroke-width="1.5"/>';
     var fl = bm ? 0 : (bd===0.5 ? 1 : (bd===0.25 ? 2 : 0));
     for(var k=0;k<fl;k++){
       var oy = up ? y2+k*7 : y2-k*7;
@@ -1434,10 +1464,8 @@ function noteSvg(n,x,y0,base,i,cls,key,bm){
         : '<path d="M'+sx+' '+oy+' C'+(sx+9)+' '+(oy-8)+' '+(sx+10)+' '+(oy-15)+' '+(sx+4)+' '+(oy-21)+'" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>';
     }
   }
-  if(n.d>bd){
-    var onLine = (((step%2)+2)%2)===0;
-    o+='<circle cx="'+(x+11)+'" cy="'+(y-(onLine?S/2:0))+'" r="1.9" fill="currentColor"/>';
-  }
+  /* penanda nada yang sedang dipilih di dalam akor (untuk ▲ ▼ dan Hapus) */
+  if(sp>=0 && pl.length>1 && hs[sp]) o+='<circle cx="'+(x+hs[sp].dx)+'" cy="'+hs[sp].y+'" r="9.5" fill="none" stroke="var(--brass)" stroke-width="2.6"/>';
   return o+'</g>';
 }
 function ulSvg(x,yb,lvl,bm){
@@ -1445,28 +1473,33 @@ function ulSvg(x,yb,lvl,bm){
   var x1 = cl ? x-bm.gL/2 : (bm && bm.dl ? x-bm.dl : x-9), x2 = cr ? x+bm.gR/2 : x+9, y = yb-18+lvl*4;
   return '<line x1="'+x1+'" x2="'+x2+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" stroke-width="1.8"/>';
 }
-function numSvg(n,x,yb,i,cls,bm,key){
+var GAP=30;
+function numSvg(n,x,yb,i,cls,bm,key,sp){
   var CELL=26, bd=baseDur(n.d), o='<g class="n'+cls+'" data-i="'+i+'">';
-  o+='<rect class="hl" x="'+(x-15)+'" y="'+(yb-34)+'" width="30" height="74" rx="9"/>';
+  var pl = n.m===null ? null : pitchList(n), stk = pl ? pl.length : 1, own=(stk-1)*GAP, lift=(bm&&bm.lift)||0;
+  o+='<rect class="hl" x="'+(x-15)+'" y="'+(yb-34-own)+'" width="30" height="'+(74+own)+'" rx="9"/>';
   var k, beats=Math.max(1,Math.floor(n.d));
   if(n.m===null && n.e) return o+'</g>';
   if(n.m===null){
     o+='<text x="'+x+'" y="'+(yb+8)+'" font-size="24" font-weight="700" text-anchor="middle">0</text>';
     for(k=1;k<beats && bd>=1;k++) o+='<text x="'+(x+CELL*k)+'" y="'+(yb+8)+'" font-size="24" font-weight="700" text-anchor="middle">0</text>';
     var rul = bd===0.5?1:(bd===0.25?2:0);
-    for(k=0;k<rul;k++) o+=ulSvg(x,yb,k,bm);
+    for(k=0;k<rul;k++) o+=ulSvg(x,yb-lift,k,bm);
     return o+'</g>';
   }
-  var j=jianpu(n,key), ul = bd===0.5?1:(bd===0.25?2:0);
-  o+='<text x="'+x+'" y="'+(yb+8)+'" font-size="24" font-weight="700" text-anchor="middle">'+j.num+'</text>';
-  if(j.acc) o+=accSvg(j.acc,x-14,yb-2,0.85);
-  for(k=0;k<ul;k++) o+=ulSvg(x,yb,k,bm);
-  var up=j.oct-4, i2;
-  for(i2=0;i2<up;i2++) o+='<circle cx="'+x+'" cy="'+(yb-17-ul*4-i2*6)+'" r="2.2" fill="currentColor"/>';
-  for(i2=0;i2<-up;i2++) o+='<circle cx="'+x+'" cy="'+(yb+15+i2*6)+'" r="2.2" fill="currentColor"/>';
-  /* titik not: dijauhkan dari angka, diletakkan di dekat not berikutnya (standar not angka), sejajar dasar angka */
-  if(bd<2 && n.d>bd) o+='<circle cx="'+(x+Math.max(14,(bm?bm.gR:0)/2))+'" cy="'+(yb+5)+'" r="2.1" fill="currentColor"/>';
-  if(bd>=2) for(k=1;k<beats;k++) o+='<circle cx="'+(x+CELL*k)+'" cy="'+(yb+1)+'" r="2.3" fill="currentColor"/>';
+  var ul = bd===0.5?1:(bd===0.25?2:0);
+  pl.forEach(function(p,pi){
+    var yy=yb-pi*GAP, j=jianpu({m:p.m,a:p.a},key), top=(pi===stk-1), up=j.oct-4, i2;
+    o+='<text x="'+x+'" y="'+(yy+8)+'" font-size="24" font-weight="700" text-anchor="middle">'+j.num+'</text>';
+    if(j.acc) o+=accSvg(j.acc,x-14,yy-2,0.85);
+    for(i2=0;i2<up;i2++) o+='<circle cx="'+x+'" cy="'+(yy-17-(top?ul*4:0)-i2*6)+'" r="2.2" fill="currentColor"/>';
+    for(i2=0;i2<-up;i2++) o+='<circle cx="'+x+'" cy="'+(yy+15+i2*6)+'" r="2.2" fill="currentColor"/>';
+    /* titik not: dijauhkan dari angka, diletakkan di dekat not berikutnya (standar not angka), sejajar dasar angka */
+    if(bd<2 && n.d>bd) o+='<circle cx="'+(x+Math.max(14,(bm?bm.gR:0)/2))+'" cy="'+(yy+5)+'" r="2.1" fill="currentColor"/>';
+    if(bd>=2) for(k=1;k<beats;k++) o+='<circle cx="'+(x+CELL*k)+'" cy="'+(yy+1)+'" r="2.3" fill="currentColor"/>';
+    if(sp===pi && stk>1) o+='<rect x="'+(x-13)+'" y="'+(yy-13)+'" width="26" height="26" rx="7" fill="none" stroke="var(--brass)" stroke-width="2.6"/>';
+  });
+  for(k=0;k<ul;k++) o+=ulSvg(x,yb-lift,k,bm);
   return o+'</g>';
 }
 var CLEF_TREBLE = '<path d="M14 -13 L12 50 C12 60 4 62 4 56" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 -13 C24 -6 22 8 12 16 C2 24 -1 36 6 42 C12 47 22 44 22 35 C22 27 12 24 8 30 C5 35 10 39 14 37" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
@@ -1491,8 +1524,10 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
   var base = score.clef==='bass' ? 18 : 30;
 
   var minStep=0, maxStep=8;
-  if(!num) notes.forEach(function(n){ if(n.m!==null){ var st=diaOf(n)-base; if(st<minStep) minStep=st; if(st>maxStep) maxStep=st; } });
-  var topM = num ? 44 : 22+Math.max(0,(maxStep-8)*S/2);
+  if(!num) notes.forEach(function(n){ if(n.m!==null) pitchList(n).forEach(function(p){ var st=diaOf({m:p.m,a:p.a})-base; if(st<minStep) minStep=st; if(st>maxStep) maxStep=st; }); });
+  var maxLift=0;
+  if(num) notes.forEach(function(n){ if(n.m!==null) maxLift=Math.max(maxLift,(pitchList(n).length-1)*GAP); });
+  var topM = num ? 44+maxLift : 22+Math.max(0,(maxStep-8)*S/2);
   var botM = num ? 40 : Math.max(26,-minStep*S/2+14);
   var sysH = num ? topM+botM : topM+4*S+botM;
 
@@ -1550,6 +1585,18 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
       var beatLen = (score.ts[1]===8 && score.ts[0]%3===0) ? 1.5 : 1;
       var tt=0, cells=[], lv=[];
       m.idx.forEach(function(q){ var b=baseDur(notes[q].d); cells.push(Math.floor(tt/beatLen+1e-6)); lv.push(b<1?(b<0.5?2:1):0); tt+=notes[q].d; });
+      /* tinggi garis balok not angka: ikut tumpukan akor tertinggi di dalam kelompok balok yang sama */
+      var runLift=[];
+      if(num){
+        var stkOf=function(j){ return notes[m.idx[j]].m!==null ? (pitchList(notes[m.idx[j]]).length-1)*GAP : 0; }, rs=0, re, jj, mx;
+        while(rs<m.idx.length){
+          re=rs;
+          while(re+1<m.idx.length && lv[re+1]>0 && lv[re]>0 && cells[re+1]===cells[re]) re++;
+          mx=0; for(jj=rs;jj<=re;jj++) mx=Math.max(mx,stkOf(jj));
+          for(jj=rs;jj<=re;jj++) runLift[jj]=mx;
+          rs=re+1;
+        }
+      }
       /* Not balok: not seperdelapan/seperenambelas yang berdekatan dalam satu ketukan digabung dengan balok (beam), bukan bendera terpisah */
       var grp={}, gs=[];
       if(!num){
@@ -1561,7 +1608,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
         });
         gs=gs.filter(function(g){ return g.js.length>=2; });
         gs.forEach(function(g){
-          var st=g.js.map(function(j){ return diaOf(notes[m.idx[j]])-base; });
+          var st=[]; g.js.forEach(function(j){ pitchList(notes[m.idx[j]]).forEach(function(p){ st.push(diaOf({m:p.m,a:p.a})-base); }); });
           g.up = (st.reduce(function(a,b){ return a+b; },0)/st.length) < 4;
           var ys=st.map(function(v){ return y0+4*S-v*S/2; });
           g.yb = g.up ? Math.min.apply(null,ys)-3.5*S : Math.max.apply(null,ys)+3.5*S;
@@ -1582,8 +1629,9 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
         cls = cls ? ' '+cls.split(' ').filter(Boolean).map(function(c){return 'st-'+c;}).join(' ') : '';
         var extra = (!num && accShown(n,key)) ? 10*k : 0;
         var noteCX = num ? (px+12) : (px+extra+(adv-extra)/2);
-        if(num) out+=numSvg(n,px+12,y0+0,ni,cls,bm,key);
-        else out+=noteSvg(n,noteCX,y0,base,ni,cls,key,grp[j]?{up:grp[j].up,yb:grp[j].yb}:null);
+        var selP = (editor && editing && !playing && ni===sel) ? pitchSel : -1;
+        if(num){ bm.lift=runLift[j]||0; out+=numSvg(n,px+12,y0+0,ni,cls,bm,key,selP); }
+        else out+=noteSvg(n,noteCX,y0,base,ni,cls,key,grp[j]?{up:grp[j].up,yb:grp[j].yb}:null,selP);
         if(grp[j]) grp[j].xs[j]=noteCX+(grp[j].up?5.4:-5.4);
         if(n.m!==null) pos[ni]={x:noteCX,y:(num?y0:y0+4*S-(diaOf(n)-base)*S/2),si:si,up:(num?false:(diaOf(n)-base)<4),xe:W-margin};
         if(ni===targetNi && cursorOnSlot){ cx=noteCX+16; cy=y0; }
@@ -1601,7 +1649,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
         }
       });
       var bx=x+wk-2, lastM=(isLast && mi===sys.ms.length-1);
-      var by1= num ? y0-22 : y0, by2 = num ? y0+22 : y0+4*S;
+      var by1= num ? y0-22-maxLift : y0, by2 = num ? y0+22 : y0+4*S;
       out+='<line class="bar" x1="'+bx+'" x2="'+bx+'" y1="'+by1+'" y2="'+by2+'"/>';
       var lastFull = notes.length && ms[ms.length-1].reduce(function(s,i){ return s+notes[i].d; },0)>=barBeats-1e-6;
       if(lastM && lastFull){
@@ -1742,7 +1790,7 @@ function spellIn(m,key){
 }
 function curScoreCopy(){
   var s=curScore();
-  return {title:s.title,ts:s.ts.slice(),clef:s.clef,key:s.key||0,notes:s.notes.map(function(n){ return {m:n.m,d:n.d,a:n.a||''}; })};
+  return {title:s.title,ts:s.ts.slice(),clef:s.clef,key:s.key||0,notes:s.notes.map(function(n){ var o={m:n.m,d:n.d,a:n.a||''}; if(n.x) o.x=n.x.map(function(p){ return {m:p.m,a:p.a}; }); if(n.tie) o.tie=true; if(n.e) o.e=true; return o; })};
 }
 var autoT=0;
 function newRound(keep){
@@ -1796,7 +1844,7 @@ function practiceData(f,rms,now){
   if(f && yin.conf>0.1) f=null;
   if(f && pr.idx && pr.idx.length){
     var fm=Math.round(69+12*Math.log2(f/A4))+instShift(), lo=1e9, hi=-1e9;
-    pr.idx.forEach(function(q){ var nm=pr.score.notes[q].m; if(nm!==null){ if(nm<lo) lo=nm; if(nm>hi) hi=nm; } });
+    pr.idx.forEach(function(q){ pitchList(pr.score.notes[q]).forEach(function(pp){ var nm=pp.m; if(nm<lo) lo=nm; if(nm>hi) hi=nm; }); });
     if(lo<=hi && (fm<lo-7 || fm>hi+7)) f=null;
   }
   var m=pdFeed(f,rms,now);
@@ -1809,7 +1857,7 @@ function practiceHit(m,exact){
   m += instShift();
   if(!pr.t0) pr.t0=performance.now();
   var ni=pr.idx[pr.pos], n=pr.score.notes[ni];
-  var ok = pr.anyOct ? (m%12===n.m%12) : (m===n.m);
+  var ok = pitchList(n).some(function(pp){ return pr.anyOct ? (m%12===pp.m%12) : (m===pp.m); });
   if(ok){
     pr.tries++; pr.missStreak=0;
     pr.marks[ni]='ok'; pr.pos++;
@@ -2084,7 +2132,7 @@ function twinkle(){
   return {id:'s0',title:'Contoh: Twinkle Twinkle',ts:[4,4],bpm:100,clef:'treble',
     notes:P.map(function(m,i){ return {m:m,d:D[i],a:''}; })};
 }
-var flashIdx={}, flashT=0, alertT=0, editing=false;
+var flashIdx={}, flashT=0, alertT=0, editing=false, pitchSel=0, autoAdv=(store.get('yg.autoAdv','0')==='1'), midiChordT=0;
 var scores=[], curId=null, sel=-1, playing=false, playIdx=-1, playTimers=[], playGain=null;
 function loadScores(){
   try{ scores=JSON.parse(store.get('yg.scores','[]')); }catch(e){ scores=[]; }
@@ -2156,7 +2204,8 @@ function showScoreAlert(msg){
   clearTimeout(alertT); alertT=setTimeout(function(){ el.hidden=true; },6000);
 }
 function fillOrInsert(item){
-  editing=false;
+  editing=!autoAdv;   /* bawaan: sorotan tetap di not yang baru ditulis (nada berikutnya menambah akor; ▶ untuk lanjut) */
+  pitchSel=0;
   var s=curScore(), bb=s.ts[0]*4/s.ts[1], N=s.notes;
   /* 1) kursor di rehat (slot kosong): not menggantikan rehat itu, sisa ketuknya tetap rehat */
   if(sel>=0 && N[sel] && N[sel].m===null){
@@ -2170,7 +2219,7 @@ function fillOrInsert(item){
     }
     if(repl){
       N.splice.apply(N,[sel,cnt].concat(repl));
-      sel = (sel+1<N.length) ? sel+1 : -1;
+      if(autoAdv) sel = (sel+1<N.length) ? sel+1 : -1;
       saveScores(); renderScoreView(); return;
     }
   }
@@ -2184,6 +2233,7 @@ function fillOrInsert(item){
     while(left>1e-6){ var chunk=Math.min(left,bb); pieces=pieces.concat(splitDur(chunk)); left-=chunk; }
     var newN=pieces.map(function(d,i){
       var o={m:item.m,d:d,a:item.a};
+      if(item.x) o.x=item.x.slice();
       if(item.m!==null && i<pieces.length-1) o.tie=true;
       return o;
     });
@@ -2249,8 +2299,9 @@ function syncInputFromNote(n){
   var bd=baseDur(n.d);
   inp.dur=bd; inp.dot=n.d>bd+1e-6;
   if(n.m!==null){
-    if(isBlack(n.m)) inp.flat=(n.a==='b');
-    inp.oct=clamp(Math.floor(n.m/12)-1,1,6);
+    var pl=pitchList(n), pp=pl[Math.min(pitchSel,pl.length-1)];
+    if(isBlack(pp.m)) inp.flat=(pp.a==='b');
+    inp.oct=clamp(Math.floor(pp.m/12)-1,1,6);
   }
   syncInputUI();
 }
@@ -2264,8 +2315,10 @@ function selectAt(i){
   var s=curScore();
   if(i>=s.notes.length || i<0){ sel=-1; editing=false; renderScoreView(); return; }
   sel=i; editing=true;
-  var n=s.notes[i]; syncInputFromNote(n);
-  if(n.m!==null){ try{ pluck(n.m,ac().currentTime,0.5); }catch(e){} }
+  var n=s.notes[i];
+  pitchSel = n.m!==null ? pitchList(n).length-1 : 0;
+  syncInputFromNote(n);
+  if(n.m!==null){ try{ pitchList(n).forEach(function(q){ pluck(q.m,ac().currentTime,0.5); }); }catch(e){} }
   renderScoreView();
 }
 /* Navigasi kursor: ◀ / ▶ pindah antar not (termasuk rehat & slot kosong). */
@@ -2282,21 +2335,55 @@ function navMove(dir){
   if(dir<0) selectAt(c);
   else if(c+1<N.length) selectAt(c+1);
 }
+/* Menambah / membuang satu nada pada not (akor) terpilih; berlaku juga untuk not-not yang tersambung tie */
+function toggleChordPitch(i,m,a){
+  var N=curScore().notes, it=N[i], oldm=it.m, chain=[i], k, j;
+  for(k=i; k>0 && N[k-1].tie && N[k-1].m===oldm; k--) chain.push(k-1);
+  for(j=i; N[j] && N[j].tie && N[j+1] && N[j+1].m===oldm; j++) chain.push(j+1);
+  var pl=pitchList(it), idx=-1;
+  pl.forEach(function(p,q){ if(p.m===m) idx=q; });
+  if(idx>=0){
+    if(pl.length===1){
+      /* nada terakhir dibuang: not jadi rehat */
+      N[i]={m:null,d:it.d,a:''}; if(i>0) N[i-1].tie=false; pitchSel=0;
+      saveScores(); renderScoreView(); return;
+    }
+    pl.splice(idx,1);
+    pitchSel=Math.max(0,Math.min(idx-1,pl.length-1));
+  } else {
+    if(pl.length>=6){ showScoreAlert('Satu akor maksimal 6 nada.'); return; }
+    pl.push({m:m,a:a});
+  }
+  chain.forEach(function(ci){ setPitchList(N[ci],pl.map(function(p){ return {m:p.m,a:p.a}; })); });
+  if(idx<0){ var sorted=pitchList(N[i]); sorted.forEach(function(p,q){ if(p.m===m) pitchSel=q; }); }
+  saveScores(); renderScoreView();
+}
+/* ▲ ▼ : pindah antar nada di dalam akor terpilih (untuk memilih kepala not yang mau dihapus) */
+function pitchMove(dir){
+  var N=curScore().notes, n=N[sel];
+  if(!(editing && sel>=0 && n && n.m!==null) || playing) return;
+  var pl=pitchList(n);
+  pitchSel=clamp(pitchSel+dir,0,pl.length-1);
+  try{ pluck(pl[pitchSel].m,ac().currentTime,0.5); }catch(e){}
+  syncInputFromNote(n); renderScoreView();
+}
 function addNote(m,silent){
   var s=curScore(), N=s.notes;
   var a = isBlack(m) ? (inp.flat?'b':'#') : '';
   if(editing && sel>=0 && N[sel] && N[sel].m!==null){
-    /* Mode edit: ganti nada not terpilih (durasinya tetap); not yang tersambung tie ikut berganti nada */
-    var old=N[sel].m, k=sel, j;
-    N[sel].m=m; N[sel].a=a;
-    for(j=sel;N[j] && N[j].tie && N[j+1] && N[j+1].m===old;j++){ N[j+1].m=m; N[j+1].a=a; }
-    for(k=sel;k>0 && N[k-1].tie && N[k-1].m===old;k--){ N[k-1].m=m; N[k-1].a=a; }
-    saveScores(); renderScoreView();
+    toggleChordPitch(sel,m,a);
     if(!silent) pluck(m,ac().currentTime,0.7);
     return;
   }
   fillOrInsert({m:m,d:curDur(),a:a});
   if(!silent) pluck(m,ac().currentTime,0.7);
+}
+/* Dari keyboard MIDI: tuts yang ditekan hampir bersamaan (<160 ms) jadi satu akor; jeda lebih lama = not baru */
+function midiScoreNote(m,silent){
+  var t=performance.now(), N=curScore().notes;
+  if(t-midiChordT>160 && editing && sel>=0 && N[sel] && N[sel].m!==null) editing=false;
+  midiChordT=t;
+  addNote(m,silent);
 }
 function addRest(){
   var s=curScore(), N=s.notes;
@@ -2317,6 +2404,16 @@ function delNote(){
     if(N[at] && N[at].m===null && at>0 && N[at-1] && N[at-1].m!==null) at=at-1;
   }
   var it=N[at];
+  if(it.m!==null && pitchList(it).length>1){
+    /* akor: hapus satu nada (yang sedang dipilih dengan ▲▼; kalau belum dipilih, nada tertinggi) */
+    var pl=pitchList(it), ps=(editing && sel===at) ? Math.min(pitchSel,pl.length-1) : pl.length-1;
+    pl.splice(ps,1); pitchSel=Math.max(0,Math.min(ps-1,pl.length-1));
+    var oldm=it.m, chain=[at], kk, jj;
+    for(kk=at; kk>0 && N[kk-1].tie && N[kk-1].m===oldm; kk--) chain.push(kk-1);
+    for(jj=at; N[jj] && N[jj].tie && N[jj+1] && N[jj+1].m===oldm; jj++) chain.push(jj+1);
+    chain.forEach(function(ci){ setPitchList(N[ci],pl.map(function(p){ return {m:p.m,a:p.a}; })); });
+    sel=at; editing=true; saveScores(); renderScoreView(); return;
+  }
   if(it.m!==null){ N[at]={m:null,d:it.d,a:''}; if(at>0) N[at-1].tie=false; }
   else if(!it.e){ N[at]={m:null,d:it.d,a:'',e:true}; }
   else if(at===N.length-1){ N.pop(); at=N.length-1; }
@@ -2341,7 +2438,7 @@ function playScore(){
   s.notes.forEach(function(n,i){
     if(i<startIdx) return;
     var at=acc*spb, dur=n.d*spb;
-    if(n.m!==null && !tieFrom(s.notes,i)) pluck(n.m,t+at,tieLen(s.notes,i)*spb,playGain);
+    if(n.m!==null && !tieFrom(s.notes,i)) pitchList(n).forEach(function(pp){ pluck(pp.m,t+at,tieLen(s.notes,i)*spb,playGain); });
     playTimers.push(setTimeout(function(){ playIdx=i; renderScoreView(); },150+at*1000));
     acc+=n.d;
   });
@@ -2435,14 +2532,24 @@ function bindScore(){
     inp.flat=!inp.flat; e.currentTarget.setAttribute('aria-pressed',inp.flat?'true':'false');
     e.currentTarget.textContent='Hitam: '+(inp.flat?'♭':'♯'); buildKeyboard();
     var n=curScore().notes[sel];
-    if(editing && n && n.m!==null && isBlack(n.m)){ n.a=inp.flat?'b':'#'; saveScores(); renderScoreView(); }
+    if(editing && n && n.m!==null){
+      var pl=pitchList(n), pp=pl[Math.min(pitchSel,pl.length-1)];
+      if(isBlack(pp.m)){ pp.a=inp.flat?'b':'#'; setPitchList(n,pl); saveScores(); renderScoreView(); }
+    }
   });
   $('#sleft').addEventListener('click',function(){ navMove(-1); });
   $('#sright').addEventListener('click',function(){ navMove(1); });
+  $('#sup').addEventListener('click',function(){ pitchMove(1); });
+  $('#sdown').addEventListener('click',function(){ pitchMove(-1); });
+  function syncAuto(){ var b=$('#sauto'); b.textContent='Maju otomatis: '+(autoAdv?'NYALA':'mati'); b.setAttribute('aria-pressed',autoAdv?'true':'false'); }
+  $('#sauto').addEventListener('click',function(){ autoAdv=!autoAdv; store.set('yg.autoAdv',autoAdv?'1':'0'); syncAuto(); });
+  syncAuto();
   document.addEventListener('keydown',function(e){
     if(app.tab!=='score' || e.target.closest && e.target.closest('input,select,textarea')) return;
     if(e.key==='ArrowLeft'){ e.preventDefault(); navMove(-1); }
     else if(e.key==='ArrowRight'){ e.preventDefault(); navMove(1); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); pitchMove(1); }
+    else if(e.key==='ArrowDown'){ e.preventDefault(); pitchMove(-1); }
     else if(e.key==='Delete' || e.key==='Backspace'){ e.preventDefault(); delNote(); }
   });
   $('#srest').addEventListener('click',addRest);
@@ -2486,9 +2593,9 @@ function scoreToMidi(sc){
     if(n.m===null){ wait+=len; return; }
     if(tieFrom(sc.notes,i)) return;
     len=Math.round(tieLen(sc.notes,i)*PPQ);
-    var m=clamp(n.m,0,127);
-    ev=ev.concat(vlq(wait),[0x90,m,90]);
-    ev=ev.concat(vlq(len),[0x80,m,0]);
+    var pls=pitchList(n).map(function(pp){ return clamp(pp.m,0,127); });
+    pls.forEach(function(m,q){ ev=ev.concat(vlq(q===0?wait:0),[0x90,m,90]); });
+    pls.forEach(function(m,q){ ev=ev.concat(vlq(q===0?len:0),[0x80,m,0]); });
     wait=0;
   });
   ev=ev.concat(vlq(wait),[0xFF,0x2F,0x00]);
