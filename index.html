@@ -2087,7 +2087,7 @@ function renderScoreView(){
   var s=curScore();
   if(sel<0 || sel>=s.notes.length){ if(sel>=s.notes.length) sel=-1; editing=false; }
   drawScore($('#sscore'),s,app.mode,function(i){
-    return i===playIdx ? 'cur' : (flashIdx[i] ? 'bad' : ((editing && i===sel) ? 'sel blink' : ''));
+    return i===playIdx ? 'cur' : (flashIdx[i] ? 'bad' : ((!playing && editing && i===sel) ? 'sel blink' : ''));
   }, (playing || editing) ? null : sel, !playing);
   $('#sempty').hidden = s.notes.length>0;
   $('#splay').textContent = playing ? '■ Berhenti' : '▶ Putar';
