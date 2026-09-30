@@ -238,7 +238,6 @@ header .sel select{max-width:100%;min-width:0}
 .n.st-sel .hl{fill:var(--hl)}
 .tie{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
 .n.st-cur .hl,.n.st-sel .hl{opacity:1}
-.n.st-curGhost .hl{opacity:1;fill:none;stroke:var(--brass);stroke-width:2;stroke-dasharray:4 3}
 .n.st-ok{color:var(--ok)}
 .n.st-bad{color:var(--bad)}
 .pstatus{text-align:center;font-size:19px;font-weight:700;min-height:30px;margin:6px 8px 0}
@@ -1813,9 +1812,6 @@ function practiceHit(m,exact){
   var ok = pr.anyOct ? (m%12===n.m%12) : (m===n.m);
   if(ok){
     pr.tries++; pr.missStreak=0;
-    var nowT=performance.now();
-    pr.fast = pr.lastAdvanceT>0 && (nowT-pr.lastAdvanceT<350);
-    pr.lastAdvanceT=nowT;
     pr.marks[ni]='ok'; pr.pos++;
     pr.lastMsg={t:'Benar!',c:'ok'};
     if(pr.pos>=pr.idx.length) finishRound();
@@ -1921,13 +1917,11 @@ var shownMsg=null;
 function renderPractice(){
   var sc=pr.score; if(!sc) return;
   var cur = pr.done ? -1 : pr.idx[pr.pos];
-  var lookahead = (!pr.done && pr.fast && pr.pos+1<pr.idx.length) ? pr.idx[pr.pos+1] : -1;
   var host=$('#pscore');
   if(pr.playing){
     drawFit(host,sc,function(i){
       var s = pr.marks[i] || '';
-      if(i===cur) s += lookahead>=0 ? ' curGhost' : ' cur';
-      if(i===lookahead) s+=' cur';
+      if(i===cur) s += ' cur';   /* satu sorotan saja (fitur dua sorotan saat main cepat sudah dihapus) */
       return s;
     });
   } else {
