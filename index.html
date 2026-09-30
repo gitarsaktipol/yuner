@@ -465,6 +465,9 @@ body{
 <section class="tab" id="tab-latih" hidden>
   <header><h1><svg class="mascot" viewBox="0 0 40 40" aria-hidden="true"><path class="mf" d="M25 29V6c4 1 8 4 9 9"/><ellipse class="mb" cx="17" cy="29" rx="10" ry="8"/><circle class="me" cx="13.5" cy="27.5" r="1.6"/><circle class="me" cx="20.5" cy="27.5" r="1.6"/><path d="M14 31.5q3 2.6 6 0" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/><circle class="mc" cx="10.5" cy="31" r="1.8"/><circle class="mc" cx="23.5" cy="31" r="1.8"/></svg>Latihan baca not</h1></header>
 
+  <button class="start" id="pstart" type="button">Aktifkan mikrofon</button>
+  <div class="msg" id="pmsg" role="alert"></div>
+
   <div class="seg" id="pinst" role="group" aria-label="Alat musik">
     <button type="button" data-inst="piano" aria-pressed="true">Piano</button>
     <button type="button" data-inst="guitar" aria-pressed="false">Gitar</button>
@@ -554,8 +557,6 @@ body{
 
   <div class="sum" id="psum" hidden><b id="psumT"></b><span id="psumD"></span></div>
 
-  <button class="start" id="pstart" type="button">Aktifkan mikrofon</button>
-  <div class="msg" id="pmsg" role="alert"></div>
   <div class="row">
     <button class="sound" id="pnew" type="button">Soal baru</button>
     <button class="sound" id="prepeat" type="button">Ulangi soal</button>
@@ -1613,7 +1614,9 @@ function curScoreCopy(){
   var s=curScore();
   return {title:s.title,ts:s.ts.slice(),clef:s.clef,key:s.key||0,notes:s.notes.map(function(n){ return {m:n.m,d:n.d,a:n.a||''}; })};
 }
+var autoT=0;
 function newRound(keep){
+  clearTimeout(autoT);
   if(!keep){
     if(pr.src==='score') pr.score=curScoreCopy();
     else if(pr.src==='arcade') pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genArcade(pr.arcLetter,pr.arcSub)};
@@ -1718,11 +1721,15 @@ function finishRound(){
     setTimeout(function(){ board.classList.remove('glow'); },1400);
     if(pr.src==='arcade'){
       $('#psumD').textContent+=' Naik ke level berikutnya...';
-      setTimeout(function(){ advanceArcadeLevel(); syncPracticeOpts(); newRound(); },1600);
+      autoT=setTimeout(function(){ advanceArcadeLevel(); syncPracticeOpts(); newRound(); },1600);
+    } else {
+      /* Semua mode: benar 100% -> otomatis ganti soal baru */
+      $('#psumD').textContent+=' Soal baru...';
+      autoT=setTimeout(function(){ newRound(); },1600);
     }
   } else if(pr.src==='arcade'){
     $('#psumD').textContent+=' Ulangi level ini dulu ya.';
-    setTimeout(function(){ newRound(); },1600);
+    autoT=setTimeout(function(){ newRound(); },1600);
   }
 }
 var shownMsg=null;
