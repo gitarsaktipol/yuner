@@ -1466,7 +1466,7 @@ function numSvg(n,x,yb,i,cls,bm,key){
   for(i2=0;i2<up;i2++) o+='<circle cx="'+x+'" cy="'+(yb-17-ul*4-i2*6)+'" r="2.2" fill="currentColor"/>';
   for(i2=0;i2<-up;i2++) o+='<circle cx="'+x+'" cy="'+(yb+15+i2*6)+'" r="2.2" fill="currentColor"/>';
   /* titik not: dijauhkan dari angka, diletakkan di dekat not berikutnya (standar not angka), sejajar dasar angka */
-  if(bd<2 && n.d>bd) o+='<circle cx="'+(x+Math.max(14,(bm?bm.gR:0)-13))+'" cy="'+(yb+5)+'" r="2.1" fill="currentColor"/>';
+  if(bd<2 && n.d>bd) o+='<circle cx="'+(x+Math.max(14,(bm?bm.gR:0)/2))+'" cy="'+(yb+5)+'" r="2.1" fill="currentColor"/>';
   if(bd>=2) for(k=1;k<beats;k++) o+='<circle cx="'+(x+CELL*k)+'" cy="'+(yb+1)+'" r="2.3" fill="currentColor"/>';
   return o+'</g>';
 }
@@ -1577,7 +1577,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
           var nOk = j<m.idx.length-1 && lv[j]>0 && lv[j+1]>0 && cells[j]===cells[j+1];
           var pdn = j>0 ? notes[m.idx[j-1]] : null, pgap = pdn ? advOf(pdn,mode,key)*k : 0;
           var dotBefore = pdn && pdn.d>baseDur(pdn.d) && baseDur(pdn.d)<2 && lv[j]>0 && !pOk;
-          bm={ dl: dotBefore ? (pgap-Math.max(14,pgap-13))+4 : 0, L1:pOk, R1:nOk, L2:pOk&&lv[j]>1&&lv[j-1]>1, R2:nOk&&lv[j]>1&&lv[j+1]>1,
+          bm={ dl: dotBefore ? (pgap-Math.max(14,pgap/2))+4 : 0, L1:pOk, R1:nOk, L2:pOk&&lv[j]>1&&lv[j-1]>1, R2:nOk&&lv[j]>1&&lv[j+1]>1,
                gL: j>0 ? advOf(notes[m.idx[j-1]],mode,key)*k : 0, gR: adv };
         }
         cls = cls ? ' '+cls.split(' ').filter(Boolean).map(function(c){return 'st-'+c;}).join(' ') : '';
