@@ -1586,7 +1586,7 @@ function genRandom(){
 
 /* =====================================================================
    MODE ARCADE: 26 level (A-Z) x 9 sub-level, kesulitan naik bertahap.
-   A-C tetap 2 birama; D dst bertambah birama sampai 9 di level V-Z.
+   A-C tetap 2 birama; D dst bertambah birama sampai 10 di level Y-Z.
    ===================================================================== */
 var ARC_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 function arcadeMeasures(letterIdx){
@@ -1597,7 +1597,8 @@ function arcadeMeasures(letterIdx){
   if(letterIdx<=14) return 6;  // M,N,O
   if(letterIdx<=17) return 7;  // P,Q,R
   if(letterIdx<=20) return 8;  // S,T,U
-  return 9;                    // V,W,X,Y,Z
+  if(letterIdx<=23) return 9;  // V,W,X
+  return 10;                   // Y,Z
 }
 function arcLevelParams(letterIdx,subLv){
   var total=ARC_LETTERS.length*9, prog=letterIdx*9+(subLv-1), p=prog/(total-1);
@@ -1637,7 +1638,7 @@ function genArcade(letterIdx,subLv){
 
 /* =====================================================================
    MODE CUSTOM: pilih sendiri nada mana saja yang boleh muncul (hingga 3
-   oktaf), dan berapa birama (maks 9).
+   oktaf), dan berapa birama (maks 10).
    ===================================================================== */
 var CUST_LO=48, CUST_HI=83; /* C3 - B5, 3 oktaf */
 function genCustom(){
@@ -1865,7 +1866,7 @@ var NOTE_NAMES_UI=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B
 function buildArcadeSelects(){
   var lSel=$('#parcLetter'); lSel.innerHTML=ARC_LETTERS.map(function(L,i){ return '<option value="'+i+'">'+L+'</option>'; }).join('');
   var sSel=$('#parcSub'); sSel.innerHTML=[1,2,3,4,5,6,7,8,9].map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
-  var mSel=$('#custMeasures'); mSel.innerHTML=[1,2,3,4,5,6,7,8,9].map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
+  var mSel=$('#custMeasures'); mSel.innerHTML=[1,2,3,4,5,6,7,8,9,10].map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
 }
 function buildCustGrid(){
   var g=$('#custGrid'), html='', m;
