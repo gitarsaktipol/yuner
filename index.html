@@ -280,6 +280,8 @@ header .sel select{max-width:100%;min-width:0}
   flex:1;min-width:52px;padding:9px 6px;border-radius:16px;border:0;background:var(--track);color:var(--ink);
   font-weight:700;font-size:14px;cursor:pointer;text-align:center;box-shadow:0 3px 0 var(--line);
 }
+#sview .chip{flex:1 1 0;font-size:12px;padding-left:3px;padding-right:3px;white-space:nowrap}
+#sdur.icons .chip{flex:1 1 0;display:flex;justify-content:center;padding-top:6px;padding-bottom:6px}
 #sdur.long .chip{flex:1 1 30%;font-size:13px;padding-left:6px;padding-right:6px}
 .chip:active{transform:translateY(2px) scale(.95);box-shadow:0 1px 0 var(--line)}
 .chip[aria-pressed="true"]{background:var(--brass);color:var(--brassText);box-shadow:0 3px 0 var(--brassDeep);animation:pop .4s var(--bounce)}
@@ -597,11 +599,12 @@ body{
   </div>
 
   <div class="card">
-    <div class="chips" id="sview" role="group" aria-label="Lihat berdasarkan" style="margin-bottom:8px;align-items:center">
-      <span style="font-size:13px;font-weight:700;color:var(--muted)">Lihat berdasarkan:</span>
+    <div class="chips" id="sview" role="group" aria-label="Lihat berdasarkan" style="margin-bottom:8px;align-items:center;gap:5px">
+      <span style="flex:1 0 100%;font-size:13px;font-weight:700;color:var(--muted)">Lihat berdasarkan:</span>
       <button class="chip" type="button" data-v="name" aria-pressed="true">Nama Nada</button>
       <button class="chip" type="button" data-v="value" aria-pressed="false">Nilai Nada</button>
       <button class="chip" type="button" data-v="symbol" aria-pressed="false">Nama Simbol</button>
+      <button class="chip" type="button" data-v="icon" aria-pressed="false">Simbol</button>
     </div>
     <div class="chips" id="sdur" role="group" aria-label="Nilai not">
       <button class="chip" type="button" data-d="4" aria-pressed="false">Penuh</button>
@@ -1999,11 +2002,25 @@ function bindScore(){
     value:['4 ketuk','2 ketuk','1 ketuk','½ ketuk','¼ ketuk'],
     symbol:['Semibreve','Minim','Crotchet','Quaver','Semiquaver']
   };
+  /* gambar simbol not: bulat kosong/penuh, tangkai, dan bendera */
+  var HEAD='<ellipse cx="9" cy="24" rx="6" ry="4.4" transform="rotate(-20 9 24)" ';
+  var FL='fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"';
+  var DUR_ICONS=[
+    '<ellipse cx="14" cy="16" rx="9.5" ry="6.5" '+FL+'/><ellipse cx="14" cy="16" rx="2.6" ry="5" transform="rotate(-40 14 16)" '+FL+'/>',
+    HEAD+FL+'/><path d="M14.6 23V4" '+FL+'/>',
+    HEAD+'fill="currentColor"/><path d="M14.6 23V4" '+FL+'/>',
+    HEAD+'fill="currentColor"/><path d="M14.6 23V4c1 6 7 7 7 13" '+FL+'/>',
+    HEAD+'fill="currentColor"/><path d="M14.6 23V4c1 6 7 7 7 13M14.6 12c1 5 7 6 7 11" '+FL+'/>'
+  ];
   function setDurView(v){
-    if(!DUR_LABELS[v]) v='name';
+    if(!DUR_LABELS[v] && v!=='icon') v='name';
     store.set('yg.durView',v);
-    $$('#sdur .chip').forEach(function(b,i){ b.textContent=DUR_LABELS[v][i]; });
-    $('#sdur').classList.toggle('long',v!=='name');
+    $$('#sdur .chip').forEach(function(b,i){
+      if(v==='icon'){ b.innerHTML='<svg viewBox="0 0 28 28" width="26" height="26" aria-hidden="true">'+DUR_ICONS[i]+'</svg>'; b.setAttribute('aria-label',DUR_LABELS.symbol[i]); }
+      else { b.textContent=DUR_LABELS[v][i]; b.removeAttribute('aria-label'); }
+    });
+    $('#sdur').classList.toggle('long',v==='value'||v==='symbol');
+    $('#sdur').classList.toggle('icons',v==='icon');
     $$('#sview .chip').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-v')===v?'true':'false'); });
   }
   $('#sview').addEventListener('click',function(e){
