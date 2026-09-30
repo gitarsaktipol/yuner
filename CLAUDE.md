@@ -115,6 +115,7 @@ Mekanisme penilaian not yang dimainkan (fungsi `practiceHit`):
 
 - Not balok (staff notation) dan not angka (numbered/jianpu notation) **digambar sendiri sebagai SVG** dari nol (fungsi `drawScore`, `noteSvg`, `numSvg`) — tidak pakai library notasi musik pihak ketiga (bukan VexFlow/abcjs/dll).
 - Not angka: garis panjang (beam) untuk not 1/8 & 1/16 digambar **DI ATAS** angka (bukan di bawah — sempat diminta dipindah), garis-garis pendek yang berdekatan dalam satu ketukan disambung jadi satu garis menerus, bukan garis terpisah per not.
+- Not angka bertitik (mis. 3 bertitik + 2 seperdelapan, `numSvg`): titik dijauhkan dari angka, diletakkan di dekat not berikutnya sejajar dasar angka, dan garis di atas not seperdelapan yang mengikutinya diperpanjang ke kiri sampai tepat di atas titik (`bm.dl`), sesuai tulisan tangan standar not angka.
 - Titik oktaf di not angka (di atas untuk oktaf tinggi, di bawah untuk oktaf rendah) posisinya menyesuaikan supaya tidak bertabrakan dengan garis beam.
 - Kursor/kotak penunjuk di editor Partitur digambar di **ruang kosong setelah** not/slot yang dituju, bukan menimpa langsung notnya — supaya jelas mana yang sudah diisi vs yang akan diisi berikutnya.
 

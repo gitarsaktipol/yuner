@@ -1344,7 +1344,7 @@ function noteSvg(n,x,y0,base,i,cls,key){
 }
 function ulSvg(x,yb,lvl,bm){
   var cl = bm && (lvl===0?bm.L1:bm.L2), cr = bm && (lvl===0?bm.R1:bm.R2);
-  var x1 = cl ? x-bm.gL/2 : x-9, x2 = cr ? x+bm.gR/2 : x+9, y = yb-14-lvl*4;
+  var x1 = cl ? x-bm.gL/2 : (bm && bm.dl ? x-bm.dl : x-9), x2 = cr ? x+bm.gR/2 : x+9, y = yb-14-lvl*4;
   return '<line x1="'+x1+'" x2="'+x2+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" stroke-width="1.8"/>';
 }
 function numSvg(n,x,yb,i,cls,bm,key){
@@ -1365,7 +1365,8 @@ function numSvg(n,x,yb,i,cls,bm,key){
   var up=j.oct-4, i2;
   for(i2=0;i2<up;i2++) o+='<circle cx="'+x+'" cy="'+(yb-17-ul*4-i2*6)+'" r="2.2" fill="currentColor"/>';
   for(i2=0;i2<-up;i2++) o+='<circle cx="'+x+'" cy="'+(yb+15+i2*6)+'" r="2.2" fill="currentColor"/>';
-  if(bd<2 && n.d>bd) o+='<circle cx="'+(x+14)+'" cy="'+(yb+2)+'" r="2" fill="currentColor"/>';
+  /* titik not: dijauhkan dari angka, diletakkan di dekat not berikutnya (standar not angka), sejajar dasar angka */
+  if(bd<2 && n.d>bd) o+='<circle cx="'+(x+Math.max(14,(bm?bm.gR:0)-13))+'" cy="'+(yb+5)+'" r="2.1" fill="currentColor"/>';
   if(bd>=2) for(k=1;k<beats;k++) o+='<circle cx="'+(x+CELL*k)+'" cy="'+(yb+1)+'" r="2.3" fill="currentColor"/>';
   return o+'</g>';
 }
@@ -1448,7 +1449,9 @@ function drawScore(host,score,mode,stateFn,cursorAfter){
         if(num){
           var pOk = j>0 && lv[j]>0 && lv[j-1]>0 && cells[j]===cells[j-1];
           var nOk = j<m.idx.length-1 && lv[j]>0 && lv[j+1]>0 && cells[j]===cells[j+1];
-          bm={ L1:pOk, R1:nOk, L2:pOk&&lv[j]>1&&lv[j-1]>1, R2:nOk&&lv[j]>1&&lv[j+1]>1,
+          var pdn = j>0 ? notes[m.idx[j-1]] : null, pgap = pdn ? advOf(pdn,mode,key)*k : 0;
+          var dotBefore = pdn && pdn.d>baseDur(pdn.d) && baseDur(pdn.d)<2 && lv[j]>0 && !pOk;
+          bm={ dl: dotBefore ? (pgap-Math.max(14,pgap-13))+4 : 0, L1:pOk, R1:nOk, L2:pOk&&lv[j]>1&&lv[j-1]>1, R2:nOk&&lv[j]>1&&lv[j+1]>1,
                gL: j>0 ? advOf(notes[m.idx[j-1]],mode,key)*k : 0, gR: adv };
         }
         cls = cls ? ' '+cls.split(' ').filter(Boolean).map(function(c){return 'st-'+c;}).join(' ') : '';
