@@ -299,13 +299,14 @@ body.playing{overflow:hidden}
 .play .level{margin-top:4px}
 #pgo{width:100%}
 /* Menu Latihan: pratinjau partitur + tombol Mulai terpaku di bawah (tidak ikut menggulir) */
-.pdock{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:4;display:flex;flex-direction:column;gap:8px}
+.pdock{position:fixed;left:12px;right:12px;bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:4;display:flex;flex-direction:column;gap:8px}
 .pdock[hidden]{display:none}
 .pdock .board{padding:8px 8px 6px}
 .pdock .pstatus,.pdock .level,.pdock .msg,.pdock .held{display:none}
 /* di menu Latihan, tautan Kebijakan Privasi diberi ruang supaya tidak tertutup pratinjau + tombol Mulai yang terpaku */
-body.on-latih .app{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;box-sizing:border-box}
-body.on-latih .foot{margin-top:auto;margin-bottom:190px;padding-top:20px}
+body.on-latih .app>.foot{display:none}   /* di Latihan, tautan ini ada di dalam dock (paling bawah, di bawah partitur) */
+.pdock .dockfoot{margin:0;text-align:center}
+#tab-latih{padding-bottom:300px}
 .connSheet{position:absolute;left:calc(12px + env(safe-area-inset-left,0px));right:calc(12px + env(safe-area-inset-right,0px));top:52px;bottom:8px;z-index:3;overflow:auto;background:var(--bg);border:2px solid var(--line);border-radius:20px;padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 30px rgba(160,110,200,.28)}
 .connSheet[hidden]{display:none}
 /* Jika layar masih tegak (kunci landscape tidak diizinkan browser), layar berlatih diputar 90° supaya HP tinggal dimiringkan */
@@ -524,6 +525,7 @@ body{
   </section>
 
   </div>
+    <p class="foot dockfoot">FerTune • <a href="privacy.html">Kebijakan Privasi</a></p>
   </div>
 
 
