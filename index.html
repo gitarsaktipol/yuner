@@ -306,6 +306,10 @@ body.playing{overflow:hidden}
 body.on-latih .app>.foot{display:none}   /* di Latihan, tautan ini ada di dalam dock (paling bawah, di bawah partitur) */
 .pdock .dockfoot{margin:0;text-align:center}
 #tab-latih{padding-bottom:300px}
+/* HP dimiringkan (landscape): pratinjau + tombol Mulai TIDAK terpaku (menutupi pengaturan), melainkan ikut halaman di bawah pengaturan */
+.pdock.inflow{position:static;margin:12px 0 0}
+body.dock-inflow #tab-latih{padding-bottom:0}
+body.dock-inflow .app{padding-bottom:110px}
 .connSheet{position:absolute;left:calc(12px + env(safe-area-inset-left,0px));right:calc(12px + env(safe-area-inset-right,0px));top:52px;bottom:8px;z-index:3;overflow:auto;background:var(--bg);border:2px solid var(--line);border-radius:20px;padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 30px rgba(160,110,200,.28)}
 .connSheet[hidden]{display:none}
 /* Jika layar masih tegak (kunci landscape tidak diizinkan browser), layar berlatih diputar 90° supaya HP tinggal dimiringkan */
@@ -2095,7 +2099,9 @@ function bindPracticeOpts(){
   $('#psharp').addEventListener('change',function(e){ pr.sharps=e.target.checked; newRound(); });
   $('#poct').addEventListener('change',function(e){ pr.anyOct=e.target.checked; });
   $('#pstart').addEventListener('click',micToggle);
-  document.body.appendChild($('#pdock'));
+  placeDock();
+  window.addEventListener('resize',placeDock);
+  window.addEventListener('orientationchange',function(){ setTimeout(placeDock,200); });
   $('#pcfg').addEventListener('toggle',function(){ if(this.open) window.scrollTo({top:0,behavior:'smooth'}); });
   $('#pconnClose').addEventListener('click',function(){ $('#pconnSheet').hidden=true; });
   document.body.appendChild($('#pplay'));   /* di luar .app supaya menutupi menu bawah */
@@ -2842,6 +2848,16 @@ function setMode(m){
   if(app.tab==='latih') renderPractice();
   if(app.tab==='score') renderScoreView();
   renderHeld();
+}
+/* Dock (pratinjau + Mulai): terpaku di bawah saat layar tegak; di layar miring/pendek ikut halaman di dalam menu Latihan */
+function placeDock(){
+  var dock=$('#pdock'), tab=$('#tab-latih'); if(!dock||!tab) return;
+  var landShort = window.matchMedia && matchMedia('(orientation:landscape) and (max-height:600px)').matches;
+  if(landShort){ if(dock.parentNode!==tab || tab.lastElementChild!==dock) tab.appendChild(dock); }
+  else if(dock.parentNode!==document.body) document.body.appendChild(dock);
+  dock.classList.toggle('inflow',!!landShort);
+  document.body.classList.toggle('dock-inflow',!!landShort);
+  if(app.tab==='latih' && pr.score) renderPractice();
 }
 var rsT=0;
 window.addEventListener('resize',function(){
