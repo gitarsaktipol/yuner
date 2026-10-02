@@ -98,9 +98,7 @@ Tanpa langkah ini aplikasi tetap jalan, tapi di bagian atas akan terlihat **bari
 
 **Iklan:** *Tidak, aplikasi saya tidak berisi iklan.*
 
-**Target audiens & konten:** karena pengguna utamanya anak-anak, centang rentang usia yang sesuai
-(mis. **6–8, 9–12, 13–15, 16–17, 18+**). Dengan memilih usia anak, aplikasi masuk **Kebijakan Keluarga (Families)** Google.
-FerTune sudah memenuhinya: tanpa iklan, tanpa pengumpulan data, tanpa SDK pihak ketiga, tanpa tautan keluar.
+**Target audiens & konten:** FerTune TIDAK lagi ditujukan untuk anak-anak. Centang hanya **13–15, 16–17, 18+** (JANGAN centang rentang usia di bawah 13) dan jawab "tidak" pada pertanyaan apakah aplikasi menarik bagi anak-anak. Dengan begitu aplikasi tidak masuk **Kebijakan Keluarga (Families)** Google, sehingga login/akun, penyimpanan cloud, dan tautan ke website Gitar Sakti boleh ditambahkan (tetap perbarui `privacy.html` dan jawaban Data safety). Maskot dan warna pastel tidak masalah, selama deskripsi toko tidak menyebut anak-anak.
 
 **Keamanan data (Data safety):**
 
@@ -131,7 +129,7 @@ menguji kedua aplikasi sekaligus. Akun organisasi/perusahaan tidak terkena atura
 ## Langkah 8 — Ajukan ke produksi
 
 Setelah uji tertutup selesai: **Rilis → Produksi → Buat rilis baru** → pakai `.aab` yang sama (atau versi baru)
-→ **Kirim untuk ditinjau**. Peninjauan aplikasi anak-anak bisa memakan beberapa hari.
+→ **Kirim untuk ditinjau**. Peninjauan bisa memakan beberapa hari.
 
 ---
 

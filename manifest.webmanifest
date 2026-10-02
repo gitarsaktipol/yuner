@@ -2,7 +2,7 @@
   "id": "./",
   "name": "FerTune",
   "short_name": "FerTune",
-  "description": "Belajar musik untuk anak & pemula: tuner gitar, latihan baca not balok & not angka dengan tangga nada, tulis partitur, dan sambungkan keyboard MIDI.",
+  "description": "Belajar musik untuk pemula: tuner gitar, latihan baca not balok & not angka dengan tangga nada, tulis partitur, dan sambungkan keyboard MIDI.",
   "categories": [
     "music",
     "education"

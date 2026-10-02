@@ -18,7 +18,7 @@ sw.js                 <- service worker untuk cache offline; CACHE name di dalam
                           index.html/manifest/sw.js diubah, supaya HP mengambil versi baru
 privacy.html          <- Kebijakan Privasi (wajib untuk Play Store); ditautkan dari footer aplikasi
 fonts/                <- font Bricolage Grotesque (woff2, subset latin) + OFL.txt; disimpan sendiri,
-                          TIDAK memakai Google Fonts (aplikasi anak di Play Store sebaiknya tanpa server pihak ketiga)
+                          TIDAK memakai Google Fonts (privasi: sebisa mungkin tanpa server pihak ketiga)
 playstore/            <- bahan Play Store: PANDUAN-PLAYSTORE.md (langkah upload via PWABuilder/TWA),
                           deskripsi-toko.md, ikon 512, feature graphic 1024x500, screenshot/ (berbingkai),
                           raw/ (screenshot polos, juga dipakai di manifest), assetlinks-template/
@@ -45,7 +45,7 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - Rencana: dibungkus jadi aplikasi Android lewat PWABuilder (Trusted Web Activity), package ID `io.github.gitarsaktipol.fertune`. Langkah lengkap & status di `playstore/PANDUAN-PLAYSTORE.md`.
 - Isi aplikasi tetap diambil dari GitHub Pages, jadi update biasa cukup push (tidak perlu upload .aab baru).
 - Verifikasi domain butuh `https://gitarsaktipol.github.io/.well-known/assetlinks.json` → repo terpisah `gitarsaktipol.github.io` (belum dibuat; butuh SHA-256 kunci dari PWABuilder & Play Console).
-- Aturan untuk aplikasi anak (Families policy): jangan tambahkan iklan, analitik, SDK/CDN pihak ketiga, atau tautan keluar tanpa memperbarui `privacy.html` dan jawaban Data Safety.
+- **Sasaran pengguna: BUKAN lagi untuk anak-anak (diputuskan Ferdi, Okt 2026)** — target usia di Play Console 13+ (jangan centang usia di bawah 13), tidak masuk Families policy. Karena itu login/akun, penyimpanan cloud, dan tautan ke website Gitar Sakti boleh ditambahkan, TETAPI setiap fitur yang mengumpulkan data atau memanggil server pihak ketiga tetap wajib memperbarui `privacy.html` dan jawaban Data Safety. Rencana: satu komunitas dengan website Gitar Sakti (Vercel proyek `gitarsaktipol` + database Supabase `addtajuxfoxcaezmkice`); akun yang sama, tabel partitur terpisah beraturan keamanan (RLS). Jangan menyentuh tabel data kursus (orders, bank_info, dll.).
 - Kunci tanda tangan (`*.keystore`) tidak boleh masuk repo (sudah di `.gitignore`).
 - Tombol kembali Android: `goTab()` memakai history (pushState/replaceState) supaya dari Latihan/Partitur "kembali" ke Tuner dulu, baru keluar. Pintasan ikon (manifest `shortcuts`) membuka `./?tab=latih` / `./?tab=score`.
 
@@ -130,7 +130,7 @@ Mekanisme penilaian not yang dimainkan (fungsi `practiceHit`):
 
 ## Desain visual
 
-Tema **ceria, lucu, pastel untuk anak-anak** (pengguna utama anak-anak). Sebelumnya tema cerah ala Apple, sebelumnya lagi gelap coklat kayu. Mode gelap otomatis mengikuti OS **sengaja dimatikan** supaya tema cerah ini selalu tampil.
+Tema **ceria, lucu, pastel** (dulu ditujukan untuk anak-anak; sekarang sasaran 13+, tampilan dipertahankan). Sebelumnya tema cerah ala Apple, sebelumnya lagi gelap coklat kayu. Mode gelap otomatis mengikuti OS **sengaja dimatikan** supaya tema cerah ini selalu tampil.
 
 - Warna: latar krem-pink `--bg:#FFF7FB` dengan gumpalan gradasi pastel di belakang; aksen utama pink permen `--brass:#FF6FA8` (+ `--brassDeep` untuk bayangan 3D, `--peach`). Palet pastel berpasangan: `--pPink/--dPink`, `--pSky/--dSky`, `--pMint/--dMint`, `--pLemon/--dLemon`, `--pLilac/--dLilac`, `--pPeach/--dPeach` (p = muda untuk latar tombol, d = lebih tua untuk bayangan 3D/aksen).
 - Tombol "jelly" 3D: bayangan bawah padat (`box-shadow:0 5px 0 ...`), saat ditekan turun & mengecil lalu memantul balik (`--bounce` cubic-bezier). Tombol `.sound` dalam satu `.row` otomatis beda warna (pink, biru, kuning, mint via nth-child). Tombol utama `.start` gradasi pink→peach dengan kilau yang menyapu; saat mikrofon aktif (`.on`) jadi mint dengan cincin berdenyut.
