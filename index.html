@@ -195,6 +195,17 @@ header .sel select{max-width:100%;min-width:0}
 .sound.on{--c:var(--brass);--cd:var(--brassDeep);color:var(--brassText)}
 .peg:focus-visible,.start:focus-visible,.ctl:focus-visible,.sound:focus-visible,select:focus-visible,input:focus-visible,.tabs button:focus-visible,.seg button:focus-visible,.key:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 
+/* ---------- akun & cloud ---------- */
+.acct{margin-top:12px;font-size:13.5px}
+.acct .arow{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.acct .amsg{color:var(--muted);flex:1;min-width:140px}
+.acct .amsg b{color:var(--ink)}
+.acct .abtn{border:0;border-radius:14px;background:var(--pSky);color:var(--ink);padding:8px 14px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit}
+.acct form{display:grid;gap:8px;margin-top:10px}
+.acct .aerr{color:#C0392B;font-size:12.5px;min-height:1em}
+.acct .ahint{color:var(--muted);font-size:12px}
+.gsback{display:inline-block;margin-right:8px}
+
 /* ---------- navigasi bawah ---------- */
 .tabs{
   position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:5;
@@ -528,7 +539,7 @@ body{
   </section>
 
   </div>
-    <p class="foot dockfoot">FerTune • <a href="privacy.html">Kebijakan Privasi</a></p>
+    <p class="foot dockfoot"><a class="gsback" href="/" hidden>← Gitar Sakti</a>FerTune • <a href="privacy.html">Kebijakan Privasi</a></p>
   </div>
 
 
@@ -634,6 +645,24 @@ body{
     <label class="sel"><span class="sr">Pilih partitur</span><select id="slist"></select></label>
   </header>
 
+  <div class="card acct" id="acct">
+    <div class="arow">
+      <span class="amsg" id="acctMsg">Partitur tersimpan di HP ini saja. Masuk dengan akun Gitar Sakti supaya tidak hilang saat ganti HP.</span>
+      <button class="abtn" id="acctBtn" type="button">Masuk</button>
+    </div>
+    <form id="acctForm" hidden autocomplete="on">
+      <input class="txt" id="acctName" type="text" placeholder="Nama (khusus daftar baru)" autocomplete="name" maxlength="60">
+      <input class="txt" id="acctEmail" type="email" placeholder="Email" autocomplete="email" required>
+      <input class="txt" id="acctPass" type="password" placeholder="Kata sandi" autocomplete="current-password" minlength="6" required>
+      <div class="aerr" id="acctErr" role="alert"></div>
+      <div class="arow">
+        <button class="abtn" id="acctIn" type="submit">Masuk</button>
+        <button class="abtn" id="acctUp" type="button">Daftar akun baru</button>
+      </div>
+      <div class="ahint">Akunnya sama dengan akun di gitarsakti.com. Lupa kata sandi? Reset lewat halaman Masuk di gitarsakti.com.</div>
+    </form>
+  </div>
+
   <div class="card">
     <label class="sr" for="stitle">Judul</label>
     <input class="txt" id="stitle" type="text" placeholder="Judul lagu" maxlength="60" autocomplete="off">
@@ -724,7 +753,7 @@ body{
   </section>
 </section>
 
-<p class="foot">FerTune • <a href="privacy.html">Kebijakan Privasi</a></p>
+<p class="foot"><a class="gsback" href="/" hidden>← Gitar Sakti</a>FerTune • <a href="privacy.html">Kebijakan Privasi</a></p>
 </main>
 
 <nav class="tabs" aria-label="Menu utama"><div class="in">
@@ -2144,8 +2173,185 @@ function loadScores(){
   if(!Array.isArray(scores)||!scores.length) scores=[twinkle()];
   curId=store.get('yg.curScore',scores[0].id);
   if(!scores.some(function(s){return s.id===curId;})) curId=scores[0].id;
+  var t=Date.now(), mig=false;
+  scores.forEach(function(s){ if(!s.updatedAt){ s.updatedAt=t; mig=true; } });
+  if(mig) store.set('yg.scores',JSON.stringify(scores));
+  initSnap();
 }
-function saveScores(){ store.set('yg.scores',JSON.stringify(scores)); store.set('yg.curScore',curId); }
+function saveScores(){ trackChanges(); store.set('yg.scores',JSON.stringify(scores)); store.set('yg.curScore',curId); schedulePush(); }
+
+/* =====================================================================
+   Akun & cloud (opsional). Akun = akun Gitar Sakti (Supabase). Tanpa login, semuanya
+   tetap tersimpan di HP seperti biasa. Hanya tabel fertune_scores yang disentuh.
+   Aturan gabung: updatedAt terbaru menang; hapus = tombstone (deleted:true).
+   ===================================================================== */
+var CLOUD={url:'https://addtajuxfoxcaezmkice.supabase.co',key:'sb_publishable_zc3y05OhRgEJQlum3x-brg_iehDElTb',storageKey:'sb-addtajuxfoxcaezmkice-auth-token'};
+var snap={}, tomb={}, sb=null, sbUser=null, pushT=0, syncing=false, syncAgain=false, syncMsg='', authWatched=false, lastSyncAt=0;
+try{ tomb=JSON.parse(store.get('yg.tomb','{}'))||{}; }catch(e){ tomb={}; }
+function scoreJson(s){ var c={}; for(var k in s){ if(k!=='updatedAt') c[k]=s[k]; } return JSON.stringify(c); }
+function isSample(s){ return s.id==='s0' && scoreJson(s)===scoreJson(twinkle()); }
+function initSnap(){ snap={}; scores.forEach(function(s){ snap[s.id]=scoreJson(s); }); }
+function trackChanges(){
+  var now=Date.now(), seen={};
+  scores.forEach(function(s){
+    seen[s.id]=1;
+    var j=scoreJson(s);
+    if(snap[s.id]!==j){ s.updatedAt=now; snap[s.id]=j; }
+    delete tomb[s.id];
+  });
+  Object.keys(snap).forEach(function(id){ if(!seen[id]){ delete snap[id]; tomb[id]=now; } });
+  store.set('yg.tomb',JSON.stringify(tomb));
+}
+function getSynced(uid){ try{ return JSON.parse(store.get('yg.synced.'+uid,'{}'))||{}; }catch(e){ return {}; } }
+function saveSynced(uid,m){ store.set('yg.synced.'+uid,JSON.stringify(m)); }
+function loadSb(){
+  if(window._sbP) return window._sbP;
+  window._sbP=new Promise(function(res,rej){
+    var el=document.createElement('script'); el.src='vendor/supabase.js';
+    el.onload=function(){
+      try{
+        sb=window.supabase.createClient(CLOUD.url,CLOUD.key,{auth:{storageKey:CLOUD.storageKey,persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+        res(sb);
+      }catch(e){ window._sbP=null; rej(e); }
+    };
+    el.onerror=function(){ window._sbP=null; rej(new Error('offline')); };
+    document.head.appendChild(el);
+  });
+  return window._sbP;
+}
+function watchAuth(){
+  return loadSb().then(function(c){
+    if(authWatched) return c; authWatched=true;
+    c.auth.onAuthStateChange(function(ev,sess){
+      var u=(sess&&sess.user)||null, changed=(u&&u.id)!==(sbUser&&sbUser.id);
+      sbUser=u; renderAcct();
+      if(u&&changed) setTimeout(syncNow,0);   // jangan memanggil Supabase langsung di dalam callback ini
+    });
+    return c;
+  });
+}
+function initCloud(){
+  var has=false; try{ has=!!localStorage.getItem(CLOUD.storageKey); }catch(e){}
+  renderAcct();
+  if(has) watchAuth().catch(function(){});
+  window.addEventListener('online',function(){ syncNow(); });
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden&&Date.now()-lastSyncAt>30000) syncNow(); });
+  if(/(^|\.)gitarsakti\.com$/.test(location.hostname)) Array.prototype.forEach.call(document.querySelectorAll('.gsback'),function(a){ a.hidden=false; });
+}
+function dirtyList(synced){
+  var out=[];
+  scores.forEach(function(s){ if((s.updatedAt||0)>(synced[s.id]||0)&&!isSample(s)) out.push({id:s.id,data:s,deleted:false,ts:s.updatedAt}); });
+  Object.keys(tomb).forEach(function(id){ if(tomb[id]>(synced[id]||0)) out.push({id:id,data:{id:id},deleted:true,ts:tomb[id]}); });
+  return out;
+}
+function pushDirty(uid,synced){
+  var p=Promise.resolve(), fails=0;
+  dirtyList(synced).forEach(function(it){
+    p=p.then(function(){
+      return Promise.resolve(sb.from('fertune_scores').upsert(
+        {user_id:uid,id:it.id,data:it.data,deleted:it.deleted,updated_at:new Date(it.ts).toISOString()},
+        {onConflict:'user_id,id'}
+      )).then(function(r){ if(r.error) fails++; else synced[it.id]=it.ts; },function(){ fails++; });
+    });
+  });
+  return p.then(function(){ saveSynced(uid,synced); return fails; });
+}
+function mergeCloud(rows,synced){
+  var changed=false;
+  rows.forEach(function(r){
+    var ts=Date.parse(r.updated_at)||0, i=-1, k;
+    for(k=0;k<scores.length;k++) if(scores[k].id===r.id){ i=k; break; }
+    var loc=i>=0?scores[i]:null, locTs=loc?(loc.updatedAt||0):(tomb[r.id]||0);
+    if(locTs>ts) return;                       // data di HP lebih baru -> akan dikirim ke cloud
+    if(r.deleted){
+      if(loc){ scores.splice(i,1); delete snap[r.id]; changed=true; }
+      tomb[r.id]=ts; synced[r.id]=ts; return;
+    }
+    var d=r.data; if(!d||d.id!==r.id) return;
+    d.updatedAt=ts;
+    if(loc){ if(scoreJson(loc)!==scoreJson(d)){ scores[i]=d; changed=true; } else loc.updatedAt=ts; }
+    else { scores.push(d); changed=true; }
+    snap[r.id]=scoreJson(d); synced[r.id]=ts; delete tomb[r.id];
+  });
+  if(changed){
+    if(!scores.length) scores=[twinkle()];
+    if(!scores.some(function(s){return s.id===curId;})) curId=scores[0].id;
+    store.set('yg.scores',JSON.stringify(scores)); store.set('yg.curScore',curId); store.set('yg.tomb',JSON.stringify(tomb));
+    if(!playing){ sel=-1; buildScoreList(); syncScoreFields(); renderScoreView(); }
+  }
+}
+function syncNow(){
+  if(!sb||!sbUser) return;
+  if(syncing){ syncAgain=true; return; }
+  syncing=true; syncMsg='Menyinkronkan…'; renderAcct();
+  var uid=sbUser.id, synced=getSynced(uid);
+  Promise.resolve(sb.from('fertune_scores').select('id,data,updated_at,deleted').eq('user_id',uid)).then(function(r){
+    if(r.error) throw r.error;
+    mergeCloud(r.data||[],synced);
+    saveSynced(uid,synced);
+    return pushDirty(uid,synced);
+  }).then(function(fails){
+    syncMsg=fails?('Sebagian partitur belum terkirim ('+fails+'). Akan dicoba lagi.'):'Tersinkron ✓';
+  },function(){ syncMsg='Belum tersinkron (offline?). Akan dicoba lagi.'; }).then(function(){
+    syncing=false; lastSyncAt=Date.now(); renderAcct();
+    if(syncAgain){ syncAgain=false; syncNow(); }
+  });
+}
+function schedulePush(){
+  if(!sbUser) return;
+  clearTimeout(pushT);
+  pushT=setTimeout(function(){
+    if(!sbUser||syncing){ syncAgain=syncAgain||syncing; return; }
+    var uid=sbUser.id, synced=getSynced(uid);
+    syncing=true; syncMsg='Menyimpan…'; renderAcct();
+    pushDirty(uid,synced).then(function(fails){ syncMsg=fails?'Belum tersimpan di cloud. Akan dicoba lagi.':'Tersinkron ✓'; },function(){ syncMsg='Belum tersimpan di cloud.'; }).then(function(){
+      syncing=false; lastSyncAt=Date.now(); renderAcct();
+      if(syncAgain){ syncAgain=false; syncNow(); }
+    });
+  },2000);
+}
+function renderAcct(){
+  var m=$('#acctMsg'), b=$('#acctBtn'); if(!m||!b) return;
+  if(sbUser){
+    m.innerHTML='☁ Masuk sebagai <b></b> · <span></span>';
+    m.querySelector('b').textContent=sbUser.email||'akun Gitar Sakti';
+    m.querySelector('span').textContent=syncMsg||'Tersinkron ✓';
+    b.textContent='Keluar'; $('#acctForm').hidden=true;
+  } else {
+    m.textContent='Partitur tersimpan di HP ini saja. Masuk dengan akun Gitar Sakti supaya tidak hilang saat ganti HP.';
+    b.textContent=$('#acctForm').hidden?'Masuk':'Tutup';
+  }
+}
+function authErr(e){
+  var t=(e&&e.message)||'Gagal. Coba lagi.';
+  if(/invalid login/i.test(t)) return 'Email atau kata sandi salah.';
+  if(/already registered/i.test(t)) return 'Email ini sudah terdaftar. Silakan Masuk.';
+  if(/password/i.test(t)&&/6|short|least/i.test(t)) return 'Kata sandi minimal 6 karakter.';
+  if(/offline|fetch|network/i.test(t)) return 'Tidak bisa terhubung. Cek internet.';
+  return t;
+}
+function bindAcct(){
+  $('#acctBtn').addEventListener('click',function(){
+    if(sbUser){ watchAuth().then(function(c){ return c.auth.signOut({scope:'local'}); }).then(function(){ syncMsg=''; },function(){}); return; }
+    var f=$('#acctForm'); f.hidden=!f.hidden; renderAcct();
+    if(!f.hidden){ watchAuth().catch(function(){ $('#acctErr').textContent='Tidak bisa terhubung. Cek internet.'; }); $('#acctEmail').focus(); }
+  });
+  function go(up){
+    var email=$('#acctEmail').value.trim().toLowerCase(), pass=$('#acctPass').value, err=$('#acctErr');
+    if(!email||!pass){ err.textContent='Isi email dan kata sandi.'; return; }
+    err.textContent='Memproses…';
+    watchAuth().then(function(c){
+      return up ? c.auth.signUp({email:email,password:pass,options:{data:{name:$('#acctName').value.trim()}}})
+                : c.auth.signInWithPassword({email:email,password:pass});
+    }).then(function(r){
+      if(r.error){ err.textContent=authErr(r.error); return; }
+      if(up&&!r.data.session){ err.textContent='Akun dibuat. Cek email untuk verifikasi, lalu tekan Masuk.'; return; }
+      err.textContent=''; $('#acctPass').value=''; $('#acctForm').hidden=true;
+    },function(e){ err.textContent=authErr(e); });
+  }
+  $('#acctForm').addEventListener('submit',function(e){ e.preventDefault(); go(false); });
+  $('#acctUp').addEventListener('click',function(){ go(true); });
+}
 function curScore(){ return scores.filter(function(s){return s.id===curId;})[0]||scores[0]; }
 
 function buildScoreList(){
@@ -2884,7 +3090,7 @@ $$('.seg button[data-mode]').forEach(function(b){ b.addEventListener('click',fun
 
 buildTicks(); buildTuningSelect(); buildPegs(); setA4(A4); renderTuner();
 bindPracticeOpts(); syncPracticeOpts();
-loadScores(); buildScoreList(); syncScoreFields(); buildKeyboard(); bindScore();
+loadScores(); buildScoreList(); syncScoreFields(); buildKeyboard(); bindScore(); bindAcct(); initCloud();
 bindMidi();
 setMode(app.mode);
 try{

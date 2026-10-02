@@ -34,15 +34,15 @@ a{color:var(--brass)}
   <img src="icon-192.png" alt="">
   <div>
     <h1>Kebijakan Privasi FerTune</h1>
-    <div class="muted">Berlaku sejak 27 September 2026</div>
+    <div class="muted">Berlaku sejak 2 Oktober 2026</div>
   </div>
 </header>
 
 <div class="card">
-  <p class="sum">Singkatnya: FerTune tidak mengumpulkan, tidak menyimpan di server, dan tidak membagikan data pribadi apa pun. Semua proses terjadi di perangkatmu sendiri.</p>
+  <p class="sum">Singkatnya: tanpa akun, semua data FerTune hanya ada di perangkatmu. Jika kamu memilih masuk dengan akun Gitar Sakti, email dan partitur milikmu disimpan di server Gitar Sakti agar tidak hilang saat ganti HP. Suara mikrofon tidak pernah direkam atau dikirim.</p>
 
   <h2>Tentang aplikasi ini</h2>
-  <p>FerTune adalah aplikasi untuk belajar musik: tuner gitar, latihan membaca not balok dan not angka, serta membuat partitur. FerTune ditujukan untuk pengguna berusia 13 tahun ke atas. FerTune saat ini tidak memiliki akun, tidak menampilkan iklan, dan tidak memiliki pembelian di dalam aplikasi.</p>
+  <p>FerTune adalah aplikasi untuk belajar musik: tuner gitar, latihan membaca not balok dan not angka, serta membuat partitur. FerTune ditujukan untuk pengguna berusia 13 tahun ke atas. Memakai FerTune tidak mewajibkan akun. Akun bersifat opsional dan sama dengan akun di gitarsakti.com. FerTune tidak menampilkan iklan dan tidak memiliki pembelian di dalam aplikasi.</p>
 
   <h2>Mikrofon</h2>
   <p>Mikrofon dipakai hanya saat kamu menekan tombol <b>"Aktifkan mikrofon"</b>, untuk mengenali nada yang kamu mainkan (tuner dan latihan membaca not).</p>
@@ -61,22 +61,33 @@ a{color:var(--brass)}
     <li>Partitur yang kamu buat atau impor.</li>
     <li>Pengaturan (misalnya tuning, tangga nada, level Arcade, jenis notasi).</li>
   </ul>
-  <p>Data ini tidak pernah dikirim ke server. Kamu bisa menghapusnya kapan saja dengan menghapus partitur di aplikasi, menghapus data aplikasi di pengaturan HP, atau mencopot pemasangan (uninstall) FerTune.</p>
+  <p>Selama kamu tidak masuk dengan akun, data ini tidak pernah dikirim ke server. Kamu bisa menghapusnya kapan saja dengan menghapus partitur di aplikasi, menghapus data aplikasi di pengaturan HP, atau mencopot pemasangan (uninstall) FerTune.</p>
+
+  <h2>Akun dan penyimpanan cloud (opsional)</h2>
+  <p>Jika kamu menekan <b>Masuk</b> atau <b>Daftar</b> di menu Partitur, FerTune memakai akun Gitar Sakti (gitarsakti.com):</p>
+  <ul>
+    <li><b>Yang dikirim dan disimpan:</b> alamat email, kata sandi (disimpan terenkripsi oleh penyedia autentikasi, tidak terbaca oleh kami), nama jika kamu mengisinya, dan partitur yang kamu buat atau impor beserta judul dan pengaturannya.</li>
+    <li><b>Tujuan:</b> masuk ke akun dan menyimpan partitur supaya tersedia di semua perangkatmu.</li>
+    <li><b>Tempat penyimpanan:</b> server Supabase yang dikelola Gitar Sakti. Hanya akunmu yang dapat membaca dan mengubah partituranmu; data ini tidak dijual dan tidak dibagikan ke pihak lain.</li>
+    <li><b>Menghapus data:</b> menghapus partitur di aplikasi juga menandainya terhapus di cloud. Untuk menghapus akun beserta seluruh partitur di cloud, kirim permintaan ke email di bagian Kontak.</li>
+    <li>Kamu bisa keluar kapan saja; partitur di perangkat tetap ada.</li>
+  </ul>
+  <p>Suara dari mikrofon dan data keyboard MIDI tetap tidak pernah dikirim ke server.</p>
 
   <h2>File yang kamu pilih</h2>
-  <p>Saat kamu mengimpor file MIDI atau memilih gambar partitur, file itu dibuka di perangkat saja. Saat mengekspor ke MIDI, file disimpan ke perangkatmu. Tidak ada yang diunggah.</p>
+  <p>Saat kamu mengimpor file MIDI atau memilih gambar partitur, file itu dibuka di perangkat saja. Saat mengekspor ke MIDI, file disimpan ke perangkatmu. File itu sendiri tidak diunggah; hanya partitur hasil impor yang ikut tersimpan di cloud jika kamu sedang masuk dengan akun.</p>
 
   <h2>Tidak ada pelacakan, iklan, atau pihak ketiga</h2>
   <ul>
     <li>Tidak ada iklan.</li>
     <li>Tidak ada analitik atau pelacakan penggunaan.</li>
-    <li>Tidak ada layanan pihak ketiga yang menerima data dari aplikasi.</li>
+    <li>Satu-satunya layanan di luar perangkat adalah server akun Gitar Sakti (Supabase) di atas, dan hanya dipakai jika kamu masuk.</li>
     <li>Tidak ada fitur obrolan, berbagi, atau tautan ke media sosial.</li>
   </ul>
-  <p>Seperti semua aplikasi yang diunduh dari internet, file aplikasi FerTune diambil dari server hosting (GitHub Pages) saat pertama kali dipasang dan saat ada pembaruan. Server hosting dapat mencatat informasi teknis standar (seperti alamat IP) untuk keperluan keamanan dan operasional mereka; FerTune sendiri tidak menerima atau menggunakan informasi tersebut.</p>
+  <p>Seperti semua aplikasi yang diunduh dari internet, file aplikasi FerTune diambil dari server hosting (GitHub Pages) saat pertama kali dipasang dan saat ada pembaruan. Server hosting dapat mencatat informasi teknis standar (seperti alamat IP) untuk keperluan keamanan dan operasional mereka; FerTune sendiri tidak menerima atau menggunakan informasi tersebut. Jika dibuka lewat gitarsakti.com, hosting dilakukan oleh Vercel dengan catatan teknis serupa.</p>
 
   <h2>Anak-anak</h2>
-  <p>FerTune tidak ditujukan untuk anak di bawah usia 13 tahun dan kami tidak dengan sengaja mengumpulkan data pribadi dari mereka. Saat ini FerTune tidak mengumpulkan data pribadi apa pun dari pengguna mana pun. Jika kami mengetahui ada data anak di bawah 13 tahun yang terkumpul, data itu akan dihapus.</p>
+  <p>FerTune tidak ditujukan untuk anak di bawah usia 13 tahun dan kami tidak dengan sengaja mengumpulkan data pribadi dari mereka. FerTune hanya mengumpulkan email dan partitur dari pengguna yang memilih membuat akun. Jika kami mengetahui ada data anak di bawah 13 tahun yang terkumpul, data itu akan dihapus.</p>
 
   <h2>Perubahan kebijakan</h2>
   <p>Jika kebijakan ini berubah, versi terbaru akan dipasang di halaman ini dengan tanggal berlaku yang baru.</p>
