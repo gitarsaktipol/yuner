@@ -19,7 +19,7 @@ Belajar musik jadi seru! Tuner gitar, latihan baca not, partitur & MIDI.
 ## Deskripsi lengkap (maks. 4000 karakter)
 
 ```
-FerTune membuat belajar musik jadi seru untuk anak-anak dan pemula! 🎵
+FerTune membuat belajar musik jadi seru untuk pemula dan siapa saja yang ingin lancar membaca not! 🎵
 
 Setem gitar, latihan membaca not balok dan not angka, tulis lagu sendiri, lalu mainkan dengan gitar, piano, atau keyboard MIDI. FerTune mendengarkan permainanmu dan langsung memberi tahu apakah nadanya sudah benar.
 
@@ -47,7 +47,7 @@ Setem gitar, latihan membaca not balok dan not angka, tulis lagu sendiri, lalu m
 • Colok keyboard MIDI lewat kabel USB/OTG: tanpa delay, bisa membaca sampai 10 nada sekaligus, dan menampilkan nama akor
 • Mode kabel jack untuk gitar atau keyboard biasa dengan latensi rendah
 
-🔒 AMAN UNTUK ANAK
+🔒 PRIVASI TERJAGA
 • Tanpa iklan
 • Tanpa akun dan tanpa pembelian dalam aplikasi
 • Tidak mengumpulkan data pribadi. Suara dari mikrofon hanya dianalisis di perangkat, tidak pernah direkam atau dikirim
