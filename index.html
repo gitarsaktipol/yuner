@@ -1935,12 +1935,11 @@ function drawFit(host,sc,fn){
   drawScore.force=0;
 }
 /* Mulai / selesai berlatih: layar penuh + kunci landscape */
+/* Tanpa mode layar penuh: Chrome selalu memunculkan pemberitahuan "Untuk keluar dari layar penuh..." yang tidak bisa disembunyikan oleh halaman.
+   Kunci landscape dicoba langsung (berhasil di aplikasi yang sudah dipasang); kalau ditolak, CSS memutar layar berlatih sebagai cadangan. */
 function goLandscape(){
   try{
-    var el=document.documentElement, p=el.requestFullscreen ? el.requestFullscreen() : null;
-    Promise.resolve(p).catch(function(){}).then(function(){
-      if(screen.orientation && screen.orientation.lock) return screen.orientation.lock('landscape');
-    }).catch(function(){});
+    if(screen.orientation && screen.orientation.lock) Promise.resolve(screen.orientation.lock('landscape')).catch(function(){});
   }catch(e){}
 }
 function startPractice(){
