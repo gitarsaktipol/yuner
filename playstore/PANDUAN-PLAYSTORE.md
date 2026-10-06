@@ -32,24 +32,25 @@ Pakai email yang sama di Play Console (Listingan toko → Detail kontak).
 
 ## Langkah 2 — Pastikan versi terbaru sudah live
 
-Buka `https://gitarsaktipol.github.io/yuner/` dan `https://gitarsaktipol.github.io/yuner/privacy.html`,
-pastikan keduanya tampil.
+Buka `https://gitarsakti.com/fertune/` dan `https://gitarsakti.com/fertune/privacy.html`,
+pastikan keduanya tampil (alamat ini disajikan website Gitar Sakti dari repo ini lewat rewrite Vercel,
+jadi memperbarui repo ini otomatis memperbarui keduanya).
 
 ## Langkah 3 — Buat paket Android di PWABuilder
 
-1. Buka **https://www.pwabuilder.com**, masukkan alamat `https://gitarsaktipol.github.io/yuner/`, tekan **Start**.
+1. Buka **https://www.pwabuilder.com**, masukkan alamat `https://gitarsakti.com/fertune/`, tekan **Start**.
 2. Tekan **Package For Stores** → **Android** → **Generate Package** (pilih opsi *Google Play*).
 3. Di **Options / All Settings**, isi seperti ini (yang lain biarkan bawaan):
 
    | Pengaturan | Isi |
    |---|---|
-   | Package ID | `io.github.gitarsaktipol.fertune` ⚠️ **tidak bisa diganti setelah terbit** |
+   | Package ID | `com.gitarsakti.fertune` ⚠️ **tidak bisa diganti setelah terbit** (sudah diputuskan: memakai domain gitarsakti.com) |
    | App name | `FerTune` |
    | Launcher name | `FerTune` |
    | App version | `1.0.0` |
    | App version code | `1` (naikkan 1 setiap upload versi baru) |
-   | Host | `gitarsaktipol.github.io` |
-   | Start URL | `/yuner/` |
+   | Host | `gitarsakti.com` |
+   | Start URL | `/fertune/` |
    | Theme color / Background color | `#FFF7FB` |
    | Status bar / Nav bar color | `#FFF7FB` |
    | Display mode | Standalone |
@@ -80,45 +81,43 @@ Tanpa langkah ini aplikasi tetap jalan, tapi di bagian atas akan terlihat **bari
    - Dari `assetlinks.json` di ZIP PWABuilder (kunci upload kamu).
    - Dari **Play Console → Pengujian dan rilis → Integritas aplikasi → Penandatanganan aplikasi**,
      bagian *Sertifikat kunci penandatanganan aplikasi* → **SHA-256**.
-2. Buat repo GitHub baru bernama persis **`gitarsaktipol.github.io`** (publik), aktifkan GitHub Pages
-   (Settings → Pages → branch `main`, folder root).
-3. Salin isi folder `playstore/assetlinks-template/` ke repo itu (termasuk file `.nojekyll`
-   dan folder `.well-known`). Ganti dua baris `GANTI_DENGAN_...` dengan dua SHA-256 di atas.
-4. Cek: `https://gitarsaktipol.github.io/.well-known/assetlinks.json` harus menampilkan isi file tersebut.
+2. Berikan kedua SHA-256 itu ke Claude yang mengurus **website Gitar Sakti** (repo `gitarsaktipol/gitarsaktipol`).
+   File `public/.well-known/assetlinks.json` ditaruh di repo website itu (bukan repo baru), dengan isi
+   dari `playstore/assetlinks-template/` (package: `com.gitarsakti.fertune`) dan dua SHA-256 tadi, lalu di-merge.
+3. Cek setelah deploy: `https://gitarsakti.com/.well-known/assetlinks.json` harus menampilkan isi file tersebut
+   (dibuka langsung di browser, tanpa pengalihan).
 
-> Aplikasi FerTune di `/yuner/` tetap berjalan seperti biasa; repo baru ini hanya menambah halaman di alamat utama.
+> Catatan: verifikasi ini berlaku untuk seluruh domain `gitarsakti.com`, tapi aplikasi FerTune hanya membuka
+> jalur `/fertune/`.
 
 ## Langkah 6 — Lengkapi halaman toko & formulir kebijakan
 
 **Listingan toko:** salin dari `deskripsi-toko.md`, upload ikon, gambar fitur, dan 6 screenshot dari folder ini.
 
-**Kebijakan privasi:** `https://gitarsaktipol.github.io/yuner/privacy.html`
+**Kebijakan privasi:** `https://gitarsakti.com/fertune/privacy.html`
 
-**Akses aplikasi:** *Semua fungsi tersedia tanpa akses khusus* (tidak ada login).
+**Akses aplikasi:** *Semua fungsi tersedia tanpa akses khusus.* Login akun Gitar Sakti bersifat opsional (hanya untuk simpan cloud); semua fitur bisa dipakai tanpa login.
 
 **Iklan:** *Tidak, aplikasi saya tidak berisi iklan.*
 
 **Target audiens & konten:** FerTune TIDAK lagi ditujukan untuk anak-anak. Centang hanya **13–15, 16–17, 18+** (JANGAN centang rentang usia di bawah 13) dan jawab "tidak" pada pertanyaan apakah aplikasi menarik bagi anak-anak. Dengan begitu aplikasi tidak masuk **Kebijakan Keluarga (Families)** Google, sehingga login/akun, penyimpanan cloud, dan tautan ke website Gitar Sakti boleh ditambahkan (tetap perbarui `privacy.html` dan jawaban Data safety). Maskot dan warna pastel tidak masalah, selama deskripsi toko tidak menyebut anak-anak.
 
-**Keamanan data (Data safety):**
+**Keamanan data (Data safety)** — berubah sejak ada akun & cloud:
 
 | Pertanyaan | Jawaban |
 |---|---|
-| Apakah aplikasi mengumpulkan atau membagikan jenis data pengguna yang diwajibkan? | **Tidak** |
-| Apakah semua data dienkripsi saat transit? | Ya (semua lewat HTTPS) |
-| Apakah pengguna dapat meminta data dihapus? | Tidak ada data yang dikumpulkan; data lokal terhapus saat aplikasi di-uninstall |
+| Apakah aplikasi mengumpulkan atau membagikan jenis data pengguna yang diwajibkan? | **Ya, mengumpulkan** (tidak membagikan ke pihak ketiga) |
+| Jenis data yang dikumpulkan | **Info pribadi:** alamat email, nama (opsional), ID pengguna · **Konten buatan pengguna lain / File & dokumen:** partitur yang disimpan di cloud |
+| Tujuan | Fungsi aplikasi, manajemen akun |
+| Dikumpulkan secara opsional? | Ya, hanya jika pengguna memilih masuk (login opsional) |
+| Apakah semua data dienkripsi saat transit? | Ya (HTTPS) |
+| Apakah pengguna dapat meminta data dihapus? | **Ya** — wajib disediakan, lihat catatan di bawah |
+| Audio mikrofon | Diproses di perangkat, tidak dikumpulkan/dikirim → tidak dicantumkan sebagai data terkumpul |
 
-> Penjelasan: suara mikrofon dan tuts MIDI diproses di perangkat saja dan tidak dikirim, sehingga menurut aturan
-> Google tidak termasuk "dikumpulkan". Partitur & pengaturan disimpan di perangkat saja.
-
-**Rating konten (kuesioner IARC):** kategori *Referensi, Pendidikan, atau Utilitas* (bukan game).
-Jawab **Tidak** untuk semua pertanyaan tentang kekerasan, seksual, bahasa kasar, obat-obatan, perjudian,
-interaksi antar pengguna, berbagi lokasi, dan pembelian digital. Hasilnya biasanya **Semua Umur / 3+**.
-
-**Aplikasi berita / pinjaman / kesehatan / pemerintah:** Tidak.
-
-**Izin:** paket TWA tidak meminta izin mikrofon sendiri; izin mikrofon diminta oleh Chrome di dalam aplikasi
-saat tombol "Aktifkan mikrofon" ditekan.
+> ⚠️ **Wajib untuk aplikasi yang membolehkan pembuatan akun:** Google Play meminta **jalur hapus akun di dalam aplikasi**
+> *dan* **tautan web** untuk meminta hapus akun & data (diisi di Play Console → Konten aplikasi → Keamanan data).
+> Saat ini FerTune baru menyebut "kirim email ke kontak" di kebijakan privasi. Sebelum rilis, minta dibuatkan tombol
+> **"Hapus akun & data cloud"** (butuh perubahan di FerTune + fungsi server di Supabase) dan halaman web penjelasnya.
 
 ## Langkah 7 — Uji tertutup (khusus akun developer **pribadi** yang dibuat setelah 13 Nov 2023)
 

@@ -49,7 +49,7 @@ Setem gitar, latihan membaca not balok dan not angka, tulis lagu sendiri, lalu m
 
 🔒 PRIVASI TERJAGA
 • Tanpa iklan
-• Tanpa akun dan tanpa pembelian dalam aplikasi
+• Bisa dipakai tanpa akun; akun Gitar Sakti opsional untuk menyimpan partitur di cloud. Tanpa pembelian dalam aplikasi
 • Tidak mengumpulkan data pribadi. Suara dari mikrofon hanya dianalisis di perangkat, tidak pernah direkam atau dikirim
 • Bisa dipakai tanpa internet
 
@@ -65,8 +65,8 @@ Selamat bermain musik! 🎶
 ## Kontak
 
 - **Email:** `leslesku@gmail.com`
-- **Situs web:** `https://gitarsaktipol.github.io/yuner/`
-- **Kebijakan privasi:** `https://gitarsaktipol.github.io/yuner/privacy.html`
+- **Situs web:** `https://gitarsakti.com/fertune/`
+- **Kebijakan privasi:** `https://gitarsakti.com/fertune/privacy.html`
 
 ## Aset grafis (sudah ada di folder ini)
 

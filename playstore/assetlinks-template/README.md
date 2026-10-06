@@ -1,10 +1,12 @@
-# Isi repo `gitarsaktipol.github.io`
+# Templat assetlinks.json (verifikasi domain TWA)
 
-Folder ini adalah **templat**. Isinya harus diletakkan di repo GitHub baru bernama persis
-`gitarsaktipol.github.io` (bukan di repo `yuner`), karena Google memeriksa file di alamat:
+File ini hanya **templat**. File aslinya harus tersaji di:
 
-    https://gitarsaktipol.github.io/.well-known/assetlinks.json
+    https://gitarsakti.com/.well-known/assetlinks.json
 
-- `.nojekyll` wajib ikut, supaya GitHub Pages tidak menyembunyikan folder `.well-known`.
-- Ganti dua baris `GANTI_DENGAN_...` di `assetlinks.json` dengan sidik jari SHA-256
-  (lihat langkah 5 di `playstore/PANDUAN-PLAYSTORE.md`).
+yaitu di folder `public/.well-known/assetlinks.json` pada repo website **`gitarsaktipol/gitarsaktipol`** (Vercel).
+Jangan dibuat di repo ini maupun di repo `gitarsaktipol.github.io`.
+
+- Package: `com.gitarsakti.fertune`.
+- Ganti dua baris `GANTI_DENGAN_...` dengan sidik jari SHA-256 (lihat langkah 5 di `playstore/PANDUAN-PLAYSTORE.md`).
+- Berkas `.nojekyll` di folder ini tidak dipakai lagi (sisa rencana GitHub Pages) dan boleh diabaikan.
