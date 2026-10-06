@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Hapus Akun FerTune</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#FFF7FB">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-weight:400 800;font-display:swap;src:url(fonts/bricolage-grotesque-latin.woff2) format('woff2')}
+:root{--bg:#FFF7FB;--panel:#FFFFFF;--ink:#3B3355;--muted:#6F6890;--line:#F3E8F6;--brass:#E0457F}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.6}
+main{max-width:520px;margin:0 auto;padding:24px 16px 48px}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:24px;padding:20px 22px;margin-top:16px}
+h1{font-size:24px;margin:0 0 6px}
+p,li{margin:6px 0}
+ul{padding-left:22px}
+.muted{color:var(--muted);font-size:14px}
+input{width:100%;padding:12px 14px;border:2px solid var(--line);border-radius:14px;font:inherit;margin-top:8px}
+button{border:0;border-radius:16px;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer;background:#D6ECFF;color:var(--ink);margin-top:12px}
+button.danger{background:#FFD6DC}
+button:disabled{opacity:.5;cursor:default}
+.msg{min-height:1.4em;margin-top:10px;font-weight:600}
+.err{color:#C0392B}
+a{color:var(--brass)}
+</style>
+</head>
+<body>
+<main>
+<h1>Hapus akun FerTune</h1>
+<p class="muted">Halaman ini untuk meminta penghapusan akun dan data cloud FerTune.</p>
+<div class="card">
+  <p><b>Yang terjadi:</b></p>
+  <ul>
+    <li>Semua partitur yang tersimpan di cloud dihapus.</li>
+    <li>Akun FerTune sama dengan akun <b>Gitar Sakti</b>. Jika kamu <b>belum pernah membeli</b> kelas, akun, profil, dan progres belajar ikut terhapus.</li>
+    <li>Jika kamu <b>pernah membeli</b>, akun tidak dihapus (riwayat pembelian wajib disimpan); hanya data FerTune di cloud yang dihapus.</li>
+    <li>Partitur di HP/perangkatmu tidak ikut terhapus.</li>
+    <li>Tindakan ini tidak bisa dibatalkan.</li>
+  </ul>
+</div>
+<div class="card" id="loginCard">
+  <b>Masuk dulu untuk memastikan ini akunmu</b>
+  <form id="f" autocomplete="on">
+    <input id="em" type="email" placeholder="Email" autocomplete="email" required>
+    <input id="pw" type="password" placeholder="Kata sandi" autocomplete="current-password" required>
+    <button id="login" type="submit">Masuk</button>
+  </form>
+</div>
+<div class="card" id="delCard" hidden>
+  <p>Masuk sebagai <b id="who"></b></p>
+  <button class="danger" id="del" type="button">Hapus akun saya</button>
+</div>
+<div class="msg" id="msg" role="status"></div>
+<p class="muted">Kesulitan? Email <a href="mailto:leslesku@gmail.com">leslesku@gmail.com</a>. · <a href="privacy.html">Kebijakan Privasi</a> · <a href="./">Kembali ke FerTune</a></p>
+</main>
+<script src="vendor/supabase.js"></script>
+<script>
+(function(){
+  var K='sb-addtajuxfoxcaezmkice-auth-token';
+  var sb=window.supabase.createClient('https://addtajuxfoxcaezmkice.supabase.co','sb_publishable_zc3y05OhRgEJQlum3x-brg_iehDElTb',{auth:{storageKey:K,persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+  var $=function(s){return document.querySelector(s);}, msg=$('#msg'), armed=0, t=0;
+  function show(user){ $('#loginCard').hidden=!!user; $('#delCard').hidden=!user; if(user) $('#who').textContent=user.email||''; }
+  function say(x,err){ msg.textContent=x; msg.className='msg'+(err?' err':''); }
+  sb.auth.getSession().then(function(r){ show(r.data&&r.data.session&&r.data.session.user); });
+  $('#f').addEventListener('submit',function(e){
+    e.preventDefault(); say('Memproses…');
+    sb.auth.signInWithPassword({email:$('#em').value.trim().toLowerCase(),password:$('#pw').value}).then(function(r){
+      if(r.error){ say(/invalid login/i.test(r.error.message)?'Email atau kata sandi salah.':r.error.message,true); return; }
+      say(''); show(r.data.user);
+    },function(){ say('Tidak bisa terhubung. Cek internet.',true); });
+  });
+  $('#del').addEventListener('click',function(){
+    var b=$('#del');
+    if(!armed){ armed=1; b.textContent='Yakin? Tekan sekali lagi'; t=setTimeout(function(){armed=0;b.textContent='Hapus akun saya';},5000); return; }
+    clearTimeout(t); armed=0; b.disabled=true; b.textContent='Menghapus…';
+    sb.functions.invoke('delete-account',{body:{confirm:true}}).then(function(r){
+      var d=r.data;
+      if(r.error||!d||!d.ok){ say((d&&d.error)||'Gagal menghapus akun. Coba lagi atau email leslesku@gmail.com.',true); b.disabled=false; b.textContent='Hapus akun saya'; return; }
+      try{ localStorage.removeItem(K); }catch(e){}
+      show(null); $('#loginCard').hidden=true;
+      say(d.scope==='account'?'Akun dan semua data cloud sudah dihapus.':'Data FerTune di cloud sudah dihapus. Akun Gitar Sakti tetap ada karena punya riwayat pembelian.');
+      sb.auth.signOut({scope:'local'}).catch(function(){});
+    },function(){ say('Tidak bisa terhubung. Cek internet.',true); b.disabled=false; b.textContent='Hapus akun saya'; });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 // Yuner service worker — supaya bisa jalan offline.
 // Setiap kali kamu mengubah index.html, naikkan angka versi ini (v1 -> v2, dst).
-const CACHE = 'fertune-v55';
+const CACHE = 'fertune-v56';
 const PRECACHE = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const PRECACHE = [
   './icon-512-maskable.png',
   './apple-touch-icon.png',
   './privacy.html',
+  './hapus-akun.html',
   './vendor/supabase.js',
   './fonts/bricolage-grotesque-latin.woff2'
 ];
