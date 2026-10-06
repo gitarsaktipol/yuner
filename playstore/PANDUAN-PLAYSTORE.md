@@ -114,10 +114,11 @@ Tanpa langkah ini aplikasi tetap jalan, tapi di bagian atas akan terlihat **bari
 | Apakah pengguna dapat meminta data dihapus? | **Ya** — wajib disediakan, lihat catatan di bawah |
 | Audio mikrofon | Diproses di perangkat, tidak dikumpulkan/dikirim → tidak dicantumkan sebagai data terkumpul |
 
-> ⚠️ **Wajib untuk aplikasi yang membolehkan pembuatan akun:** Google Play meminta **jalur hapus akun di dalam aplikasi**
-> *dan* **tautan web** untuk meminta hapus akun & data (diisi di Play Console → Konten aplikasi → Keamanan data).
-> Saat ini FerTune baru menyebut "kirim email ke kontak" di kebijakan privasi. Sebelum rilis, minta dibuatkan tombol
-> **"Hapus akun & data cloud"** (butuh perubahan di FerTune + fungsi server di Supabase) dan halaman web penjelasnya.
+> ✅ **Hapus akun sudah ada.** Google Play meminta jalur hapus akun di dalam aplikasi *dan* tautan web. Keduanya tersedia:
+> tombol **Hapus akun** di kartu akun menu Partitur, dan halaman web `https://gitarsakti.com/fertune/hapus-akun.html`.
+> Isi tautan web itu di Play Console → Konten aplikasi → Keamanan data → *Hapus akun*.
+> Aturannya: akun yang punya pesanan tidak dihapus (riwayat pembelian wajib disimpan), hanya data FerTune di cloud;
+> akun tanpa pesanan dihapus seluruhnya. Sebutkan ini di formulir Play Console bila ditanya data yang dipertahankan.
 
 ## Langkah 7 — Uji tertutup (khusus akun developer **pribadi** yang dibuat setelah 13 Nov 2023)
 
