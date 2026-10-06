@@ -22,7 +22,7 @@ fonts/                <- font Bricolage Grotesque (woff2, subset latin) + OFL.tx
 playstore/            <- bahan Play Store: PANDUAN-PLAYSTORE.md (langkah upload via PWABuilder/TWA),
                           deskripsi-toko.md, ikon 512, feature graphic 1024x500, screenshot/ (berbingkai),
                           raw/ (screenshot polos, juga dipakai di manifest), assetlinks-template/
-                          (isi untuk repo gitarsaktipol.github.io, verifikasi domain TWA)
+                          (templat assetlinks.json; file aslinya ditaruh di repo website Gitar Sakti, bukan di sini)
 icon-192.png, icon-512.png, icon-512-maskable.png, apple-touch-icon.png  <- ikon PWA
                           (desain "FT" gradasi ungu-pink-biru dengan motif not musik;
                           icon-192/512 = sudut membulat transparan, maskable = huruf diperkecil
@@ -34,7 +34,7 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 ## Hosting & deployment
 
 - Repo GitHub: `gitarsaktipol/yuner` (nama repo masih "yuner", belum diganti walau aplikasinya sudah bernama FerTune — belum diminta untuk diganti)
-- Live di: **https://gitarsaktipol.github.io/yuner/** via GitHub Pages (branch `main`, folder root)
+- Live di: **https://gitarsaktipol.github.io/yuner/** via GitHub Pages (branch `main`, folder root). Alamat utama sekarang **https://gitarsakti.com/fertune/** (website Gitar Sakti me-rewrite ke alamat GitHub Pages; sesi login terbagi karena same-origin)
 - Tidak ada CI/CD, tidak ada build. Push ke `main` = otomatis live dalam 1-3 menit.
 - **Setiap kali mengubah `index.html`, `manifest.webmanifest`, atau `sw.js`, WAJIB naikkan nomor versi `CACHE` di `sw.js`** (contoh: `const CACHE = 'fertune-v2';` -> `'fertune-v3';`), kalau tidak, HP yang sudah pernah install PWA-nya tidak akan mengambil perubahan (service worker akan terus menyajikan versi lama dari cache).
 - Service worker: precache diambil dengan `cache:'reload'` dan file sendiri dicek ulang dengan `no-cache`, supaya versi baru tidak tersimpan dengan file lama dari cache HTTP GitHub Pages (±10 menit). Saat service worker baru mengambil alih, halaman otomatis dimuat ulang sekali (`controllerchange` di `index.html`), jadi pembaruan langsung terlihat.
@@ -42,9 +42,10 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - Ferdi mengerjakan lewat PowerShell Windows di folder lokal `D:\YUNER\yuner-pwa`, pakai `git add . && git commit -m "..." && git push` untuk deploy.
 
 ## Google Play Store (TWA)
-- Rencana: dibungkus jadi aplikasi Android lewat PWABuilder (Trusted Web Activity), package ID `io.github.gitarsaktipol.fertune`. Langkah lengkap & status di `playstore/PANDUAN-PLAYSTORE.md`.
+- Rencana: dibungkus jadi aplikasi Android lewat PWABuilder (Trusted Web Activity), package ID **`com.gitarsakti.fertune`** (diputuskan Ferdi, Okt 2026; tidak bisa diganti setelah terbit), host `gitarsakti.com`, start URL `/fertune/`. Langkah lengkap & status di `playstore/PANDUAN-PLAYSTORE.md`.
 - Isi aplikasi tetap diambil dari GitHub Pages, jadi update biasa cukup push (tidak perlu upload .aab baru).
-- Verifikasi domain butuh `https://gitarsaktipol.github.io/.well-known/assetlinks.json` → repo terpisah `gitarsaktipol.github.io` (belum dibuat; butuh SHA-256 kunci dari PWABuilder & Play Console).
+- Verifikasi domain butuh `https://gitarsakti.com/.well-known/assetlinks.json` → ditaruh di `public/.well-known/` repo website `gitarsaktipol/gitarsaktipol` (belum dibuat; butuh SHA-256 kunci dari PWABuilder & Play Console). Aplikasi dibuat pertama; Gitar Sakti sendiri BELUM dijadikan aplikasi Play Store (kelas video = produk digital → aturan Play Billing).
+- **Wajib sebelum rilis:** karena ada pembuatan akun, Play meminta jalur hapus akun di dalam aplikasi + tautan web hapus akun/data (belum dibuat; lihat catatan Data safety di panduan).
 - **Sasaran pengguna: BUKAN lagi untuk anak-anak (diputuskan Ferdi, Okt 2026)** — target usia di Play Console 13+ (jangan centang usia di bawah 13), tidak masuk Families policy. Karena itu login/akun, penyimpanan cloud, dan tautan ke website Gitar Sakti boleh ditambahkan, TETAPI setiap fitur yang mengumpulkan data atau memanggil server pihak ketiga tetap wajib memperbarui `privacy.html` dan jawaban Data Safety. Rencana: satu komunitas dengan website Gitar Sakti (Vercel proyek `gitarsaktipol` + database Supabase `addtajuxfoxcaezmkice`); akun yang sama, tabel partitur terpisah beraturan keamanan (RLS). Jangan menyentuh tabel data kursus (orders, bank_info, dll.).
 - Kunci tanda tangan (`*.keystore`) tidak boleh masuk repo (sudah di `.gitignore`).
 - Tombol kembali Android: `goTab()` memakai history (pushState/replaceState) supaya dari Latihan/Partitur "kembali" ke Tuner dulu, baru keluar. Pintasan ikon (manifest `shortcuts`) membuka `./?tab=latih` / `./?tab=score`.
