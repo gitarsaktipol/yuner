@@ -686,6 +686,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <span class="amsg" id="acctMsg">Partitur tersimpan di HP ini saja. Masuk dengan akun Gitar Sakti supaya tidak hilang saat ganti HP.</span>
       <button class="abtn" id="acctBtn" type="button">Masuk</button>
     </div>
+    <div class="arow" id="acctDelRow" hidden style="margin-top:8px">
+      <span class="ahint" id="acctDelHint">Hapus akun = semua partitur di cloud ikut terhapus; partitur di HP ini tetap ada. Akun ini sama dengan akun Gitar Sakti: bila belum pernah membeli kelas, akun dan progres belajar ikut terhapus; bila sudah pernah, akun tetap ada (riwayat pembelian) dan hanya data FerTune di cloud yang dihapus.</span>
+      <button class="abtn" id="acctDel" type="button" style="background:#FFD6DC">Hapus akun</button>
+    </div>
     <form id="acctForm" hidden autocomplete="on">
       <input class="txt" id="acctName" type="text" placeholder="Nama (khusus daftar baru)" autocomplete="name" maxlength="60">
       <input class="txt" id="acctEmail" type="email" placeholder="Email" autocomplete="email" required>
@@ -2400,10 +2404,10 @@ function renderAcct(){
     m.innerHTML='☁ Masuk sebagai <b></b> · <span></span>';
     m.querySelector('b').textContent=sbUser.email||'akun Gitar Sakti';
     m.querySelector('span').textContent=syncMsg||'Tersinkron ✓';
-    b.textContent='Keluar'; $('#acctForm').hidden=true;
+    b.textContent='Keluar'; $('#acctForm').hidden=true; $('#acctDelRow').hidden=false;
   } else {
     m.textContent='Partitur tersimpan di HP ini saja. Masuk dengan akun Gitar Sakti supaya tidak hilang saat ganti HP.';
-    b.textContent=$('#acctForm').hidden?'Masuk':'Tutup';
+    b.textContent=$('#acctForm').hidden?'Masuk':'Tutup'; $('#acctDelRow').hidden=true;
   }
 }
 function authErr(e){
@@ -2415,6 +2419,25 @@ function authErr(e){
   return t;
 }
 function bindAcct(){
+  var delArm=0, delT=0;
+  $('#acctDel').addEventListener('click',function(){
+    var btn=$('#acctDel'), hint=$('#acctDelHint');
+    if(!delArm){
+      delArm=1; btn.textContent='Yakin hapus? Tidak bisa dibatalkan';
+      delT=setTimeout(function(){ delArm=0; btn.textContent='Hapus akun'; },5000); return;
+    }
+    clearTimeout(delT); delArm=0; btn.disabled=true; btn.textContent='Menghapus…';
+    watchAuth().then(function(c){ return c.functions.invoke('delete-account',{body:{confirm:true}}); }).then(function(r){
+      var d=r&&r.data;
+      if(r.error||!d||!d.ok){ hint.textContent=(d&&d.error)||'Gagal menghapus akun. Coba lagi atau hubungi leslesku@gmail.com.'; return; }
+      var msg=d.scope==='account' ? 'Akun dan semua data cloud sudah dihapus.' : 'Data FerTune di cloud sudah dihapus. Akun Gitar Sakti tetap ada karena punya riwayat pembelian.';
+      try{ localStorage.removeItem(CLOUD.storageKey); }catch(e){}
+      store.set('yg.tomb','{}');
+      sbUser=null; syncMsg='';
+      var after=function(){ renderAcct(); $('#acctMsg').textContent=msg+' Partitur di HP ini tetap ada.'; };
+      sb.auth.signOut({scope:'local'}).then(after,after);
+    },function(){ hint.textContent='Tidak bisa terhubung. Cek internet lalu coba lagi.'; }).then(function(){ btn.disabled=false; btn.textContent='Hapus akun'; });
+  });
   $('#acctBtn').addEventListener('click',function(){
     if(sbUser){ watchAuth().then(function(c){ return c.auth.signOut({scope:'local'}); }).then(function(){ syncMsg=''; },function(){}); return; }
     var f=$('#acctForm'); f.hidden=!f.hidden; renderAcct();
