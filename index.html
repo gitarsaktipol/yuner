@@ -455,6 +455,33 @@ body{
   *{transition:none !important;animation:none !important}
   .confetti{display:none}
 }
+/* Warna per kelompok tombol di Partitur: notasi = kuning, navigasi = biru, oktaf = ungu, hapus = oranye, berkas = hijau */
+#sview,#sdur .chip,#sdot,#sflat,#srest{background:var(--pLemon);box-shadow:0 3px 0 var(--dLemon)}
+#snav .chip,#sauto{background:var(--pSky);box-shadow:0 3px 0 var(--dSky)}
+#sview:active,#sdur .chip:active,#sdot:active,#sflat:active,#srest:active{box-shadow:0 1px 0 var(--dLemon)}
+#snav .chip:active,#sauto:active{box-shadow:0 1px 0 var(--dSky)}
+#sdur .chip[aria-pressed="true"],#sdot[aria-pressed="true"],#sflat[aria-pressed="true"],#sauto[aria-pressed="true"]{background:var(--brass);box-shadow:0 3px 0 var(--brassDeep)}
+#tab-score .stepper{background:var(--pLilac);border-color:var(--dLilac)}
+#tab-score .stepper .ctl{background:#fff;box-shadow:0 4px 0 var(--dLilac)}
+#sdelnote,#sdel{--c:var(--pPeach);--cd:var(--dPeach)}
+#tab-score label.sound,#snew{--c:var(--pMint);--cd:var(--dMint)}
+#sprac{--c:var(--pLilac);--cd:var(--dLilac)}
+/* Nilai besar di layar berlatih */
+.pgrade{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;overflow:hidden}
+.pgrade canvas{position:absolute;inset:0;width:100%;height:100%}
+.pgrade .gv{position:relative;font-weight:800;line-height:.9;font-size:min(62vh,46vw);letter-spacing:-.03em;font-variant-numeric:tabular-nums;
+  -webkit-text-stroke:.05em #fff;paint-order:stroke fill;text-shadow:0 .04em .08em rgba(0,0,0,.25);animation:gradeIn .6s var(--bounce) both}
+.pgrade .gm{position:relative;font-weight:800;font-size:min(10vh,7vw);margin-top:.2em;color:#C62828;-webkit-text-stroke:.12em #fff;paint-order:stroke fill;animation:gradeIn .6s .15s var(--bounce) both}
+.pgrade.out{animation:gradeOut .45s ease-in forwards}
+.pgrade.g100 .gv{background:linear-gradient(90deg,#FF6FA8,#FFB347,#FFE14D,#4ED8A0,#4AB3FF,#A78BFA,#FF6FA8);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;-webkit-text-stroke:0;filter:drop-shadow(0 .03em 0 #fff) drop-shadow(0 0 .02em #fff);
+  animation:gradeIn .6s var(--bounce) both,gradeWiggle 1s .6s ease-in-out infinite,gradeHue 2s linear infinite}
+.pgrade.g80 .gv{color:#F5B800}
+.pgrade.g50 .gv{color:#E53935}
+.pgrade.g0 .gv{color:#111}
+@keyframes gradeIn{0%{opacity:0;transform:scale(.2)}70%{opacity:1;transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
+@keyframes gradeOut{to{opacity:0;transform:scale(1.15)}}
+@keyframes gradeWiggle{0%,100%{transform:rotate(-5deg) scale(1)}25%{transform:rotate(4deg) scale(1.08) translateY(-2%)}50%{transform:rotate(-3deg) scale(1)}75%{transform:rotate(5deg) scale(1.07) translateY(2%)}}
+@keyframes gradeHue{to{background-position:300% 0}}
 /* Anti-zoom (ketuk dua kali / cubit) + animasi ketuk untuk semua tombol */
 html,body,*{touch-action:manipulation}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -623,6 +650,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <span class="plast" id="plast" hidden>Skor terakhir: <b id="plastV"></b></span>
   </div>
   <div class="pstage" id="pstage"></div>
+  <div class="pgrade" id="pgrade" hidden aria-hidden="true"><canvas id="pfw"></canvas><div class="gv" id="pgv"></div><div class="gm" id="pgm"></div></div>
   <div class="connSheet" id="pconnSheet" hidden>
     <button class="sound" id="pconnClose" type="button">✕ Tutup</button>
   <details class="card cfg conn" id="pconn" open>
@@ -1835,7 +1863,7 @@ function curScoreCopy(){
 }
 var autoT=0;
 function newRound(keep){
-  clearTimeout(autoT);
+  clearTimeout(autoT); hideGrade();
   if(!keep){
     if(pr.src==='score') pr.score=curScoreCopy();
     else if(pr.src==='arcade') pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genArcade(pr.arcLetter,pr.arcSub)};
@@ -1925,6 +1953,52 @@ function advanceArcadeLevel(){
   if(pr.arcSub>9){ pr.arcSub=1; pr.arcLetter=Math.min(pr.arcLetter+1,ARC_LETTERS.length-1); }
   store.set('yg.arcLetter',String(pr.arcLetter)); store.set('yg.arcSub',String(pr.arcSub));
 }
+
+/* Nilai besar + kembang api saat satu soal selesai (animasi di atas partitur) */
+var gradeT=null, fwRaf=0;
+function hideGrade(){
+  clearTimeout(gradeT); cancelAnimationFrame(fwRaf);
+  var g=$('#pgrade'); if(g){ g.hidden=true; g.classList.remove('out'); var c=$('#pfw'); c.width=c.width; }
+}
+function fireworks(cv,bursts,pal){
+  var W=cv.clientWidth, H=cv.clientHeight, d=window.devicePixelRatio||1;
+  cv.width=W*d; cv.height=H*d;
+  var x=cv.getContext('2d'); x.scale(d,d);
+  var ps=[], t0=performance.now(), spawned=0, last=t0;
+  function burst(){
+    var cx=W*(.15+Math.random()*.7), cy=H*(.12+Math.random()*.5), col=pal[Math.floor(Math.random()*pal.length)], n=46;
+    for(var i=0;i<n;i++){ var a=i/n*Math.PI*2+Math.random()*.2, v=2.2+Math.random()*3.6;
+      ps.push({x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:pal[Math.floor(Math.random()*pal.length)]||col}); }
+  }
+  (function frame(now){
+    var dt=Math.min(2,(now-last)/16.7); last=now;
+    if(spawned<bursts && now-t0>spawned*260){ burst(); spawned++; }
+    x.clearRect(0,0,W,H);
+    ps.forEach(function(p){
+      p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=.06*dt; p.vx*=.992; p.l-=.012*dt;
+      if(p.l>0){ x.globalAlpha=Math.max(0,p.l); x.fillStyle=p.c; x.beginPath(); x.arc(p.x,p.y,3.2*p.l+.6,0,6.3); x.fill(); }
+    });
+    ps=ps.filter(function(p){ return p.l>0; });
+    if(ps.length||spawned<bursts) fwRaf=requestAnimationFrame(frame);
+  })(last);
+}
+function showGrade(pct,ms){
+  var g=$('#pgrade'); if(!g) return;
+  hideGrade();
+  var cls=pct>=100?'g100':pct>=80?'g80':pct>=50?'g50':'g0';
+  g.className='pgrade '+cls; g.hidden=false;
+  var calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var gv=$('#pgv'), t0=performance.now(), dur=Math.min(900,ms*.4);
+  $('#pgm').textContent= pct>=100?'Sempurna! 🎉' : pct>=80?'Hebat!' : pct>=50?'Coba lagi' : '';
+  (function count(now){
+    var k=Math.min(1,(now-t0)/dur); gv.textContent=Math.round(pct*(1-Math.pow(1-k,3)));
+    if(k<1) requestAnimationFrame(count);
+  })(t0);
+  if(!calm && pct>=80){
+    fireworks($('#pfw'), pct>=100?9:5, pct>=100?['#FF6FA8','#FFD23F','#4ED8A0','#4AB3FF','#A78BFA','#FF9248']:['#F5B800','#FFD93D','#FFC107','#FFE680']);
+  }
+  gradeT=setTimeout(function(){ g.classList.add('out'); gradeT=setTimeout(hideGrade,460); },Math.max(800,ms-500));
+}
 function finishRound(){
   pr.done=true;
   var secs=Math.max(1,Math.round((performance.now()-pr.t0)/1000));
@@ -1934,6 +2008,7 @@ function finishRound(){
   $('#psum').hidden=false;
   $('#plastV').textContent=pct+'%'; $('#plast').hidden=false;
   var board=$('#pboard');
+  showGrade(pct, pct>=100?2200:1800);
   if(pct>=100){
     board.classList.add('glow'); practiceWin();
     setTimeout(function(){ board.classList.remove('glow'); },1400);
@@ -1990,6 +2065,7 @@ function startPractice(){
   newRound(true);
 }
 function closePractice(fromPop){
+  hideGrade();
   if(!pr.playing) return;
   clearTimeout(autoT);
   pr.playing=false; document.body.classList.remove('playing'); $('#pconnSheet').hidden=true; $('#pdock').hidden=(app.tab!=='latih');
