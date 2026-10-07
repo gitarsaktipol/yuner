@@ -51,6 +51,14 @@ a{color:var(--brass)}
 </div>
 <div class="card" id="delCard" hidden>
   <p>Masuk sebagai <b id="who"></b></p>
+  <p style="margin-top:14px"><b>Boleh tahu kenapa kamu menghapus akun?</b> <span class="muted">(opsional; jawabanmu disimpan tanpa nama dan email)</span></p>
+  <label style="display:block;margin:6px 0"><input type="radio" name="dr" value="Tidak lagi memakai FerTune"> Tidak lagi memakai FerTune</label>
+  <label style="display:block;margin:6px 0"><input type="radio" name="dr" value="Fiturnya kurang sesuai kebutuhan"> Fiturnya kurang sesuai kebutuhan</label>
+  <label style="display:block;margin:6px 0"><input type="radio" name="dr" value="Aplikasi sulit dipakai atau ada masalah"> Aplikasi sulit dipakai atau ada masalah</label>
+  <label style="display:block;margin:6px 0"><input type="radio" name="dr" value="Khawatir soal data atau privasi"> Khawatir soal data atau privasi</label>
+  <label style="display:block;margin:6px 0"><input type="radio" name="dr" value="Ingin membuat akun baru"> Ingin membuat akun baru</label>
+  <label style="display:block;margin:6px 0"><input type="radio" name="dr" value="Alasan lain"> Alasan lain</label>
+  <textarea id="dn" rows="3" maxlength="500" placeholder="Ceritakan lebih lanjut (boleh dikosongkan)" style="width:100%;padding:12px 14px;border:2px solid var(--line);border-radius:14px;font:inherit;margin-top:6px"></textarea>
   <button class="danger" id="del" type="button">Hapus akun saya</button>
 </div>
 <div class="msg" id="msg" role="status"></div>
@@ -76,7 +84,10 @@ a{color:var(--brass)}
     var b=$('#del');
     if(!armed){ armed=1; b.textContent='Yakin? Tekan sekali lagi'; t=setTimeout(function(){armed=0;b.textContent='Hapus akun saya';},5000); return; }
     clearTimeout(t); armed=0; b.disabled=true; b.textContent='Menghapus…';
-    sb.functions.invoke('delete-account',{body:{confirm:true}}).then(function(r){
+    var rs=document.querySelector('input[name="dr"]:checked'), reason=rs?rs.value:'', note=$('#dn').value.trim();
+    var src=(function(){ try{ if(/^android-app:\/\/com\.gitarsakti\.fertune/.test(document.referrer||'')){ localStorage.setItem('yg.src','playstore'); return 'playstore'; } return localStorage.getItem('yg.src')==='playstore'?'playstore':'web'; }catch(e){ return 'web'; } })();
+    var fb=(reason||note) ? Promise.resolve(sb.rpc('submit_fertune_feedback',{p_reason:reason,p_note:note,p_source:src})).then(function(){},function(){}) : Promise.resolve();
+    fb.then(function(){ return sb.functions.invoke('delete-account',{body:{confirm:true}}); }).then(function(r){
       var d=r.data;
       if(r.error||!d||!d.ok){ say((d&&d.error)||'Gagal menghapus akun. Coba lagi atau email leslesku@gmail.com.',true); b.disabled=false; b.textContent='Hapus akun saya'; return; }
       try{ localStorage.removeItem(K); }catch(e){}

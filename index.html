@@ -241,6 +241,11 @@ header .sel select{max-width:100%;min-width:0}
 .acct .aerr{color:#C0392B;font-size:12.5px;min-height:1em}
 .acct .ahint{color:var(--muted);font-size:12px}
 .gsback{display:inline-block;margin-right:8px}
+.delfb{margin:4px 0 12px}
+.delfb .q{font-weight:800;font-size:14px;color:var(--ink);margin:0 0 4px}
+.delfb .q small{font-weight:600;color:var(--muted)}
+.delfb label.chk{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:13.5px;color:var(--ink)}
+.delfb textarea.txt{width:100%;margin-top:6px;resize:vertical;min-height:64px;font:inherit}
 
 /* ---------- halaman Pengaturan ---------- */
 #tab-set h2.sh{margin:0 0 10px;font-size:16px;font-weight:800;color:var(--ink)}
@@ -1058,6 +1063,17 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
   <div class="card acct dangerCard" id="acctDelCard" hidden>
     <h2 class="sh">Hapus akun</h2>
+    <div class="delfb" id="delFb">
+      <p class="q">Boleh tahu kenapa kamu menghapus akun? <small>(opsional, membantu kami memperbaiki FerTune)</small></p>
+      <label class="chk"><input type="radio" name="delReason" value="Tidak lagi memakai FerTune"> Tidak lagi memakai FerTune</label>
+      <label class="chk"><input type="radio" name="delReason" value="Fiturnya kurang sesuai kebutuhan"> Fiturnya kurang sesuai kebutuhan</label>
+      <label class="chk"><input type="radio" name="delReason" value="Aplikasi sulit dipakai atau ada masalah"> Aplikasi sulit dipakai atau ada masalah</label>
+      <label class="chk"><input type="radio" name="delReason" value="Khawatir soal data atau privasi"> Khawatir soal data atau privasi</label>
+      <label class="chk"><input type="radio" name="delReason" value="Ingin membuat akun baru"> Ingin membuat akun baru</label>
+      <label class="chk"><input type="radio" name="delReason" value="Alasan lain"> Alasan lain</label>
+      <textarea class="txt" id="delNote" rows="3" maxlength="500" placeholder="Ceritakan lebih lanjut (boleh dikosongkan)"></textarea>
+      <p class="ahint">Jawabanmu disimpan tanpa nama dan tanpa email, tidak terhubung ke akunmu.</p>
+    </div>
     <div class="arow" id="acctDelRow">
       <span class="ahint" id="acctDelHint">Hapus akun = semua partitur di cloud ikut terhapus; partitur di HP ini tetap ada. Akun ini sama dengan akun Gitar Sakti: bila belum pernah membeli kelas, akun dan progres belajar ikut terhapus; bila sudah pernah, akun tetap ada (riwayat pembelian) dan hanya data FerTune di cloud yang dihapus.</span>
       <button class="abtn danger" id="acctDel" type="button" >Hapus akun</button>
@@ -3076,7 +3092,16 @@ function authErr(e){
   if(/offline|fetch|network/i.test(t)) return 'Tidak bisa terhubung. Cek internet.';
   return t;
 }
+/* Dari mana aplikasi dibuka: di aplikasi Play Store (TWA) halaman dibuka dengan referrer android-app://<package>. */
+function appSource(){
+  try{
+    if(/^android-app:\/\/com\.gitarsakti\.fertune/.test(document.referrer||'')){ localStorage.setItem('yg.src','playstore'); return 'playstore'; }
+    if(localStorage.getItem('yg.src')==='playstore') return 'playstore';
+  }catch(e){}
+  return 'web';
+}
 function bindAcct(){
+  appSource();
   var delArm=0, delT=0;
   $('#acctDel').addEventListener('click',function(){
     var btn=$('#acctDel'), hint=$('#acctDelHint');
@@ -3085,11 +3110,17 @@ function bindAcct(){
       delT=setTimeout(function(){ delArm=0; btn.textContent='Hapus akun'; },5000); return;
     }
     clearTimeout(delT); delArm=0; btn.disabled=true; btn.textContent='Menghapus…';
-    watchAuth().then(function(c){ return c.functions.invoke('delete-account',{body:{confirm:true}}); }).then(function(r){
+    var rsel=document.querySelector('input[name="delReason"]:checked'), reason=rsel?rsel.value:'', note=$('#delNote').value.trim();
+    watchAuth().then(function(c){
+      /* Umpan balik dikirim SEBELUM akun dihapus (butuh sesi login) dan tidak boleh menghalangi penghapusan. */
+      var fb=(reason||note) ? Promise.resolve(c.rpc('submit_fertune_feedback',{p_reason:reason,p_note:note,p_source:appSource()})).then(function(){},function(){}) : Promise.resolve();
+      return fb.then(function(){ return c.functions.invoke('delete-account',{body:{confirm:true}}); });
+    }).then(function(r){
       var d=r&&r.data;
       if(r.error||!d||!d.ok){ hint.textContent=(d&&d.error)||'Gagal menghapus akun. Coba lagi atau hubungi leslesku@gmail.com.'; return; }
       var msg=d.scope==='account' ? 'Akun dan semua data cloud sudah dihapus.' : 'Data FerTune di cloud sudah dihapus. Akun Gitar Sakti tetap ada karena punya riwayat pembelian.';
       try{ localStorage.removeItem(CLOUD.storageKey); }catch(e){}
+      $('#delNote').value=''; if(rsel) rsel.checked=false;
       store.set('yg.tomb','{}');
       sbUser=null; syncMsg='';
       var after=function(){ renderAcct(); $('#acctMsg').textContent=msg+' Partitur di HP ini tetap ada.'; };
