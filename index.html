@@ -247,6 +247,44 @@ header .sel select{max-width:100%;min-width:0}
 .delfb label.chk{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:13.5px;color:var(--ink)}
 .delfb textarea.txt{width:100%;margin-top:6px;resize:vertical;min-height:64px;font:inherit}
 
+/* ---------- metronome ---------- */
+#tab-tuner .tmseg{padding:3px;flex:none}
+#tab-tuner .tmseg button{flex:none;padding:5px 12px;font-size:14px}
+#tab-tuner #tuneSel{min-width:0;flex:1}
+#tab-tuner #tuneSel select{width:100%;text-overflow:ellipsis}
+.met{display:flex;flex-direction:column;gap:14px}
+.met .metCard{text-align:center;padding:16px 14px}
+.met .metBig{font-size:clamp(64px,15vh,104px);font-weight:800;line-height:1;letter-spacing:-.02em;color:var(--ink)}
+.met .metBig small{display:block;font-size:14px;font-weight:700;letter-spacing:0;color:var(--muted);margin-top:2px}
+.met .metName{font-weight:800;color:var(--brass);margin-top:6px;min-height:1.4em}
+.met .metDots{display:flex;gap:10px;justify-content:center;margin-top:12px;min-height:22px}
+.met .metDots i{width:20px;height:20px;border-radius:50%;background:var(--track);border:2px solid var(--line);transition:transform .08s ease,background-color .08s ease}
+.met .metDots i.acc{border-color:var(--brass)}
+.met .metDots i.on{background:var(--brass);transform:scale(1.3)}
+.met .metDots i.acc.on{background:var(--ok);border-color:var(--ok)}
+.met input[type=range]{width:100%;accent-color:var(--brass);height:34px}
+.met .row .sound{padding:10px 6px;font-size:15px}
+/* ---------- langganan, mode coba & kunci Premium ---------- */
+#planCard .planChip{display:inline-block;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--track);color:var(--muted);margin-left:6px;vertical-align:middle}
+#planCard .planChip.pro{background:var(--ok);color:var(--okText)}
+#planCard .plancols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 10px}
+#planCard .plancol{background:var(--track);border-radius:16px;padding:10px 12px;font-size:13px;line-height:1.5}
+#planCard .plancol b{display:block;margin-bottom:4px;font-size:14px}
+#planCard .plancol ul{margin:0;padding-left:16px}
+#planCard .price{font-size:13.5px;margin:6px 2px 10px;color:var(--ink)}
+#planCard .price small{color:var(--muted)}
+.sfree{font-size:13.5px;line-height:1.5}
+.sfree p{margin:0 0 8px}
+.sfree .row{gap:8px}
+.sfree .sound{padding:9px 8px;font-size:14px}
+.lockCard{text-align:center;padding:22px 16px}
+.lockCard h2{margin:6px 0 6px;font-size:20px}
+.lockCard p{margin:0 0 14px;color:var(--muted);font-size:14px;line-height:1.5}
+.pwOv{position:fixed;inset:0;z-index:100000;background:rgba(20,16,40,.55);display:flex;align-items:center;justify-content:center;padding:18px}
+.pwBox{background:var(--surf);color:var(--ink);border-radius:26px;padding:20px 20px 16px;max-width:360px;width:100%;text-align:center;box-shadow:0 14px 44px rgba(0,0,0,.35);animation:popIn .3s var(--bounce)}
+.pwBox h2{margin:2px 0 6px;font-size:20px}
+.pwBox p{margin:0 0 14px;font-size:14px;line-height:1.55;color:var(--muted)}
+.pwBox .row{gap:8px}
 /* ---------- halaman Pengaturan ---------- */
 #tab-set h2.sh{margin:0 0 10px;font-size:16px;font-weight:800;color:var(--ink)}
 #tab-set .themes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -642,10 +680,15 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <!-- ================= TUNER GITAR ================= -->
 <section class="tab" id="tab-tuner">
   <header>
-    <h1><svg class="mascot" viewBox="0 0 40 40" aria-hidden="true"><path class="mf" d="M25 29V6c4 1 8 4 9 9"/><ellipse class="mb" cx="17" cy="29" rx="10" ry="8"/><circle class="me" cx="13.5" cy="27.5" r="1.6"/><circle class="me" cx="20.5" cy="27.5" r="1.6"/><path d="M14 31.5q3 2.6 6 0" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/><circle class="mc" cx="10.5" cy="31" r="1.8"/><circle class="mc" cx="23.5" cy="31" r="1.8"/></svg>Tuner gitar</h1>
-    <label class="sel"><span class="sr">Pilih tuning</span><select id="tuning"></select></label>
+    <h1 class="sr" id="tTitle">Tuner gitar</h1>
+    <div class="seg tmseg" id="tmSeg" role="group" aria-label="Pilih alat">
+      <button type="button" data-tm="tuner" aria-pressed="true">Tuner</button>
+      <button type="button" data-tm="metro" aria-pressed="false">Metronome</button>
+    </div>
+    <label class="sel" id="tuneSel"><span class="sr">Pilih tuning</span><select id="tuning"></select></label>
   </header>
 
+  <div id="tunerPane" style="display:contents">
   <section class="reader" id="reader" data-state="idle" aria-live="polite">
     <div class="noteRow"><span id="noteName" class="idle">♪</span><span id="noteOct"></span></div>
     <div class="readout"><span id="hz"></span><span id="cents"></span></div>
@@ -685,6 +728,30 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     </div>
     <button class="sound" id="sound" type="button" disabled>Bunyikan nada</button>
   </div>
+  </div>
+
+  <section class="met" id="metPane" hidden aria-label="Metronome">
+    <div class="card metCard">
+      <div class="metBig"><output id="metBpm" aria-live="off">100</output><small>ketukan per menit</small></div>
+      <div class="metName" id="metName"></div>
+      <div class="metDots" id="metDots" aria-hidden="true"></div>
+    </div>
+    <input type="range" id="metRange" min="30" max="240" value="100" aria-label="Tempo (BPM)">
+    <div class="row">
+      <button class="sound" id="metM5" type="button" aria-label="Kurangi 5">−5</button>
+      <button class="sound" id="metM1" type="button" aria-label="Kurangi 1">−1</button>
+      <button class="sound" id="metP1" type="button" aria-label="Tambah 1">+1</button>
+      <button class="sound" id="metP5" type="button" aria-label="Tambah 5">+5</button>
+    </div>
+    <div class="seg" id="metSig" role="group" aria-label="Birama">
+      <button type="button" data-b="2" aria-pressed="false">2/4</button>
+      <button type="button" data-b="3" aria-pressed="false">3/4</button>
+      <button type="button" data-b="4" aria-pressed="true">4/4</button>
+      <button type="button" data-b="6" aria-pressed="false">6/8</button>
+    </div>
+    <button class="start" id="metGo" type="button">▶ Mulai</button>
+    <button class="sound" id="metTap" type="button">Ketuk tempo</button>
+  </section>
 </section>
 
 <!-- ================= LATIHAN BACA NOT ================= -->
@@ -807,6 +874,12 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <!-- ================= ARCADE ================= -->
 <section class="tab" id="tab-arcade" hidden>
   <header><h1><svg class="mascot" viewBox="0 0 40 40" aria-hidden="true"><path class="mf" d="M25 29V6c4 1 8 4 9 9"/><ellipse class="mb" cx="17" cy="29" rx="10" ry="8"/><circle class="me" cx="13.5" cy="27.5" r="1.6"/><circle class="me" cx="20.5" cy="27.5" r="1.6"/><path d="M14 31.5q3 2.6 6 0" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/><circle class="mc" cx="10.5" cy="31" r="1.8"/><circle class="mc" cx="23.5" cy="31" r="1.8"/></svg>Arcade</h1></header>
+  <div class="card lockCard" id="arcLock" hidden>
+    <div style="font-size:42px" aria-hidden="true">⭐</div>
+    <h2>Arcade khusus Premium</h2>
+    <p>Main game baca not dengan karakter, level A sampai Z, dan bukit petualangan. Berlangganan Premium untuk membukanya.</p>
+    <button class="start" id="arcLockGo" type="button">Lihat Premium</button>
+  </div>
   <div class="adots" id="arcDots" aria-hidden="true"></div>
 
   <div class="astep" id="arcS1">
@@ -866,6 +939,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <h1><svg class="mascot" viewBox="0 0 40 40" aria-hidden="true"><path class="mf" d="M25 29V6c4 1 8 4 9 9"/><ellipse class="mb" cx="17" cy="29" rx="10" ry="8"/><circle class="me" cx="13.5" cy="27.5" r="1.6"/><circle class="me" cx="20.5" cy="27.5" r="1.6"/><path d="M14 31.5q3 2.6 6 0" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/><circle class="mc" cx="10.5" cy="31" r="1.8"/><circle class="mc" cx="23.5" cy="31" r="1.8"/></svg>Partitur</h1>
     <label class="sel"><span class="sr">Pilih partitur</span><select id="slist"></select></label>
   </header>
+
+  <div class="card sfree" id="sfree" hidden></div>
 
   <div class="card">
     <label class="sr" for="stitle">Judul</label>
@@ -960,6 +1035,21 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <section class="tab" id="tab-set" hidden>
   <header><h1><svg class="mascot" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:var(--brass);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>Pengaturan</h1></header>
 
+  <div class="card" id="planCard">
+    <h2 class="sh" id="planTitle">Langganan <span class="planChip" id="planChip">Gratis</span></h2>
+    <div class="plancols">
+      <div class="plancol"><b>Gratis</b><ul><li>Tuner</li><li>Metronome</li><li>Latihan mode Acak</li><li>Lagu contoh di Partitur (lihat &amp; putar)</li><li>Coba menulis 4 birama</li></ul></div>
+      <div class="plancol"><b>Premium ⭐</b><ul><li>Semua fitur Gratis</li><li>Arcade, Custom &amp; Partitur saya</li><li>Tulis, edit &amp; simpan partitur</li><li>Impor/ekspor MIDI, akor, gambar</li><li>Simpan di cloud</li></ul></div>
+    </div>
+    <p class="price"><b>Rp45.000 / bulan</b> atau <b>Rp350.000 / tahun</b><br><small>Gratis 1 bulan pertama, bisa dibatalkan kapan saja. Harga final tampil di Google Play saat berlangganan.</small></p>
+    <button class="start" id="planBuy" type="button" disabled>Segera tersedia di Google Play</button>
+    <div id="premTestBox" hidden style="margin-top:12px;padding-top:10px;border-top:2px dashed var(--line)">
+      <p class="ahint" style="margin:0 0 6px"><b>Mode uji (sementara, untuk pengembang)</b></p>
+      <label class="chk"><input type="checkbox" id="gateTest"> Simulasikan pembatasan versi gratis</label>
+      <label class="chk"><input type="checkbox" id="premTest"> Anggap saya Premium (saat simulasi aktif)</label>
+    </div>
+  </div>
+
   <div class="card acct" id="acct">
     <h2 class="sh">Akun</h2>
     <div class="arow">
@@ -991,7 +1081,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
   <div class="card">
     <h2 class="sh">Bantuan</h2>
-    <details class="helpitem"><summary>Tuner gitar</summary><div class="hb">
+    <details class="helpitem"><summary>Tuner gitar dan Metronome</summary><div class="hb">
       <ol>
         <li>Buka menu <b>Tuner</b>, tekan <b>Aktifkan mikrofon</b>, lalu izinkan akses mikrofon.</li>
         <li>Petik satu senar. Aplikasi menebak senar mana yang kamu bunyikan (atau kunci ke satu senar lewat pasak senar).</li>
@@ -1000,6 +1090,12 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       </ol>
       <p>Pilih jenis <b>tuning</b> (Standar, Drop D, dan lainnya) dan <b>A4</b> acuan di bagian pengaturan tuner. Tombol nada acuan membunyikan nada senar sebagai pembanding.</p>
       <div class="tip">Tips: cari tempat yang tenang dan petik satu senar sekali, biarkan bunyi sampai habis.</div>
+      <p><b>Metronome:</b> tekan tombol <b>Metronome</b> di bagian atas menu Tuner. Atur tempo dengan geseran, tombol −/+, atau <b>Ketuk tempo</b> (ketuk beberapa kali mengikuti irama). Pilih birama (2/4, 3/4, 4/4, 6/8), lalu tekan <b>Mulai</b>. Ketukan pertama bunyinya lebih tinggi.</p>
+    </div></details>
+    <details class="helpitem"><summary>Gratis dan Premium</summary><div class="hb">
+      <p><b>Gratis:</b> Tuner, Metronome, Latihan mode Acak, lagu contoh di Partitur (bisa dilihat dan diputar), dan mode <b>Coba menulis</b> (maksimal 4 birama 4/4, tidak bisa disimpan).</p>
+      <p><b>Premium:</b> semua fitur lain, yaitu Arcade, Latihan Custom dan Partitur saya, menulis dan menyimpan partitur, impor/ekspor MIDI, akor, impor gambar, dan simpan di cloud.</p>
+      <p>Lihat harga dan cara berlangganan di bagian <b>Langganan</b> (paling atas halaman Pengaturan ini).</p>
     </div></details>
     <details class="helpitem"><summary>Latihan baca not</summary><div class="hb">
       <ol>
@@ -1083,6 +1179,18 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 <p class="foot"><a class="gsback" href="/" hidden>← Gitar Sakti</a>FerTune • <a href="privacy.html">Kebijakan Privasi</a></p>
 </main>
+
+<div class="pwOv" id="paywall" hidden role="dialog" aria-modal="true" aria-labelledby="pwTitle">
+  <div class="pwBox">
+    <div style="font-size:38px" aria-hidden="true">⭐</div>
+    <h2 id="pwTitle">Fitur Premium</h2>
+    <p id="pwText"></p>
+    <div class="row">
+      <button class="sound" id="pwClose" type="button">Nanti saja</button>
+      <button class="start" id="pwGo" type="button" style="flex:1.3;padding:11px 8px;font-size:15px">Lihat Premium</button>
+    </div>
+  </div>
+</div>
 
 <nav class="tabs" aria-label="Menu utama"><div class="in">
   <button type="button" data-tab="tuner" aria-current="page">
@@ -2865,7 +2973,11 @@ function buildCustGrid(){
 function bindPracticeOpts(){
   buildArcadeSelects(); buildCustGrid(); bindPlayers(); bindArcade(); bindTempoUI();
   $$('#pinst button').forEach(function(b){ b.addEventListener('click',function(){ setInst(b.getAttribute('data-inst')); }); });
-  $('#psrc').addEventListener('change',function(e){ pr.src=e.target.value; syncPracticeOpts(); newRound(); });
+  $('#psrc').addEventListener('change',function(e){
+    var v=e.target.value;
+    if(!isPremium() && (v==='custom'||v==='score')){ e.target.value=(pr.src==='custom'||pr.src==='score')?pr.src:'random'; showPaywall(v); return; }
+    pr.src=v; syncPracticeOpts(); newRound();
+  });
   $('#pkey').addEventListener('change',function(e){
     pr.key=clamp(parseInt(e.target.value,10)||0,-7,7); store.set('yg.key',String(pr.key));
     if(pr.src==='score') return;
@@ -2928,19 +3040,28 @@ function twinkle(){
   return {id:'s0',title:'Contoh: Twinkle Twinkle',ts:[4,4],bpm:100,clef:'treble',
     notes:P.map(function(m,i){ return {m:m,d:D[i],a:''}; })};
 }
+function maryLamb(){
+  var P=[64,62,60,62, 64,64,64, 62,62,62, 64,67,67, 64,62,60,62, 64,64,64,64, 62,62,64,62, 60];
+  var D=[1,1,1,1, 1,1,2, 1,1,2, 1,1,2, 1,1,1,1, 1,1,1,1, 1,1,1,1, 4];
+  return {id:'b-mary',title:'Contoh: Mary Had a Little Lamb',ts:[4,4],bpm:100,clef:'treble',
+    notes:P.map(function(m,i){ return {m:m,d:D[i],a:''}; })};
+}
 var flashIdx={}, flashT=0, alertT=0, editing=false, pitchSel=0, autoAdv=(store.get('yg.autoAdv','0')==='1'), midiChordT=0;
 var scores=[], curId=null, sel=-1, playing=false, playIdx=-1, playTimers=[], playGain=null;
 function loadScores(){
   try{ scores=JSON.parse(store.get('yg.scores','[]')); }catch(e){ scores=[]; }
   if(!Array.isArray(scores)||!scores.length) scores=[twinkle()];
+  /* Lagu contoh kedua: ditambahkan sekali ke daftar (di paling atas). */
+  if(!scores.some(function(x){return x.id==='b-mary';}) && store.get('yg.seedMary','')!=='1'){ scores.unshift(maryLamb()); store.set('yg.seedMary','1'); store.set('yg.scores',JSON.stringify(scores)); }
   curId=store.get('yg.curScore',scores[0].id);
   if(!scores.some(function(s){return s.id===curId;})) curId=scores[0].id;
   var t=Date.now(), mig=false;
   scores.forEach(function(s){ if(!s.updatedAt){ s.updatedAt=t; mig=true; } });
   if(mig) store.set('yg.scores',JSON.stringify(scores));
+  lastRealId=curId;
   initSnap();
 }
-function saveScores(){ trackChanges(); store.set('yg.scores',JSON.stringify(scores)); store.set('yg.curScore',curId); schedulePush(); }
+function saveScores(){ trackChanges(); store.set('yg.scores',JSON.stringify(scores)); store.set('yg.curScore',curIsTrial()?lastRealId:curId); schedulePush(); }
 
 /* =====================================================================
    Akun & cloud (opsional). Akun = akun Gitar Sakti (Supabase). Tanpa login, semuanya
@@ -2951,7 +3072,7 @@ var CLOUD={url:'https://addtajuxfoxcaezmkice.supabase.co',key:'sb_publishable_zc
 var snap={}, tomb={}, sb=null, sbUser=null, pushT=0, syncing=false, syncAgain=false, syncMsg='', authWatched=false, lastSyncAt=0;
 try{ tomb=JSON.parse(store.get('yg.tomb','{}'))||{}; }catch(e){ tomb={}; }
 function scoreJson(s){ var c={}; for(var k in s){ if(k!=='updatedAt') c[k]=s[k]; } return JSON.stringify(c); }
-function isSample(s){ return s.id==='s0' && scoreJson(s)===scoreJson(twinkle()); }
+function isSample(s){ return (s.id==='s0' && scoreJson(s)===scoreJson(twinkle())) || (s.id==='b-mary' && scoreJson(s)===scoreJson(maryLamb())); }
 function initSnap(){ snap={}; scores.forEach(function(s){ snap[s.id]=scoreJson(s); }); }
 function trackChanges(){
   var now=Date.now(), seen={};
@@ -3043,7 +3164,7 @@ function mergeCloud(rows,synced){
   }
 }
 function syncNow(){
-  if(!sb||!sbUser) return;
+  if(!sb||!sbUser||!isPremium()) return;
   if(syncing){ syncAgain=true; return; }
   syncing=true; syncMsg='Menyinkronkan…'; renderAcct();
   var uid=sbUser.id, synced=getSynced(uid);
@@ -3060,7 +3181,7 @@ function syncNow(){
   });
 }
 function schedulePush(){
-  if(!sbUser) return;
+  if(!sbUser||!isPremium()) return;
   clearTimeout(pushT);
   pushT=setTimeout(function(){
     if(!sbUser||syncing){ syncAgain=syncAgain||syncing; return; }
@@ -3077,7 +3198,7 @@ function renderAcct(){
   if(sbUser){
     m.innerHTML='☁ Masuk sebagai <b></b> · <span></span>';
     m.querySelector('b').textContent=sbUser.email||'akun Gitar Sakti';
-    m.querySelector('span').textContent=syncMsg||'Tersinkron ✓';
+    m.querySelector('span').textContent=!isPremium()?'Simpan di cloud khusus Premium':(syncMsg||'Tersinkron ✓');
     b.textContent='Keluar'; $('#acctForm').hidden=true; $('#acctDelCard').hidden=false;
   } else {
     m.textContent='Partitur tersimpan di HP ini saja. Masuk dengan akun Gitar Sakti supaya tidak hilang saat ganti HP.';
@@ -3148,7 +3269,65 @@ function bindAcct(){
   $('#acctForm').addEventListener('submit',function(e){ e.preventDefault(); go(false); });
   $('#acctUp').addEventListener('click',function(){ go(true); });
 }
-function curScore(){ return scores.filter(function(s){return s.id===curId;})[0]||scores[0]; }
+/* =====================================================================
+   Hak akses: Gratis vs Premium.
+   - GATING_ON=false: semua fitur terbuka (sebelum Play Billing siap). Ubah ke true saat rilis berbayar.
+   - Untuk menguji di HP: buka ?gating=1 (simulasi versi gratis) lalu pakai "Mode uji" di Pengaturan > Langganan
+     (ketuk judul "Langganan" 7x). ?gating=0 mematikan simulasi.
+   - isPremium() nanti diganti pemeriksaan langganan Google Play (Digital Goods API + verifikasi server).
+   ===================================================================== */
+var GATING_ON=false;
+function gatingOn(){ return GATING_ON || store.get('yg.gating','0')==='1'; }
+function isPremium(){ return !gatingOn() || store.get('yg.premTest','0')==='1'; }
+var trialScore=null, lastRealId=null;
+function curIsTrial(){ return curId==='trial' && !!trialScore; }
+function canEditNow(){ return isPremium() || curIsTrial(); }
+function advOn(){ return autoAdv || curIsTrial(); }   /* mode coba selalu maju otomatis (satu not per ketukan, bukan akor) */
+function guardEdit(){
+  if(canEditNow()) return true;
+  showScoreAlert('Versi gratis: lagu contoh hanya bisa dilihat dan diputar. Tekan "Coba menulis" untuk mencoba (maks 4 birama), atau berlangganan Premium untuk mengedit.');
+  return false;
+}
+var PW={
+  arcade:['Arcade khusus Premium','Main game baca not dengan karakter dan level A sampai Z. Berlangganan Premium untuk membukanya.'],
+  custom:['Latihan Custom khusus Premium','Pilih sendiri nada yang keluar di latihan. Berlangganan Premium untuk membukanya.'],
+  score:['Partitur saya khusus Premium','Berlatih dari lagu yang kamu tulis sendiri. Berlangganan Premium untuk membukanya.'],
+  simpan:['Menyimpan khusus Premium','Di mode coba, tulisanmu tidak disimpan. Berlangganan Premium untuk menyimpan dan menulis tanpa batas.'],
+  trial4:['Batas mode coba: 4 birama','Berlangganan Premium untuk menulis tanpa batas, menyimpan, dan mengekspor.'],
+  impor:['Impor MIDI khusus Premium','Ubah file MIDI jadi partitur. Berlangganan Premium untuk membukanya.'],
+  ekspor:['Ekspor MIDI khusus Premium','Simpan partiturmu sebagai file MIDI. Berlangganan Premium untuk membukanya.'],
+  gambar:['Impor gambar khusus Premium','Unggah gambar partitur sebagai acuan. Berlangganan Premium untuk membukanya.'],
+  akor:['Akor khusus Premium','Akor (beberapa nada sekaligus) dan mengubah not yang sudah ada khusus Premium. Di mode coba, tulis not satu per satu.']
+};
+function showPaywall(key){
+  var d=PW[key]||['Fitur Premium','Berlangganan Premium untuk membuka fitur ini.'];
+  $('#pwTitle').textContent=d[0]; $('#pwText').textContent=d[1]; $('#paywall').hidden=false;
+}
+function curScore(){
+  if(curIsTrial()) return trialScore;
+  return scores.filter(function(s){return s.id===curId;})[0]||scores[0];
+}
+function startTrial(){
+  stopPlay();
+  if(!trialScore) trialScore={id:'trial',title:'Coba menulis',ts:[4,4],bpm:90,clef:'treble',notes:[],trial:true};
+  if(!curIsTrial()) lastRealId=curId;
+  curId='trial'; sel=-1; editing=false;
+  buildScoreList(); syncScoreFields(); renderScoreView(); applyEntitlements();
+}
+function leaveTrial(discard){
+  stopPlay();
+  if(discard) trialScore=null;
+  curId=lastRealId&&scores.some(function(x){return x.id===lastRealId;})?lastRealId:scores[0].id; sel=-1; editing=false;
+  buildScoreList(); syncScoreFields(); renderScoreView(); applyEntitlements();
+}
+function promoteTrial(){
+  /* Berlangganan saat sedang mode coba: tulisannya ikut disimpan sebagai partitur biasa. */
+  if(!trialScore || !isPremium()) return;
+  var t=trialScore; trialScore=null; delete t.trial; t.id='s'+Date.now(); t.title=(t.title&&t.title!=='Coba menulis')?t.title:'Partitur baru';
+  if(t.notes.length) scores.push(t);
+  curId=t.notes.length?t.id:(lastRealId||scores[0].id); sel=-1; editing=false;
+  saveScores(); buildScoreList(); syncScoreFields(); renderScoreView();
+}
 
 function buildScoreList(){
   var sl=$('#slist'); sl.innerHTML='';
@@ -3156,10 +3335,13 @@ function buildScoreList(){
     var o=document.createElement('option'); o.value=s.id; o.textContent=s.title||'Tanpa judul';
     if(s.id===curId) o.selected=true; sl.appendChild(o);
   });
+  if(trialScore){ var t=document.createElement('option'); t.value='trial'; t.textContent='✏️ Coba menulis (tidak disimpan)'; if(curIsTrial()) t.selected=true; sl.appendChild(t); }
 }
 function syncScoreFields(){
   var s=curScore();
   $('#stitle').value=s.title||''; $('#sbpm').value=s.bpm; $('#sts').value=s.ts[0]+'/'+s.ts[1]; $('#sclef').value=s.clef;
+  var ok=canEditNow();
+  $('#stitle').disabled=!ok; $('#sbpm').disabled=!ok; $('#sclef').disabled=!ok; $('#sts').disabled=!ok || curIsTrial();
 }
 function renderScoreView(){
   var s=curScore();
@@ -3211,7 +3393,7 @@ function showScoreAlert(msg){
   clearTimeout(alertT); alertT=setTimeout(function(){ el.hidden=true; },6000);
 }
 function fillOrInsert(item){
-  editing=!autoAdv;   /* bawaan: sorotan tetap di not yang baru ditulis (nada berikutnya menambah akor; ▶ untuk lanjut) */
+  editing=!advOn();   /* bawaan: sorotan tetap di not yang baru ditulis (nada berikutnya menambah akor; ▶ untuk lanjut) */
   pitchSel=0;
   var s=curScore(), bb=s.ts[0]*4/s.ts[1], N=s.notes;
   /* 1) kursor di rehat (slot kosong): not menggantikan rehat itu, sisa ketuknya tetap rehat */
@@ -3226,12 +3408,16 @@ function fillOrInsert(item){
     }
     if(repl){
       N.splice.apply(N,[sel,cnt].concat(repl));
-      if(autoAdv) sel = (sel+1<N.length) ? sel+1 : -1;
+      if(advOn()) sel = (sel+1<N.length) ? sel+1 : -1;
       saveScores(); renderScoreView(); return;
     }
   }
   /* 2) sisipkan setelah kursor / di akhir */
   var at = sel>=0 ? sel+1 : N.length, rem=barRemain(s,at);
+  if(s.trial){   /* mode coba: maksimal 4 birama */
+    var tot=0; N.forEach(function(n){ tot+=n.d; });
+    if(tot+item.d>4*bb+1e-6){ showPaywall('trial4'); return; }
+  }
   if(item.d<=rem+1e-6){
     N.splice(at,0,item); sel=at;
   } else {
@@ -3256,6 +3442,7 @@ function curDur(){ return inp.dur*(inp.dot&&inp.dur>0.25?1.5:1); }
 /* Ubah lama (ketukan) not/rehat/kosong terpilih tanpa menggeser birama lain:
    lebih pendek -> sisanya jadi rehat (atau kosong), lebih panjang -> memakai rehat/kosong sesudahnya. */
 function changeDur(at,newD){
+  if(!guardEdit()) return;
   var s=curScore(), N=s.notes, it=N[at];
   if(!it || Math.abs(newD-it.d)<1e-6) return;
   var delta=newD-it.d, left=[];
@@ -3344,6 +3531,7 @@ function navMove(dir){
 }
 /* Menambah / membuang satu nada pada not (akor) terpilih; berlaku juga untuk not-not yang tersambung tie */
 function toggleChordPitch(i,m,a){
+  if(!isPremium()){ showPaywall('akor'); return; }
   var N=curScore().notes, it=N[i], oldm=it.m, chain=[i], k, j;
   for(k=i; k>0 && N[k-1].tie && N[k-1].m===oldm; k--) chain.push(k-1);
   for(j=i; N[j] && N[j].tie && N[j+1] && N[j+1].m===oldm; j++) chain.push(j+1);
@@ -3375,6 +3563,7 @@ function pitchMove(dir){
   syncInputFromNote(n); renderScoreView();
 }
 function addNote(m,silent){
+  if(!guardEdit()) return;
   var s=curScore(), N=s.notes;
   var a = isBlack(m) ? (inp.flat?'b':'#') : '';
   if(editing && sel>=0 && N[sel] && N[sel].m!==null){
@@ -3393,6 +3582,7 @@ function midiScoreNote(m,silent){
   addNote(m,silent);
 }
 function addRest(){
+  if(!guardEdit()) return;
   var s=curScore(), N=s.notes;
   if(editing && sel>=0 && N[sel] && N[sel].m!==null){
     N[sel]={m:null,d:N[sel].d,a:''}; if(sel>0) N[sel-1].tie=false;
@@ -3402,6 +3592,7 @@ function addRest(){
 }
 /* Hapus bertahap: not -> rehat -> kosong (ruang tetap, tidak menggeser not di sampingnya) -> (kosong paling belakang) dibuang. */
 function delNote(){
+  if(!guardEdit()) return;
   var s=curScore(), N=s.notes; if(!N.length) return;
   var at;
   if(editing && sel>=0 && N[sel]) at=sel;
@@ -3475,7 +3666,7 @@ function delScore(){
   buildScoreList(); syncScoreFields(); renderScoreView();
 }
 function bindScore(){
-  $('#slist').addEventListener('change',function(e){ stopPlay(); curId=e.target.value; sel=-1; saveScores(); syncScoreFields(); renderScoreView(); });
+  $('#slist').addEventListener('change',function(e){ stopPlay(); curId=e.target.value; if(curId!=='trial') lastRealId=curId; sel=-1; editing=false; saveScores(); syncScoreFields(); renderScoreView(); applyEntitlements(); });
   $('#stitle').addEventListener('input',function(e){
     var s=curScore(); s.title=e.target.value; saveScores();
     var o=$('#slist').querySelector('option[value="'+s.id+'"]'); if(o) o.textContent=s.title||'Tanpa judul';
@@ -3541,7 +3732,7 @@ function bindScore(){
     var n=curScore().notes[sel];
     if(editing && n && n.m!==null){
       var pl=pitchList(n), pp=pl[Math.min(pitchSel,pl.length-1)];
-      if(isBlack(pp.m)){ pp.a=inp.flat?'b':'#'; setPitchList(n,pl); saveScores(); renderScoreView(); }
+      if(isBlack(pp.m) && canEditNow()){ pp.a=inp.flat?'b':'#'; setPitchList(n,pl); saveScores(); renderScoreView(); }
     }
   });
   $('#sleft').addEventListener('click',function(){ navMove(-1); });
@@ -3567,16 +3758,25 @@ function bindScore(){
     var b=e.target.closest('[data-m]'); if(!b) return; addNote(parseInt(b.getAttribute('data-m'),10));
   });
   $('#splay').addEventListener('click',playScore);
-  $('#snew').addEventListener('click',newScore);
-  $('#sdel').addEventListener('click',delScore);
+  $('#snew').addEventListener('click',function(){
+    if(isPremium()) return newScore();
+    if(!curIsTrial()) startTrial(); else showPaywall('simpan');
+  });
+  $('#sdel').addEventListener('click',function(){
+    if(isPremium()) return delScore();
+    if(curIsTrial()) leaveTrial(true); else guardEdit();
+  });
   $('#sprac').addEventListener('click',function(){
+    if(!isPremium()){ showPaywall('score'); return; }
     stopPlay(); pr.src='score'; syncPracticeOpts(); goTab('latih'); newRound();
   });
-  $('#simg').addEventListener('change',onImage);
+  $('#simg').addEventListener('click',function(e){ if(!isPremium()){ e.preventDefault(); showPaywall('gambar'); } });
+  $('#simg').addEventListener('change',function(e){ if(!isPremium()) return; onImage(e); });
   $('#sclose').addEventListener('click',function(){ $('#simgpanel').hidden=true; });
-  $('#sai').addEventListener('click',readWithAI);
-  $('#smidiOut').addEventListener('click',exportMidi);
-  $('#smidiIn').addEventListener('change',importMidi);
+  $('#sai').addEventListener('click',function(){ if(!isPremium()){ showPaywall('gambar'); return; } readWithAI(); });
+  $('#smidiOut').addEventListener('click',function(){ if(!isPremium()){ showPaywall('ekspor'); return; } exportMidi(); });
+  $('#smidiIn').addEventListener('click',function(e){ if(!isPremium()){ e.preventDefault(); showPaywall('impor'); } });
+  $('#smidiIn').addEventListener('change',function(e){ if(!isPremium()) return; importMidi(e); });
 }
 
 /* ---------- file MIDI (.mid): ekspor partitur & impor lagu untuk latihan ---------- */
@@ -3829,6 +4029,8 @@ window.addEventListener('popstate',function(e){
 /* ===== Menu Arcade: pilih karakter -> alat musik -> jenis not -> PLAY ===== */
 var arc={step:1};
 function renderArcade(){
+  var lock=!isPremium(); $('#arcLock').hidden=!lock; $('#arcDots').hidden=lock;
+  if(lock){ [1,2,3].forEach(function(n){ $('#arcS'+n).hidden=true; }); window.scrollTo(0,0); return; }
   [1,2,3].forEach(function(n){ $('#arcS'+n).hidden=(arc.step!==n); });
   $('#arcDots').innerHTML=[1,2,3].map(function(n){ return '<i class="'+(n<=arc.step?'on':'')+'"></i>'; }).join('');
   buildChars();
@@ -3841,6 +4043,7 @@ function renderArcade(){
 }
 function arcGo(n){ arc.step=n; renderArcade(); }
 function startArcade(){
+  if(!isPremium()){ showPaywall('arcade'); return; }
   var a=activePlayer(); pr.arcLetter=a.letter; pr.arcSub=a.sub; arcSave();
   pr.prevSrc = pr.src==='arcade' ? 'random' : pr.src; pr.src='arcade';
   syncPracticeOpts(); newRound(); startPractice(); refreshTop();
@@ -3855,6 +4058,131 @@ function bindArcade(){
   $$('[data-amode]').forEach(function(b){ b.addEventListener('click',function(){ setMode(b.getAttribute('data-amode')); renderArcade(); }); });
   $('#arcPlay').addEventListener('click',startArcade);
 }
+/* ===== Terapkan hak akses ke tampilan ===== */
+function applyEntitlements(){
+  var prem=isPremium(), trial=curIsTrial();
+  if(prem && trialScore) promoteTrial();
+  trial=curIsTrial();
+  /* Latihan */
+  $$('#psrc option').forEach(function(o){
+    if(o.value==='custom') o.textContent='Custom'+(prem?'':' ⭐');
+    if(o.value==='score') o.textContent='Partitur saya'+(prem?'':' ⭐');
+  });
+  if(!prem && (pr.src==='custom'||pr.src==='score')){ pr.src='random'; $('#psrc').value='random'; }
+  /* Partitur */
+  var fb=$('#sfree');
+  if(prem){ fb.hidden=true; }
+  else if(!trial){
+    fb.hidden=false;
+    fb.innerHTML='<p><b>Versi gratis:</b> lagu contoh bisa <b>dilihat dan diputar</b>. Menulis, menyimpan, impor/ekspor, dan akor khusus Premium.</p>'
+      +'<div class="row"><button class="sound" type="button" data-act="try">✏️ Coba menulis</button><button class="start" type="button" data-act="prem" style="flex:1.2;padding:9px 8px;font-size:14px">⭐ Lihat Premium</button></div>';
+  } else {
+    fb.hidden=false;
+    fb.innerHTML='<p><b>Mode coba:</b> maksimal <b>4 birama</b>, sukat 4/4, tidak bisa disimpan atau diekspor. Menutup aplikasi menghapusnya.</p>'
+      +'<div class="row"><button class="sound" type="button" data-act="reset">Kosongkan</button><button class="sound" type="button" data-act="back">Kembali ke lagu</button></div>'
+      +'<div class="row" style="margin-top:8px"><button class="start" type="button" data-act="prem" style="padding:9px 8px;font-size:14px">⭐ Lihat Premium untuk menyimpan</button></div>';
+  }
+  $('#snew').textContent = prem ? 'Save/Create' : (trial ? '⭐ Simpan (Premium)' : '✏️ Coba menulis');
+  $('#sdel').hidden = !prem && !trial;
+  $('#sdel').textContent = (!prem && trial) ? 'Buang coba menulis' : 'Hapus partitur';
+  ['#smidiOut','#sprac'].forEach(function(q){ var b=$(q); if(!b._t){ b._t=b.textContent; } b.textContent=b._t+(prem?'':' ⭐'); });
+  [['#smidiIn','Impor file MIDI'],['#simg','Unggah gambar partitur']].forEach(function(x){
+    var lab=$(x[0]).parentNode; lab.firstChild.nodeValue=x[1]+(prem?'':' ⭐')+' ';
+  });
+  syncScoreFields();
+  /* Langganan */
+  var chip=$('#planChip'); chip.textContent=prem?(gatingOn()?'Premium':'Terbuka (uji)'):'Gratis'; chip.classList.toggle('pro',prem);
+  $('#gateTest').checked=store.get('yg.gating','0')==='1'; $('#premTest').checked=store.get('yg.premTest','0')==='1';
+  renderAcct();
+}
+function bindPremium(){
+  var m=(location.search.match(/[?&]gating=(0|1)/)||[])[1]; if(m!==undefined) store.set('yg.gating',m);
+  $('#sfree').addEventListener('click',function(e){
+    var b=e.target.closest('[data-act]'); if(!b) return; var a=b.getAttribute('data-act');
+    if(a==='try') startTrial();
+    else if(a==='back') leaveTrial(false);
+    else if(a==='reset'){ trialScore=null; startTrial(); }
+    else if(a==='prem') openPlan();
+  });
+  function openPlan(){ $('#paywall').hidden=true; goTab('set'); setTimeout(function(){ var c=$('#planCard'); if(c&&c.scrollIntoView) c.scrollIntoView({behavior:'smooth',block:'start'}); },80); }
+  $('#pwClose').addEventListener('click',function(){ $('#paywall').hidden=true; });
+  $('#pwGo').addEventListener('click',openPlan);
+  $('#paywall').addEventListener('click',function(e){ if(e.target===this) this.hidden=true; });
+  $('#arcLockGo').addEventListener('click',openPlan);
+  var taps=0, tapT=0;
+  $('#planTitle').addEventListener('click',function(){
+    taps++; clearTimeout(tapT); tapT=setTimeout(function(){ taps=0; },4000);
+    if(taps>=7){ $('#premTestBox').hidden=false; }
+  });
+  $('#gateTest').addEventListener('change',function(e){ store.set('yg.gating',e.target.checked?'1':'0'); stopPlay(); if(!isPremium()&&curIsTrial()===false){} buildScoreList(); applyEntitlements(); renderScoreView(); if(app.tab==='arcade') renderArcade(); if(isPremium()&&sbUser) syncNow(); });
+  $('#premTest').addEventListener('change',function(e){ store.set('yg.premTest',e.target.checked?'1':'0'); buildScoreList(); applyEntitlements(); renderScoreView(); if(app.tab==='arcade') renderArcade(); if(isPremium()&&sbUser) syncNow(); });
+  applyEntitlements();
+}
+
+/* ===== Metronome (di menu Tuner): jadwal bunyi presisi lewat jam AudioContext ===== */
+var met={on:false,bpm:clamp(parseInt(store.get('yg.metBpm','100'),10)||100,30,240),beats:[2,3,4,6].indexOf(parseInt(store.get('yg.metBeats','4'),10))>=0?parseInt(store.get('yg.metBeats','4'),10):4,next:0,beat:0,timer:0,vis:[],taps:[]};
+function metTempoName(b){ return b<60?'Largo':b<66?'Larghetto':b<76?'Adagio':b<108?'Andante':b<120?'Moderato':b<156?'Allegro':b<176?'Vivace':'Presto'; }
+function metAccent(b){ return b===0 || (met.beats===6 && b===3); }
+function metClick(t,acc){
+  var c=ac(), o=c.createOscillator(), g=c.createGain();
+  o.type='square'; o.frequency.value=acc?1500:1000;
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(acc?0.5:0.32,t+0.002); g.gain.exponentialRampToValueAtTime(0.0001,t+0.055);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.07);
+}
+function metDot(b){ $$('#metDots i').forEach(function(d,i){ d.classList.toggle('on',i===b); }); }
+function metSched(){
+  var c=ac();
+  while(met.next<c.currentTime+0.12){
+    var b=met.beat; metClick(met.next,metAccent(b));
+    met.vis.push(setTimeout((function(bb){ return function(){ if(met.on) metDot(bb); }; })(b),Math.max(0,(met.next-c.currentTime)*1000)));
+    if(met.vis.length>24) met.vis.shift();
+    met.next+=60/met.bpm; met.beat=(b+1)%met.beats;
+  }
+}
+function metRender(){
+  $('#metBpm').textContent=String(met.bpm); $('#metRange').value=met.bpm; $('#metName').textContent=metTempoName(met.bpm);
+  $('#metGo').textContent=met.on?'■ Berhenti':'▶ Mulai';
+  var d=''; for(var i=0;i<met.beats;i++) d+='<i class="'+(metAccent(i)?'acc':'')+'"></i>';
+  if($('#metDots').getAttribute('data-n')!==String(met.beats)){ $('#metDots').innerHTML=d; $('#metDots').setAttribute('data-n',String(met.beats)); }
+  $$('#metSig button').forEach(function(b){ b.setAttribute('aria-pressed',parseInt(b.getAttribute('data-b'),10)===met.beats?'true':'false'); });
+}
+function metStart(){
+  if(mic.active) micStop();
+  var c=ac(); met.on=true; met.beat=0; met.next=c.currentTime+0.08;
+  metSched(); met.timer=setInterval(metSched,25); metRender();
+}
+function metStop(){
+  if(!met.on && !met.timer) return;
+  met.on=false; clearInterval(met.timer); met.timer=0; met.vis.forEach(clearTimeout); met.vis=[]; metDot(-1);
+  if($('#metGo')) metRender();
+}
+function metSetBpm(v){ met.bpm=clamp(Math.round(v),30,240); store.set('yg.metBpm',String(met.bpm)); metRender(); }
+function setTunerMode(mode){
+  var metro=(mode==='metro');
+  if(metro){ if(mic.active) micStop(); } else metStop();
+  $('#tunerPane').hidden=metro; $('#metPane').hidden=!metro; $('#tuneSel').hidden=metro;
+  $('#tTitle').textContent=metro?'Metronome':'Tuner gitar';
+  $$('#tmSeg button').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-tm')===mode?'true':'false'); });
+  if(metro) metRender();
+  window.scrollTo(0,0);
+}
+function bindMetro(){
+  $$('#tmSeg button').forEach(function(b){ b.addEventListener('click',function(){ setTunerMode(b.getAttribute('data-tm')); }); });
+  $('#metRange').addEventListener('input',function(e){ metSetBpm(parseInt(e.target.value,10)||100); });
+  [['#metM5',-5],['#metM1',-1],['#metP1',1],['#metP5',5]].forEach(function(x){ $(x[0]).addEventListener('click',function(){ metSetBpm(met.bpm+x[1]); }); });
+  $$('#metSig button').forEach(function(b){ b.addEventListener('click',function(){
+    met.beats=parseInt(b.getAttribute('data-b'),10); store.set('yg.metBeats',String(met.beats)); met.beat=0; $('#metDots').setAttribute('data-n',''); metRender();
+  }); });
+  $('#metGo').addEventListener('click',function(){ if(met.on) metStop(); else metStart(); });
+  $('#metTap').addEventListener('click',function(){
+    var t=performance.now(); if(met.taps.length && t-met.taps[met.taps.length-1]>2000) met.taps=[];
+    met.taps.push(t); if(met.taps.length>6) met.taps.shift();
+    if(met.taps.length>=2){ var sum=0; for(var i=1;i<met.taps.length;i++) sum+=met.taps[i]-met.taps[i-1]; metSetBpm(60000/(sum/(met.taps.length-1))); }
+  });
+  document.addEventListener('visibilitychange',function(){ if(document.hidden) metStop(); });
+  metRender();
+}
+
 /* ===== Pengaturan: tema tampilan ===== */
 function applyTheme(t){
   if(t!=='dark' && t!=='laut') t='warna';
@@ -3875,6 +4203,7 @@ function showTab(name){
   if(pr.playing && name!==(pr.src==='arcade'?'arcade':'latih')) closePractice(true);
   if(name==='score' && mic.active) micStop();
   if(name!=='score') stopPlay();
+  if(name!=='tuner') metStop();
   app.tab=name; document.body.classList.toggle('on-latih',name==='latih');
   var dk=$('#pdock'); if(dk) dk.hidden = !(name==='latih' && !pr.playing);
   $$('.tab').forEach(function(t){ t.hidden = (t.id!=='tab-'+name); });
@@ -3886,7 +4215,7 @@ function showTab(name){
   window.scrollTo(0,0);
   if(name==='tuner'){ reading=null; hist.length=0; renderTuner(); }
   if(name==='latih'){ if(!pr.score) newRound(); else renderPractice(); }
-  if(name==='score'){ renderScoreView(); }
+  if(name==='score'){ applyEntitlements(); syncScoreFields(); renderScoreView(); }
   if(name==='arcade'){ if(prevTab!=='arcade') arc.step=1; renderArcade(); }
 }
 function setMode(m){
@@ -3936,6 +4265,8 @@ bindPracticeOpts(); syncPracticeOpts();
 loadScores(); buildScoreList(); syncScoreFields(); buildKeyboard(); bindScore(); bindAcct(); initCloud();
 bindMidi();
 bindSettings();
+bindMetro();
+bindPremium();
 setMode(app.mode);
 try{
   /* Pintasan dari ikon (tekan lama ikon FerTune): ?tab=latih / ?tab=score */
