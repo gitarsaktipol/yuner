@@ -513,7 +513,10 @@ body{
 .phill .hnode{fill:#fff;stroke:#8CC6F2;stroke-width:4}
 .phill .hnode.done{fill:#FFE14D;stroke:#F2A900}
 .phill .hnode.next{fill:#fff;stroke:#FF6FA8;stroke-dasharray:6 5}
-.phill .hlab{font-size:17px;font-weight:800;fill:#3B3355;text-anchor:middle}
+.phill .hlab{font-size:16px;font-weight:800;fill:#fff;stroke:rgba(40,30,70,.6);stroke-width:4px;paint-order:stroke;text-anchor:middle}
+.phill .hlab.sm{font-size:13px;stroke-width:3.5px}
+.phill .hstar{animation:hTw 2s ease-in-out infinite}
+@keyframes hTw{0%,100%{opacity:.35}50%{opacity:1}}
 .phill .hbub{transform-box:fill-box;transform-origin:50% 100%;animation:bubPop .5s var(--bounce) both}
 .phill .hbub text{font-size:26px;font-weight:800;text-anchor:middle}
 @keyframes bubPop{0%{opacity:0;transform:scale(.2) translateY(10px)}70%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
@@ -2218,23 +2221,45 @@ function showHill(played,pct,cb){
   hideGrade();
   var h=$('#phill'), svg=$('#phsvg'), cap=$('#hcap'), calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var res=arcRes(), from=played;
-  while(from>0 && played-from<6 && res[from-1]!==undefined) from--;
+  while(from>0 && played-from<8 && res[from-1]!==undefined) from--;
   var lv=[]; for(var k=from;k<=played;k++) lv.push({k:k,p:k===played?pct:res[k],next:false});
   if(pct>=100 && played<ARC_LETTERS.length*9-1) lv.push({k:played+1,p:null,next:true});
-  var pts=[{x:46,y:296,base:true}], n=lv.length;
-  for(var i=0;i<n;i++){ var t=(i+1)/n; pts.push({x:46+t*(700-46)+ (i===n-1?0:0), y:300-Math.pow(t,.95)*170, lv:lv[i]}); }
-  var d='M0,340 L0,318 ', top=pts[pts.length-1];
-  var surf=pts.map(function(q){ return q.x+','+(q.y+16); });
-  d+='L'+surf.join(' L')+' L'+(top.x+60)+','+(top.y+60)+' L'+(top.x+160)+',340 Z';
-  var h1='<defs><linearGradient id="hrb" x1="0" x2="1"><stop offset="0" stop-color="#FF6FA8"/><stop offset=".33" stop-color="#FFB300"/><stop offset=".66" stop-color="#2FC58A"/><stop offset="1" stop-color="#4AB3FF"/></linearGradient>'+
-         '<linearGradient id="hhill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9BE7B8"/><stop offset="1" stop-color="#59C98C"/></linearGradient></defs>'+
-         '<circle cx="70" cy="60" r="30" fill="#FFE680"/><g fill="#fff" opacity=".9"><ellipse cx="300" cy="55" rx="46" ry="16"/><ellipse cx="330" cy="46" rx="30" ry="14"/><ellipse cx="560" cy="40" rx="40" ry="14"/></g>'+
-         '<path d="'+d+'" fill="url(#hhill)" stroke="#3FAE74" stroke-width="3" stroke-linejoin="round"/>'+
-         '<polyline points="'+pts.map(function(q){ return q.x+','+q.y; }).join(' ')+'" fill="none" stroke="#fff" stroke-width="6" stroke-dasharray="2 12" stroke-linecap="round"/>';
+  var pts=[{x:46,y:300,base:true}], n=lv.length, sm=n>6;
+  for(var i=0;i<n;i++){ var t=(i+1)/n; pts.push({x:46+t*(700-46), y:300-Math.pow(t,.95)*170, lv:lv[i]}); }
+  var top=pts[pts.length-1];
+  /* gunung selalu naik ke kanan; tiap potongan diwarnai menurut huruf levelnya, makin tinggi makin gelap */
+  var skyK=['pagi','sore','malam'][Math.floor(Math.random()*3)];
+  var SK={
+    pagi:{bg:'linear-gradient(#7FCBFF,#DDF1FF 55%,#FFF3D6)',cap:'#3B3355',cloud:'#fff',co:.92},
+    sore:{bg:'linear-gradient(#4E4590,#E0707F 50%,#FFC58A 85%,#FFE0AE)',cap:'#fff',cloud:'#FFD0C8',co:.7},
+    malam:{bg:'linear-gradient(#060A26,#1B2260 70%,#2E3A86)',cap:'#fff',cloud:'#4A558F',co:.5}
+  }[skyK];
+  h.style.background=SK.bg; cap.style.color=SK.cap; cap.style.textShadow= skyK==='pagi'?'0 0 6px #fff,0 0 6px #fff':'0 1px 6px rgba(0,0,0,.6)';
+  function hueOf(k){ return (Math.floor(k/9)*47+130)%360; }
+  function hillCol(y,k,bottom){ var ht=Math.max(0,Math.min(1,(300-y)/170)); return 'hsl('+hueOf(k)+','+(bottom?50:58)+'%,'+(bottom?80:Math.round(72-38*ht))+'%)'; }
+  var S=[{x:0,y:324,k:lv[0].k}].concat(pts.map(function(q){ return {x:q.x,y:q.y+16,k:q.lv?q.lv.k:lv[0].k}; })).concat([{x:800,y:top.y+4,k:lv[lv.length-1].k}]);
+  var defs='', strips='', surf=[];
+  for(var j=0;j<S.length-1;j++){
+    var A=S[j], B=S[j+1], k=B.k, yt=Math.min(A.y,B.y);
+    defs+='<linearGradient id="hg'+j+'" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="'+yt+'" y2="340"><stop offset="0" stop-color="'+hillCol(yt,k,false)+'"/><stop offset="1" stop-color="'+hillCol(yt,k,true)+'"/></linearGradient>';
+    strips+='<path d="M'+A.x+','+A.y+' L'+B.x+','+B.y+' L'+B.x+',340 L'+A.x+',340Z" fill="url(#hg'+j+')" stroke="url(#hg'+j+')" stroke-width="1"/>';
+  }
+  var h1='<defs><linearGradient id="hrb" x1="0" x2="1"><stop offset="0" stop-color="#FF6FA8"/><stop offset=".33" stop-color="#FFB300"/><stop offset=".66" stop-color="#2FC58A"/><stop offset="1" stop-color="#4AB3FF"/></linearGradient>'+defs+'</defs>';
+  /* langit: matahari/bulan, awan, bintang */
+  if(skyK==='pagi') h1+='<circle cx="70" cy="60" r="30" fill="#FFE680"/>';
+  else if(skyK==='sore') h1+='<circle cx="120" cy="215" r="44" fill="#FF9248" opacity=".95"/><circle cx="120" cy="215" r="60" fill="#FF9248" opacity=".25"/>';
+  else {
+    h1+='<circle cx="82" cy="62" r="26" fill="#FFF6C8"/><circle cx="94" cy="55" r="23" fill="#0B1240"/>';
+    for(var si=0;si<46;si++){ var sx=Math.round(Math.random()*790+5), sy=Math.round(Math.random()*190+6), sr=(Math.random()*1.6+.8).toFixed(1);
+      h1+='<circle class="hstar" cx="'+sx+'" cy="'+sy+'" r="'+sr+'" fill="#fff" style="animation-delay:'+(Math.random()*2).toFixed(2)+'s"/>'; }
+  }
+  h1+='<g fill="'+SK.cloud+'" opacity="'+SK.co+'"><ellipse cx="300" cy="55" rx="46" ry="16"/><ellipse cx="330" cy="46" rx="30" ry="14"/><ellipse cx="580" cy="38" rx="40" ry="14"/></g>';
+  h1+=strips+'<polyline points="'+S.map(function(q){ return q.x+','+q.y; }).join(' ')+'" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="3" stroke-linejoin="round"/>';
+  h1+='<polyline points="'+pts.map(function(q){ return q.x+','+q.y; }).join(' ')+'" fill="none" stroke="#fff" stroke-width="6" stroke-dasharray="2 12" stroke-linecap="round"/>';
   pts.forEach(function(q,i){
     if(q.base) return;
     var l=q.lv, cls='hnode'+(l.next?' next':(l.p!==undefined&&l.p!==null?' done':''));
-    h1+='<circle class="'+cls+'" cx="'+q.x+'" cy="'+q.y+'" r="15"/><text class="hlab" x="'+q.x+'" y="'+(q.y+38)+'">'+arcLabel(l.k)+'</text>';
+    h1+='<circle class="'+cls+'" cx="'+q.x+'" cy="'+q.y+'" r="'+(sm?12:15)+'"/><text class="hlab'+(sm?' sm':'')+'" x="'+q.x+'" y="'+(q.y+(sm?32:38))+'">'+arcLabel(l.k)+'</text>';
   });
   h1+='<g transform="translate('+top.x+','+(top.y-16)+')"><line x1="0" y1="0" x2="0" y2="-46" stroke="#6B5B8C" stroke-width="4" stroke-linecap="round"/><path d="M2,-46 L34,-37 L2,-26 Z" fill="#FF6FA8"/></g>';
   h1+='<g id="hbubs"></g>';
@@ -2244,14 +2269,15 @@ function showHill(played,pct,cb){
   var bubs=$('#hbubs'), ch=$('#hchar'), fin=false;
   function bubble(q){
     var l=q.lv; if(l.p===undefined||l.p===null) return;
-    var g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.setAttribute('transform','translate(0,-30)');
-    var w=l.p>=100?74:58, col=gradeFill(l.p);
-    g.innerHTML='<g class="hbub"><path d="M'+(q.x-w/2)+','+(q.y-70)+' h'+w+' a10,10 0 0 1 10,10 v22 a10,10 0 0 1 -10,10 h-'+(w/2-8)+' l-8,10 l-8,-10 h-'+(w/2-8)+' a10,10 0 0 1 -10,-10 v-22 a10,10 0 0 1 10,-10z" fill="#fff" stroke="'+(l.p>=100?'#FFB300':l.p>=80?'#F5B800':l.p>=50?'#E53935':'#111')+'" stroke-width="3"/>'+
-                '<text x="'+q.x+'" y="'+(q.y-40)+'" fill="'+col+'">'+l.p+(l.p>=100?'✨':'')+'</text></g>';
+    var g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.setAttribute('transform','translate(0,'+(sm?-34:-30)+')');
+    var w=sm?(l.p>=100?30:24):(l.p>=100?74:58), H=sm?30:42, tl=sm?8:10, top0=q.y-70, col=gradeFill(l.p);
+    var bc=l.p>=100?'#FFB300':l.p>=80?'#F5B800':l.p>=50?'#E53935':'#111';
+    g.innerHTML='<g class="hbub"><path d="M'+(q.x-w/2)+','+top0+' h'+w+' a10,10 0 0 1 10,10 v'+(H-20)+' a10,10 0 0 1 -10,10 h-'+(w/2-tl+2)+' l-'+tl+','+tl+' l-'+tl+',-'+tl+' h-'+(w/2-tl+2)+' a10,10 0 0 1 -10,-10 v-'+(H-20)+' a10,10 0 0 1 10,-10z" fill="#fff" stroke="'+bc+'" stroke-width="3"/>'+
+                '<text x="'+q.x+'" y="'+(top0+H/2+(sm?6:9))+'" fill="'+col+'" style="font-size:'+(sm?18:26)+'px">'+l.p+(l.p>=100&&!sm?'✨':'')+'</text></g>';
     bubs.appendChild(g);
   }
   function setCap(){
-    cap.textContent = pct>=100 ? (lv[lv.length-1].next ? charName()+' naik ke level '+arcLabel(played+1)+'! 🎉' : 'Level tertinggi tercapai! 🏆')
+    cap.textContent = pct>=100 ? (lv[lv.length-1].next ? (played%9===8 ? charName()+' menamatkan Level '+ARC_LETTERS[Math.floor(played/9)]+'! Lanjut ke '+arcLabel(played+1)+' 🎉' : charName()+' naik ke level '+arcLabel(played+1)+'! 🎉') : 'Level tertinggi tercapai! 🏆')
                                : charName()+': level '+arcLabel(played)+' belum 100% — ulangi dulu ya!';
   }
   function end(){
@@ -2272,7 +2298,7 @@ function showHill(played,pct,cb){
       else { ch.firstChild.setAttribute('class','still'); }
       hillT.push(setTimeout(end,pct>=100?1500:1900)); return;
     }
-    var a=pts[idx], b=pts[idx+1], t0=performance.now(), dur=idx===0?520:430;
+    var a=pts[idx], b=pts[idx+1], t0=performance.now(), dur=idx===0?520:(sm?300:430);
     ch.firstChild.setAttribute('class','walk');
     (function mv(now){
       var k=Math.min(1,(now-t0)/dur), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
@@ -2280,7 +2306,7 @@ function showHill(played,pct,cb){
       if(k<1){ hillRaf=requestAnimationFrame(mv); return; }
       idx++; bubble(b); hillDing(idx-1,b.lv.p);
       ch.firstChild.setAttribute('class','still');
-      hillT.push(setTimeout(step,b.lv.next?200:380));
+      hillT.push(setTimeout(step,b.lv.next?200:(sm?250:380)));
     })(t0);
   }
   hillT.push(setTimeout(step,500));
@@ -2303,7 +2329,8 @@ function finishRound(){
     if(pr.src==='arcade'){
       $('#psumD').textContent+=' Naik ke level berikutnya...';
       advanceArcadeLevel(); /* level naik langsung disimpan, supaya bisa dilanjutkan walau keluar di tengah */
-      autoT=setTimeout(function(){ syncPracticeOpts(); newRound(); },2200); /* 100%: langsung lanjut, halaman bukit hanya untuk nilai di bawah 100 */
+      if(played%9===8) autoT=setTimeout(function(){ showHill(played,pct,function(){ syncPracticeOpts(); newRound(); }); },2000); /* satu huruf (9 level) tamat 100% -> tampilkan bukit */
+      else autoT=setTimeout(function(){ syncPracticeOpts(); newRound(); },2200); /* 100%: langsung lanjut; bukit hanya untuk nilai di bawah 100 atau saat huruf tamat */
     } else {
       /* Semua mode: benar 100% -> otomatis ganti soal baru */
       $('#psumD').textContent+=' Soal baru...';
