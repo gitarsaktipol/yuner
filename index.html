@@ -484,6 +484,9 @@ body{
 @keyframes gradeHue{to{background-position:300% 0}}
 .charLab{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
 .chars{display:flex;gap:6px;margin-bottom:8px}
+.chars.wrap{flex-wrap:wrap}
+.chars.wrap button{flex:1 1 28%;max-width:32%}
+.chars button small{font-weight:600;font-size:11px;opacity:.8}
 .chars button{flex:1;min-width:0;border:0;border-radius:16px;background:var(--pSky);box-shadow:0 3px 0 var(--dSky);padding:4px 2px 6px;font-weight:700;font-size:12px;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 .chars button svg{width:100%;max-width:44px;height:48px}
 .chars button[aria-pressed="true"]{background:var(--brass);color:var(--brassText);box-shadow:0 3px 0 var(--brassDeep)}
@@ -653,9 +656,23 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <select id="parcSub"></select>
       </label>
       <div class="charPick" style="grid-column:1/-1">
-        <span class="charLab">Karakter &amp; nama</span>
-        <div class="chars" id="pchars" role="group" aria-label="Pilih karakter"></div>
-        <input class="txt" id="pcharName" type="text" maxlength="12" placeholder="Nama karakter" autocomplete="off" aria-label="Nama karakter">
+        <span class="charLab">Pemain Arcade (maks. 5) — tiap pemain punya level sendiri</span>
+        <div class="chars wrap" id="pplayers" role="group" aria-label="Pilih pemain"></div>
+        <div class="row" style="gap:8px;margin:2px 0 8px">
+          <button class="sound" id="pAddPl" type="button">+ Pemain baru</button>
+          <button class="sound" id="pDelPl" type="button">Hapus pemain</button>
+        </div>
+        <div id="pNewPl" hidden>
+          <span class="charLab">Pilih karakter &amp; nama untuk pemain baru</span>
+          <div class="chars" id="pchars" role="group" aria-label="Pilih karakter"></div>
+          <input class="txt" id="pnewName" type="text" maxlength="12" placeholder="Nama pemain baru" autocomplete="off" aria-label="Nama pemain baru">
+          <div class="row" style="gap:8px;margin-top:8px">
+            <button class="start" id="pNewOk" type="button" style="padding:10px">Mulai dari A1</button>
+            <button class="sound" id="pNewNo" type="button">Batal</button>
+          </div>
+        </div>
+        <span class="charLab" style="margin-top:6px">Nama pemain ini</span>
+        <input class="txt" id="pcharName" type="text" maxlength="12" placeholder="Nama pemain" autocomplete="off" aria-label="Nama pemain">
       </div>
     </div>
     <div id="pCustomOpts" hidden>
@@ -1988,7 +2005,7 @@ function practiceHit(m,exact){
 function advanceArcadeLevel(){
   pr.arcSub++;
   if(pr.arcSub>9){ pr.arcSub=1; pr.arcLetter=Math.min(pr.arcLetter+1,ARC_LETTERS.length-1); }
-  store.set('yg.arcLetter',String(pr.arcLetter)); store.set('yg.arcSub',String(pr.arcSub));
+  arcSave();
 }
 
 /* Nilai besar + kembang api saat satu soal selesai (animasi di atas partitur) */
@@ -2046,25 +2063,92 @@ var CHARS=[
   {id:3,name:'Bagas',shirt:'#FFB300',hair:'#3B2A1C',skin:'#C99068',pack:'#4AB3FF'},
   {id:4,name:'Luna',shirt:'#A78BFA',hair:'#E0457F',skin:'#F6CBA6',pack:'#2FC58A'}
 ];
-function charLook(){ return CHARS[clamp(parseInt(store.get('yg.arcChar','0'),10)||0,0,CHARS.length-1)]; }
-function charName(){ var n=(store.get('yg.arcName','')||'').trim(); return n||charLook().name; }
+function loadPlayers(){
+  var l; try{ l=JSON.parse(store.get('yg.arcPlayers','null')); }catch(e){ l=null; }
+  if(!Array.isArray(l)||!l.length){
+    var c=CHARS[clamp(parseInt(store.get('yg.arcChar','0'),10)||0,0,CHARS.length-1)], res;
+    try{ res=JSON.parse(store.get('yg.arcRes','{}')); }catch(e){ res={}; }
+    l=[{id:1,name:(store.get('yg.arcName','')||'').trim()||c.name,look:c.id,letter:parseInt(store.get('yg.arcLetter','0'),10)||0,sub:parseInt(store.get('yg.arcSub','1'),10)||1,res:(res&&typeof res==='object')?res:{}}];
+    store.set('yg.arcPlayers',JSON.stringify(l)); store.set('yg.arcActive','1');
+  }
+  return l;
+}
+function savePlayers(l){ store.set('yg.arcPlayers',JSON.stringify(l)); }
+function activePlayer(){
+  var l=loadPlayers(), id=parseInt(store.get('yg.arcActive','0'),10), a=null;
+  l.forEach(function(x){ if(x.id===id) a=x; });
+  return a||l[0];
+}
+function charLook(){ return CHARS[clamp(activePlayer().look||0,0,CHARS.length-1)]; }
+function charName(){ var n=(activePlayer().name||'').trim(); return n||charLook().name; }
+/* simpan level yang sedang dimainkan ke pemain aktif */
+function arcSave(){
+  store.set('yg.arcLetter',String(pr.arcLetter)); store.set('yg.arcSub',String(pr.arcSub));
+  var l=loadPlayers(), id=activePlayer().id;
+  l.forEach(function(x){ if(x.id===id){ x.letter=pr.arcLetter; x.sub=pr.arcSub; } });
+  savePlayers(l);
+}
 function charBody(c){
   return '<line class="hleg1" x1="-5" y1="-20" x2="-5" y2="-2" stroke="#4A4270" stroke-width="6" stroke-linecap="round"/><line class="hleg2" x1="5" y1="-20" x2="5" y2="-2" stroke="#4A4270" stroke-width="6" stroke-linecap="round"/>'+
     '<rect x="-12" y="-46" width="24" height="30" rx="10" fill="'+c.shirt+'"/><rect x="-18" y="-44" width="9" height="22" rx="4" fill="'+c.pack+'"/>'+
     '<circle cx="0" cy="-58" r="12" fill="'+c.skin+'"/><path d="M-12,-60 Q-10,-74 2,-71 Q13,-70 12,-58 Q6,-66 -12,-60Z" fill="'+c.hair+'"/><circle cx="4" cy="-58" r="1.8" fill="#3B3355"/><path d="M1,-53 q4,3 7,0" fill="none" stroke="#3B3355" stroke-width="1.6" stroke-linecap="round"/>';
 }
+var newLook=0;
 function buildChars(){
-  var box=$('#pchars'); if(!box) return;
-  var cur=charLook().id;
-  box.innerHTML=CHARS.map(function(c){
-    return '<button type="button" data-c="'+c.id+'" aria-pressed="'+(c.id===cur)+'"><svg viewBox="-24 -80 48 86" aria-hidden="true">'+charBody(c)+'</svg>'+c.name+'</button>';
+  /* daftar pemain */
+  var l=loadPlayers(), act=activePlayer().id, box=$('#pplayers');
+  box.innerHTML=l.map(function(x){
+    var c=CHARS[clamp(x.look||0,0,CHARS.length-1)];
+    return '<button type="button" data-p="'+x.id+'" aria-pressed="'+(x.id===act)+'"><svg viewBox="-24 -80 48 86" aria-hidden="true">'+charBody(c)+'</svg>'+
+           (x.name||c.name).replace(/[<&]/g,'')+'<small>Level '+ARC_LETTERS[x.letter]+x.sub+'</small></button>';
+  }).join('');
+  $$('#pplayers button').forEach(function(b){ b.addEventListener('click',function(){
+    var id=parseInt(b.getAttribute('data-p'),10); if(id===activePlayer().id) return;
+    store.set('yg.arcActive',String(id));
+    var a=activePlayer(); pr.arcLetter=a.letter; pr.arcSub=a.sub;
+    arcSave(); buildChars(); syncPracticeOpts(); newRound();
+  }); });
+  $('#pAddPl').disabled = l.length>=5; $('#pAddPl').textContent = l.length>=5 ? 'Penuh (maks. 5)' : '+ Pemain baru';
+  $('#pDelPl').disabled = l.length<=1;
+  $('#pcharName').value=charName();
+  /* pilihan karakter untuk pemain baru */
+  $('#pchars').innerHTML=CHARS.map(function(c){
+    return '<button type="button" data-c="'+c.id+'" aria-pressed="'+(c.id===newLook)+'"><svg viewBox="-24 -80 48 86" aria-hidden="true">'+charBody(c)+'</svg>'+c.name+'</button>';
   }).join('');
   $$('#pchars button').forEach(function(b){ b.addEventListener('click',function(){
-    var c=CHARS[parseInt(b.getAttribute('data-c'),10)];
-    store.set('yg.arcChar',String(c.id)); store.set('yg.arcName',c.name);
-    $('#pcharName').value=c.name; buildChars();
+    var prev=CHARS[newLook].name, cur=$('#pnewName').value.trim();
+    newLook=parseInt(b.getAttribute('data-c'),10);
+    if(!cur||cur===prev) $('#pnewName').value=CHARS[newLook].name;
+    buildChars();
   }); });
-  $('#pcharName').value=charName();
+}
+function bindPlayers(){
+  $('#pcharName').addEventListener('input',function(e){
+    var l=loadPlayers(), id=activePlayer().id; l.forEach(function(x){ if(x.id===id) x.name=e.target.value; }); savePlayers(l);
+    var b=$('#pplayers [aria-pressed="true"]'); if(b && b.firstChild){ /* nama di chip diperbarui saat selesai mengetik */ }
+  });
+  $('#pcharName').addEventListener('change',buildChars);
+  $('#pAddPl').addEventListener('click',function(){
+    if(loadPlayers().length>=5) return;
+    newLook=0; $('#pnewName').value=CHARS[0].name; $('#pNewPl').hidden=false; buildChars();
+  });
+  $('#pNewNo').addEventListener('click',function(){ $('#pNewPl').hidden=true; });
+  $('#pNewOk').addEventListener('click',function(){
+    var l=loadPlayers(); if(l.length>=5) return;
+    var id=1; l.forEach(function(x){ if(x.id>=id) id=x.id+1; });
+    l.push({id:id,name:($('#pnewName').value||'').trim()||CHARS[newLook].name,look:newLook,letter:0,sub:1,res:{}});
+    savePlayers(l); store.set('yg.arcActive',String(id));
+    pr.arcLetter=0; pr.arcSub=1; arcSave(); $('#pNewPl').hidden=true;
+    buildChars(); syncPracticeOpts(); newRound();
+  });
+  $('#pDelPl').addEventListener('click',function(){
+    var l=loadPlayers(); if(l.length<=1) return;
+    var a=activePlayer();
+    if(!confirm('Hapus pemain "'+charName()+'"? Level dan nilainya ikut terhapus.')) return;
+    l=l.filter(function(x){ return x.id!==a.id; }); savePlayers(l);
+    store.set('yg.arcActive',String(l[0].id)); pr.arcLetter=l[0].letter; pr.arcSub=l[0].sub; arcSave();
+    buildChars(); syncPracticeOpts(); newRound();
+  });
 }
 /* ===== Halaman bukit Arcade ===== */
 var hillT=[], hillRaf=0, hillDone=null;
@@ -2072,7 +2156,8 @@ function hideHill(){
   hillT.forEach(clearTimeout); hillT=[]; cancelAnimationFrame(hillRaf); hillDone=null;
   var h=$('#phill'); if(h) h.hidden=true;
 }
-function arcRes(){ try{ var o=JSON.parse(store.get('yg.arcRes','{}')); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; } }
+function arcRes(){ var r=activePlayer().res; return (r&&typeof r==='object')?r:{}; }
+function arcSetRes(k,v){ var l=loadPlayers(), id=activePlayer().id; l.forEach(function(x){ if(x.id===id){ x.res=x.res||{}; x.res[k]=v; } }); savePlayers(l); }
 function arcLabel(k){ return ARC_LETTERS[Math.floor(k/9)]+(k%9+1); }
 function gradeFill(p){ return p>=100?'url(#hrb)':p>=80?'#F5B800':p>=50?'#E53935':'#111'; }
 function showHill(played,pct,cb){
@@ -2155,7 +2240,7 @@ function finishRound(){
   $('#psum').hidden=false;
   $('#plastV').textContent=pct+'%'; $('#plast').hidden=false;
   var played=pr.arcLetter*9+pr.arcSub-1;
-  if(pr.src==='arcade'){ var rs=arcRes(); rs[played]=pct; store.set('yg.arcRes',JSON.stringify(rs)); }
+  if(pr.src==='arcade'){ arcSetRes(played,pct); }
   var board=$('#pboard');
   showGrade(pct, pct>=100?2200:1800);
   if(pct>=100){
@@ -2163,7 +2248,8 @@ function finishRound(){
     setTimeout(function(){ board.classList.remove('glow'); },1400);
     if(pr.src==='arcade'){
       $('#psumD').textContent+=' Naik ke level berikutnya...';
-      autoT=setTimeout(function(){ showHill(played,pct,function(){ advanceArcadeLevel(); syncPracticeOpts(); newRound(); }); },2000);
+      advanceArcadeLevel(); /* level naik langsung disimpan, supaya bisa dilanjutkan walau keluar di tengah */
+      autoT=setTimeout(function(){ showHill(played,pct,function(){ syncPracticeOpts(); newRound(); }); },2000);
     } else {
       /* Semua mode: benar 100% -> otomatis ganti soal baru */
       $('#psumD').textContent+=' Soal baru...';
@@ -2337,8 +2423,7 @@ function buildCustGrid(){
   });
 }
 function bindPracticeOpts(){
-  buildArcadeSelects(); buildCustGrid(); buildChars();
-  $('#pcharName').addEventListener('input',function(e){ store.set('yg.arcName',e.target.value); });
+  buildArcadeSelects(); buildCustGrid(); buildChars(); bindPlayers();
   $$('#pinst button').forEach(function(b){ b.addEventListener('click',function(){ setInst(b.getAttribute('data-inst')); }); });
   $('#psrc').addEventListener('change',function(e){ pr.src=e.target.value; syncPracticeOpts(); newRound(); });
   $('#pkey').addEventListener('change',function(e){
@@ -2347,8 +2432,8 @@ function bindPracticeOpts(){
     if(pr.src==='custom' && pr.score){ pr.score.key=pr.key; pr.score.notes.forEach(function(n){ if(n.m!==null) n.a=spellIn(n.m,pr.key); }); newRound(true); }
     else newRound();
   });
-  $('#parcLetter').addEventListener('change',function(e){ pr.arcLetter=parseInt(e.target.value,10); store.set('yg.arcLetter',String(pr.arcLetter)); syncPracticeOpts(); newRound(); });
-  $('#parcSub').addEventListener('change',function(e){ pr.arcSub=parseInt(e.target.value,10); store.set('yg.arcSub',String(pr.arcSub)); syncPracticeOpts(); newRound(); });
+  $('#parcLetter').addEventListener('change',function(e){ pr.arcLetter=parseInt(e.target.value,10); arcSave(); syncPracticeOpts(); newRound(); });
+  $('#parcSub').addEventListener('change',function(e){ pr.arcSub=parseInt(e.target.value,10); arcSave(); syncPracticeOpts(); newRound(); });
   $('#custMeasures').addEventListener('change',function(e){ pr.custMeasures=parseInt(e.target.value,10); store.set('yg.custMeasures',String(pr.custMeasures)); newRound(); });
   $('#custAll').addEventListener('click',function(){ pr.custNotes=[]; for(var m=CUST_LO;m<=CUST_HI;m++) pr.custNotes.push(m); store.set('yg.custNotes',JSON.stringify(pr.custNotes)); syncPracticeOpts(); newRound(); });
   $('#custNone').addEventListener('click',function(){
