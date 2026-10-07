@@ -5,6 +5,13 @@
 <title>FerTune</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#FFF7FB">
+<script>
+/* Tema tampilan (Pengaturan > Tampilan): dipasang sebelum halaman digambar supaya tidak berkedip. */
+(function(){try{var t=localStorage.getItem('yg.theme');
+  if(t==='dark'||t==='laut'){document.documentElement.setAttribute('data-theme',t);
+    var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',t==='dark'?'#15162A':'#EAF6FB');}
+}catch(e){}})();
+</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FerTune">
@@ -36,6 +43,7 @@
   --pLilac:#E7DEFF; --dLilac:#B5A1F0;
   --pPeach:#FFE2D1; --dPeach:#F7B28F;
   --peach:#FF9A7A;
+  --navbg:rgba(255,255,255,.92); --surf:#FFFFFF; --hillTop:#CDEBFF;
   --shadow:0 2px 3px rgba(120,80,160,.05),0 10px 24px rgba(160,110,200,.10);
   --bounce:cubic-bezier(.34,1.7,.55,1);
   box-sizing:border-box;
@@ -44,14 +52,42 @@
 }
 :root[data-theme="dark"]{
   --bg:#15162A; --panel:#1F2138; --ink:#F1F2FF; --muted:#9EA2C4; --line:#31335A;
-  --track:#282A4C; --brass:#FF7FA1; --brassText:#1A0B10;
+  --track:#282A4C; --brass:#FF7FA1; --brassDeep:#C24B72; --brassText:#1A0B10;
   --ok:#3FE0A0; --okText:#08201A; --okSoft:rgba(63,224,160,.22);
   --warn:#FFC257; --bad:#FF7A8C; --hl:rgba(255,127,161,.22);
   --headstock:#282A4C; --peg:#31335A; --pegText:#F1F2FF; --nut:#3A3D68;
   --white:#EDEBFF; --black:#0C0D1C;
   --accent2:#8B98FF; --accent3:#5DEDEA;
+  --pPink:#4A2A3F; --dPink:#8A4A6B;  --pSky:#1F3A55;  --dSky:#3F78A8;
+  --pMint:#1D4A3F; --dMint:#2F8C70;  --pLemon:#4A4220; --dLemon:#9C8630;
+  --pLilac:#37305E; --dLilac:#6F63B8; --pPeach:#4A3326; --dPeach:#9A6648; --peach:#FF9A7A;
+  --navbg:rgba(31,33,56,.94); --surf:#1F2138; --hillTop:#1B2A4A;
   --shadow:0 1px 2px rgba(0,0,0,.25),0 10px 24px rgba(0,0,0,.35);
 }
+:root[data-theme="laut"]{
+  --bg:#EAF6FB; --panel:#FFFFFF; --ink:#0E3A52; --muted:#6B93A8; --line:#CFE6F0;
+  --track:#E1F1F8; --brass:#1E9BD7; --brassDeep:#1478AB; --brassText:#FFFFFF;
+  --ok:#14B8A6; --okText:#FFFFFF; --okSoft:rgba(20,184,166,.20);
+  --warn:#F5B547; --bad:#FF6B85; --hl:rgba(30,155,215,.16);
+  --headstock:#D5EEF8; --peg:#FFFFFF; --pegText:#0E3A52; --nut:#FFFFFF;
+  --white:#FFFFFF; --black:#14506E;
+  --accent2:#2F7DE1; --accent3:#22D3C5;
+  --pPink:#CFEFFF; --dPink:#7CC4E8;  --pSky:#D2EAFF;  --dSky:#86B9EE;
+  --pMint:#CDF5EC; --dMint:#6FD4BF;  --pLemon:#FFF0C9; --dLemon:#EDCB77;
+  --pLilac:#DDE6FF; --dLilac:#97A9EE; --pPeach:#FFE5D6; --dPeach:#F3AE90; --peach:#22C3C6;
+  --navbg:rgba(255,255,255,.92); --surf:#FFFFFF; --hillTop:#BFE6F7;
+  --shadow:0 2px 3px rgba(20,100,150,.06),0 10px 24px rgba(30,140,200,.14);
+}
+:root[data-theme="laut"] .start{box-shadow:0 6px 0 var(--brassDeep),0 12px 22px rgba(30,155,215,.35)}
+:root[data-theme="laut"] .tabs{box-shadow:0 10px 30px rgba(30,140,200,.22)}
+:root[data-theme="dark"] .tabs button[data-tab="tuner"]{--tt:#FF9CC0}
+:root[data-theme="dark"] .tabs button[data-tab="latih"]{--tt:#7CC4FF}
+:root[data-theme="dark"] .tabs button[data-tab="arcade"]{--tt:#FFD66B}
+:root[data-theme="dark"] .tabs button[data-tab="score"]{--tt:#5FE3B0}
+:root[data-theme="dark"] .tabs button[data-tab="set"]{--tt:#B5A8FF}
+:root[data-theme="dark"] .tabs{box-shadow:0 10px 30px rgba(0,0,0,.5)}
+:root[data-theme="dark"] .acct .aerr{color:#FF8A8A}
+:root[data-theme="dark"] .mascot .mc{fill:#FF9CC0}
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none !important}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
@@ -206,10 +242,31 @@ header .sel select{max-width:100%;min-width:0}
 .acct .ahint{color:var(--muted);font-size:12px}
 .gsback{display:inline-block;margin-right:8px}
 
+/* ---------- halaman Pengaturan ---------- */
+#tab-set h2.sh{margin:0 0 10px;font-size:16px;font-weight:800;color:var(--ink)}
+#tab-set .themes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+#tab-set .themeopt{border:2px solid var(--line);background:var(--track);border-radius:18px;padding:10px 6px 9px;display:flex;flex-direction:column;align-items:center;gap:7px;font-weight:800;font-size:13px;color:var(--ink);cursor:pointer}
+#tab-set .themeopt .sw{display:flex;border-radius:12px;overflow:hidden;width:100%;height:34px;border:2px solid rgba(0,0,0,.08)}
+#tab-set .themeopt .sw i{flex:1}
+#tab-set .themeopt[aria-pressed="true"]{border-color:var(--brass);background:var(--panel);box-shadow:0 3px 0 var(--brass)}
+#tab-set .helpitem{border-top:2px solid var(--line);padding:2px 0}
+#tab-set .helpitem:first-of-type{border-top:0}
+#tab-set .helpitem summary{cursor:pointer;font-weight:800;padding:10px 2px;list-style-position:inside;color:var(--ink)}
+#tab-set .helpitem[open] summary{color:var(--brass)}
+#tab-set .helpitem .hb{padding:0 4px 12px;font-size:14px;line-height:1.55;color:var(--ink)}
+#tab-set .helpitem .hb p{margin:6px 0}
+#tab-set .helpitem .hb ol,#tab-set .helpitem .hb ul{margin:6px 0;padding-left:20px}
+#tab-set .helpitem .hb li{margin:4px 0}
+#tab-set .helpitem .hb .tip{background:var(--track);border-radius:14px;padding:8px 12px;margin:8px 0;font-size:13px;color:var(--muted)}
+#tab-set a.sound{display:block;text-decoration:none}
+#tab-set .dangerCard{border-color:#F3B6C0}
+:root[data-theme="dark"] #tab-set .dangerCard{border-color:#6B3A52}
+#tab-set .abtn.danger{background:#FFD6DC;color:#7A1F35}
+:root[data-theme="dark"] #tab-set .abtn.danger{background:#5A2438;color:#FFD6DC}
 /* ---------- navigasi bawah ---------- */
 .tabs{
   position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:5;
-  background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  background:var(--navbg);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   border:2px solid var(--line);border-radius:28px;padding:6px;
   box-shadow:0 10px 30px rgba(160,110,200,.22);
 }
@@ -223,6 +280,9 @@ header .sel select{max-width:100%;min-width:0}
 .tabs button[data-tab="latih"]{--tc:var(--pSky);--tt:#2F86C9}
 .tabs button[data-tab="arcade"]{--tc:var(--pLemon);--tt:#A87800}
 .tabs button[data-tab="score"]{--tc:var(--pMint);--tt:#1E9E6C}
+.tabs button[data-tab="set"]{--tc:var(--pLilac);--tt:#7A5AE0}
+.tabs button{font-size:11.5px;padding:7px 2px;letter-spacing:-.01em;white-space:nowrap}
+.tabs svg{width:22px;height:22px}
 .tabs button[aria-current="page"]{color:var(--tt);background:var(--tc);transform:translateY(-3px)}
 .tabs button[aria-current="page"] svg{animation:hop .6s var(--bounce)}
 @keyframes hop{ 0%{transform:translateY(0) scale(1)} 35%{transform:translateY(-7px) scale(1.18) rotate(-8deg)} 70%{transform:translateY(1px) scale(.95)} 100%{transform:none} }
@@ -296,7 +356,7 @@ header .sel select{max-width:100%;min-width:0}
 body.playing{overflow:hidden}
 .playbar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px}
 .pclose{width:44px;height:44px;border-radius:50%;border:0;background:var(--pLilac);box-shadow:0 3px 0 var(--dLilac);font-size:18px;font-weight:800;color:var(--ink);cursor:pointer}
-.pstageLbl{margin-left:auto;background:#fff;border:2px solid var(--dMint);border-radius:18px;padding:4px 14px;font-weight:800;font-size:17px;box-shadow:0 3px 0 var(--dMint);white-space:nowrap}
+.pstageLbl{margin-left:auto;background:var(--surf);border:2px solid var(--dMint);border-radius:18px;padding:4px 14px;font-weight:800;font-size:17px;box-shadow:0 3px 0 var(--dMint);white-space:nowrap}
 .pstage{flex:1;min-height:0;display:flex;flex-direction:column}
 .play .board{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:8px 10px}
 .play .scorehost{flex:1;min-height:0;overflow:auto;display:flex;align-items:center}
@@ -462,7 +522,7 @@ body{
 #snav .chip:active,#sauto:active{box-shadow:0 1px 0 var(--dSky)}
 #sdur .chip[aria-pressed="true"],#sdot[aria-pressed="true"],#sflat[aria-pressed="true"],#sauto[aria-pressed="true"]{background:var(--brass);box-shadow:0 3px 0 var(--brassDeep)}
 #tab-score .stepper{background:var(--pLilac);border-color:var(--dLilac)}
-#tab-score .stepper .ctl{background:#fff;box-shadow:0 4px 0 var(--dLilac)}
+#tab-score .stepper .ctl{background:var(--surf);box-shadow:0 4px 0 var(--dLilac)}
 #sdelnote,#sdel{--c:var(--pPeach);--cd:var(--dPeach)}
 #tab-score label.sound,#snew{--c:var(--pMint);--cd:var(--dMint)}
 #sprac{--c:var(--pLilac);--cd:var(--dLilac)}
@@ -505,7 +565,7 @@ body{
 .bigopts .bi{font-size:46px;line-height:1.1}
 .asum{text-align:center;font-weight:700}
 /* Halaman bukit Arcade: karakter naik dari level ke level, nilai muncul saat dilewati */
-.phill{position:absolute;left:0;right:0;bottom:0;top:calc(46px + env(safe-area-inset-top,0px));z-index:6;display:flex;flex-direction:column;background:linear-gradient(#CDEBFF,#FFF7FB 75%);overflow:hidden;animation:popIn .45s var(--bounce)}
+.phill{position:absolute;left:0;right:0;bottom:0;top:calc(46px + env(safe-area-inset-top,0px));z-index:6;display:flex;flex-direction:column;background:linear-gradient(var(--hillTop),var(--bg) 75%);overflow:hidden;animation:popIn .45s var(--bounce)}
 .phill svg{flex:1;min-height:0;width:100%;display:block}
 .phill .hcap{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-weight:800;font-size:clamp(16px,4.6vh,26px);color:var(--ink);padding:0 130px;pointer-events:none;text-shadow:0 0 6px #fff,0 0 6px #fff}
 .phill .hgo{position:absolute;right:12px;bottom:10px;flex:none;padding:10px 18px}
@@ -529,9 +589,9 @@ body{
 @keyframes hLeg{0%,100%{transform:rotate(26deg)}50%{transform:rotate(-26deg)}}
 @keyframes hTired{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 @keyframes hStar{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
-.ptop{position:absolute;left:50%;top:6px;transform:translateX(-50%);background:#fff;border:2px solid var(--dLemon);border-radius:20px;padding:4px 14px;font-weight:800;font-size:17px;box-shadow:0 3px 0 var(--dLemon);z-index:2}
+.ptop{position:absolute;left:50%;top:6px;transform:translateX(-50%);background:var(--surf);border:2px solid var(--dLemon);border-radius:20px;padding:4px 14px;font-weight:800;font-size:17px;box-shadow:0 3px 0 var(--dLemon);z-index:2}
 .playbar{position:relative;z-index:10}
-.phill .hscore{position:absolute;left:50%;top:6px;transform:translateX(-50%);z-index:3;background:#fff;border:3px solid #FFB300;border-radius:24px;padding:4px 18px;font-weight:800;font-size:clamp(18px,5.4vh,30px);box-shadow:0 4px 0 #F2A900;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.phill .hscore{position:absolute;left:50%;top:6px;transform:translateX(-50%);z-index:3;background:var(--surf);border:3px solid #FFB300;border-radius:24px;padding:4px 18px;font-weight:800;font-size:clamp(18px,5.4vh,30px);box-shadow:0 4px 0 #F2A900;white-space:nowrap;display:flex;align-items:center;gap:6px}
 .phill .hscore.pop{animation:scPop .45s var(--bounce)}
 @keyframes scPop{0%{transform:translateX(-50%) scale(1)}40%{transform:translateX(-50%) scale(1.18)}100%{transform:translateX(-50%) scale(1)}}
 .phill .hbonus{font-style:normal;font-size:.62em;color:#fff;background:linear-gradient(90deg,#FF6FA8,#FFB300);border-radius:14px;padding:2px 10px;margin-left:6px;animation:gradeIn .6s var(--bounce) both}
@@ -541,7 +601,7 @@ body{
   filter:drop-shadow(0 .03em 0 #fff) drop-shadow(0 0 .04em #fff);animation:gradeIn .6s var(--bounce) both,gradeWiggle 1s .6s ease-in-out infinite,gradeHue 2s linear infinite}
 .pquit{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(59,51,85,.55);padding:12px}
 .pquit[hidden]{display:none}
-.pqbox{background:#fff;border-radius:26px;padding:18px 22px;max-width:380px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);animation:popIn .35s var(--bounce)}
+.pqbox{background:var(--surf);border-radius:26px;padding:18px 22px;max-width:380px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);animation:popIn .35s var(--bounce)}
 .pqbox h3{margin:0 0 4px;font-size:22px}
 .pqbox p{margin:0 0 14px;color:var(--muted);font-size:15px}
 .pqbox .row{gap:12px}
@@ -802,28 +862,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <label class="sel"><span class="sr">Pilih partitur</span><select id="slist"></select></label>
   </header>
 
-  <div class="card acct" id="acct">
-    <div class="arow">
-      <span class="amsg" id="acctMsg">Partitur tersimpan di HP ini saja. Masuk dengan akun Gitar Sakti supaya tidak hilang saat ganti HP.</span>
-      <button class="abtn" id="acctBtn" type="button">Masuk</button>
-    </div>
-    <div class="arow" id="acctDelRow" hidden style="margin-top:8px">
-      <span class="ahint" id="acctDelHint">Hapus akun = semua partitur di cloud ikut terhapus; partitur di HP ini tetap ada. Akun ini sama dengan akun Gitar Sakti: bila belum pernah membeli kelas, akun dan progres belajar ikut terhapus; bila sudah pernah, akun tetap ada (riwayat pembelian) dan hanya data FerTune di cloud yang dihapus.</span>
-      <button class="abtn" id="acctDel" type="button" style="background:#FFD6DC">Hapus akun</button>
-    </div>
-    <form id="acctForm" hidden autocomplete="on">
-      <input class="txt" id="acctName" type="text" placeholder="Nama (khusus daftar baru)" autocomplete="name" maxlength="60">
-      <input class="txt" id="acctEmail" type="email" placeholder="Email" autocomplete="email" required>
-      <input class="txt" id="acctPass" type="password" placeholder="Kata sandi" autocomplete="current-password" minlength="6" required>
-      <div class="aerr" id="acctErr" role="alert"></div>
-      <div class="arow">
-        <button class="abtn" id="acctIn" type="submit">Masuk</button>
-        <button class="abtn" id="acctUp" type="button">Daftar akun baru</button>
-      </div>
-      <div class="ahint">Akunnya sama dengan akun di gitarsakti.com. Lupa kata sandi? Reset lewat halaman Masuk di gitarsakti.com.</div>
-    </form>
-  </div>
-
   <div class="card">
     <label class="sr" for="stitle">Judul</label>
     <input class="txt" id="stitle" type="text" placeholder="Judul lagu" maxlength="60" autocomplete="off">
@@ -914,6 +952,119 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </section>
 </section>
 
+<section class="tab" id="tab-set" hidden>
+  <header><h1><svg class="mascot" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:var(--brass);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>Pengaturan</h1></header>
+
+  <div class="card acct" id="acct">
+    <h2 class="sh">Akun</h2>
+    <div class="arow">
+      <span class="amsg" id="acctMsg">Partitur tersimpan di HP ini saja. Masuk dengan akun Gitar Sakti supaya tidak hilang saat ganti HP.</span>
+      <button class="abtn" id="acctBtn" type="button">Masuk</button>
+    </div>
+    <form id="acctForm" hidden autocomplete="on">
+      <input class="txt" id="acctName" type="text" placeholder="Nama (khusus daftar baru)" autocomplete="name" maxlength="60">
+      <input class="txt" id="acctEmail" type="email" placeholder="Email" autocomplete="email" required>
+      <input class="txt" id="acctPass" type="password" placeholder="Kata sandi" autocomplete="current-password" minlength="6" required>
+      <div class="aerr" id="acctErr" role="alert"></div>
+      <div class="arow">
+        <button class="abtn" id="acctIn" type="submit">Masuk</button>
+        <button class="abtn" id="acctUp" type="button">Daftar akun baru</button>
+      </div>
+      <div class="ahint">Akunnya sama dengan akun di gitarsakti.com. Lupa kata sandi? Reset lewat halaman Masuk di gitarsakti.com.</div>
+    </form>
+  </div>
+
+
+  <div class="card">
+    <h2 class="sh">Tampilan</h2>
+    <div class="themes" id="themes">
+      <button type="button" class="themeopt" data-theme="warna" aria-pressed="true"><span class="sw"><i style="background:#FFD9E8"></i><i style="background:#D3ECFF"></i><i style="background:#D2F5E6"></i><i style="background:#FFF1BA"></i></span>Full Color</button>
+      <button type="button" class="themeopt" data-theme="dark" aria-pressed="false"><span class="sw"><i style="background:#15162A"></i><i style="background:#1F2138"></i><i style="background:#FF7FA1"></i><i style="background:#3FE0A0"></i></span>Dark</button>
+      <button type="button" class="themeopt" data-theme="laut" aria-pressed="false"><span class="sw"><i style="background:#EAF6FB"></i><i style="background:#CDF5EC"></i><i style="background:#86B9EE"></i><i style="background:#1E9BD7"></i></span>Biru Laut</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="sh">Bantuan</h2>
+    <details class="helpitem"><summary>Tuner gitar</summary><div class="hb">
+      <ol>
+        <li>Buka menu <b>Tuner</b>, tekan <b>Aktifkan mikrofon</b>, lalu izinkan akses mikrofon.</li>
+        <li>Petik satu senar. Aplikasi menebak senar mana yang kamu bunyikan (atau kunci ke satu senar lewat pasak senar).</li>
+        <li>Lihat jarum dan tulisan: <b>Kencangkan senar</b> bila nada terlalu rendah, <b>Kendurkan senar</b> bila terlalu tinggi.</li>
+        <li>Saat pas, terdengar bunyi "ting", pasak berubah hijau, dan muncul tulisan "Senar sudah pas".</li>
+      </ol>
+      <p>Pilih jenis <b>tuning</b> (Standar, Drop D, dan lainnya) dan <b>A4</b> acuan di bagian pengaturan tuner. Tombol nada acuan membunyikan nada senar sebagai pembanding.</p>
+      <div class="tip">Tips: cari tempat yang tenang dan petik satu senar sekali, biarkan bunyi sampai habis.</div>
+    </div></details>
+    <details class="helpitem"><summary>Latihan baca not</summary><div class="hb">
+      <ol>
+        <li>Buka menu <b>Latihan</b>. Pilih <b>Piano</b> atau <b>Gitar</b>, lalu <b>Not balok</b> atau <b>Not angka</b>.</li>
+        <li>Pilih <b>Mode Latihan</b>: Acak, Arcade, Custom (pilih sendiri nada yang keluar), atau Partitur saya (soal dari partitur buatanmu).</li>
+        <li>Atur <b>Tangga nada</b> bila perlu, lalu tekan <b>Mulai berlatih</b>. Layar latihan terbuka penuh.</li>
+        <li>Mainkan not yang disorot. Nada dibaca lewat <b>mikrofon</b>, <b>kabel audio</b>, atau <b>keyboard MIDI</b>.</li>
+        <li>Selesai satu soal, aplikasi menunjukkan hasilnya lalu otomatis pindah ke soal berikutnya.</li>
+      </ol>
+      <p>Opsional: nyalakan <b>Mode Tempo</b> supaya ada garis berjalan, dan not harus dibunyikan tepat saat garis lewat.</p>
+      <div class="tip">Mikrofon dan kabel audio membaca satu nada dalam satu waktu. Untuk banyak nada sekaligus (akor), pakai keyboard MIDI.</div>
+    </div></details>
+    <details class="helpitem"><summary>Arcade</summary><div class="hb">
+      <ol>
+        <li>Buka menu <b>Arcade</b>. Pilih karakter pemainmu (bisa sampai 5 pemain, masing-masing punya level sendiri).</li>
+        <li>Pilih <b>Piano</b> atau <b>Gitar</b>, lalu <b>Not balok</b> atau <b>Not angka</b>.</li>
+        <li>Tekan <b>PLAY</b>. Mainkan semua not sampai selesai. Nilai 100% naik ke level berikutnya.</li>
+      </ol>
+      <p>Level naik dari A1 sampai Z9 dan makin sulit. Tombol <b>Ganti level</b> dipakai untuk pindah level.</p>
+    </div></details>
+    <details class="helpitem"><summary>Partitur (menulis dan MIDI)</summary><div class="hb">
+      <ol>
+        <li>Buka menu <b>Partitur</b>. Isi judul, tempo, birama, dan kunci.</li>
+        <li>Ketuk tuts piano di layar untuk menulis not. Pilih nilai not (penuh sampai 1/16), titik, ♯/♭, atau rehat.</li>
+        <li>Tombol ◀ ▶ memindahkan kursor. Ketuk not untuk memilih dan mengubahnya. Tombol hapus menghapus bertahap.</li>
+        <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
+        <li><b>Putar</b> membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
+        <li><b>Save/Create</b> membuat partitur kosong baru. <b>Ekspor ke MIDI</b> dan <b>Impor file MIDI</b> ada di bawah tombol itu.</li>
+      </ol>
+      <div class="tip">Dengan keyboard MIDI tersambung, tuts yang kamu tekan langsung menjadi not di partitur.</div>
+    </div></details>
+    <details class="helpitem"><summary>Sambung keyboard MIDI (kabel MIDI/printer + OTG)</summary><div class="hb">
+      <p><b>Yang dibutuhkan:</b> keyboard atau controller dengan colokan <b>USB</b> (biasanya bentuknya seperti colokan printer/USB-B).</p>
+      <p><b>Di HP Android:</b></p>
+      <ol>
+        <li>Pasang <b>kabel OTG</b> ke HP (USB-C atau micro-USB sesuai HP). Sambungkan kabel USB keyboard (kabel "printer") ke OTG itu. Atau pakai satu kabel OTG khusus dari USB-C ke USB-B.</li>
+        <li>Buka FerTune lewat <b>Chrome</b> (aplikasi yang dipasang dari Chrome juga bisa).</li>
+        <li>Buka menu <b>Latihan</b> lalu tekan <b>Sambungkan alat musik</b>, kemudian <b>Hubungkan MIDI</b>. Izinkan bila ditanya.</li>
+        <li>Tekan satu tuts. Nama nada dan akor tampil di layar. Selanjutnya sambungan otomatis tersambung lagi saat aplikasi dibuka.</li>
+      </ol>
+      <p><b>Di laptop atau PC:</b> colok kabel USB keyboard <b>langsung</b> ke laptop (tanpa OTG), buka FerTune di <b>Chrome atau Edge</b>, lalu ikuti langkah 3 dan 4.</p>
+      <div class="tip"><b>Kalau tidak terdeteksi:</b> cabut lalu colok lagi; coba kabel lain (ada kabel yang hanya untuk mengisi daya); pastikan keyboard menyala dan mode USB-MIDI aktif; tutup aplikasi musik lain yang sedang memakai MIDI; di HP tertentu OTG perlu diaktifkan di pengaturan sistem.</div>
+      <div class="tip">Keyboard yang hanya punya colokan MIDI bulat (DIN 5 pin) butuh kabel atau antarmuka MIDI-ke-USB. iPhone dan Safari belum mendukung MIDI di browser.</div>
+    </div></details>
+    <details class="helpitem"><summary>Sambung gitar atau keyboard lewat kabel audio (jack)</summary><div class="hb">
+      <ol>
+        <li>Sambungkan alat musikmu ke HP atau laptop lewat <b>adaptor jack TRRS</b> atau <b>soundcard/audio interface USB</b> (di HP perlu OTG bila memakai soundcard USB).</li>
+        <li>Buka menu <b>Latihan</b> lalu <b>Sambungkan alat musik</b>. Di bagian "Kabel / jack audio", pilih input suara yang sesuai.</li>
+        <li>Centang <b>Mode kabel (latensi rendah)</b> supaya pembacaan lebih cepat.</li>
+        <li>Tekan <b>Mulai berlatih</b>, lalu aktifkan mikrofon di layar latihan dan mainkan.</li>
+      </ol>
+      <div class="tip">Kabel audio membaca satu nada sekali. Kalau tidak terbaca, periksa volume alat musik dan pastikan input yang dipilih bukan mikrofon bawaan.</div>
+    </div></details>
+    <details class="helpitem"><summary>Akun dan penyimpanan cloud</summary><div class="hb">
+      <p>FerTune bisa dipakai tanpa akun. Partitur tersimpan di HP-mu. Kalau mau partitur aman saat ganti HP, tekan <b>Masuk</b> di bagian Akun dengan akun Gitar Sakti. Partitur akan tersinkron otomatis.</p>
+      <p>Untuk keluar, tekan <b>Keluar</b>. Partitur di HP tetap ada. Untuk menghapus akun dan data cloud, gunakan kartu <b>Hapus akun</b> di bawah (tampil setelah masuk).</p>
+    </div></details>
+  </div>
+
+  <a class="sound" href="privacy.html">Kebijakan Privasi</a>
+
+  <div class="card acct dangerCard" id="acctDelCard" hidden>
+    <h2 class="sh">Hapus akun</h2>
+    <div class="arow" id="acctDelRow">
+      <span class="ahint" id="acctDelHint">Hapus akun = semua partitur di cloud ikut terhapus; partitur di HP ini tetap ada. Akun ini sama dengan akun Gitar Sakti: bila belum pernah membeli kelas, akun dan progres belajar ikut terhapus; bila sudah pernah, akun tetap ada (riwayat pembelian) dan hanya data FerTune di cloud yang dihapus.</span>
+      <button class="abtn danger" id="acctDel" type="button" >Hapus akun</button>
+    </div>
+  </div>
+</section>
+
 <p class="foot"><a class="gsback" href="/" hidden>← Gitar Sakti</a>FerTune • <a href="privacy.html">Kebijakan Privasi</a></p>
 </main>
 
@@ -929,6 +1080,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </button>
   <button type="button" data-tab="score">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18M3 11h18M3 15h18M3 19h18"/><circle cx="9" cy="15" r="2" fill="currentColor"/><path d="M11 15V6"/></svg>Partitur
+  </button>
+  <button type="button" data-tab="set">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Pengaturan
   </button>
 </div></nav>
 
@@ -2908,10 +3062,10 @@ function renderAcct(){
     m.innerHTML='☁ Masuk sebagai <b></b> · <span></span>';
     m.querySelector('b').textContent=sbUser.email||'akun Gitar Sakti';
     m.querySelector('span').textContent=syncMsg||'Tersinkron ✓';
-    b.textContent='Keluar'; $('#acctForm').hidden=true; $('#acctDelRow').hidden=false;
+    b.textContent='Keluar'; $('#acctForm').hidden=true; $('#acctDelCard').hidden=false;
   } else {
     m.textContent='Partitur tersimpan di HP ini saja. Masuk dengan akun Gitar Sakti supaya tidak hilang saat ganti HP.';
-    b.textContent=$('#acctForm').hidden?'Masuk':'Tutup'; $('#acctDelRow').hidden=true;
+    b.textContent=$('#acctForm').hidden?'Masuk':'Tutup'; $('#acctDelCard').hidden=true;
   }
 }
 function authErr(e){
@@ -3670,6 +3824,21 @@ function bindArcade(){
   $$('[data-amode]').forEach(function(b){ b.addEventListener('click',function(){ setMode(b.getAttribute('data-amode')); renderArcade(); }); });
   $('#arcPlay').addEventListener('click',startArcade);
 }
+/* ===== Pengaturan: tema tampilan ===== */
+function applyTheme(t){
+  if(t!=='dark' && t!=='laut') t='warna';
+  if(t==='warna') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',t);
+  var m=document.querySelector('meta[name="theme-color"]');
+  if(m) m.setAttribute('content', t==='dark'?'#15162A':t==='laut'?'#EAF6FB':'#FFF7FB');
+  $$('#themes [data-theme]').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-theme')===t?'true':'false'); });
+}
+function bindSettings(){
+  applyTheme(store.get('yg.theme','warna'));
+  $$('#themes [data-theme]').forEach(function(b){ b.addEventListener('click',function(){
+    var t=b.getAttribute('data-theme'); store.set('yg.theme',t); applyTheme(t);
+    if(app.tab==='score') renderScoreView();
+  }); });
+}
 function showTab(name){
   var prevTab=app.tab;
   if(pr.playing && name!==(pr.src==='arcade'?'arcade':'latih')) closePractice(true);
@@ -3735,10 +3904,11 @@ buildTicks(); buildTuningSelect(); buildPegs(); setA4(A4); renderTuner();
 bindPracticeOpts(); syncPracticeOpts();
 loadScores(); buildScoreList(); syncScoreFields(); buildKeyboard(); bindScore(); bindAcct(); initCloud();
 bindMidi();
+bindSettings();
 setMode(app.mode);
 try{
   /* Pintasan dari ikon (tekan lama ikon FerTune): ?tab=latih / ?tab=score */
-  var qTab=(location.search.match(/[?&]tab=(tuner|latih|arcade|score)/)||[])[1];
+  var qTab=(location.search.match(/[?&]tab=(tuner|latih|arcade|score|set)/)||[])[1];
   if(qTab && qTab!=='tuner'){ history.replaceState(null,'',location.pathname); goTab(qTab); }
   else if(history.state && history.state.tab && history.state.tab!=='tuner') showTab(history.state.tab);
 }catch(e){}
