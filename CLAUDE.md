@@ -50,6 +50,11 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - Kunci tanda tangan (`*.keystore`) tidak boleh masuk repo (sudah di `.gitignore`).
 - Tombol kembali Android: `goTab()` memakai history (pushState/replaceState) supaya dari Latihan/Partitur "kembali" ke Tuner dulu, baru keluar. Pintasan ikon (manifest `shortcuts`) membuka `./?tab=latih` / `./?tab=score`.
 
+## Menu Pengaturan (tab ke-5, `#tab-set`)
+- Isi: kartu **Akun** (Masuk/Daftar/Keluar, dipindah dari Partitur; ID elemen `#acct*` tidak berubah), kartu **Tampilan** (tema), kartu **Bantuan** (panduan per halaman + cara sambung keyboard MIDI via OTG/laptop dan kabel audio), tombol **Kebijakan Privasi**, dan kartu **Hapus akun** (`#acctDelCard`, hanya tampil saat login) di paling bawah.
+- Tema (`yg.theme` = `warna` default | `dark` | `laut`): atribut `data-theme` di `<html>`, dipasang oleh skrip kecil di `<head>` sebelum halaman digambar (tanpa kedip) dan oleh `applyTheme()`. Semua warna lewat CSS custom properties di `:root` / `:root[data-theme=...]`, termasuk pasangan pastel `--pXxx/--dXxx`, `--navbg`, `--surf`, `--hillTop`. Jangan hardcode warna terang baru; pakai variabel.
+- Teks Bantuan harus disesuaikan bila label tombol di Latihan/Partitur berubah (mis. "Sambungkan alat musik", "Hubungkan MIDI", "Mode kabel").
+
 ## Ajakan pasang aplikasi (install)
 - Kartu "Pasang FerTune di HP" di atas halaman (script kecil terpisah di bawah `index.html`, sebelum registrasi service worker). Muncul saat browser mengirim event `beforeinstallprompt` (Chrome/Edge Android & PC); tombol "Pasang" memunculkan dialog install bawaan browser.
 - Di iPhone/iPad (tidak ada event itu) kartu berisi petunjuk: Bagikan → "Tambah ke Layar Utama".
