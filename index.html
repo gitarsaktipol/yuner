@@ -221,6 +221,7 @@ header .sel select{max-width:100%;min-width:0}
 }
 .tabs button[data-tab="tuner"]{--tc:var(--pPink);--tt:#E0457F}
 .tabs button[data-tab="latih"]{--tc:var(--pSky);--tt:#2F86C9}
+.tabs button[data-tab="arcade"]{--tc:var(--pLemon);--tt:#A87800}
 .tabs button[data-tab="score"]{--tc:var(--pMint);--tt:#1E9E6C}
 .tabs button[aria-current="page"]{color:var(--tt);background:var(--tc);transform:translateY(-3px)}
 .tabs button[aria-current="page"] svg{animation:hop .6s var(--bounce)}
@@ -490,6 +491,20 @@ body{
 .chars button{flex:1;min-width:0;border:0;border-radius:16px;background:var(--pSky);box-shadow:0 3px 0 var(--dSky);padding:4px 2px 6px;font-weight:700;font-size:12px;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 .chars button svg{width:100%;max-width:44px;height:48px}
 .chars button[aria-pressed="true"]{background:var(--brass);color:var(--brassText);box-shadow:0 3px 0 var(--brassDeep)}
+.adots{display:flex;gap:8px;justify-content:center}
+.adots i{width:34px;height:8px;border-radius:6px;background:var(--line);transition:background-color .3s,transform .3s var(--bounce)}
+.adots i.on{background:var(--brass);transform:scaleY(1.2)}
+.atitle{margin:0 0 4px;font-size:22px;text-align:center}
+.astep{display:flex;flex-direction:column;gap:10px;animation:popIn .45s var(--bounce)}
+.astep[hidden]{display:none}
+.chars.big button{padding:10px 4px 10px;font-size:15px;border-radius:20px}
+.chars.big button svg{max-width:70px;height:80px}
+.bigopts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bigopts button{border:0;border-radius:26px;background:var(--pSky);box-shadow:0 6px 0 var(--dSky);padding:22px 8px;font-size:19px;font-weight:800;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+.bigopts button:nth-child(2){background:var(--pLemon);box-shadow:0 6px 0 var(--dLemon)}
+.bigopts button[aria-pressed="true"]{background:var(--brass);color:var(--brassText);box-shadow:0 6px 0 var(--brassDeep)}
+.bigopts .bi{font-size:46px;line-height:1.1}
+.asum{text-align:center;font-weight:700}
 /* Halaman bukit Arcade: karakter naik dari level ke level, nilai muncul saat dilewati */
 .phill{position:absolute;left:0;right:0;bottom:0;top:46px;z-index:6;display:flex;flex-direction:column;background:linear-gradient(#CDEBFF,#FFF7FB 75%);overflow:hidden;animation:popIn .45s var(--bounce)}
 .phill svg{flex:1;min-height:0;width:100%;display:block}
@@ -622,7 +637,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   <details class="card cfg" id="pcfg">
     <summary>Mode Latihan</summary>
     <label>Berlatih secara
-      <select id="psrc"><option value="random">Acak</option><option value="arcade">Arcade</option><option value="custom">Custom</option><option value="score">Partitur saya</option></select>
+      <select id="psrc"><option value="random">Acak</option><option value="custom">Custom</option><option value="score">Partitur saya</option></select>
     </label>
     <label>Tangga nada
       <select id="pkey"></select>
@@ -648,33 +663,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <label class="chk"><input type="checkbox" id="psharp"> Sertakan nada ♯</label>
       <label class="chk"><input type="checkbox" id="poct"> Abaikan oktaf</label>
     </div>
-    <div class="grid" id="pArcadeOpts" hidden>
-      <label>Level
-        <select id="parcLetter"></select>
-      </label>
-      <label>Sub-level
-        <select id="parcSub"></select>
-      </label>
-      <div class="charPick" style="grid-column:1/-1">
-        <span class="charLab">Pemain Arcade (maks. 5) — tiap pemain punya level sendiri</span>
-        <div class="chars wrap" id="pplayers" role="group" aria-label="Pilih pemain"></div>
-        <div class="row" style="gap:8px;margin:2px 0 8px">
-          <button class="sound" id="pAddPl" type="button">+ Pemain baru</button>
-          <button class="sound" id="pDelPl" type="button">Hapus pemain</button>
-        </div>
-        <div id="pNewPl" hidden>
-          <span class="charLab">Pilih karakter &amp; nama untuk pemain baru</span>
-          <div class="chars" id="pchars" role="group" aria-label="Pilih karakter"></div>
-          <input class="txt" id="pnewName" type="text" maxlength="12" placeholder="Nama pemain baru" autocomplete="off" aria-label="Nama pemain baru">
-          <div class="row" style="gap:8px;margin-top:8px">
-            <button class="start" id="pNewOk" type="button" style="padding:10px">Mulai dari A1</button>
-            <button class="sound" id="pNewNo" type="button">Batal</button>
-          </div>
-        </div>
-        <span class="charLab" style="margin-top:6px">Nama pemain ini</span>
-        <input class="txt" id="pcharName" type="text" maxlength="12" placeholder="Nama pemain" autocomplete="off" aria-label="Nama pemain">
-      </div>
-    </div>
     <div id="pCustomOpts" hidden>
       <div class="noteGrid" id="custGrid"></div>
       <div class="row">
@@ -687,7 +675,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <p class="hint" id="custHint"></p>
     </div>
   </details>
-  <p class="hint" id="parcInfo" hidden></p>
 
 
 </section>
@@ -723,6 +710,61 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   <div class="sum" id="psum" hidden><b id="psumT"></b><span id="psumD"></span></div>
 
 </div>
+
+<!-- ================= ARCADE ================= -->
+<section class="tab" id="tab-arcade" hidden>
+  <header><h1><svg class="mascot" viewBox="0 0 40 40" aria-hidden="true"><path class="mf" d="M25 29V6c4 1 8 4 9 9"/><ellipse class="mb" cx="17" cy="29" rx="10" ry="8"/><circle class="me" cx="13.5" cy="27.5" r="1.6"/><circle class="me" cx="20.5" cy="27.5" r="1.6"/><path d="M14 31.5q3 2.6 6 0" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/><circle class="mc" cx="10.5" cy="31" r="1.8"/><circle class="mc" cx="23.5" cy="31" r="1.8"/></svg>Arcade</h1></header>
+  <div class="adots" id="arcDots" aria-hidden="true"></div>
+
+  <div class="astep" id="arcS1">
+    <h2 class="atitle">1. Pilih karakter</h2>
+    <div class="chars wrap big" id="pplayers" role="group" aria-label="Pilih karakter"></div>
+    <div class="row" style="gap:8px;margin:2px 0 8px">
+      <button class="sound" id="pAddPl" type="button">+ Karakter baru</button>
+      <button class="sound" id="pDelPl" type="button">Hapus karakter</button>
+    </div>
+    <div class="card" id="pNewPl" hidden>
+      <span class="charLab">Pilih tampilan &amp; nama karakter baru (maks. 5 karakter)</span>
+      <div class="chars" id="pchars" role="group" aria-label="Pilih tampilan"></div>
+      <input class="txt" id="pnewName" type="text" maxlength="12" placeholder="Nama karakter baru" autocomplete="off" aria-label="Nama karakter baru">
+      <div class="row" style="gap:8px;margin-top:8px">
+        <button class="start" id="pNewOk" type="button" style="padding:10px">Mulai dari A1</button>
+        <button class="sound" id="pNewNo" type="button">Batal</button>
+      </div>
+    </div>
+    <span class="charLab">Nama karakter ini</span>
+    <input class="txt" id="pcharName" type="text" maxlength="12" placeholder="Nama karakter" autocomplete="off" aria-label="Nama karakter">
+    <button class="start" id="arcNext1" type="button" style="margin-top:14px;width:100%">Lanjut ▶</button>
+  </div>
+
+  <div class="astep" id="arcS2" hidden>
+    <h2 class="atitle">2. Pilih alat musik</h2>
+    <div class="bigopts" role="group" aria-label="Alat musik">
+      <button type="button" data-ainst="piano"><span class="bi">🎹</span>Piano</button>
+      <button type="button" data-ainst="guitar"><span class="bi">🎸</span>Gitar</button>
+    </div>
+    <p class="hint" id="arcInstHint"></p>
+    <button class="sound" id="arcBack2" type="button" style="margin-top:12px;width:100%">◀ Kembali</button>
+  </div>
+
+  <div class="astep" id="arcS3" hidden>
+    <h2 class="atitle">3. Pilih jenis not</h2>
+    <div class="bigopts" role="group" aria-label="Jenis notasi">
+      <button type="button" data-amode="staff"><span class="bi">𝄞</span>Not balok</button>
+      <button type="button" data-amode="num"><span class="bi">1 2 3</span>Not angka</button>
+    </div>
+    <div class="card asum" id="arcSum"></div>
+    <details class="card cfg"><summary>Ganti level</summary>
+      <div class="grid">
+        <label>Level <select id="parcLetter"></select></label>
+        <label>Sub-level <select id="parcSub"></select></label>
+      </div>
+    </details>
+    <p class="hint" id="parcInfo"></p>
+    <button class="start" id="arcPlay" type="button" style="width:100%;font-size:22px">▶ PLAY</button>
+    <button class="sound" id="arcBack3" type="button" style="margin-top:12px;width:100%">◀ Kembali</button>
+  </div>
+</section>
 
 <!-- ================= PARTITUR ================= -->
 <section class="tab" id="tab-score" hidden>
@@ -852,6 +894,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </button>
   <button type="button" data-tab="latih">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>Latihan
+  </button>
+  <button type="button" data-tab="arcade">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19l6-10 4 6 3-4 5 8z"/><path d="M15 5l3 1-3 1z"/></svg>Arcade
   </button>
   <button type="button" data-tab="score">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18M3 11h18M3 15h18M3 19h18"/><circle cx="9" cy="15" r="2" fill="currentColor"/><path d="M11 15V6"/></svg>Partitur
@@ -1166,7 +1211,7 @@ function midiNoteOn(n,v){
   midi.held[n]=v;
   if(midi.synth) synthOn(n,v);
   renderHeld();
-  if(app.tab==='latih' && pr.playing) practiceHit(n,true);
+  if((app.tab==='latih'||app.tab==='arcade') && pr.playing) practiceHit(n,true);
   else if(app.tab==='score' && !playing) midiScoreNote(n,midi.synth);
   else if(app.tab==='tuner') midiTunerShow(n);
 }
@@ -1240,7 +1285,7 @@ function renderHeld(){
     if(!ns.length){ h.innerHTML='<span class="idle">MIDI siap — tekan tuts di keyboard MIDI</span>'; return; }
     var ch=chordName(ns), out='';
     if(ch) out+='<span class="chord">'+ch+'</span>';
-    out+=ns.slice(0,10).map(function(m){ return '<span class="hk">'+(app.mode==='num'?labelOf(m,'',(app.tab==='latih'&&pr.score)?(pr.score.key||0):0):nameOf(m,''))+'</span>'; }).join('');
+    out+=ns.slice(0,10).map(function(m){ return '<span class="hk">'+(app.mode==='num'?labelOf(m,'',((app.tab==='latih'||app.tab==='arcade')&&pr.score)?(pr.score.key||0):0):nameOf(m,''))+'</span>'; }).join('');
     if(ns.length>10) out+='<span class="hk">+'+(ns.length-10)+'</span>';
     h.innerHTML=out;
   });
@@ -2106,9 +2151,9 @@ function buildChars(){
     var id=parseInt(b.getAttribute('data-p'),10); if(id===activePlayer().id) return;
     store.set('yg.arcActive',String(id));
     var a=activePlayer(); pr.arcLetter=a.letter; pr.arcSub=a.sub;
-    arcSave(); buildChars(); syncPracticeOpts(); newRound();
+    arcSave(); buildChars(); syncPracticeOpts();
   }); });
-  $('#pAddPl').disabled = l.length>=5; $('#pAddPl').textContent = l.length>=5 ? 'Penuh (maks. 5)' : '+ Pemain baru';
+  $('#pAddPl').disabled = l.length>=5; $('#pAddPl').textContent = l.length>=5 ? 'Penuh (maks. 5)' : '+ Karakter baru';
   $('#pDelPl').disabled = l.length<=1;
   $('#pcharName').value=charName();
   /* pilihan karakter untuk pemain baru */
@@ -2139,7 +2184,7 @@ function bindPlayers(){
     l.push({id:id,name:($('#pnewName').value||'').trim()||CHARS[newLook].name,look:newLook,letter:0,sub:1,res:{}});
     savePlayers(l); store.set('yg.arcActive',String(id));
     pr.arcLetter=0; pr.arcSub=1; arcSave(); $('#pNewPl').hidden=true;
-    buildChars(); syncPracticeOpts(); newRound();
+    buildChars(); syncPracticeOpts();
   });
   $('#pDelPl').addEventListener('click',function(){
     var l=loadPlayers(); if(l.length<=1) return;
@@ -2147,7 +2192,7 @@ function bindPlayers(){
     if(!confirm('Hapus pemain "'+charName()+'"? Level dan nilainya ikut terhapus.')) return;
     l=l.filter(function(x){ return x.id!==a.id; }); savePlayers(l);
     store.set('yg.arcActive',String(l[0].id)); pr.arcLetter=l[0].letter; pr.arcSub=l[0].sub; arcSave();
-    buildChars(); syncPracticeOpts(); newRound();
+    buildChars(); syncPracticeOpts();
   });
 }
 /* ===== Halaman bukit Arcade ===== */
@@ -2296,7 +2341,7 @@ function startPractice(){
   $('#plast').hidden=true;
   $('#pstage').appendChild($('#pboard'));
   $('#pplay').hidden=false;
-  try{ history.pushState({tab:'latih',play:1},''); }catch(e){}
+  try{ history.pushState({tab:app.tab,play:1},''); }catch(e){}
   goLandscape();
   newRound(true);
 }
@@ -2308,10 +2353,13 @@ function closePractice(fromPop){
   if(mic.active) micStop();
   $('#pplay').hidden=true; $('#psum').hidden=true;
   $('#pboardHome').appendChild($('#pboard'));
+  var wasArc=(pr.src==='arcade');
   try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
   try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
   if(!fromPop){ try{ if(history.state && history.state.play) history.back(); }catch(e){} }
-  pr.lastMsg=null; renderPractice();
+  pr.lastMsg=null;
+  if(wasArc){ pr.src=pr.prevSrc||'random'; pr.score=null; syncPracticeOpts(); arc.step=3; if(app.tab==='arcade') renderArcade(); return; }
+  renderPractice();
 }
 var shownMsg=null;
 function renderPractice(){
@@ -2347,6 +2395,7 @@ function refreshPractice(){
   if(!pr.score) return;
   if(!mic.active) pr.lastMsg=null;
   $('#plevel').style.width='0';
+  if(wasArc){ pr.src=pr.prevSrc||'random'; pr.score=null; syncPracticeOpts(); arc.step=3; if(app.tab==='arcade') renderArcade(); return; }
   renderPractice();
 }
 function syncPracticeOpts(){
@@ -2358,9 +2407,8 @@ function syncPracticeOpts(){
   var fromScore = pr.src==='score', isArc = pr.src==='arcade', isCust = pr.src==='custom';
   ['#prange','#plen','#psharp'].forEach(function(s){ $(s).disabled=fromScore||isArc||isCust; });
   $$('#pclefSeg button').forEach(function(b){ b.disabled=fromScore||isArc||isCust; });
-  $('#pArcadeOpts').hidden = !isArc; $('#parcInfo').hidden = !isArc;
   $('#pCustomOpts').hidden = !isCust;
-  if(isArc){
+  {
     $('#parcLetter').value=String(pr.arcLetter); $('#parcSub').value=String(pr.arcSub);
     var pm=arcLevelParams(pr.arcLetter,pr.arcSub);
     var leapTxt = pm.steps.length<=2?'langkah kecil':(pm.steps.length<=4?'lompatan sedang':'lompatan luas');
@@ -2423,7 +2471,7 @@ function buildCustGrid(){
   });
 }
 function bindPracticeOpts(){
-  buildArcadeSelects(); buildCustGrid(); buildChars(); bindPlayers();
+  buildArcadeSelects(); buildCustGrid(); bindPlayers(); bindArcade();
   $$('#pinst button').forEach(function(b){ b.addEventListener('click',function(){ setInst(b.getAttribute('data-inst')); }); });
   $('#psrc').addEventListener('change',function(e){ pr.src=e.target.value; syncPracticeOpts(); newRound(); });
   $('#pkey').addEventListener('change',function(e){
@@ -2432,8 +2480,8 @@ function bindPracticeOpts(){
     if(pr.src==='custom' && pr.score){ pr.score.key=pr.key; pr.score.notes.forEach(function(n){ if(n.m!==null) n.a=spellIn(n.m,pr.key); }); newRound(true); }
     else newRound();
   });
-  $('#parcLetter').addEventListener('change',function(e){ pr.arcLetter=parseInt(e.target.value,10); arcSave(); syncPracticeOpts(); newRound(); });
-  $('#parcSub').addEventListener('change',function(e){ pr.arcSub=parseInt(e.target.value,10); arcSave(); syncPracticeOpts(); newRound(); });
+  $('#parcLetter').addEventListener('change',function(e){ pr.arcLetter=parseInt(e.target.value,10); arcSave(); syncPracticeOpts(); renderArcade(); });
+  $('#parcSub').addEventListener('change',function(e){ pr.arcSub=parseInt(e.target.value,10); arcSave(); syncPracticeOpts(); renderArcade(); });
   $('#custMeasures').addEventListener('change',function(e){ pr.custMeasures=parseInt(e.target.value,10); store.set('yg.custMeasures',String(pr.custMeasures)); newRound(); });
   $('#custAll').addEventListener('click',function(){ pr.custNotes=[]; for(var m=CUST_LO;m<=CUST_HI;m++) pr.custNotes.push(m); store.set('yg.custNotes',JSON.stringify(pr.custNotes)); syncPracticeOpts(); newRound(); });
   $('#custNone').addEventListener('click',function(){
@@ -3368,8 +3416,39 @@ window.addEventListener('popstate',function(e){
   if(pr.playing){ closePractice(true); return; }
   showTab((e.state && e.state.tab) || 'tuner');
 });
+
+/* ===== Menu Arcade: pilih karakter -> alat musik -> jenis not -> PLAY ===== */
+var arc={step:1};
+function renderArcade(){
+  [1,2,3].forEach(function(n){ $('#arcS'+n).hidden=(arc.step!==n); });
+  $('#arcDots').innerHTML=[1,2,3].map(function(n){ return '<i class="'+(n<=arc.step?'on':'')+'"></i>'; }).join('');
+  buildChars();
+  $$('[data-ainst]').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-ainst')===pr.inst?'true':'false'); });
+  $$('[data-amode]').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-amode')===app.mode?'true':'false'); });
+  $('#arcInstHint').textContent = pr.inst==='guitar' ? 'Not ditulis satu oktaf lebih tinggi dari bunyi gitar, seperti partitur gitar pada umumnya.' : '';
+  var a=activePlayer();
+  $('#arcSum').textContent=charName()+' • Level '+ARC_LETTERS[a.letter]+a.sub+' • '+(pr.inst==='guitar'?'Gitar':'Piano')+' • '+(app.mode==='num'?'Not angka':'Not balok');
+  window.scrollTo(0,0);
+}
+function arcGo(n){ arc.step=n; renderArcade(); }
+function startArcade(){
+  var a=activePlayer(); pr.arcLetter=a.letter; pr.arcSub=a.sub; arcSave();
+  pr.prevSrc = pr.src==='arcade' ? 'random' : pr.src; pr.src='arcade';
+  syncPracticeOpts(); newRound(); startPractice();
+}
+function bindArcade(){
+  $('#arcNext1').addEventListener('click',function(){ arcGo(2); });
+  $('#arcBack2').addEventListener('click',function(){ arcGo(1); });
+  $('#arcBack3').addEventListener('click',function(){ arcGo(2); });
+  $$('[data-ainst]').forEach(function(b){ b.addEventListener('click',function(){
+    pr.inst=b.getAttribute('data-ainst')==='guitar'?'guitar':'piano'; store.set('yg.inst',pr.inst); syncPracticeOpts(); arcGo(3);
+  }); });
+  $$('[data-amode]').forEach(function(b){ b.addEventListener('click',function(){ setMode(b.getAttribute('data-amode')); renderArcade(); }); });
+  $('#arcPlay').addEventListener('click',startArcade);
+}
 function showTab(name){
-  if(pr.playing && name!=='latih') closePractice(true);
+  var prevTab=app.tab;
+  if(pr.playing && name!==(pr.src==='arcade'?'arcade':'latih')) closePractice(true);
   if(name==='score' && mic.active) micStop();
   if(name!=='score') stopPlay();
   app.tab=name; document.body.classList.toggle('on-latih',name==='latih');
@@ -3384,12 +3463,13 @@ function showTab(name){
   if(name==='tuner'){ reading=null; hist.length=0; renderTuner(); }
   if(name==='latih'){ if(!pr.score) newRound(); else renderPractice(); }
   if(name==='score'){ renderScoreView(); }
+  if(name==='arcade'){ if(prevTab!=='arcade') arc.step=1; renderArcade(); }
 }
 function setMode(m){
   app.mode=m; store.set('yg.mode',m);
   $$('.seg button[data-mode]').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-mode')===m?'true':'false'); });
   buildKeySelect();
-  if(app.tab==='latih') renderPractice();
+  if((app.tab==='latih'||app.tab==='arcade')) renderPractice();
   if(app.tab==='score') renderScoreView();
   renderHeld();
 }
@@ -3401,13 +3481,13 @@ function placeDock(){
   else if(dock.parentNode!==document.body) document.body.appendChild(dock);
   dock.classList.toggle('inflow',!!landShort);
   document.body.classList.toggle('dock-inflow',!!landShort);
-  if(app.tab==='latih' && pr.score) renderPractice();
+  if((app.tab==='latih'||app.tab==='arcade') && pr.score) renderPractice();
 }
 var rsT=0;
 window.addEventListener('resize',function(){
   clearTimeout(rsT);
   rsT=setTimeout(function(){
-    if(app.tab==='latih' && pr.score) renderPractice();
+    if((app.tab==='latih'||app.tab==='arcade') && pr.score) renderPractice();
     if(app.tab==='score') renderScoreView();
   },120);
 });
@@ -3420,7 +3500,7 @@ document.addEventListener('visibilitychange',function(){
 
 mic.onData.push(function(f,rms,now){
   if(app.tab==='tuner') tunerData(f,now);
-  else if(app.tab==='latih') practiceData(f,rms,now);
+  else if((app.tab==='latih'||app.tab==='arcade')) practiceData(f,rms,now);
 });
 mic.onTick.push(function(){ if(app.tab==='tuner') renderTuner(); });
 
@@ -3434,7 +3514,7 @@ bindMidi();
 setMode(app.mode);
 try{
   /* Pintasan dari ikon (tekan lama ikon FerTune): ?tab=latih / ?tab=score */
-  var qTab=(location.search.match(/[?&]tab=(tuner|latih|score)/)||[])[1];
+  var qTab=(location.search.match(/[?&]tab=(tuner|latih|arcade|score)/)||[])[1];
   if(qTab && qTab!=='tuner'){ history.replaceState(null,'',location.pathname); goTab(qTab); }
   else if(history.state && history.state.tab && history.state.tab!=='tuner') showTab(history.state.tab);
 }catch(e){}

@@ -55,7 +55,9 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - Di iPhone/iPad (tidak ada event itu) kartu berisi petunjuk: Bagikan → "Tambah ke Layar Utama".
 - Tidak tampil kalau app sudah dibuka sebagai aplikasi terpasang (`display-mode: standalone`). "Nanti saja" menyembunyikannya 7 hari (`yg.installSnooze`).
 
-## Tiga menu utama (navigasi tab di bawah)
+## Menu utama (navigasi tab di bawah: Tuner, Latihan, **Arcade**, Partitur)
+
+**Menu Arcade** (`#tab-arcade`, `renderArcade`, `startArcade`) adalah menu tersendiri seperti game dengan 3 langkah: 1) pilih karakter (pemain, maks. 5, level masing-masing; baru/hapus/ganti nama), 2) pilih Piano atau Gitar, 3) pilih Not balok atau Not angka lalu ▶ PLAY (ada "Ganti level"). Arcade TIDAK lagi ada di dropdown "Berlatih secara" Latihan; `pr.src='arcade'` hanya selama sesi Arcade berjalan (`startArcade` mengisinya, `closePractice` mengembalikan ke `pr.prevSrc` dan kembali ke langkah 3). Mesin latihan (overlay `#pplay`, penilaian, nilai besar, halaman bukit) dipakai bersama dengan Latihan. Query `?tab=arcade` didukung.
 
 ### 1. Tuner gitar
 - Deteksi nada real-time dari mikrofon pakai algoritma **YIN** (implementasi sendiri, fungsi `yin()`).
