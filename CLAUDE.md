@@ -57,6 +57,12 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - Rencana: FerTune akan berbayar setelah akun Play Console aktif. PERHATIAN: aplikasi Play yang diterbitkan GRATIS tidak bisa diubah jadi berbayar nanti; putuskan "berbayar sejak awal" atau "gratis + pembelian dalam aplikasi" SEBELUM rilis pertama. Catatan pembelian per sumber ada di tabel `fertune_purchases` (diisi Edge Function; belum ada integrasi pembayaran).
 - Teks Bantuan harus disesuaikan bila label tombol di Latihan/Partitur berubah (mis. "Sambungkan alat musik", "Hubungkan MIDI", "Mode kabel").
 
+## Gratis vs Premium & Metronome (lihat `RENCANA-PREMIUM.md` untuk rencana lengkap)
+- **Metronome**: bagian dari menu Tuner (tombol "Tuner | Metronome" di header, `setTunerMode`). BPM 30-240, birama 2/4 3/4 4/4 6/8, ketuk tempo, jadwal bunyi presisi lewat jam `AudioContext` (`metSched`, lookahead 120 ms). Berhenti saat pindah menu / halaman tersembunyi. Gratis.
+- **Hak akses**: `isPremium()`, `gatingOn()`, `GATING_ON` (sekarang `false` = semua terbuka). `applyEntitlements()` menyesuaikan tampilan; `guardEdit()`/`showPaywall(kunci)` dipakai titik penguncian (Latihan Custom & Partitur saya, Arcade, edit/simpan/impor/ekspor/akor/gambar di Partitur, cloud). Lagu contoh: `s0` (Twinkle) dan `b-mary` (Mary Had a Little Lamb, ditambahkan sekali lewat `yg.seedMary`). **Mode coba** (`trialScore`, id `trial`): hanya di memori, maks 4 birama 4/4, tanpa simpan/ekspor/akor; saat Premium aktif otomatis disimpan (`promoteTrial`).
+- Uji di HP: `?gating=1` (simulasi gratis) + Pengaturan > Langganan > ketuk judul 7x > "Mode uji". SEBELUM RILIS BERBAYAR: set `GATING_ON=true`, ganti `isPremium()` dengan verifikasi Play Billing, hapus "Mode uji".
+- Tuner harus tetap muat satu layar di 360x640: tombol Tuner|Metronome ada DI DALAM header (tidak menambah tinggi).
+
 ## Ajakan pasang aplikasi (install)
 - Kartu "Pasang FerTune di HP" di atas halaman (script kecil terpisah di bawah `index.html`, sebelum registrasi service worker). Muncul saat browser mengirim event `beforeinstallprompt` (Chrome/Edge Android & PC); tombol "Pasang" memunculkan dialog install bawaan browser.
 - Di iPhone/iPad (tidak ada event itu) kartu berisi petunjuk: Bagikan → "Tambah ke Layar Utama".
