@@ -539,6 +539,13 @@ body{
 .phill .hperf{position:absolute;left:0;right:0;top:22%;z-index:5;text-align:center;pointer-events:none;font-weight:800;font-size:min(24vh,13vw);letter-spacing:.02em;line-height:1;
   background:linear-gradient(90deg,#FF6FA8,#FFB347,#FFE14D,#4ED8A0,#4AB3FF,#A78BFA,#FF6FA8);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
   filter:drop-shadow(0 .03em 0 #fff) drop-shadow(0 0 .04em #fff);animation:gradeIn .6s var(--bounce) both,gradeWiggle 1s .6s ease-in-out infinite,gradeHue 2s linear infinite}
+.pquit{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(59,51,85,.55);padding:12px}
+.pquit[hidden]{display:none}
+.pqbox{background:#fff;border-radius:26px;padding:18px 22px;max-width:380px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);animation:popIn .35s var(--bounce)}
+.pqbox h3{margin:0 0 4px;font-size:22px}
+.pqbox p{margin:0 0 14px;color:var(--muted);font-size:15px}
+.pqbox .row{gap:12px}
+.pqbox .start,.pqbox .sound{flex:1;padding:12px;font-size:18px}
 /* Anti-zoom (ketuk dua kali / cubit) + animasi ketuk untuk semua tombol */
 html,body,*{touch-action:manipulation}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -700,6 +707,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
   <div class="pstage" id="pstage"></div>
   <div class="phill" id="phill" hidden><svg id="phsvg" viewBox="0 0 800 340" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg><div class="hscore" id="hscore"><span aria-hidden="true">⭐</span> <b id="hscoreV">0</b><i class="hbonus" id="hbonus" hidden>BONUS ×2</i></div><canvas class="hfw" id="hfw"></canvas><div class="hperf" id="hperf" hidden>PERFECT!</div><div class="hcap" id="hcap"></div><button class="start hgo" id="hgo" type="button">Lanjut ▶</button></div>
+  <div class="pquit" id="pquit" hidden role="alertdialog" aria-modal="true" aria-labelledby="pqT"><div class="pqbox"><h3 id="pqT">Yakin mau keluar?</h3><p>Permainan yang sedang berjalan akan dihentikan.</p><div class="row"><button class="start" id="pqYes" type="button">Ya</button><button class="sound" id="pqNo" type="button">Tidak</button></div></div></div>
   <div class="pgrade" id="pgrade" hidden aria-hidden="true"><canvas id="pfw"></canvas><div class="gv" id="pgv"></div><div class="gm" id="pgm"></div></div>
   <div class="connSheet" id="pconnSheet" hidden>
     <button class="sound" id="pconnClose" type="button">✕ Tutup</button>
@@ -2035,7 +2043,7 @@ function pdFeed(f,rms,now){
   return null;
 }
 function practiceData(f,rms,now){
-  if(!pr.playing) return;
+  if(!pr.playing || pr.paused) return;
   $('#plevel').style.width=Math.min(100,Math.round(rms*1200))+'%';
   if(now<pr.mute){ pd.armed=false; return; }
   /* Sedang main lewat MIDI: abaikan mikrofon supaya bunyi synth dari speaker tidak terhitung dua kali. */
@@ -2053,7 +2061,7 @@ function practiceData(f,rms,now){
 /* Gitar berbunyi satu oktaf lebih rendah dari not yang tertulis (aturan penulisan partitur gitar). */
 function instShift(){ return pr.inst==='guitar' ? 12 : 0; }
 function practiceHit(m,exact){
-  if(pr.done || !pr.idx.length) return;
+  if(pr.done || pr.paused || !pr.idx.length) return;
   m += instShift();
   if(!pr.t0) pr.t0=performance.now();
   var ni=pr.idx[pr.pos], n=pr.score.notes[ni];
@@ -2454,13 +2462,14 @@ function startPractice(){
   goLandscape();
   newRound(true);
 }
+function askQuit(){ if(!pr.playing) return; pr.paused=true; $('#pquit').hidden=false; try{ $('#pqNo').focus(); }catch(e){} }
 function closePractice(fromPop){
   hideGrade(); hideHill(); var tp=$('#ptop'); if(tp) tp.hidden=true;
   if(!pr.playing) return;
   clearTimeout(autoT);
-  pr.playing=false; document.body.classList.remove('playing'); $('#pconnSheet').hidden=true; $('#pdock').hidden=(app.tab!=='latih');
-  if(mic.active) micStop();
-  $('#pplay').hidden=true; $('#psum').hidden=true;
+  pr.playing=false; pr.paused=false; document.body.classList.remove('playing'); $('#pconnSheet').hidden=true; $('#pdock').hidden=(app.tab!=='latih');
+  $('#pplay').hidden=true; $('#psum').hidden=true; $('#pquit').hidden=true;
+  try{ if(mic.active) micStop(); }catch(e){ console.warn(e); }
   $('#pboardHome').appendChild($('#pboard'));
   var wasArc=(pr.src==='arcade');
   try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
@@ -2504,7 +2513,6 @@ function refreshPractice(){
   if(!pr.score) return;
   if(!mic.active) pr.lastMsg=null;
   $('#plevel').style.width='0';
-  if(wasArc){ pr.src=pr.prevSrc||'random'; pr.score=null; syncPracticeOpts(); arc.step=3; if(app.tab==='arcade') renderArcade(); return; }
   renderPractice();
 }
 function syncPracticeOpts(){
@@ -2611,7 +2619,9 @@ function bindPracticeOpts(){
   $('#pconnClose').addEventListener('click',function(){ $('#pconnSheet').hidden=true; });
   document.body.appendChild($('#pplay'));   /* di luar .app supaya menutupi menu bawah */
   $('#pgo').addEventListener('click',startPractice);
-  $('#pclose').addEventListener('click',function(){ closePractice(); });
+  $('#pclose').addEventListener('click',askQuit);
+  $('#pqYes').addEventListener('click',function(){ closePractice(); });
+  $('#pqNo').addEventListener('click',function(){ pr.paused=false; $('#pquit').hidden=true; });
   $('#pmidiGo').addEventListener('click',async function(){
     var m=$('#pmsg'); m.textContent='';
     $('#pconnSheet').hidden=false;
@@ -3522,7 +3532,7 @@ function goTab(name){
   showTab(name);
 }
 window.addEventListener('popstate',function(e){
-  if(pr.playing){ closePractice(true); return; }
+  if(pr.playing){ try{ history.pushState({tab:app.tab,play:1},''); }catch(e){} askQuit(); return; }
   showTab((e.state && e.state.tab) || 'tuner');
 });
 
