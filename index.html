@@ -1909,8 +1909,17 @@ function arcLevelParams(letterIdx,subLv){
   var steps = stepPool[p<0.35?0:(p<0.7?1:2)];
   var durPool=[[1],[1,0.5],[1,1,0.5,0.5,0.25],[1,0.5,0.5,0.25,1.5]];
   var durs = durPool[p<0.2?0:(p<0.45?1:(p<0.75?2:3))];
-  var rangeKey = p<0.5?'narrow':(p<0.8?'mid':'wide');
-  return { measures:arcadeMeasures(letterIdx), steps:steps, durs:durs, sharpProb:Math.min(0.5,p*0.55), rangeKey:rangeKey };
+  /* Prioritas: lebar rentang dulu (1 oktaf -> 2 oktaf -> 3 oktaf), baru nada ♯ muncul setelah 3 oktaf tercapai */
+  var w = prog<27 ? 5+Math.round(prog/26*3) : (prog<81 ? 8+Math.round((prog-27)/53*7) : (prog<131 ? 15+Math.round((prog-81)/49*7) : 22));
+  var sharpProb = prog<131 ? 0 : Math.min(0.5,0.05+(prog-131)/102*0.45);
+  return { measures:arcadeMeasures(letterIdx), steps:steps, durs:durs, sharpProb:sharpProb, width:w, octaves:(w<=8?1:(w<=15?2:3)) };
+}
+/* Rentang nada (indeks diatonik) untuk lebar w: dimulai di sekitar tengah, melebar ke bawah dan atas */
+function arcRange(w){
+  var base, k;
+  if(pr.inst==='guitar'){ base=30; k=.5; } else if(pr.clef==='bass'){ base=21; k=.5; } else { base=28; k=.4; }
+  var lo = w>8 ? base-Math.round((w-8)*k) : base;
+  return [lo, lo+w-1];
 }
 function genMeasureRhythm(allowedDurs,beatsPerBar){
   var out=[], remaining=beatsPerBar, guard=0;
@@ -1924,7 +1933,7 @@ function genMeasureRhythm(allowedDurs,beatsPerBar){
 }
 function genArcade(letterIdx,subLv){
   var pm=arcLevelParams(letterIdx,subLv);
-  var r=(pr.inst==='guitar'?RANGES_GUITAR:RANGES[pr.clef])[pm.rangeKey], lo=r[0], hi=r[1];
+  var r=arcRange(pm.width), lo=r[0], hi=r[1];
   var notes=[], d=lo+Math.floor(Math.random()*(hi-lo+1)), bar;
   for(bar=0; bar<pm.measures; bar++){
     genMeasureRhythm(pm.durs,4).forEach(function(dur){
@@ -2449,7 +2458,7 @@ function syncPracticeOpts(){
     var pm=arcLevelParams(pr.arcLetter,pr.arcSub);
     var leapTxt = pm.steps.length<=2?'langkah kecil':(pm.steps.length<=4?'lompatan sedang':'lompatan luas');
     var rhTxt = pm.durs.length<=1?'not seperempat saja':(pm.durs.length===2?'seperempat & seperdelapan':'berbagai nilai not');
-    $('#parcInfo').textContent='Level '+ARC_LETTERS[pr.arcLetter]+String(pr.arcSub)+' • '+pm.measures+' birama • '+leapTxt+' • '+rhTxt+(pm.sharpProb>0.05?' • ada nada ♯':'');
+    $('#parcInfo').textContent='Level '+ARC_LETTERS[pr.arcLetter]+String(pr.arcSub)+' • '+pm.measures+' birama • '+pm.octaves+' oktaf • '+leapTxt+' • '+rhTxt+(pm.sharpProb>0.05?' • ada nada ♯':'');
   }
   if(isCust){
     $$('#custGrid button').forEach(function(b){ b.setAttribute('aria-pressed', pr.custNotes.indexOf(parseInt(b.getAttribute('data-note'),10))>=0 ? 'true':'false'); });
