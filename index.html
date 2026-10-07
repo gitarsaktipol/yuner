@@ -546,6 +546,11 @@ body{
 .pqbox p{margin:0 0 14px;color:var(--muted);font-size:15px}
 .pqbox .row{gap:12px}
 .pqbox .start,.pqbox .sound{flex:1;padding:12px;font-size:18px}
+.tpline{stroke:#FF4F94;stroke-width:4;stroke-linecap:round;opacity:.92;filter:drop-shadow(0 0 4px rgba(255,79,148,.8));pointer-events:none}
+.tpline.wait{animation:blink .6s steps(1,end) infinite}
+.tempoCard{display:flex;flex-direction:column;gap:8px}
+.tempoCard label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.tempoCard label.chk{flex-direction:row;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--ink)}
 /* Anti-zoom (ketuk dua kali / cubit) + animasi ketuk untuk semua tombol */
 html,body,*{touch-action:manipulation}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -661,6 +666,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <label>Tangga nada
       <select id="pkey"></select>
     </label>
+    <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo: garis berjalan, not harus dibunyikan saat garis lewat</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label></div>
+    
     <label>Kunci</label>
     <div class="clefSeg" id="pclefSeg" role="group" aria-label="Kunci">
       <button type="button" data-clef="treble" aria-pressed="true">
@@ -775,6 +782,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button type="button" data-amode="num"><span class="bi">1 2 3</span>Not angka</button>
     </div>
     <div class="card asum" id="arcSum"></div>
+    <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo: garis berjalan, not harus dibunyikan saat garis lewat</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label></div>
     <details class="card cfg"><summary>Ganti level</summary>
       <div class="grid">
         <label>Level <select id="parcLetter"></select></label>
@@ -984,7 +992,7 @@ function syncMic(){
     var b=$(s); b.textContent = mic.active ? 'Matikan mikrofon' : 'Aktifkan mikrofon';
     b.classList.toggle('on',mic.active);
   });
-  syncAudStat(); refreshTuner(); refreshPractice();
+  syncAudStat(); refreshTuner(); refreshPractice(); tempoMaybeStart();
 }
 function micLoop(){
   mic.raf=requestAnimationFrame(micLoop);
@@ -1199,7 +1207,7 @@ function midiBindInputs(){
     if(inp.state!=='disconnected') midi.inputs.push(inp);
   });
   if(!midi.inputs.length){ midi.held={}; midiReleaseAll(); }
-  syncMidiUI();
+  syncMidiUI(); tempoMaybeStart();
 }
 function midiConnected(){ return midi.inputs.length>0; }
 function syncMidiUI(){
@@ -1879,7 +1887,8 @@ var pr = { playing:false, inst: store.get('yg.inst','piano')==='guitar' ? 'guita
            custNotes: loadCustNotes(), custMeasures: parseInt(store.get('yg.custMeasures','2'),10)||2,
            key: clamp(parseInt(store.get('yg.key','0'),10)||0,-7,7),
            score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0, missStreak:0,
-           lastAdvanceT:0, fast:false };
+           lastAdvanceT:0, fast:false, paused:false,
+           tempoOn: store.get('yg.tempoOn','0')==='1', bpm: clamp(parseInt(store.get('yg.bpm','70'),10)||70,30,160) };
 var RANGES = {
   treble:{narrow:[28,32], mid:[28,35], wide:[26,40]},
   bass:{narrow:[21,25], mid:[18,28], wide:[16,30]}
@@ -1998,7 +2007,7 @@ function curScoreCopy(){
 }
 var autoT=0;
 function newRound(keep){
-  clearTimeout(autoT); hideGrade(); hideHill();
+  clearTimeout(autoT); hideGrade(); hideHill(); tempoStop();
   if(!keep){
     if(pr.src==='score') pr.score=curScoreCopy();
     else if(pr.src==='arcade') pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genArcade(pr.arcLetter,pr.arcSub)};
@@ -2013,6 +2022,7 @@ function newRound(keep){
   $('#psum').hidden=true;
   buildKeySelect();
   renderPractice();
+  tempoMaybeStart();
 }
 var pd = { armed:false, cand:null, count:0, lastOnset:0, rms:[], last:null, legCand:null, legCount:0, peak:0, dip:0 };
 function pdFeed(f,rms,now){
@@ -2060,11 +2070,104 @@ function practiceData(f,rms,now){
 }
 /* Gitar berbunyi satu oktaf lebih rendah dari not yang tertulis (aturan penulisan partitur gitar). */
 function instShift(){ return pr.inst==='guitar' ? 12 : 0; }
+
+/* ===== Tempo: garis berjalan di partitur; not harus dibunyikan saat garis melewatinya ===== */
+var tp={run:false,raf:0,t0:0,beatMs:857,beat:[],win:[],end:0,lastInt:0,geo:null,first:true};
+function inputReady(){ return mic.active || midiConnected(); }
+function tempoTick(accent){
+  try{ var c=ac(), t=c.currentTime, o=c.createOscillator(), g=c.createGain(); o.type='square'; o.frequency.value=accent?1500:1050;
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.1,t+0.003); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.06); }catch(e){}
+  pr.mute=performance.now()+90;   /* mikrofon jangan mendengar bunyi ketukan sendiri */
+}
+function tempoStop(){ tp.run=false; cancelAnimationFrame(tp.raf); tp.geo=null; }
+function tempoMaybeStart(){
+  if(!pr.tempoOn || !pr.playing || pr.done || tp.run || !pr.score || !pr.idx.length || pr.paused) return;
+  if(!inputReady()) return;
+  var b=0; tp.beat=[]; tp.win=[];
+  pr.score.notes.forEach(function(n,i){ tp.beat[i]=b; tp.win[i]=Math.max(0.2,Math.min(0.45,0.6*n.d)); b+=n.d; });
+  tp.end=b; tp.beatMs=60000/pr.bpm;
+  var cnt=tp.first?4:2; tp.first=false;
+  tp.t0=performance.now()+cnt*tp.beatMs; tp.lastInt=-cnt-1; tp.run=true; pr.t0=tp.t0;
+  renderPractice();
+  tp.raf=requestAnimationFrame(tempoLoop);
+}
+/* Posisi garis: bangun peta posisi tiap not dari gambar partitur yang sedang tampil, lalu pasang garisnya */
+function tempoAttach(){
+  var host=$('#pscore'), svg=host && host.querySelector('svg'); if(!svg || !tp.run) return;
+  var ctm=svg.getScreenCTM(); if(!ctm) return;
+  var inv=ctm.inverse(), seen={}, list=[], rows=[], row=-1, prevX=-1e9;
+  svg.querySelectorAll('g[data-i]').forEach(function(g){
+    var i=parseInt(g.getAttribute('data-i'),10); if(seen[i]) return; seen[i]=1;
+    var bb=g.getBBox(), m=inv.multiply(g.getScreenCTM()), pt=new DOMPoint(bb.x+bb.width/2,bb.y+bb.height/2).matrixTransform(m), h=bb.height*Math.hypot(m.c,m.d);
+    list.push({i:i,x:pt.x,y:pt.y,h:h});
+  });
+  list.sort(function(a,b){ return a.i-b.i; });
+  list.forEach(function(q){
+    if(q.x<prevX-10 || row<0){ row++; rows[row]={y1:1e9,y2:-1e9,xs:[]}; }
+    prevX=q.x; q.row=row; var r=rows[row]; r.y1=Math.min(r.y1,q.y-q.h/2-10); r.y2=Math.max(r.y2,q.y+q.h/2+10); r.xs.push(q.x);
+  });
+  rows.forEach(function(r){
+    var cy=(r.y1+r.y2)/2; if(r.y2-r.y1<80){ r.y1=cy-40; r.y2=cy+40; }
+    var gap=r.xs.length>1 ? (r.xs[r.xs.length-1]-r.xs[0])/(r.xs.length-1) : 40;
+    r.end=r.xs[r.xs.length-1]+gap*0.8;
+  });
+  list.forEach(function(q){ q.rowEnd=rows[q.row].end; });
+  var old=svg.querySelector('.tpline'); if(old) old.remove();
+  var ln=document.createElementNS('http://www.w3.org/2000/svg','line'); ln.setAttribute('class','tpline'); svg.appendChild(ln);
+  tp.geo={list:list,rows:rows,line:ln};
+  tempoMove((performance.now()-tp.t0)/tp.beatMs);
+}
+function tempoMove(t){
+  var g=tp.geo; if(!g || !g.list.length) return;
+  var L=g.list, k=-1, i, x, row;
+  for(i=0;i<L.length;i++){ if(tp.beat[L[i].i]<=t) k=i; else break; }
+  if(k<0){ x=L[0].x-14; row=L[0].row; }
+  else {
+    var a=L[k], b=L[k+1], bb=tp.beat[a.i], endB=b?tp.beat[b.i]:tp.end, fr=Math.min(1,Math.max(0,(t-bb)/Math.max(0.001,endB-bb)));
+    var xe=(b && b.row===a.row) ? b.x : a.rowEnd; x=a.x+(xe-a.x)*fr; row=a.row;
+  }
+  var r=g.rows[row], ln=g.line;
+  ln.setAttribute('x1',x); ln.setAttribute('x2',x); ln.setAttribute('y1',r.y1); ln.setAttribute('y2',r.y2);
+  ln.setAttribute('class','tpline'+(t<0?' wait':''));
+}
+function tempoLoop(now){
+  if(!tp.run) return;
+  var t=(now-tp.t0)/tp.beatMs, bi=Math.floor(t), changed=false;
+  if(bi!==tp.lastInt){
+    tp.lastInt=bi; if(bi<=tp.end) tempoTick(((bi%4)+4)%4===0);
+    if(bi<0){ pr.lastMsg={t:'Siap... '+(-bi),c:''}; changed=true; }
+    else if(bi===0){ pr.lastMsg=null; changed=true; }
+  }
+  /* not yang waktunya sudah lewat tanpa dibunyikan = terlewat */
+  while(!pr.done && pr.pos<pr.idx.length){
+    var ni=pr.idx[pr.pos];
+    if(t>tp.beat[ni]+tp.win[ni]){
+      pr.tries++; pr.wrong++; pr.marks[ni]='bad'; pr.pos++; pr.missStreak=0; pr.lastMsg={t:'Terlewat! Bunyikan saat garis lewat.',c:'bad'}; changed=true;
+      if(pr.pos>=pr.idx.length){ finishRound(); break; }
+    } else break;
+  }
+  if(pr.done){ renderPractice(); tempoStop(); return; }
+  if(changed) renderPractice(); else tempoMove(t);
+  tp.raf=requestAnimationFrame(tempoLoop);
+}
+function bindTempoUI(){
+  $$('.tpBpm').forEach(function(sel){ sel.innerHTML=[40,50,60,70,80,90,100,110,120].map(function(v){ return '<option value="'+v+'">'+v+' ketukan/menit</option>'; }).join(''); });
+  function sync(){ $$('.tpOn').forEach(function(c){ c.checked=pr.tempoOn; }); $$('.tpBpm').forEach(function(s){ s.value=String(pr.bpm); }); }
+  $$('.tpOn').forEach(function(c){ c.addEventListener('change',function(e){ pr.tempoOn=e.target.checked; store.set('yg.tempoOn',pr.tempoOn?'1':'0'); sync(); }); });
+  $$('.tpBpm').forEach(function(s){ s.addEventListener('change',function(e){ pr.bpm=clamp(parseInt(e.target.value,10)||70,30,160); store.set('yg.bpm',String(pr.bpm)); sync(); }); });
+  sync();
+}
 function practiceHit(m,exact){
   if(pr.done || pr.paused || !pr.idx.length) return;
   m += instShift();
   if(!pr.t0) pr.t0=performance.now();
   var ni=pr.idx[pr.pos], n=pr.score.notes[ni];
+  if(pr.tempoOn){
+    if(!tp.run) return;
+    var tb=((performance.now()-(exact?0:(mic.interval<20?70:140)))-tp.t0)/tp.beatMs;
+    if(tb<tp.beat[ni]-tp.win[ni]) return;   /* terlalu cepat: belum waktunya, abaikan */
+  }
   var ok = pitchList(n).some(function(pp){ return pr.anyOct ? (m%12===pp.m%12) : (m===pp.m); });
   if(ok){
     pr.tries++; pr.missStreak=0;
@@ -2083,7 +2186,8 @@ function practiceHit(m,exact){
     var sk=pr.score.key||0, a = spellIn(m,sk);
     pr.lastMsg={t:'Belum tepat, yang terdengar: '+labelOf(m,a,sk),c:'bad'};
     pr.missStreak=0;
-    /* Tetap di not yang sama; harus benar-benar dimainkan dengan benar sebelum lanjut. */
+    /* Tetap di not yang sama; harus benar-benar dimainkan dengan benar sebelum lanjut (mode tempo: waktu terus berjalan, lanjut ke not berikutnya). */
+    if(pr.tempoOn){ pr.pos++; if(pr.pos>=pr.idx.length) finishRound(); }
   }
   renderPractice();
 }
@@ -2394,7 +2498,7 @@ function showHill(played,pct,cb,opt){
   hillT.push(setTimeout(step,500));
 }
 function finishRound(){
-  pr.done=true;
+  pr.done=true; tempoStop();
   var secs=Math.max(1,Math.round((performance.now()-pr.t0)/1000));
   var pct=Math.round(100*pr.idx.length/Math.max(1,pr.tries));
   $('#psumT').textContent='Selesai! Ketepatan '+pct+'%';
@@ -2455,7 +2559,7 @@ function goLandscape(){
 }
 function startPractice(){
   if(pr.playing) return;
-  pr.playing=true; document.body.classList.add('playing'); $('#pdock').hidden=true;
+  pr.playing=true; tp.first=true; document.body.classList.add('playing'); $('#pdock').hidden=true;
   $('#pstage').appendChild($('#pboard'));
   $('#pplay').hidden=false;
   try{ history.pushState({tab:app.tab,play:1},''); }catch(e){}
@@ -2464,7 +2568,7 @@ function startPractice(){
 }
 function askQuit(){ if(!pr.playing) return; pr.paused=true; $('#pquit').hidden=false; try{ $('#pqNo').focus(); }catch(e){} }
 function closePractice(fromPop){
-  hideGrade(); hideHill(); var tp=$('#ptop'); if(tp) tp.hidden=true;
+  hideGrade(); hideHill(); tempoStop(); var tpp=$('#ptop'); if(tpp) tpp.hidden=true;
   if(!pr.playing) return;
   clearTimeout(autoT);
   pr.playing=false; pr.paused=false; document.body.classList.remove('playing'); $('#pconnSheet').hidden=true; $('#pdock').hidden=(app.tab!=='latih');
@@ -2506,6 +2610,7 @@ function renderPractice(){
   /* Pesan baru (benar/salah): ulangi animasi lompat/goyang. */
   if(pr.lastMsg && pr.lastMsg!==shownMsg){ void st.offsetWidth; st.classList.add('bump'); }
   shownMsg=pr.lastMsg;
+  if(pr.tempoOn && pr.playing && tp.run) tempoAttach();
   var tooLow = pr.inst==='guitar' && pr.idx.some(function(i){ return sc.notes[i].m-12<40; });
   $('#pwarn').hidden = !tooLow;
 }
@@ -2588,7 +2693,7 @@ function buildCustGrid(){
   });
 }
 function bindPracticeOpts(){
-  buildArcadeSelects(); buildCustGrid(); bindPlayers(); bindArcade();
+  buildArcadeSelects(); buildCustGrid(); bindPlayers(); bindArcade(); bindTempoUI();
   $$('#pinst button').forEach(function(b){ b.addEventListener('click',function(){ setInst(b.getAttribute('data-inst')); }); });
   $('#psrc').addEventListener('change',function(e){ pr.src=e.target.value; syncPracticeOpts(); newRound(); });
   $('#pkey').addEventListener('change',function(e){
