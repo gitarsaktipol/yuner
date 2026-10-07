@@ -482,6 +482,11 @@ body{
 @keyframes gradeOut{to{opacity:0;transform:scale(1.15)}}
 @keyframes gradeWiggle{0%,100%{transform:rotate(-5deg) scale(1)}25%{transform:rotate(4deg) scale(1.08) translateY(-2%)}50%{transform:rotate(-3deg) scale(1)}75%{transform:rotate(5deg) scale(1.07) translateY(2%)}}
 @keyframes gradeHue{to{background-position:300% 0}}
+.charLab{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.chars{display:flex;gap:6px;margin-bottom:8px}
+.chars button{flex:1;min-width:0;border:0;border-radius:16px;background:var(--pSky);box-shadow:0 3px 0 var(--dSky);padding:4px 2px 6px;font-weight:700;font-size:12px;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.chars button svg{width:100%;max-width:44px;height:48px}
+.chars button[aria-pressed="true"]{background:var(--brass);color:var(--brassText);box-shadow:0 3px 0 var(--brassDeep)}
 /* Halaman bukit Arcade: karakter naik dari level ke level, nilai muncul saat dilewati */
 .phill{position:absolute;left:0;right:0;bottom:0;top:46px;z-index:6;display:flex;flex-direction:column;background:linear-gradient(#CDEBFF,#FFF7FB 75%);overflow:hidden;animation:popIn .45s var(--bounce)}
 .phill svg{flex:1;min-height:0;width:100%;display:block}
@@ -647,6 +652,11 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <label>Sub-level
         <select id="parcSub"></select>
       </label>
+      <div class="charPick" style="grid-column:1/-1">
+        <span class="charLab">Karakter &amp; nama</span>
+        <div class="chars" id="pchars" role="group" aria-label="Pilih karakter"></div>
+        <input class="txt" id="pcharName" type="text" maxlength="12" placeholder="Nama karakter" autocomplete="off" aria-label="Nama karakter">
+      </div>
     </div>
     <div id="pCustomOpts" hidden>
       <div class="noteGrid" id="custGrid"></div>
@@ -2027,6 +2037,35 @@ function showGrade(pct,ms){
   gradeT=setTimeout(function(){ g.classList.add('out'); gradeT=setTimeout(hideGrade,460); },Math.max(800,ms-500));
 }
 
+
+/* ===== Karakter Arcade ===== */
+var CHARS=[
+  {id:0,name:'Dina',shirt:'#FF6FA8',hair:'#5A3E2B',skin:'#FFD9B8',pack:'#FFB300'},
+  {id:1,name:'Raka',shirt:'#4AB3FF',hair:'#2B2B3A',skin:'#E8B88F',pack:'#FF9248'},
+  {id:2,name:'Mimi',shirt:'#2FC58A',hair:'#C0561E',skin:'#FFE0C8',pack:'#A78BFA'},
+  {id:3,name:'Bagas',shirt:'#FFB300',hair:'#3B2A1C',skin:'#C99068',pack:'#4AB3FF'},
+  {id:4,name:'Luna',shirt:'#A78BFA',hair:'#E0457F',skin:'#F6CBA6',pack:'#2FC58A'}
+];
+function charLook(){ return CHARS[clamp(parseInt(store.get('yg.arcChar','0'),10)||0,0,CHARS.length-1)]; }
+function charName(){ var n=(store.get('yg.arcName','')||'').trim(); return n||charLook().name; }
+function charBody(c){
+  return '<line class="hleg1" x1="-5" y1="-20" x2="-5" y2="-2" stroke="#4A4270" stroke-width="6" stroke-linecap="round"/><line class="hleg2" x1="5" y1="-20" x2="5" y2="-2" stroke="#4A4270" stroke-width="6" stroke-linecap="round"/>'+
+    '<rect x="-12" y="-46" width="24" height="30" rx="10" fill="'+c.shirt+'"/><rect x="-18" y="-44" width="9" height="22" rx="4" fill="'+c.pack+'"/>'+
+    '<circle cx="0" cy="-58" r="12" fill="'+c.skin+'"/><path d="M-12,-60 Q-10,-74 2,-71 Q13,-70 12,-58 Q6,-66 -12,-60Z" fill="'+c.hair+'"/><circle cx="4" cy="-58" r="1.8" fill="#3B3355"/><path d="M1,-53 q4,3 7,0" fill="none" stroke="#3B3355" stroke-width="1.6" stroke-linecap="round"/>';
+}
+function buildChars(){
+  var box=$('#pchars'); if(!box) return;
+  var cur=charLook().id;
+  box.innerHTML=CHARS.map(function(c){
+    return '<button type="button" data-c="'+c.id+'" aria-pressed="'+(c.id===cur)+'"><svg viewBox="-24 -80 48 86" aria-hidden="true">'+charBody(c)+'</svg>'+c.name+'</button>';
+  }).join('');
+  $$('#pchars button').forEach(function(b){ b.addEventListener('click',function(){
+    var c=CHARS[parseInt(b.getAttribute('data-c'),10)];
+    store.set('yg.arcChar',String(c.id)); store.set('yg.arcName',c.name);
+    $('#pcharName').value=c.name; buildChars();
+  }); });
+  $('#pcharName').value=charName();
+}
 /* ===== Halaman bukit Arcade ===== */
 var hillT=[], hillRaf=0, hillDone=null;
 function hideHill(){
@@ -2061,9 +2100,7 @@ function showHill(played,pct,cb){
   h1+='<g transform="translate('+top.x+','+(top.y-16)+')"><line x1="0" y1="0" x2="0" y2="-46" stroke="#6B5B8C" stroke-width="4" stroke-linecap="round"/><path d="M2,-46 L34,-37 L2,-26 Z" fill="#FF6FA8"/></g>';
   h1+='<g id="hbubs"></g>';
   h1+='<g id="hchar" transform="translate('+pts[0].x+','+pts[0].y+')"><g class="'+(calm?'still':'walk')+'"><ellipse cx="0" cy="2" rx="16" ry="5" fill="rgba(0,0,0,.15)"/><g class="hbob">'+
-      '<line class="hleg1" x1="-5" y1="-20" x2="-5" y2="-2" stroke="#4A4270" stroke-width="6" stroke-linecap="round"/><line class="hleg2" x1="5" y1="-20" x2="5" y2="-2" stroke="#4A4270" stroke-width="6" stroke-linecap="round"/>'+
-      '<rect x="-12" y="-46" width="24" height="30" rx="10" fill="#FF6FA8"/><rect x="-18" y="-44" width="9" height="22" rx="4" fill="#FFB300"/>'+
-      '<circle cx="0" cy="-58" r="12" fill="#FFD9B8"/><path d="M-12,-60 Q-10,-74 2,-71 Q13,-70 12,-58 Q6,-66 -12,-60Z" fill="#5A3E2B"/><circle cx="4" cy="-58" r="1.8" fill="#3B3355"/><path d="M1,-53 q4,3 7,0" fill="none" stroke="#3B3355" stroke-width="1.6" stroke-linecap="round"/></g></g></g>';
+      charBody(charLook())+'</g></g></g>';
   svg.innerHTML=h1;
   var bubs=$('#hbubs'), ch=$('#hchar'), fin=false;
   function bubble(q){
@@ -2075,8 +2112,8 @@ function showHill(played,pct,cb){
     bubs.appendChild(g);
   }
   function setCap(){
-    cap.textContent = pct>=100 ? (lv[lv.length-1].next ? 'Naik ke level '+arcLabel(played+1)+'! 🎉' : 'Level tertinggi tercapai! 🏆')
-                               : 'Level '+arcLabel(played)+' belum 100% — ulangi dulu ya!';
+    cap.textContent = pct>=100 ? (lv[lv.length-1].next ? charName()+' naik ke level '+arcLabel(played+1)+'! 🎉' : 'Level tertinggi tercapai! 🏆')
+                               : charName()+': level '+arcLabel(played)+' belum 100% — ulangi dulu ya!';
   }
   function end(){
     if(fin) return; fin=true; var f=cb; hideHill(); if(f) f();
@@ -2300,7 +2337,8 @@ function buildCustGrid(){
   });
 }
 function bindPracticeOpts(){
-  buildArcadeSelects(); buildCustGrid();
+  buildArcadeSelects(); buildCustGrid(); buildChars();
+  $('#pcharName').addEventListener('input',function(e){ store.set('yg.arcName',e.target.value); });
   $$('#pinst button').forEach(function(b){ b.addEventListener('click',function(){ setInst(b.getAttribute('data-inst')); }); });
   $('#psrc').addEventListener('change',function(e){ pr.src=e.target.value; syncPracticeOpts(); newRound(); });
   $('#pkey').addEventListener('change',function(e){
