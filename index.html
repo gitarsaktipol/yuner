@@ -482,6 +482,28 @@ body{
 @keyframes gradeOut{to{opacity:0;transform:scale(1.15)}}
 @keyframes gradeWiggle{0%,100%{transform:rotate(-5deg) scale(1)}25%{transform:rotate(4deg) scale(1.08) translateY(-2%)}50%{transform:rotate(-3deg) scale(1)}75%{transform:rotate(5deg) scale(1.07) translateY(2%)}}
 @keyframes gradeHue{to{background-position:300% 0}}
+/* Halaman bukit Arcade: karakter naik dari level ke level, nilai muncul saat dilewati */
+.phill{position:absolute;left:0;right:0;bottom:0;top:46px;z-index:6;display:flex;flex-direction:column;background:linear-gradient(#CDEBFF,#FFF7FB 75%);overflow:hidden;animation:popIn .45s var(--bounce)}
+.phill svg{flex:1;min-height:0;width:100%;display:block}
+.phill .hcap{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-weight:800;font-size:clamp(16px,4.6vh,26px);color:var(--ink);padding:0 130px;pointer-events:none;text-shadow:0 0 6px #fff,0 0 6px #fff}
+.phill .hgo{position:absolute;right:12px;bottom:10px;flex:none;padding:10px 18px}
+.phill .hnode{fill:#fff;stroke:#8CC6F2;stroke-width:4}
+.phill .hnode.done{fill:#FFE14D;stroke:#F2A900}
+.phill .hnode.next{fill:#fff;stroke:#FF6FA8;stroke-dasharray:6 5}
+.phill .hlab{font-size:17px;font-weight:800;fill:#3B3355;text-anchor:middle}
+.phill .hbub{transform-box:fill-box;transform-origin:50% 100%;animation:bubPop .5s var(--bounce) both}
+.phill .hbub text{font-size:26px;font-weight:800;text-anchor:middle}
+@keyframes bubPop{0%{opacity:0;transform:scale(.2) translateY(10px)}70%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
+.phill .hbob{animation:hBob .32s ease-in-out infinite}
+.phill .hleg1,.phill .hleg2{transform-box:fill-box;transform-origin:50% 0}
+.phill .walk .hleg1{animation:hLeg .32s ease-in-out infinite}
+.phill .walk .hleg2{animation:hLeg .32s ease-in-out infinite reverse}
+.phill .still .hbob{animation:none}
+.phill .tired{animation:hTired .6s 2}
+@keyframes hBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes hLeg{0%,100%{transform:rotate(26deg)}50%{transform:rotate(-26deg)}}
+@keyframes hTired{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes hStar{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
 /* Anti-zoom (ketuk dua kali / cubit) + animasi ketuk untuk semua tombol */
 html,body,*{touch-action:manipulation}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -650,6 +672,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <span class="plast" id="plast" hidden>Skor terakhir: <b id="plastV"></b></span>
   </div>
   <div class="pstage" id="pstage"></div>
+  <div class="phill" id="phill" hidden><svg id="phsvg" viewBox="0 0 800 340" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg><div class="hcap" id="hcap"></div><button class="start hgo" id="hgo" type="button">Lanjut ▶</button></div>
   <div class="pgrade" id="pgrade" hidden aria-hidden="true"><canvas id="pfw"></canvas><div class="gv" id="pgv"></div><div class="gm" id="pgm"></div></div>
   <div class="connSheet" id="pconnSheet" hidden>
     <button class="sound" id="pconnClose" type="button">✕ Tutup</button>
@@ -1867,7 +1890,7 @@ function curScoreCopy(){
 }
 var autoT=0;
 function newRound(keep){
-  clearTimeout(autoT); hideGrade();
+  clearTimeout(autoT); hideGrade(); hideHill();
   if(!keep){
     if(pr.src==='score') pr.score=curScoreCopy();
     else if(pr.src==='arcade') pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genArcade(pr.arcLetter,pr.arcSub)};
@@ -2003,6 +2026,89 @@ function showGrade(pct,ms){
   }
   gradeT=setTimeout(function(){ g.classList.add('out'); gradeT=setTimeout(hideGrade,460); },Math.max(800,ms-500));
 }
+
+/* ===== Halaman bukit Arcade ===== */
+var hillT=[], hillRaf=0, hillDone=null;
+function hideHill(){
+  hillT.forEach(clearTimeout); hillT=[]; cancelAnimationFrame(hillRaf); hillDone=null;
+  var h=$('#phill'); if(h) h.hidden=true;
+}
+function arcRes(){ try{ var o=JSON.parse(store.get('yg.arcRes','{}')); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; } }
+function arcLabel(k){ return ARC_LETTERS[Math.floor(k/9)]+(k%9+1); }
+function gradeFill(p){ return p>=100?'url(#hrb)':p>=80?'#F5B800':p>=50?'#E53935':'#111'; }
+function showHill(played,pct,cb){
+  hideGrade();
+  var h=$('#phill'), svg=$('#phsvg'), cap=$('#hcap'), calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var res=arcRes(), from=played;
+  while(from>0 && played-from<4 && res[from-1]!==undefined) from--;
+  var lv=[]; for(var k=from;k<=played;k++) lv.push({k:k,p:k===played?pct:res[k],next:false});
+  if(pct>=100 && played<ARC_LETTERS.length*9-1) lv.push({k:played+1,p:null,next:true});
+  var pts=[{x:46,y:296,base:true}], n=lv.length;
+  for(var i=0;i<n;i++){ var t=(i+1)/n; pts.push({x:46+t*(700-46)+ (i===n-1?0:0), y:300-Math.pow(t,.95)*170, lv:lv[i]}); }
+  var d='M0,340 L0,318 ', top=pts[pts.length-1];
+  var surf=pts.map(function(q){ return q.x+','+(q.y+16); });
+  d+='L'+surf.join(' L')+' L'+(top.x+60)+','+(top.y+60)+' L'+(top.x+160)+',340 Z';
+  var h1='<defs><linearGradient id="hrb" x1="0" x2="1"><stop offset="0" stop-color="#FF6FA8"/><stop offset=".33" stop-color="#FFB300"/><stop offset=".66" stop-color="#2FC58A"/><stop offset="1" stop-color="#4AB3FF"/></linearGradient>'+
+         '<linearGradient id="hhill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9BE7B8"/><stop offset="1" stop-color="#59C98C"/></linearGradient></defs>'+
+         '<circle cx="70" cy="60" r="30" fill="#FFE680"/><g fill="#fff" opacity=".9"><ellipse cx="300" cy="55" rx="46" ry="16"/><ellipse cx="330" cy="46" rx="30" ry="14"/><ellipse cx="560" cy="40" rx="40" ry="14"/></g>'+
+         '<path d="'+d+'" fill="url(#hhill)" stroke="#3FAE74" stroke-width="3" stroke-linejoin="round"/>'+
+         '<polyline points="'+pts.map(function(q){ return q.x+','+q.y; }).join(' ')+'" fill="none" stroke="#fff" stroke-width="6" stroke-dasharray="2 12" stroke-linecap="round"/>';
+  pts.forEach(function(q,i){
+    if(q.base) return;
+    var l=q.lv, cls='hnode'+(l.next?' next':(l.p!==undefined&&l.p!==null?' done':''));
+    h1+='<circle class="'+cls+'" cx="'+q.x+'" cy="'+q.y+'" r="15"/><text class="hlab" x="'+q.x+'" y="'+(q.y+38)+'">'+arcLabel(l.k)+'</text>';
+  });
+  h1+='<g transform="translate('+top.x+','+(top.y-16)+')"><line x1="0" y1="0" x2="0" y2="-46" stroke="#6B5B8C" stroke-width="4" stroke-linecap="round"/><path d="M2,-46 L34,-37 L2,-26 Z" fill="#FF6FA8"/></g>';
+  h1+='<g id="hbubs"></g>';
+  h1+='<g id="hchar" transform="translate('+pts[0].x+','+pts[0].y+')"><g class="'+(calm?'still':'walk')+'"><ellipse cx="0" cy="2" rx="16" ry="5" fill="rgba(0,0,0,.15)"/><g class="hbob">'+
+      '<line class="hleg1" x1="-5" y1="-20" x2="-5" y2="-2" stroke="#4A4270" stroke-width="6" stroke-linecap="round"/><line class="hleg2" x1="5" y1="-20" x2="5" y2="-2" stroke="#4A4270" stroke-width="6" stroke-linecap="round"/>'+
+      '<rect x="-12" y="-46" width="24" height="30" rx="10" fill="#FF6FA8"/><rect x="-18" y="-44" width="9" height="22" rx="4" fill="#FFB300"/>'+
+      '<circle cx="0" cy="-58" r="12" fill="#FFD9B8"/><path d="M-12,-60 Q-10,-74 2,-71 Q13,-70 12,-58 Q6,-66 -12,-60Z" fill="#5A3E2B"/><circle cx="4" cy="-58" r="1.8" fill="#3B3355"/><path d="M1,-53 q4,3 7,0" fill="none" stroke="#3B3355" stroke-width="1.6" stroke-linecap="round"/></g></g></g>';
+  svg.innerHTML=h1;
+  var bubs=$('#hbubs'), ch=$('#hchar'), fin=false;
+  function bubble(q){
+    var l=q.lv; if(l.p===undefined||l.p===null) return;
+    var g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.setAttribute('transform','translate(0,-30)');
+    var w=l.p>=100?74:58, col=gradeFill(l.p);
+    g.innerHTML='<g class="hbub"><path d="M'+(q.x-w/2)+','+(q.y-70)+' h'+w+' a10,10 0 0 1 10,10 v22 a10,10 0 0 1 -10,10 h-'+(w/2-8)+' l-8,10 l-8,-10 h-'+(w/2-8)+' a10,10 0 0 1 -10,-10 v-22 a10,10 0 0 1 10,-10z" fill="#fff" stroke="'+(l.p>=100?'#FFB300':l.p>=80?'#F5B800':l.p>=50?'#E53935':'#111')+'" stroke-width="3"/>'+
+                '<text x="'+q.x+'" y="'+(q.y-40)+'" fill="'+col+'">'+l.p+(l.p>=100?'✨':'')+'</text></g>';
+    bubs.appendChild(g);
+  }
+  function setCap(){
+    cap.textContent = pct>=100 ? (lv[lv.length-1].next ? 'Naik ke level '+arcLabel(played+1)+'! 🎉' : 'Level tertinggi tercapai! 🏆')
+                               : 'Level '+arcLabel(played)+' belum 100% — ulangi dulu ya!';
+  }
+  function end(){
+    if(fin) return; fin=true; var f=cb; hideHill(); if(f) f();
+  }
+  h.hidden=false; cap.textContent=''; hillDone=end;
+  $('#hgo').onclick=end;
+  if(calm){
+    pts.forEach(function(q,i){ if(i) bubble(q); });
+    var last=pts[pts.length-1]; ch.setAttribute('transform','translate('+last.x+','+last.y+')'); setCap();
+    hillT.push(setTimeout(end,2600)); return;
+  }
+  var idx=0;
+  function step(){
+    if(idx>=pts.length-1){
+      setCap();
+      if(pct<100){ ch.firstChild.setAttribute('class','still tired'); }
+      else { ch.firstChild.setAttribute('class','still'); }
+      hillT.push(setTimeout(end,pct>=100?1500:1900)); return;
+    }
+    var a=pts[idx], b=pts[idx+1], t0=performance.now(), dur=idx===0?520:430;
+    ch.firstChild.setAttribute('class','walk');
+    (function mv(now){
+      var k=Math.min(1,(now-t0)/dur), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+      ch.setAttribute('transform','translate('+(a.x+(b.x-a.x)*e)+','+(a.y+(b.y-a.y)*e)+')');
+      if(k<1){ hillRaf=requestAnimationFrame(mv); return; }
+      idx++; bubble(b);
+      ch.firstChild.setAttribute('class','still');
+      hillT.push(setTimeout(step,b.lv.next?200:380));
+    })(t0);
+  }
+  hillT.push(setTimeout(step,500));
+}
 function finishRound(){
   pr.done=true;
   var secs=Math.max(1,Math.round((performance.now()-pr.t0)/1000));
@@ -2011,6 +2117,8 @@ function finishRound(){
   $('#psumD').textContent=pr.idx.length+' not benar dari '+pr.tries+' percobaan, waktu '+secs+' detik.';
   $('#psum').hidden=false;
   $('#plastV').textContent=pct+'%'; $('#plast').hidden=false;
+  var played=pr.arcLetter*9+pr.arcSub-1;
+  if(pr.src==='arcade'){ var rs=arcRes(); rs[played]=pct; store.set('yg.arcRes',JSON.stringify(rs)); }
   var board=$('#pboard');
   showGrade(pct, pct>=100?2200:1800);
   if(pct>=100){
@@ -2018,7 +2126,7 @@ function finishRound(){
     setTimeout(function(){ board.classList.remove('glow'); },1400);
     if(pr.src==='arcade'){
       $('#psumD').textContent+=' Naik ke level berikutnya...';
-      autoT=setTimeout(function(){ advanceArcadeLevel(); syncPracticeOpts(); newRound(); },2200);
+      autoT=setTimeout(function(){ showHill(played,pct,function(){ advanceArcadeLevel(); syncPracticeOpts(); newRound(); }); },2000);
     } else {
       /* Semua mode: benar 100% -> otomatis ganti soal baru */
       $('#psumD').textContent+=' Soal baru...';
@@ -2028,7 +2136,8 @@ function finishRound(){
     /* Belum 100%: bunyi nada turun, lalu otomatis ganti soal (Arcade mengulang level yang sama) */
     practiceMiss();
     $('#psumD').textContent+= pr.src==='arcade' ? ' Ulangi level ini dulu ya.' : ' Soal baru...';
-    autoT=setTimeout(function(){ newRound(); },1800);
+    if(pr.src==='arcade') autoT=setTimeout(function(){ showHill(played,pct,function(){ newRound(); }); },1700);
+    else autoT=setTimeout(function(){ newRound(); },1800);
   }
 }
 /* Pratinjau di menu: hanya 2 birama pertama */
@@ -2069,7 +2178,7 @@ function startPractice(){
   newRound(true);
 }
 function closePractice(fromPop){
-  hideGrade();
+  hideGrade(); hideHill();
   if(!pr.playing) return;
   clearTimeout(autoT);
   pr.playing=false; document.body.classList.remove('playing'); $('#pconnSheet').hidden=true; $('#pdock').hidden=(app.tab!=='latih');
