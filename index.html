@@ -2205,11 +2205,20 @@ function arcRes(){ var r=activePlayer().res; return (r&&typeof r==='object')?r:{
 function arcSetRes(k,v){ var l=loadPlayers(), id=activePlayer().id; l.forEach(function(x){ if(x.id===id){ x.res=x.res||{}; x.res[k]=v; } }); savePlayers(l); }
 function arcLabel(k){ return ARC_LETTERS[Math.floor(k/9)]+(k%9+1); }
 function gradeFill(p){ return p>=100?'url(#hrb)':p>=80?'#F5B800':p>=50?'#E53935':'#111'; }
+/* Bunyi tiap kali karakter melewati satu level: nada naik per level; 100 = "ting" ganda, di bawah 100 = lebih lembut */
+function hillDing(i,p){
+  try{
+    var c=ac(), t=c.currentTime, sc=[0,2,4,5,7,9,11,12], m=72+sc[i%8];
+    if(p===undefined||p===null) return;
+    if(p>=100){ pluck(m,t,0.5); pluck(m+12,t+0.07,0.35); }
+    else pluck(m-5,t,0.45);
+  }catch(e){}
+}
 function showHill(played,pct,cb){
   hideGrade();
   var h=$('#phill'), svg=$('#phsvg'), cap=$('#hcap'), calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var res=arcRes(), from=played;
-  while(from>0 && played-from<4 && res[from-1]!==undefined) from--;
+  while(from>0 && played-from<6 && res[from-1]!==undefined) from--;
   var lv=[]; for(var k=from;k<=played;k++) lv.push({k:k,p:k===played?pct:res[k],next:false});
   if(pct>=100 && played<ARC_LETTERS.length*9-1) lv.push({k:played+1,p:null,next:true});
   var pts=[{x:46,y:296,base:true}], n=lv.length;
@@ -2269,7 +2278,7 @@ function showHill(played,pct,cb){
       var k=Math.min(1,(now-t0)/dur), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
       ch.setAttribute('transform','translate('+(a.x+(b.x-a.x)*e)+','+(a.y+(b.y-a.y)*e)+')');
       if(k<1){ hillRaf=requestAnimationFrame(mv); return; }
-      idx++; bubble(b);
+      idx++; bubble(b); hillDing(idx-1,b.lv.p);
       ch.firstChild.setAttribute('class','still');
       hillT.push(setTimeout(step,b.lv.next?200:380));
     })(t0);
@@ -2294,7 +2303,7 @@ function finishRound(){
     if(pr.src==='arcade'){
       $('#psumD').textContent+=' Naik ke level berikutnya...';
       advanceArcadeLevel(); /* level naik langsung disimpan, supaya bisa dilanjutkan walau keluar di tengah */
-      autoT=setTimeout(function(){ showHill(played,pct,function(){ syncPracticeOpts(); newRound(); }); },2000);
+      autoT=setTimeout(function(){ syncPracticeOpts(); newRound(); },2200); /* 100%: langsung lanjut, halaman bukit hanya untuk nilai di bawah 100 */
     } else {
       /* Semua mode: benar 100% -> otomatis ganti soal baru */
       $('#psumD').textContent+=' Soal baru...';
