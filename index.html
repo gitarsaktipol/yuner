@@ -2778,9 +2778,12 @@ function showHill(played,pct,cb,opt){
 function finishRound(){
   pr.done=true; tempoStop();
   var secs=Math.max(1,Math.round((performance.now()-pr.t0)/1000));
-  var pct=Math.round(100*pr.idx.length/Math.max(1,pr.tries));
+  /* Mode tempo: tiap not hanya 1 kesempatan (salah/terlewat langsung dilewati), jadi percobaan selalu = jumlah not.
+     Nilai dihitung dari not yang benar. Mode biasa: not salah diulang, jadi percobaan bertambah. */
+  var good=pr.tempoOn ? Math.max(0,pr.idx.length-pr.wrong) : pr.idx.length;
+  var pct=pr.tempoOn ? Math.round(100*good/Math.max(1,pr.idx.length)) : Math.round(100*pr.idx.length/Math.max(1,pr.tries));
   $('#psumT').textContent='Selesai! Ketepatan '+pct+'%';
-  $('#psumD').textContent=pr.idx.length+' not benar dari '+pr.tries+' percobaan, waktu '+secs+' detik.';
+  $('#psumD').textContent= pr.tempoOn ? good+' not benar dari '+pr.idx.length+' not, waktu '+secs+' detik.' : pr.idx.length+' not benar dari '+pr.tries+' percobaan, waktu '+secs+' detik.';
   $('#psum').hidden=false;
   var played=pr.arcLetter*9+pr.arcSub-1;
   var perf={perfect:false,newBonus:false};
