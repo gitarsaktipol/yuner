@@ -2670,12 +2670,13 @@ function perfectBurst(){
 function showHill(played,pct,cb,opt){
   hideGrade(); opt=opt||{};
   var h=$('#phill'), svg=$('#phsvg'), cap=$('#hcap'), calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var res=arcRes(), from=played;
-  /* Rekap beberapa level hanya saat lulus 100%; kalau belum 100% karakter cukup naik satu langkah (level yang baru dimainkan). */
-  while(pct>=100 && from>0 && played-from<8 && res[from-1]!==undefined) from--;
-  var plr=activePlayer(), bon=plr.bonus||{}, L0=Math.floor(played/9);
-  var lv=[]; for(var k=from;k<=played;k++) lv.push({k:k,p:k===played?pct:res[k],next:false});
-  if(pct>=100 && played<ARC_LETTERS.length*9-1) lv.push({k:played+1,p:null,next:true});
+  var res=arcRes();
+  var plr=activePlayer(), bon=plr.bonus||{}, L0=Math.floor(played/9), off=played%9;
+  /* Gunung selalu 9 titik (level 1-9 dari huruf ini, dari bawah ke atas). Naik 1 level = 1 langkah kecil;
+     rekap berjalan dari bawah hanya saat huruf tamat 100%. */
+  var recap=pct>=100 && off===8, hasNext=pct>=100 && played<ARC_LETTERS.length*9-1;
+  var lv=[]; for(var k=L0*9;k<L0*9+9;k++) lv.push({k:k,p:k===played?pct:(k<played?res[k]:undefined),next:false});
+  var startI=recap?0:off, endI=off+1;
   function scoreWith(nPassed,bonusOn){
     var t=0, vis={}, k;
     lv.forEach(function(l,i){ if(l.p!==undefined&&l.p!==null) vis[l.k]=i; });
@@ -2683,8 +2684,8 @@ function showHill(played,pct,cb,opt){
       var m=(bon[Math.floor(kk/9)] && !(opt.newBonus && Math.floor(kk/9)===L0 && !bonusOn))?2:1; t+=((plr.res[k]|0))*m; }
     return t;
   }
-  hillSc=scoreWith(0,false); $('#hscoreV').textContent=fmtScore(hillSc); $('#hbonus').hidden=true;
-  var pts=[{x:46,y:300,base:true}], n=lv.length, sm=n>6;
+  hillSc=scoreWith(startI,false); $('#hscoreV').textContent=fmtScore(hillSc); $('#hbonus').hidden=true;
+  var pts=[{x:46,y:300,base:true}], n=lv.length, sm=true;
   for(var i=0;i<n;i++){ var t=(i+1)/n; pts.push({x:46+t*(700-46), y:300-Math.pow(t,.95)*170, lv:lv[i]}); }
   var top=pts[pts.length-1];
   /* gunung selalu naik ke kanan; tiap potongan diwarnai menurut huruf levelnya, makin tinggi makin gelap */
@@ -2737,30 +2738,32 @@ function showHill(played,pct,cb,opt){
     bubs.appendChild(g);
   }
   function setCap(){
-    cap.textContent = opt.perfect ? charName()+' PERFECT di Level '+ARC_LETTERS[L0]+'! '+(opt.newBonus?'Bonus skor ×2 🎉':'🎉') : pct>=100 ? (lv[lv.length-1].next ? (played%9===8 ? charName()+' menamatkan Level '+ARC_LETTERS[Math.floor(played/9)]+'! Lanjut ke '+arcLabel(played+1)+' 🎉' : charName()+' naik ke level '+arcLabel(played+1)+'! 🎉') : 'Level tertinggi tercapai! 🏆')
+    cap.textContent = opt.perfect ? charName()+' PERFECT di Level '+ARC_LETTERS[L0]+'! '+(opt.newBonus?'Bonus skor ×2 🎉':'🎉') : pct>=100 ? (hasNext ? (played%9===8 ? charName()+' menamatkan Level '+ARC_LETTERS[Math.floor(played/9)]+'! Lanjut ke '+arcLabel(played+1)+' 🎉' : charName()+' naik ke level '+arcLabel(played+1)+'! 🎉') : 'Level tertinggi tercapai! 🏆')
                                : charName()+': level '+arcLabel(played)+' belum 100% — ulangi dulu ya!';
   }
   function end(){
     if(fin) return; fin=true; var f=cb; hideHill(); if(f) f();
   }
+  if(!recap) pts.forEach(function(q,i){ if(i>=1 && i<endI) bubble(q); });
   h.hidden=false; cap.textContent=''; hillDone=end;
   $('#hgo').onclick=end;
   if(calm){
-    pts.forEach(function(q,i){ if(i) bubble(q); });
-    var last=pts[pts.length-1]; ch.setAttribute('transform','translate('+last.x+','+last.y+')'); setCap();
-    hillSc=scoreWith(n,true); $('#hscoreV').textContent=fmtScore(hillSc); if(opt.newBonus) $('#hbonus').hidden=false;
+    pts.forEach(function(q,i){ if(i && i<=endI) bubble(q); });
+    var last=pts[endI]; ch.setAttribute('transform','translate('+last.x+','+last.y+')'); setCap();
+    hillSc=scoreWith(endI,true); $('#hscoreV').textContent=fmtScore(hillSc); if(opt.newBonus) $('#hbonus').hidden=false;
     hillT.push(setTimeout(end,2600)); return;
   }
-  var idx=0;
+  var idx=startI;
+  ch.setAttribute('transform','translate('+pts[startI].x+','+pts[startI].y+')');
   function step(){
-    if(idx>=pts.length-1){
+    if(idx>=endI){
       setCap();
-      if(opt.newBonus){ $('#hbonus').hidden=false; bumpScore(scoreWith(n,true)); }
+      if(opt.newBonus){ $('#hbonus').hidden=false; bumpScore(scoreWith(endI,true)); }
       if(pct<100){ ch.firstChild.setAttribute('class','still tired'); }
       else { ch.firstChild.setAttribute('class','still'); }
       hillT.push(setTimeout(end,opt.perfect?2600:(pct>=100?1500:1900))); return;
     }
-    var a=pts[idx], b=pts[idx+1], t0=performance.now(), dur=idx===0?520:(sm?300:430);
+    var a=pts[idx], b=pts[idx+1], t0=performance.now(), dur=recap?(idx===0?520:300):650;
     ch.firstChild.setAttribute('class','walk');
     (function mv(now){
       var k=Math.min(1,(now-t0)/dur), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
