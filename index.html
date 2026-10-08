@@ -2671,7 +2671,8 @@ function showHill(played,pct,cb,opt){
   hideGrade(); opt=opt||{};
   var h=$('#phill'), svg=$('#phsvg'), cap=$('#hcap'), calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var res=arcRes(), from=played;
-  while(from>0 && played-from<8 && res[from-1]!==undefined) from--;
+  /* Rekap beberapa level hanya saat lulus 100%; kalau belum 100% karakter cukup naik satu langkah (level yang baru dimainkan). */
+  while(pct>=100 && from>0 && played-from<8 && res[from-1]!==undefined) from--;
   var plr=activePlayer(), bon=plr.bonus||{}, L0=Math.floor(played/9);
   var lv=[]; for(var k=from;k<=played;k++) lv.push({k:k,p:k===played?pct:res[k],next:false});
   if(pct>=100 && played<ARC_LETTERS.length*9-1) lv.push({k:played+1,p:null,next:true});
