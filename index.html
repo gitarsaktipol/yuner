@@ -44,6 +44,7 @@
   --pPeach:#FFE2D1; --dPeach:#F7B28F;
   --peach:#FF9A7A;
   --navbg:rgba(255,255,255,.92); --surf:#FFFFFF; --hillTop:#CDEBFF;
+  --pkW:#FFFFFF; --pkLine:#D9D3E6; --pkB:#34304A; --pkTgt:#7CCBFF; --pkTgtB:#1E88E5; --pkTgtText:#0B4A7A;
   --shadow:0 2px 3px rgba(120,80,160,.05),0 10px 24px rgba(160,110,200,.10);
   --bounce:cubic-bezier(.34,1.7,.55,1);
   box-sizing:border-box;
@@ -62,6 +63,7 @@
   --pMint:#1D4A3F; --dMint:#2F8C70;  --pLemon:#4A4220; --dLemon:#9C8630;
   --pLilac:#37305E; --dLilac:#6F63B8; --pPeach:#4A3326; --dPeach:#9A6648; --peach:#FF9A7A;
   --navbg:rgba(31,33,56,.94); --surf:#1F2138; --hillTop:#1B2A4A;
+  --pkW:#E9EAF6; --pkLine:#4A4C78; --pkB:#0E0F1E; --pkTgt:#6CC3FF; --pkTgtB:#2F95F0; --pkTgtText:#062B48;
   --shadow:0 1px 2px rgba(0,0,0,.25),0 10px 24px rgba(0,0,0,.35);
 }
 :root[data-theme="laut"]{
@@ -77,6 +79,7 @@
   --pLilac:#DDE6FF; --dLilac:#97A9EE; --pPeach:#FFE5D6; --dPeach:#F3AE90; --peach:#22C3C6;
   --navbg:rgba(255,255,255,.92); --surf:#FFFFFF; --hillTop:#BFE6F7;
   --shadow:0 2px 3px rgba(20,100,150,.06),0 10px 24px rgba(30,140,200,.14);
+  --pkW:#FFFFFF; --pkLine:#CFE6F0; --pkB:#0E3A52; --pkTgt:#7CD3FF; --pkTgtB:#1E9BD7; --pkTgtText:#073A55;
 }
 :root[data-theme="laut"] .start{box-shadow:0 6px 0 var(--brassDeep),0 12px 22px rgba(30,155,215,.35)}
 :root[data-theme="laut"] .tabs{box-shadow:0 10px 30px rgba(30,140,200,.22)}
@@ -651,6 +654,19 @@ body{
 .pqbox .start,.pqbox .sound{flex:1;padding:12px;font-size:18px}
 .tpline{stroke:#FF4F94;stroke-width:4;stroke-linecap:round;opacity:.92;filter:drop-shadow(0 0 4px rgba(255,79,148,.8));pointer-events:none}
 .tpline.wait{animation:blink .6s steps(1,end) infinite}
+/* Tuts petunjuk (ala Simply Piano): tuts yang harus ditekan menyala biru, berkedip hijau/merah saat terdengar */
+.pkeys{position:relative;flex:none;height:clamp(52px,17vh,96px);margin:6px 4px 0;user-select:none}
+.pkeys[hidden]{display:none}
+.pkeys i{position:absolute;top:0;box-sizing:border-box;transition:background-color .12s ease}
+.pkeys .w{height:100%;background:var(--pkW);border:1.5px solid var(--pkLine);border-radius:0 0 8px 8px}
+.pkeys .b{height:60%;background:var(--pkB);border-radius:0 0 5px 5px;z-index:2}
+.pkeys span{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:11px;font-weight:700;font-style:normal;color:var(--muted);pointer-events:none}
+.pkeys .tgt{background:var(--pkTgt);animation:pkPulse 1.1s ease-in-out infinite}
+.pkeys .b.tgt{background:var(--pkTgtB)}
+.pkeys .tgt span{color:var(--pkTgtText)}
+.pkeys .hit{background:var(--ok)!important;animation:none}
+.pkeys .miss{background:var(--bad)!important;animation:none}
+@keyframes pkPulse{50%{filter:brightness(1.12)}}
 .tempoCard{display:flex;flex-direction:column;gap:8px}
 .tempoCard label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
 .tempoCard label.chk{flex-direction:row;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--ink)}
@@ -763,6 +779,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   <div id="pboardHome">
   <section class="board" id="pboard" aria-live="polite">
     <div class="scorehost" id="pscore"></div>
+    <div class="pkeys" id="pkeys" hidden aria-hidden="true"></div>
     <div class="prebtns" id="pprebtns" hidden>
       <button class="start" id="pstart" type="button">Aktifkan mikrofon</button>
       <button class="start alt" id="pmidiGo" type="button">Sambungkan alat musik</button>
@@ -798,7 +815,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <label>Tangga nada
       <select id="pkey"></select>
     </label>
-    <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo: garis berjalan, not harus dibunyikan saat garis lewat</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label></div>
+    <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo: garis berjalan, not harus dibunyikan saat garis lewat</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk: tuts piano yang harus ditekan menyala</label></div>
     
     <label>Kunci</label>
     <div class="clefSeg" id="pclefSeg" role="group" aria-label="Kunci">
@@ -920,7 +937,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button type="button" data-amode="num"><span class="bi">1 2 3</span>Not angka</button>
     </div>
     <div class="card asum" id="arcSum"></div>
-    <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo: garis berjalan, not harus dibunyikan saat garis lewat</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label></div>
+    <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo: garis berjalan, not harus dibunyikan saat garis lewat</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk: tuts piano yang harus ditekan menyala</label></div>
     <details class="card cfg"><summary>Ganti level</summary>
       <div class="grid">
         <label>Level <select id="parcLetter"></select></label>
@@ -1106,6 +1123,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Selesai satu soal, aplikasi menunjukkan hasilnya lalu otomatis pindah ke soal berikutnya.</li>
       </ol>
       <p>Opsional: nyalakan <b>Mode Tempo</b> supaya ada garis berjalan, dan not harus dibunyikan tepat saat garis lewat.</p>
+      <p><b>Tuts petunjuk</b> (khusus Piano, bawaan menyala): keyboard kecil di bawah partitur. Tuts yang harus ditekan menyala biru, lalu berkedip hijau kalau benar atau merah kalau salah. Matikan lewat centang <b>🎹 Tuts petunjuk</b> di kartu Tempo kalau mau latihan membaca not tanpa bantuan.</p>
       <div class="tip">Mikrofon dan kabel audio membaca satu nada dalam satu waktu. Untuk banyak nada sekaligus (akor), pakai keyboard MIDI.</div>
     </div></details>
     <details class="helpitem"><summary>Arcade</summary><div class="hb">
@@ -1234,34 +1252,94 @@ function setText(n,t){ if(n.textContent!==t) n.textContent=t; }
 /* =====================================================================
    Deteksi nada (YIN) dan mesin mikrofon bersama
    ===================================================================== */
+/* YIN versi hemat:
+   1) sampel diperkecil 2x (rata-rata tiap pasang) kalau sample rate tinggi; nada tertinggi yang dicari 1400 Hz,
+      jadi 22-24 kHz masih jauh cukup. Kerja turun ±4x.
+   2) berhenti begitu lembah pertama di bawah ambang ketemu (tidak menghitung semua pergeseran sampai 60 Hz).
+   3) posisi lembah dihaluskan lagi di sample rate penuh, jadi ketelitian sen untuk tuner tetap sama. */
+var yinD=null, yinX=null;
 function yin(buf,sr){
-  var W=buf.length>>1;
-  var tauMax=Math.min(W,Math.floor(sr/60));
-  var tauMin=Math.floor(sr/1400);
-  var d=new Float32Array(tauMax+1);
-  var tau,j,sum,diff;
+  var n=buf.length, x=buf, sx=sr, ds=sr>=32000, i;
+  if(ds){
+    n=buf.length>>1;
+    if(!yinX || yinX.length!==n) yinX=new Float32Array(n);
+    x=yinX; for(i=0;i<n;i++) x[i]=0.5*(buf[2*i]+buf[2*i+1]);
+    sx=sr/2;
+  }
+  yin.x=x; yin.n=n; yin.sr=sx;
+  var W=n>>1;
+  var tauMax=Math.min(W-1,Math.floor(sx/60));
+  var tauMin=Math.max(2,Math.floor(sx/1400));
+  if(!yinD || yinD.length<tauMax+2) yinD=new Float32Array(tauMax+2);
+  var d=yinD, tau, j, sum, diff, running=0, found=-1;
+  d[0]=1;
   for(tau=1;tau<=tauMax;tau++){
     sum=0;
-    for(j=0;j<W;j++){ diff=buf[j]-buf[j+tau]; sum+=diff*diff; }
-    d[tau]=sum;
+    for(j=0;j<W;j++){ diff=x[j]-x[j+tau]; sum+=diff*diff; }
+    running+=sum; d[tau]=running?sum*tau/running:1;
+    /* lembah di bawah ambang sudah lewat titik terendahnya -> selesai */
+    if(tau>tauMin && d[tau-1]<0.12 && d[tau]>=d[tau-1]){ found=tau-1; break; }
   }
-  var running=0; d[0]=1;
-  for(tau=1;tau<=tauMax;tau++){ running+=d[tau]; d[tau]=running?d[tau]*tau/running:1; }
-  var found=-1;
-  for(tau=tauMin;tau<tauMax;tau++){
-    if(d[tau]<0.12){
-      while(tau+1<tauMax && d[tau+1]<d[tau]) tau++;
-      found=tau; break;
-    }
-  }
+  if(found<0 && tauMax>tauMin && d[tauMax]<0.12) found=tauMax-1;
   if(found<1) return null;
   yin.conf=d[found];
   var x0=d[found-1], x1=d[found], x2=d[found+1];
   var den=x0+x2-2*x1;
   var shift=den?(x0-x2)/(2*den):0;
-  return sr/(found+shift);
+  var T=found+shift;
+  if(ds){
+    /* haluskan di sample rate penuh: cari selisih terkecil di sekitar 2xT */
+    var Wf=buf.length>>1, c=Math.round(2*T), best=-1, bv=1e30, v=[], t;
+    for(t=c-2;t<=c+2;t++){
+      if(t<1 || t+Wf>buf.length){ v.push(1e30); continue; }
+      sum=0; for(j=0;j<Wf;j++){ diff=buf[j]-buf[j+t]; sum+=diff*diff; }
+      v.push(sum); if(sum<bv){ bv=sum; best=t; }
+    }
+    var k=best-(c-2);
+    if(best>0 && k>0 && k<4 && v[k-1]<1e30 && v[k+1]<1e30){
+      den=v[k-1]+v[k+1]-2*v[k];
+      return sr/(best+(den?(v[k-1]-v[k+1])/(2*den):0));
+    }
+    return sr/(2*T);
+  }
+  return sr/T;
 }
-
+/* Kemiripan sinyal dengan dirinya sendiri yang digeser tau sampel (0..1; 1 = berulang sempurna). */
+function nsdfAt(x,W,tau){
+  var r=0, m=0, a, b, j;
+  for(j=0;j<W;j++){ a=x[j]; b=x[j+tau]; r+=a*b; m+=a*a+b*b; }
+  return m>0 ? 2*r/m : 0;
+}
+/* Puncak kemiripan di sekitar T (±8%): nilai puncak dan letaknya (dihaluskan, pecahan sampel). */
+function nsdfPeak(x,W,T){
+  var lo=Math.max(1,Math.floor(T*0.92)), hi=Math.ceil(T*1.08), bt=-1, bv=-2, t, v, pv, nv;
+  for(t=lo;t<=hi;t++){ v=nsdfAt(x,W,t); if(v>bv){ bv=v; bt=t; } }
+  var at=bt;
+  if(bt>lo && bt<hi){
+    pv=nsdfAt(x,W,bt-1); nv=nsdfAt(x,W,bt+1);
+    var den=pv+nv-2*bv; if(den<0) at=bt+(pv-nv)/(2*den);
+  }
+  return {v:bv, t:at};
+}
+/* Cara Simply Piano: bukan menebak "nada apa ini", tapi mengecek "apakah not yang diminta sedang berbunyi".
+   Jauh lebih tahan untuk suara piano/gitar asli yang tidak murni (YIN sering menolaknya) dan untuk salah oktaf.
+   Dipakai pada jendela suara yang terakhir dianalisis yin(). anyOct = oktaf boleh beda. */
+function heardTarget(m,anyOct){
+  var x=yin.x, n=yin.n, sr=yin.sr; if(!x) return false;
+  var T=sr/freqOf(m);
+  if(T*2*1.08+2>=n) return false;
+  var W=Math.min(n-Math.ceil(T*2*1.08)-2, Math.max(256, Math.round(T*4)));
+  if(W<Math.ceil(T)) return false;
+  var p=nsdfPeak(x,W,T);
+  /* harus berulang kuat (>=0.86) DAN puncaknya tepat di periode not ini (selisih < ±40 sen), bukan not tetangga */
+  if(p.v<0.86 || Math.abs(1200*Math.log2(p.t/T))>40) return false;
+  if(anyOct) return true;
+  /* bukan oktaf di bawahnya (kalau nada lebih rendah satu oktaf, kemiripan di 2T jauh lebih kuat) */
+  if(nsdfPeak(x,W,2*T).v>p.v+0.06) return false;
+  /* bukan oktaf di atasnya (nada lebih tinggi satu oktaf sudah berulang di T/2) */
+  if(T/2>=3 && nsdfPeak(x,W,T/2).v>0.62) return false;
+  return true;
+}
 var mic = { active:false, ctx:null, stream:null, analyser:null, buf:null, raf:0, last:0, wl:null, onData:[], onTick:[],
             deviceId: store.get('yg.audIn',''), direct: store.get('yg.direct','0')==='1', interval:25 };
 function setMicErr(t){ $('#msg').textContent=t||''; $('#pmsg').textContent=t||''; }
@@ -1278,10 +1356,15 @@ function micLoop(){
   if(now-mic.last>=mic.interval){
     mic.last=now;
     mic.analyser.getFloatTimeDomainData(mic.buf);
-    var s=0,i; for(i=0;i<mic.buf.length;i++) s+=mic.buf[i]*mic.buf[i];
-    var rms=Math.sqrt(s/mic.buf.length);
+    /* Latihan: cukup analisis ±43 ms suara TERBARU (ujung jendela), jadi petikan baru lebih cepat terdengar.
+       Tuner tetap memakai jendela penuh supaya jarumnya tenang. */
+    var w=mic.buf;
+    if(app.tab!=='tuner' && mic.recent && mic.recent<w.length) w=w.subarray(w.length-mic.recent);
+    var s=0,i; for(i=0;i<w.length;i++) s+=w[i]*w[i];
+    var rms=Math.sqrt(s/w.length);
     mic.lastRms=rms;
-    var f = rms<0.008 ? null : yin(mic.buf,mic.ctx.sampleRate);
+    yin.x=null;
+    var f = rms<0.008 ? null : yin(w,mic.ctx.sampleRate);
     for(i=0;i<mic.onData.length;i++) mic.onData[i](f,rms,now);
   }
   for(var k=0;k<mic.onTick.length;k++) mic.onTick[k]();
@@ -1323,6 +1406,8 @@ async function micStart(){
     mic.analyser=mic.ctx.createAnalyser(); mic.analyser.fftSize=mic.direct?2048:4096; mic.analyser.smoothingTimeConstant=0;
     src.connect(mic.analyser);
     mic.buf=new Float32Array(mic.analyser.fftSize);
+    /* panjang jendela latihan ±43 ms (2048 sampel di 44,1/48 kHz); minimal 30 ms supaya nada terendah gitar (E2) masih terbaca */
+    mic.recent=Math.min(mic.buf.length, Math.max(1024, Math.pow(2,Math.ceil(Math.log2(mic.ctx.sampleRate*0.04)))));
     mic.active=true; requestWake(); micLoop();
     listAudioInputs();
   }catch(e){
@@ -2166,7 +2251,8 @@ var pr = { playing:false, inst: store.get('yg.inst','piano')==='guitar' ? 'guita
            key: clamp(parseInt(store.get('yg.key','0'),10)||0,-7,7),
            score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0, missStreak:0,
            lastAdvanceT:0, fast:false, paused:false,
-           tempoOn: store.get('yg.tempoOn','0')==='1', bpm: clamp(parseInt(store.get('yg.bpm','70'),10)||70,30,160) };
+           tempoOn: store.get('yg.tempoOn','0')==='1', bpm: clamp(parseInt(store.get('yg.bpm','70'),10)||70,30,160),
+           keysOn: store.get('yg.pkeys','1')==='1', flash:null };
 var RANGES = {
   treble:{narrow:[28,32], mid:[28,35], wide:[26,40]},
   bass:{narrow:[21,25], mid:[18,28], wide:[16,30]}
@@ -2296,6 +2382,7 @@ function newRound(keep){
   { var sl=$('#pstageLbl'); if(sl){ if(pr.src==='arcade'){ sl.textContent='Stage '+ARC_LETTERS[pr.arcLetter]+pr.arcSub; sl.hidden=false; } else sl.hidden=true; } }
   pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
   pr.lastAdvanceT=0; pr.fast=false;
+  pr.drawn=null; pr.lo=undefined;   /* soal baru / ejaan not bisa berubah: gambar ulang partitur & hitung ulang rentang */
   pd.armed=false; pd.cand=null; pd.count=0; pd.last=null; pd.legCand=null; pd.legCount=0; pd.peak=0; pd.dip=0;
   $('#psum').hidden=true;
   buildKeySelect();
@@ -2303,17 +2390,23 @@ function newRound(keep){
   tempoMaybeStart();
 }
 var pd = { armed:false, cand:null, count:0, lastOnset:0, rms:[], last:null, legCand:null, legCount:0, peak:0, dip:0 };
-function pdFeed(f,rms,now){
+function pdFeed(f,rms,now,target){
   pd.rms.push(rms); if(pd.rms.length>6) pd.rms.shift();
   /* Lacak puncak & lembah volume sejak serangan terakhir: serangan baru hanya sah kalau volume sempat turun dulu
      (bukan sekadar lanjutan tanjakan serangan atau goyangan bunyi yang masih menyambung). */
+  /* "Sempat turun" dinilai dari puncak & lembah SEBELUM bingkai ini. Dulu dinilai sesudahnya, sehingga petikan yang
+     lebih keras dari not sebelumnya (dan not pertama) langsung menimpa puncak & lembah dan tidak pernah dianggap serangan baru. */
+  var dipped = pd.peak<=0.016 || pd.dip<=0.6*pd.peak;
   if(rms>pd.peak){ pd.peak=rms; pd.dip=rms; } else if(rms<pd.dip) pd.dip=rms;
   if(pd.rms.length>=4){
     var prev=pd.rms.slice(0,-1), mn=Math.min.apply(null,prev);
-    if(rms>0.016 && rms>2*mn+0.006 && now-pd.lastOnset>90 && (pd.peak<=0.016 || pd.dip<=0.6*pd.peak)){ pd.armed=true; pd.lastOnset=now; pd.cand=null; pd.count=0; pd.peak=rms; pd.dip=rms; }
+    if(rms>0.016 && rms>2*mn+0.006 && now-pd.lastOnset>90 && dipped){ pd.armed=true; pd.lastOnset=now; pd.cand=null; pd.count=0; pd.peak=rms; pd.dip=rms; }
   }
   if(pd.armed){
     if(now-pd.lastOnset>1000){ pd.armed=false; return null; }
+    /* Not yang diminta terdengar: langsung sah tanpa menunggu konfirmasi kedua (lebih cepat ±25 ms). */
+    var tm = target ? target(f) : null;
+    if(tm!==null){ pd.armed=false; pd.cand=null; pd.count=0; pd.last=tm; pd.legCand=null; pd.legCount=0; return tm; }
     if(!f){ pd.cand=null; pd.count=0; return null; }
     var m=Math.round(69+12*Math.log2(f/A4));
     if(m===pd.cand) pd.count++; else { pd.cand=m; pd.count=1; }
@@ -2332,19 +2425,38 @@ function pdFeed(f,rms,now){
 }
 function practiceData(f,rms,now){
   if(!pr.playing || pr.paused) return;
-  $('#plevel').style.width=Math.min(100,Math.round(rms*1200))+'%';
-  if(now<pr.mute){ pd.armed=false; return; }
+  var lv=Math.min(100,Math.round(rms*1200));
+  if(lv!==pr.lv){ pr.lv=lv; (pr.lvEl||(pr.lvEl=$('#plevel'))).style.width=lv+'%'; }
+  /* Bunyi klik ketukan (Mode Tempo): selama ±90 ms jangan menerima serangan/nada baru, TAPI jangan membatalkan
+     petikan yang sudah tertangkap dan tetap catat volumenya. Pemain justru memetik tepat di ketukan; dulu petikan itu
+     ikut dibatalkan, sehingga not yang sama diulang dianggap "Terlewat" dan not lain baru tertangkap ±200 ms kemudian. */
+  if(now<pr.mute){ pd.rms.push(rms); if(pd.rms.length>6) pd.rms.shift(); return; }
   /* Sedang main lewat MIDI: abaikan mikrofon supaya bunyi synth dari speaker tidak terhitung dua kali. */
   if(midi.lastT && now-midi.lastT<2500){ pd.armed=false; return; }
   /* Penyaring suara bukan alat musik (sama seperti Tuner): nada harus murni dan dalam rentang not soal (±7 nada). */
   if(f && yin.conf>0.1) f=null;
   if(f && pr.idx && pr.idx.length){
-    var fm=Math.round(69+12*Math.log2(f/A4))+instShift(), lo=1e9, hi=-1e9;
-    pr.idx.forEach(function(q){ pitchList(pr.score.notes[q]).forEach(function(pp){ var nm=pp.m; if(nm<lo) lo=nm; if(nm>hi) hi=nm; }); });
-    if(lo<=hi && (fm<lo-7 || fm>hi+7)) f=null;
+    if(pr.lo===undefined || pr.loScore!==pr.score){
+      var lo=1e9, hi=-1e9;
+      pr.idx.forEach(function(q){ pitchList(pr.score.notes[q]).forEach(function(pp){ var nm=pp.m; if(nm<lo) lo=nm; if(nm>hi) hi=nm; }); });
+      pr.lo=lo; pr.hi=hi; pr.loScore=pr.score;
+    }
+    var fm=Math.round(69+12*Math.log2(f/A4))+instShift();
+    if(pr.lo<=pr.hi && (fm<pr.lo-7 || fm>pr.hi+7)) f=null;
   }
-  var m=pdFeed(f,rms,now);
+  var m=pdFeed(f,rms,now,practiceTarget);
   if(m!==null) practiceHit(m);
+}
+/* Not yang sedang diminta (dalam nada yang berbunyi; gitar satu oktaf di bawah tulisan) terdengar? */
+function practiceTarget(f){
+  if(pr.done || !pr.idx.length || pr.pos>=pr.idx.length) return null;
+  var n=pr.score.notes[pr.idx[pr.pos]], ps=pitchList(n), sh=instShift(), i, m;
+  if(f){
+    var fm=Math.round(69+12*Math.log2(f/A4));
+    for(i=0;i<ps.length;i++){ m=ps[i].m-sh; if(fm===m || (pr.anyOct && (fm-m)%12===0)) return fm; }
+  }
+  for(i=0;i<ps.length;i++){ m=ps[i].m-sh; if(heardTarget(m,pr.anyOct)) return m; }
+  return null;
 }
 /* Gitar berbunyi satu oktaf lebih rendah dari not yang tertulis (aturan penulisan partitur gitar). */
 function instShift(){ return pr.inst==='guitar' ? 12 : 0; }
@@ -2358,7 +2470,7 @@ function tempoTick(accent){
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.06); }catch(e){}
   pr.mute=performance.now()+90;   /* mikrofon jangan mendengar bunyi ketukan sendiri */
 }
-function tempoStop(){ tp.run=false; cancelAnimationFrame(tp.raf); tp.geo=null; }
+function tempoStop(){ tp.run=false; cancelAnimationFrame(tp.raf); if(tp.geo && tp.geo.line && tp.geo.line.parentNode) tp.geo.line.parentNode.removeChild(tp.geo.line); tp.geo=null; }
 function tempoMaybeStart(){
   if(!pr.tempoOn || !pr.playing || pr.done || tp.run || !pr.score || !pr.idx.length || pr.paused) return;
   if(!inputReady()) return;
@@ -2434,7 +2546,44 @@ function bindTempoUI(){
   function sync(){ $$('.tpOn').forEach(function(c){ c.checked=pr.tempoOn; }); $$('.tpBpm').forEach(function(s){ s.value=String(pr.bpm); }); }
   $$('.tpOn').forEach(function(c){ c.addEventListener('change',function(e){ pr.tempoOn=e.target.checked; store.set('yg.tempoOn',pr.tempoOn?'1':'0'); sync(); }); });
   $$('.tpBpm').forEach(function(s){ s.addEventListener('change',function(e){ pr.bpm=clamp(parseInt(e.target.value,10)||70,30,160); store.set('yg.bpm',String(pr.bpm)); sync(); }); });
+  $$('.pkOn').forEach(function(c){ c.checked=pr.keysOn; c.addEventListener('change',function(e){ pr.keysOn=e.target.checked; store.set('yg.pkeys',pr.keysOn?'1':'0'); $$('.pkOn').forEach(function(x){ x.checked=pr.keysOn; }); renderPkeys(); }); });
   sync();
+}
+/* ===== Tuts petunjuk: keyboard kecil di bawah partitur (hanya untuk piano) ===== */
+function buildPkeys(box){
+  var lo=1e9, hi=-1e9;
+  pr.idx.forEach(function(q){ pitchList(pr.score.notes[q]).forEach(function(p){ if(p.m<lo) lo=p.m; if(p.m>hi) hi=p.m; }); });
+  if(lo>hi){ lo=60; hi=71; }
+  /* rentang dibulatkan per oktaf (C..B), minimal 2 oktaf supaya tampak seperti keyboard sungguhan */
+  var a=Math.floor(lo/12)*12, b=Math.floor(hi/12)*12+11;
+  while(b-a+1<24){ if(lo-a<=b-hi) a-=12; else b+=12; }
+  var whites=[], m;
+  for(m=a;m<=b;m++) if(!isBlack(m)) whites.push(m);
+  var ww=100/whites.length, h='', wi=0;
+  for(m=a;m<=b;m++){
+    if(!isBlack(m)){
+      h+='<i class="w" data-m="'+m+'" style="left:'+(wi*ww)+'%;width:'+ww+'%">'+(m%12===0?'<span>C'+(Math.floor(m/12)-1)+'</span>':'')+'</i>';
+      wi++;
+    } else {
+      h+='<i class="b" data-m="'+m+'" style="left:'+(wi*ww-ww*0.31)+'%;width:'+(ww*0.62)+'%"></i>';
+    }
+  }
+  box.innerHTML=h; box._sc=pr.score; box._keys=Array.prototype.slice.call(box.children);
+}
+var pkT=0;
+function renderPkeys(){
+  var box=$('#pkeys'); if(!box) return;
+  var on = pr.playing && pr.keysOn && pr.inst==='piano' && !!pr.score && pr.idx.length>0;
+  if(box.hidden===on) box.hidden=!on;
+  if(!on) return;
+  if(box._sc!==pr.score) buildPkeys(box);
+  var tg={}, fl=(pr.flash && performance.now()-pr.flash.t<420) ? pr.flash : null;
+  if(!pr.done && pr.pos<pr.idx.length) pitchList(pr.score.notes[pr.idx[pr.pos]]).forEach(function(p){ tg[p.m]=1; });
+  box._keys.forEach(function(k){
+    var m=+k.getAttribute('data-m'), c=(isBlack(m)?'b':'w')+(tg[m]?' tgt':'')+(fl && fl.m===m ? (fl.ok?' hit':' miss') : '');
+    if(k.className!==c) k.className=c;
+  });
+  if(fl){ clearTimeout(pkT); pkT=setTimeout(renderPkeys,430); }
 }
 function practiceHit(m,exact){
   if(pr.done || pr.paused || !pr.idx.length) return;
@@ -2443,10 +2592,12 @@ function practiceHit(m,exact){
   var ni=pr.idx[pr.pos], n=pr.score.notes[ni];
   if(pr.tempoOn){
     if(!tp.run) return;
-    var tb=((performance.now()-(exact?0:(mic.interval<20?70:140)))-tp.t0)/tp.beatMs;
+    /* kompensasi jeda deteksi mikrofon (jendela ±43 ms terbaru + 1 putaran analisis) */
+    var tb=((performance.now()-(exact?0:(mic.interval<20?50:90)))-tp.t0)/tp.beatMs;
     if(tb<tp.beat[ni]-tp.win[ni]) return;   /* terlalu cepat: belum waktunya, abaikan */
   }
   var ok = pitchList(n).some(function(pp){ return pr.anyOct ? (m%12===pp.m%12) : (m===pp.m); });
+  if(ok || exact || pr.missStreak>=1) pr.flash={m:m,ok:ok,t:performance.now()};
   if(ok){
     pr.tries++; pr.missStreak=0;
     pr.marks[ni]='ok'; pr.pos++;
@@ -2871,16 +3022,32 @@ function closePractice(fromPop){
 var shownMsg=null;
 function renderPractice(){
   var sc=pr.score; if(!sc) return;
+  renderPkeys();   /* tampilkan/sembunyikan tuts dulu, supaya ukuran partitur dihitung dengan ruang yang benar */
   var cur = pr.done ? -1 : pr.idx[pr.pos];
-  var host=$('#pscore');
+  var host=$('#pscore'), redrawn=false;
   if(pr.playing){
-    drawFit(host,sc,function(i){
+    var stFn=function(i){
       var s = pr.marks[i] || '';
       if(i===cur) s += ' cur';   /* satu sorotan saja (fitur dua sorotan saat main cepat sudah dihapus) */
       return s;
-    });
+    };
+    /* Partitur yang sama di ukuran layar yang sama: cukup ganti warna/sorotan not (class), tidak digambar ulang.
+       Menggambar ulang (drawFit bisa mencoba belasan ukuran) tiap not benar membuat HP tersendat. */
+    var dk=pr.drawn, w=host.clientWidth, h=host.clientHeight;
+    if(dk && dk.sc===sc && dk.w===w && dk.h===h && dk.mode===app.mode && host.firstChild && host.firstChild.nodeName.toLowerCase()==='svg'){
+      host.querySelectorAll('g[data-i]').forEach(function(g){
+        var c=stFn(parseInt(g.getAttribute('data-i'),10));
+        c='n'+(c ? ' '+c.split(' ').filter(Boolean).map(function(x){ return 'st-'+x; }).join(' ') : '');
+        if(g.getAttribute('class')!==c) g.setAttribute('class',c);
+      });
+    } else {
+      drawFit(host,sc,stFn);
+      pr.drawn={sc:sc,w:host.clientWidth,h:host.clientHeight,mode:app.mode};
+      redrawn=true;
+    }
   } else {
     /* Menu Latihan: pratinjau 2 birama pertama saja */
+    pr.drawn=null;
     drawScore(host,previewScore(sc),app.mode,function(){ return ''; });
   }
   $('#pprebtns').hidden = !(pr.playing && !(mic.active || midiConnected()));
@@ -2895,14 +3062,14 @@ function renderPractice(){
   /* Pesan baru (benar/salah): ulangi animasi lompat/goyang. */
   if(pr.lastMsg && pr.lastMsg!==shownMsg){ void st.offsetWidth; st.classList.add('bump'); }
   shownMsg=pr.lastMsg;
-  if(pr.tempoOn && pr.playing && tp.run) tempoAttach();
+  if(pr.tempoOn && pr.playing && tp.run && (redrawn || !tp.geo || !host.contains(tp.geo.line))) tempoAttach();
   var tooLow = pr.inst==='guitar' && pr.idx.some(function(i){ return sc.notes[i].m-12<40; });
   $('#pwarn').hidden = !tooLow;
 }
 function refreshPractice(){
   if(!pr.score) return;
   if(!mic.active) pr.lastMsg=null;
-  $('#plevel').style.width='0';
+  $('#plevel').style.width='0'; pr.lv=0;
   renderPractice();
 }
 function syncPracticeOpts(){
