@@ -2789,6 +2789,8 @@ function arcCheckPerfect(played){
   });
   savePlayers(l); return out;
 }
+/* Simpan beberapa data milik pemain aktif (mis. posisi terakhir di gunung `hill`, nilai terakhir 100 `last100`). */
+function arcSetPl(o){ var l=loadPlayers(), id=activePlayer().id, k; l.forEach(function(x){ if(x.id===id) for(k in o) x[k]=o[k]; }); savePlayers(l); }
 function arcSetRes(k,v){ var l=loadPlayers(), id=activePlayer().id; l.forEach(function(x){ if(x.id===id){ x.res=x.res||{}; x.res[k]=v; } }); savePlayers(l); }
 function arcLabel(k){ return ARC_LETTERS[Math.floor(k/9)]+(k%9+1); }
 function gradeFill(p){ return p>=100?'url(#hrb)':p>=80?'#F5B800':p>=50?'#E53935':'#111'; }
@@ -2823,11 +2825,17 @@ function showHill(played,pct,cb,opt){
   var h=$('#phill'), svg=$('#phsvg'), cap=$('#hcap'), calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var res=arcRes();
   var plr=activePlayer(), bon=plr.bonus||{}, L0=Math.floor(played/9), off=played%9;
-  /* Gunung selalu 9 titik (level 1-9 dari huruf ini, dari bawah ke atas). Naik 1 level = 1 langkah kecil;
-     rekap berjalan dari bawah hanya saat huruf tamat 100%. */
-  var recap=pct>=100 && off===8, hasNext=pct>=100 && played<ARC_LETTERS.length*9-1;
-  var lv=[]; for(var k=L0*9;k<L0*9+9;k++) lv.push({k:k,p:k===played?pct:(k<played?res[k]:undefined),next:false});
-  var startI=recap?0:off, endI=off+1;
+  /* Gunung selalu 9 titik (level 1-9 dari huruf ini, dari bawah ke atas). Karakter mulai dari titik TERAKHIR yang pernah
+     ditampilkan untuk pemain ini (`hill`, nomor level tempat ia berdiri; L*9-1 = kaki gunung huruf L), lalu naik melewati
+     stage yang tadi dilewati tanpa gunung (100 berturut-turut) sampai stage ini. 100 di stage 1-8: naik sampai stage berikutnya. */
+  var hasNext=pct>=100 && played<ARC_LETTERS.length*9-1, toNext=pct>=100 && off<8;
+  var lv=[]; for(var k=L0*9;k<L0*9+9;k++) lv.push({k:k,p:k===played?pct:(k<played?res[k]:undefined),next:toNext && k===played+1});
+  var rel=(typeof plr.hill==='number') ? plr.hill-(L0*9-1) : 0;
+  if(!(rel>=0 && rel<=9)) rel=0;   /* belum pernah / huruf lain: dari kaki gunung */
+  var endI=toNext?off+2:off+1;
+  if(rel>=endI) rel=endI-1;        /* sudah berdiri di tujuan atau lewat (gagal lagi, ganti level): mulai satu titik sebelumnya */
+  var startI=rel, recap=endI-startI>3;
+  arcSetPl({hill: (pct>=100 && off===8) ? (L0+1)*9-1 : L0*9+endI-1});
   function scoreWith(nPassed,bonusOn){
     var t=0, vis={}, k;
     lv.forEach(function(l,i){ if(l.p!==undefined&&l.p!==null) vis[l.k]=i; });
@@ -2895,11 +2903,11 @@ function showHill(played,pct,cb,opt){
   function end(){
     if(fin) return; fin=true; var f=cb; hideHill(); if(f) f();
   }
-  if(!recap) pts.forEach(function(q,i){ if(i>=1 && i<endI) bubble(q); });
+  pts.forEach(function(q,i){ if(i>=1 && i<=startI) bubble(q); });   /* nilai stage yang sudah dilewati sebelumnya */
   h.hidden=false; cap.textContent=''; hillDone=end;
   $('#hgo').onclick=end;
   if(calm){
-    pts.forEach(function(q,i){ if(i && i<=endI) bubble(q); });
+    pts.forEach(function(q,i){ if(i>startI && i<=endI) bubble(q); });
     var last=pts[endI]; ch.setAttribute('transform','translate('+last.x+','+last.y+')'); setCap();
     hillSc=scoreWith(endI,true); $('#hscoreV').textContent=fmtScore(hillSc); if(opt.newBonus) $('#hbonus').hidden=false;
     hillT.push(setTimeout(end,2600)); return;
@@ -2942,7 +2950,8 @@ function finishRound(){
   $('#psum').hidden=false;
   var played=pr.arcLetter*9+pr.arcSub-1;
   var perf={perfect:false,newBonus:false};
-  if(pr.src==='arcade'){ arcSetRes(played,pct); if(pct>=100 && played%9===8) perf=arcCheckPerfect(played); refreshTop(); }
+  var was100=false;
+  if(pr.src==='arcade'){ was100=!!activePlayer().last100; arcSetPl({last100:pct>=100}); arcSetRes(played,pct); if(pct>=100 && played%9===8) perf=arcCheckPerfect(played); refreshTop(); }
   var board=$('#pboard');
   showGrade(pct, pct>=100?2200:1800);
   if(pct>=100){
@@ -2951,8 +2960,10 @@ function finishRound(){
     if(pr.src==='arcade'){
       $('#psumD').textContent+=' Naik ke level berikutnya...';
       advanceArcadeLevel(); /* level naik langsung disimpan, supaya bisa dilanjutkan walau keluar di tengah */
-      if(played%9===8) autoT=setTimeout(function(){ showHill(played,pct,function(){ syncPracticeOpts(); newRound(); },perf); },2000); /* satu huruf (9 level) tamat 100% -> tampilkan bukit */
-      else autoT=setTimeout(function(){ syncPracticeOpts(); newRound(); },2200); /* 100%: langsung lanjut; bukit hanya untuk nilai di bawah 100 atau saat huruf tamat */
+      /* Gunung tampil: stage 9 tamat (wajib), atau 100 pertama setelah nilai bukan-100. 100 berturut-turut: langsung lanjut
+         (stage yang dilewati itu nanti ikut didaki saat gunung tampil berikutnya). */
+      if(played%9===8 || !was100) autoT=setTimeout(function(){ showHill(played,pct,function(){ syncPracticeOpts(); newRound(); },perf); },2000);
+      else autoT=setTimeout(function(){ syncPracticeOpts(); newRound(); },2200);
     } else {
       /* Semua mode: benar 100% -> otomatis ganti soal baru */
       $('#psumD').textContent+=' Soal baru...';
