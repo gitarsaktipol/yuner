@@ -402,7 +402,7 @@ header .sel select{max-width:100%;min-width:0}
 body.playing{overflow:hidden}
 .playbar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px}
 .pclose{width:44px;height:44px;border-radius:50%;border:0;background:var(--pLilac);box-shadow:0 3px 0 var(--dLilac);font-size:18px;font-weight:800;color:var(--ink);cursor:pointer}
-.pstageLbl{margin-left:auto;background:var(--surf);border:2px solid var(--dMint);border-radius:18px;padding:4px 14px;font-weight:800;font-size:17px;box-shadow:0 3px 0 var(--dMint);white-space:nowrap}
+.pstageLbl{margin-left:auto;background:var(--surf);border:3px solid var(--dMint);border-radius:22px;padding:4px 20px;font-weight:900;font-size:clamp(22px,7vh,34px);line-height:1.2;box-shadow:0 4px 0 var(--dMint);white-space:nowrap}
 .pstage{flex:1;min-height:0;display:flex;flex-direction:column}
 .play .board{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:8px 10px}
 .play .scorehost{flex:1;min-height:0;overflow:auto;display:flex;align-items:center}
@@ -1130,7 +1130,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <ol>
         <li>Buka menu <b>Arcade</b>. Pilih karakter pemainmu (bisa sampai 5 pemain, masing-masing punya level sendiri).</li>
         <li>Pilih <b>Piano</b> atau <b>Gitar</b>, lalu <b>Not balok</b> atau <b>Not angka</b>.</li>
-        <li>Tekan <b>PLAY</b>. Mainkan semua not sampai selesai. Nilai 100% naik ke level berikutnya.</li>
+        <li>Tekan <b>PLAY</b>. Mainkan semua not sampai selesai. Berapa pun nilainya, karakter naik ke level berikutnya; nilai tiap level tercatat. Kalau A1–A9 (satu huruf) semuanya 100, kamu dapat <b>PERFECT</b> dan skor huruf itu ×2.</li>
       </ol>
       <p>Level naik dari A1 sampai Z9 dan makin sulit. Tombol <b>Ganti level</b> dipakai untuk pindah level.</p>
     </div></details>
@@ -2827,15 +2827,15 @@ function showHill(played,pct,cb,opt){
   var plr=activePlayer(), bon=plr.bonus||{}, L0=Math.floor(played/9), off=played%9;
   /* Gunung selalu 9 titik (level 1-9 dari huruf ini, dari bawah ke atas). Karakter mulai dari titik TERAKHIR yang pernah
      ditampilkan untuk pemain ini (`hill`, nomor level tempat ia berdiri; L*9-1 = kaki gunung huruf L), lalu naik melewati
-     stage yang tadi dilewati tanpa gunung (100 berturut-turut) sampai stage ini. 100 di stage 1-8: naik sampai stage berikutnya. */
-  var hasNext=pct>=100 && played<ARC_LETTERS.length*9-1, toNext=pct>=100 && off<8;
+     stage yang tadi dilewati tanpa gunung (100 berturut-turut) sampai stage ini, lalu ke stage berikutnya (nilai berapa pun). */
+  var hasNext=played<ARC_LETTERS.length*9-1, toNext=off<8;   /* nilai berapa pun tetap naik ke stage berikutnya */
   var lv=[]; for(var k=L0*9;k<L0*9+9;k++) lv.push({k:k,p:k===played?pct:(k<played?res[k]:undefined),next:toNext && k===played+1});
   var rel=(typeof plr.hill==='number') ? plr.hill-(L0*9-1) : 0;
   if(!(rel>=0 && rel<=9)) rel=0;   /* belum pernah / huruf lain: dari kaki gunung */
   var endI=toNext?off+2:off+1;
   if(rel>=endI) rel=endI-1;        /* sudah berdiri di tujuan atau lewat (gagal lagi, ganti level): mulai satu titik sebelumnya */
   var startI=rel, recap=endI-startI>3;
-  arcSetPl({hill: (pct>=100 && off===8) ? (L0+1)*9-1 : L0*9+endI-1});
+  arcSetPl({hill: off===8 ? (L0+1)*9-1 : L0*9+endI-1});
   function scoreWith(nPassed,bonusOn){
     var t=0, vis={}, k;
     lv.forEach(function(l,i){ if(l.p!==undefined&&l.p!==null) vis[l.k]=i; });
@@ -2897,8 +2897,9 @@ function showHill(played,pct,cb,opt){
     bubs.appendChild(g);
   }
   function setCap(){
-    cap.textContent = opt.perfect ? charName()+' PERFECT di Level '+ARC_LETTERS[L0]+'! '+(opt.newBonus?'Bonus skor ×2 🎉':'🎉') : pct>=100 ? (hasNext ? (played%9===8 ? charName()+' menamatkan Level '+ARC_LETTERS[Math.floor(played/9)]+'! Lanjut ke '+arcLabel(played+1)+' 🎉' : charName()+' naik ke level '+arcLabel(played+1)+'! 🎉') : 'Level tertinggi tercapai! 🏆')
-                               : charName()+': level '+arcLabel(played)+' belum 100% — ulangi dulu ya!';
+    var ok=pct>=100, nx=hasNext ? (played%9===8 ? charName()+' menamatkan Level '+ARC_LETTERS[Math.floor(played/9)]+'! Lanjut ke '+arcLabel(played+1) : charName()+' naik ke level '+arcLabel(played+1)+'!') : 'Level tertinggi tercapai!';
+    cap.textContent = opt.perfect ? charName()+' PERFECT di Level '+ARC_LETTERS[L0]+'! '+(opt.newBonus?'Bonus skor ×2 🎉':'🎉')
+                    : ok ? nx+(hasNext?' 🎉':' 🏆') : arcLabel(played)+' dapat '+pct+'. '+nx;
   }
   function end(){
     if(fin) return; fin=true; var f=cb; hideHill(); if(f) f();
@@ -2918,8 +2919,7 @@ function showHill(played,pct,cb,opt){
     if(idx>=endI){
       setCap();
       if(opt.newBonus){ $('#hbonus').hidden=false; bumpScore(scoreWith(endI,true)); }
-      if(pct<100){ ch.firstChild.setAttribute('class','still tired'); }
-      else { ch.firstChild.setAttribute('class','still'); }
+      ch.firstChild.setAttribute('class','still');
       hillT.push(setTimeout(end,opt.perfect?2600:(pct>=100?1500:1900))); return;
     }
     var a=pts[idx], b=pts[idx+1], t0=performance.now(), dur=recap?(idx===0?520:300):650;
@@ -2970,10 +2970,11 @@ function finishRound(){
       autoT=setTimeout(function(){ newRound(); },2200);
     }
   } else {
-    /* Belum 100%: bunyi nada turun, lalu otomatis ganti soal (Arcade mengulang level yang sama) */
+    /* Belum 100%: bunyi nada turun, lalu otomatis ganti soal. Arcade tetap naik ke level berikutnya (diputuskan Ferdi,
+       Okt 2026); nilainya tercatat, dan PERFECT huruf itu hanya kalau 9 level semuanya 100. */
     practiceMiss();
-    $('#psumD').textContent+= pr.src==='arcade' ? ' Ulangi level ini dulu ya.' : ' Soal baru...';
-    if(pr.src==='arcade') autoT=setTimeout(function(){ showHill(played,pct,function(){ newRound(); }); },1700);
+    $('#psumD').textContent+= pr.src==='arcade' ? ' Lanjut ke level berikutnya...' : ' Soal baru...';
+    if(pr.src==='arcade'){ advanceArcadeLevel(); autoT=setTimeout(function(){ showHill(played,pct,function(){ syncPracticeOpts(); newRound(); }); },1700); }
     else autoT=setTimeout(function(){ newRound(); },1800);
   }
 }
