@@ -1325,20 +1325,22 @@ function nsdfPeak(x,W,T){
    Jauh lebih tahan untuk suara piano/gitar asli yang tidak murni (YIN sering menolaknya) dan untuk salah oktaf.
    Dipakai pada jendela suara yang terakhir dianalisis yin(). anyOct = oktaf boleh beda. */
 function heardTarget(m,anyOct){
-  var x=yin.x, n=yin.n, sr=yin.sr; if(!x) return false;
+  /* hasil: frekuensi yang terukur (Hz) kalau not ini terdengar, 0 kalau tidak */
+  var x=yin.x, n=yin.n, sr=yin.sr; if(!x) return 0;
   var T=sr/freqOf(m);
-  if(T*2*1.08+2>=n) return false;
+  if(T*2*1.08+2>=n) return 0;
   var W=Math.min(n-Math.ceil(T*2*1.08)-2, Math.max(256, Math.round(T*4)));
-  if(W<Math.ceil(T)) return false;
+  if(W<Math.ceil(T)) return 0;
   var p=nsdfPeak(x,W,T);
   /* harus berulang kuat (>=0.86) DAN puncaknya tepat di periode not ini (selisih < ±40 sen), bukan not tetangga */
-  if(p.v<0.86 || Math.abs(1200*Math.log2(p.t/T))>40) return false;
-  if(anyOct) return true;
+  if(p.v<0.86 || Math.abs(1200*Math.log2(p.t/T))>40) return 0;
+  var hz=sr/p.t;
+  if(anyOct) return hz;
   /* bukan oktaf di bawahnya (kalau nada lebih rendah satu oktaf, kemiripan di 2T jauh lebih kuat) */
-  if(nsdfPeak(x,W,2*T).v>p.v+0.06) return false;
+  if(nsdfPeak(x,W,2*T).v>p.v+0.06) return 0;
   /* bukan oktaf di atasnya (nada lebih tinggi satu oktaf sudah berulang di T/2) */
-  if(T/2>=3 && nsdfPeak(x,W,T/2).v>0.62) return false;
-  return true;
+  if(T/2>=3 && nsdfPeak(x,W,T/2).v>0.62) return 0;
+  return hz;
 }
 var mic = { active:false, ctx:null, stream:null, analyser:null, buf:null, raf:0, last:0, wl:null, onData:[], onTick:[],
             deviceId: store.get('yg.audIn',''), direct: store.get('yg.direct','0')==='1', interval:25 };
@@ -2389,7 +2391,38 @@ function newRound(keep){
   renderPractice();
   tempoMaybeStart();
 }
-var pd = { armed:false, cand:null, count:0, lastOnset:0, rms:[], last:null, legCand:null, legCount:0, peak:0, dip:0 };
+var pd = { armed:false, cand:null, count:0, lastOnset:0, rms:[], last:null, legCand:null, legCount:0, peak:0, dip:0, tm:null, tc:0, cc:0, lc:0, atk:99, atkT:-1e9, atkOn:null, hitT:0 };
+/* Penyaring suara bicara: nada piano/gitar diam di tempat, nada orang bicara selalu meluncur naik-turun (intonasi).
+   Not baru diterima kalau DUA pembacaan berturut-turut (±25 ms) nadanya sama dalam selisih PD_STAB sen. */
+var PD_STAB=8;
+function centsOf(f){ return 1200*Math.log2(f/A4); }
+/* Penyaring kedua: cara bunyi dimulai. Senar dipukul/dipetik langsung keras dalam beberapa ms; suara bicara mulai pelan
+   lalu membesar puluhan ms. Diukur dari 85 ms suara terakhir (mic.buf) dalam potongan 5 ms: waktu naik dari 20% ke 90%
+   kekerasan menuju puncak di jendela itu. Hasil: ms, atau -1 kalau belum bisa diukur (masih membesar di ujung jendela,
+   tidak ada lonjakan jelas, atau tanjakannya sudah mulai sebelum jendela). */
+var atkE=null;
+function attackMs(){
+  var b=mic.buf; if(!b || !mic.ctx) return -1;
+  var L=Math.max(32,Math.round(mic.ctx.sampleRate*0.005)), B=Math.floor(b.length/L), i, j, s, mx=0, k90=-1, base=1e9, kLo=-1;
+  if(!atkE || atkE.length!==B) atkE=new Float32Array(B);
+  for(i=0;i<B;i++){ s=0; for(j=i*L;j<(i+1)*L;j++) s+=b[j]*b[j]; atkE[i]=Math.sqrt(s/L); if(atkE[i]>mx) mx=atkE[i]; }
+  for(i=0;i<B;i++) if(atkE[i]>=0.9*mx){ k90=i; break; }
+  if(k90<1 || k90>B-3) return -1;                 /* puncak di awal jendela, atau masih membesar di ujung */
+  for(i=0;i<k90;i++) if(atkE[i]<base) base=atkE[i];
+  if(mx-base<0.5*mx) return -1;                   /* tidak ada lonjakan jelas (naik < 2x) */
+  var lo=base+0.2*(mx-base);
+  for(i=k90-1;i>=0;i--) if(atkE[i]<lo){ kLo=i; break; }
+  if(kLo<0) return -1;
+  if(kLo===0 && atkE[0]>0.25*mx) return -1;       /* tanjakan sudah mulai sebelum jendela: tidak bisa dinilai */
+  return (k90-kLo)*L*1000/mic.ctx.sampleRate;
+}
+/* ukuran pertama yang sah di sekitar serangan ini (paling cepat 120 ms sebelum serangan tercatat) */
+function struck(){ return pd.atkOn!==null && pd.atkOn<=25; }
+function trackAttack(now){
+  var a=attackMs(); if(a<0) return;
+  pd.atk=a; pd.atkT=now;
+  if(pd.armed && pd.atkOn===null) pd.atkOn=a;
+}
 function pdFeed(f,rms,now,target){
   pd.rms.push(rms); if(pd.rms.length>6) pd.rms.shift();
   /* Lacak puncak & lembah volume sejak serangan terakhir: serangan baru hanya sah kalau volume sempat turun dulu
@@ -2400,26 +2433,32 @@ function pdFeed(f,rms,now,target){
   if(rms>pd.peak){ pd.peak=rms; pd.dip=rms; } else if(rms<pd.dip) pd.dip=rms;
   if(pd.rms.length>=4){
     var prev=pd.rms.slice(0,-1), mn=Math.min.apply(null,prev);
-    if(rms>0.016 && rms>2*mn+0.006 && now-pd.lastOnset>90 && dipped){ pd.armed=true; pd.lastOnset=now; pd.cand=null; pd.count=0; pd.peak=rms; pd.dip=rms; }
+    if(rms>0.016 && rms>2*mn+0.006 && now-pd.lastOnset>90 && dipped){ pd.armed=true; pd.lastOnset=now; pd.cand=null; pd.count=0; pd.tm=null; pd.atkOn=(now-pd.atkT<=120) ? pd.atk : null; pd.peak=rms; pd.dip=rms; }
   }
   if(pd.armed){
     if(now-pd.lastOnset>1000){ pd.armed=false; return null; }
-    /* Not yang diminta terdengar: langsung sah tanpa menunggu konfirmasi kedua (lebih cepat ±25 ms). */
-    var tm = target ? target(f) : null;
-    if(tm!==null){ pd.armed=false; pd.cand=null; pd.count=0; pd.last=tm; pd.legCand=null; pd.legCount=0; return tm; }
+    /* Not yang diminta terdengar 2x berturut dengan nada stabil -> sah. */
+    var tg = target ? target(f) : null;
+    if(tg){
+      var tc=centsOf(tg.f);
+      if(pd.tm===tg.m && Math.abs(tc-pd.tc)<=PD_STAB && struck()){ pd.armed=false; pd.hitT=now; pd.cand=null; pd.count=0; pd.tm=null; pd.last=tg.m; pd.legCand=null; pd.legCount=0; return tg.m; }
+      pd.tm=tg.m; pd.tc=tc;
+    } else pd.tm=null;
     if(!f){ pd.cand=null; pd.count=0; return null; }
-    var m=Math.round(69+12*Math.log2(f/A4));
-    if(m===pd.cand) pd.count++; else { pd.cand=m; pd.count=1; }
-    if(pd.count>=2){ pd.armed=false; pd.cand=null; pd.count=0; pd.last=m; pd.legCand=null; pd.legCount=0; return m; }
+    var m=Math.round(69+12*Math.log2(f/A4)), c=centsOf(f);
+    if(m===pd.cand && Math.abs(c-pd.cc)<=PD_STAB) pd.count++; else { pd.cand=m; pd.count=1; }
+    pd.cc=c;
+    if(pd.count>=2 && struck()){ pd.armed=false; pd.hitT=now; pd.cand=null; pd.count=0; pd.tm=null; pd.last=m; pd.legCand=null; pd.legCount=0; return m; }
     return null;
   }
   /* Legato (hammer-on/pull-off/slide/slur): nada berganti tanpa serangan/petikan baru,
      selama bunyinya masih menyambung (tidak putus dulu ke sunyi). */
-  if(f && rms>0.016){
-    var lm=Math.round(69+12*Math.log2(f/A4));
+  if(f && rms>0.016 && now-(pd.hitT||-1e9)<1500){
+    var lm=Math.round(69+12*Math.log2(f/A4)), lc=centsOf(f);
     if(lm===pd.last){ pd.legCand=null; pd.legCount=0; return null; }
-    if(lm===pd.legCand) pd.legCount++; else { pd.legCand=lm; pd.legCount=1; }
-    if(pd.legCount>=4){ pd.last=lm; pd.legCand=null; pd.legCount=0; return lm; }
+    if(lm===pd.legCand && Math.abs(lc-pd.lc)<=PD_STAB) pd.legCount++; else { pd.legCand=lm; pd.legCount=1; }
+    pd.lc=lc;
+    if(pd.legCount>=4){ pd.hitT=now; pd.last=lm; pd.legCand=null; pd.legCount=0; return lm; }
   } else { pd.legCand=null; pd.legCount=0; }
   return null;
 }
@@ -2430,6 +2469,7 @@ function practiceData(f,rms,now){
   /* Bunyi klik ketukan (Mode Tempo): selama ±90 ms jangan menerima serangan/nada baru, TAPI jangan membatalkan
      petikan yang sudah tertangkap dan tetap catat volumenya. Pemain justru memetik tepat di ketukan; dulu petikan itu
      ikut dibatalkan, sehingga not yang sama diulang dianggap "Terlewat" dan not lain baru tertangkap ±200 ms kemudian. */
+  trackAttack(now);
   if(now<pr.mute){ pd.rms.push(rms); if(pd.rms.length>6) pd.rms.shift(); return; }
   /* Sedang main lewat MIDI: abaikan mikrofon supaya bunyi synth dari speaker tidak terhitung dua kali. */
   if(midi.lastT && now-midi.lastT<2500){ pd.armed=false; return; }
@@ -2449,13 +2489,14 @@ function practiceData(f,rms,now){
 }
 /* Not yang sedang diminta (dalam nada yang berbunyi; gitar satu oktaf di bawah tulisan) terdengar? */
 function practiceTarget(f){
+  /* hasil: {m: not yang cocok, f: frekuensi terukur} atau null */
   if(pr.done || !pr.idx.length || pr.pos>=pr.idx.length) return null;
-  var n=pr.score.notes[pr.idx[pr.pos]], ps=pitchList(n), sh=instShift(), i, m;
+  var n=pr.score.notes[pr.idx[pr.pos]], ps=pitchList(n), sh=instShift(), i, m, hz;
   if(f){
     var fm=Math.round(69+12*Math.log2(f/A4));
-    for(i=0;i<ps.length;i++){ m=ps[i].m-sh; if(fm===m || (pr.anyOct && (fm-m)%12===0)) return fm; }
+    for(i=0;i<ps.length;i++){ m=ps[i].m-sh; if(fm===m || (pr.anyOct && (fm-m)%12===0)) return {m:fm,f:f}; }
   }
-  for(i=0;i<ps.length;i++){ m=ps[i].m-sh; if(heardTarget(m,pr.anyOct)) return m; }
+  for(i=0;i<ps.length;i++){ m=ps[i].m-sh; hz=heardTarget(m,pr.anyOct); if(hz) return {m:m,f:hz}; }
   return null;
 }
 /* Gitar berbunyi satu oktaf lebih rendah dari not yang tertulis (aturan penulisan partitur gitar). */
