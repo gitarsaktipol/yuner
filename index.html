@@ -1037,6 +1037,11 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     </label>
     <button class="sound" id="smidiOut" type="button">Ekspor ke MIDI</button>
   </div>
+  <div class="row">
+    <label class="sound" style="cursor:pointer">🎵 Impor lagu (audio)
+      <input type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.aac" id="saudIn" hidden>
+    </label>
+  </div>
   <p class="hint" id="smidiMsg"></p>
 
   <section class="imgpanel" id="simgpanel" hidden>
@@ -1142,6 +1147,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
         <li><b>Putar</b> membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
         <li><b>Save/Create</b> membuat partitur kosong baru. <b>Ekspor ke MIDI</b> dan <b>Impor file MIDI</b> ada di bawah tombol itu.</li>
+        <li><b>🎵 Impor lagu (audio)</b>: pilih rekaman (mp3, wav, m4a). FerTune mendengarkannya langsung di HP, mengubahnya jadi not, lalu jadi partitur (maks. 2 menit pertama). Hasil terbaik dari rekaman satu alat musik atau nyanyian saja; lagu lengkap dengan band hasilnya kurang rapi. Setelah selesai ada tautan <b>Unduh MIDI lengkap</b> berisi semua nada yang terdengar.</li>
       </ol>
       <div class="tip">Dengan keyboard MIDI tersambung, tuts yang kamu tekan langsung menjadi not di partitur.</div>
     </div></details>
@@ -3522,6 +3528,7 @@ var PW={
   simpan:['Menyimpan khusus Premium','Di mode coba, tulisanmu tidak disimpan. Berlangganan Premium untuk menyimpan dan menulis tanpa batas.'],
   trial4:['Batas mode coba: 4 birama','Berlangganan Premium untuk menulis tanpa batas, menyimpan, dan mengekspor.'],
   impor:['Impor MIDI khusus Premium','Ubah file MIDI jadi partitur. Berlangganan Premium untuk membukanya.'],
+  audio:['Impor lagu khusus Premium','Ubah rekaman lagu jadi MIDI dan partitur. Berlangganan Premium untuk membukanya.'],
   ekspor:['Ekspor MIDI khusus Premium','Simpan partiturmu sebagai file MIDI. Berlangganan Premium untuk membukanya.'],
   gambar:['Impor gambar khusus Premium','Unggah gambar partitur sebagai acuan. Berlangganan Premium untuk membukanya.'],
   akor:['Akor khusus Premium','Akor (beberapa nada sekaligus) dan mengubah not yang sudah ada khusus Premium. Di mode coba, tulis not satu per satu.']
@@ -4004,6 +4011,8 @@ function bindScore(){
   $('#smidiOut').addEventListener('click',function(){ if(!isPremium()){ showPaywall('ekspor'); return; } exportMidi(); });
   $('#smidiIn').addEventListener('click',function(e){ if(!isPremium()){ e.preventDefault(); showPaywall('impor'); } });
   $('#smidiIn').addEventListener('change',function(e){ if(!isPremium()) return; importMidi(e); });
+  $('#saudIn').addEventListener('click',function(e){ if(!isPremium()){ e.preventDefault(); showPaywall('audio'); } else if(audBusy){ e.preventDefault(); } });
+  $('#saudIn').addEventListener('change',function(e){ if(!isPremium()) return; importAudio(e); });
 }
 
 /* ---------- file MIDI (.mid): ekspor partitur & impor lagu untuk latihan ---------- */
@@ -4127,6 +4136,15 @@ function midiToScore(pm,fname){
   return {score:{id:'s'+Date.now(),title:title,ts:[ts[0],ts[1]],bpm:clamp(pm.bpm,30,240),clef:'treble',notes:out},cut:cut,
           chords:src.length>line.length, tsn:tsn};
 }
+/* Masukkan partitur hasil impor (MIDI / audio) ke daftar partitur dan tampilkan. Hasil: jumlah not. */
+function addImportedScore(res){
+  var sc=res.score, low=0, cnt=0;
+  sc.notes.forEach(function(n){ if(n.m!==null){ low+=n.m; cnt++; } });
+  if(cnt && low/cnt<57) sc.clef='bass';
+  stopPlay(); scores.push(sc); curId=sc.id; sel=-1; saveScores();
+  buildScoreList(); syncScoreFields(); renderScoreView();
+  return cnt;
+}
 function importMidi(e){
   var f=e.target.files && e.target.files[0], msg=$('#smidiMsg'); e.target.value='';
   if(!f) return;
@@ -4135,17 +4153,145 @@ function importMidi(e){
     try{
       var res=midiToScore(parseMidi(rdr.result),f.name);
       if(!res){ msg.textContent='File MIDI ini tidak berisi not melodi yang bisa dibaca.'; return; }
-      var sc=res.score, low=0, cnt=0;
-      sc.notes.forEach(function(n){ if(n.m!==null){ low+=n.m; cnt++; } });
-      if(cnt && low/cnt<57) sc.clef='bass';
-      stopPlay(); scores.push(sc); curId=sc.id; sel=-1; saveScores();
-      buildScoreList(); syncScoreFields(); renderScoreView();
+      var cnt=addImportedScore(res);
       msg.textContent='Berhasil diimpor: '+cnt+' not'+(res.chords?' (akor diambil nada teratasnya saja sebagai melodi)':'')+(res.cut?', lagu dipotong karena terlalu panjang':'')+'. Tekan Putar untuk mendengar, atau Latih untuk berlatih.';
     }catch(err){
       msg.textContent='File tidak bisa dibaca: '+(err&&err.message?err.message:'format tidak dikenal')+'.';
     }
   };
   rdr.readAsArrayBuffer(f);
+}
+
+/* ---------- impor lagu (audio) -> MIDI -> partitur ----------
+   Memakai Basic Pitch (Spotify, Apache-2.0) yang dijalankan LANGSUNG di HP lewat TensorFlow.js (vendor/basic-pitch.js +
+   vendor/basic-pitch-model/, dimuat hanya saat fitur ini dipakai). File audio tidak dikirim ke mana pun.
+   Alur: decode file -> mono 22050 Hz (maks AUD_MAX detik) -> Basic Pitch -> daftar not (bisa akor) -> buang nada "hantu"
+   (harmonik di atas nada yang lebih kuat) & not terlalu pendek -> tebak tempo -> midiToScore (melodi = nada teratas). */
+var AUD_MAX=120, audBusy=false, audMidi=null;
+function loadBasicPitch(){
+  if(window._bpP) return window._bpP;
+  window._bpP=new Promise(function(res,rej){
+    var el=document.createElement('script'); el.src='vendor/basic-pitch.js';
+    el.onload=function(){ window.FTBasicPitch ? res(window.FTBasicPitch) : rej(new Error('gagal memuat')); };
+    el.onerror=function(){ window._bpP=null; rej(new Error('offline')); };
+    document.head.appendChild(el);
+  });
+  return window._bpP;
+}
+function decodeAudioFile(buf){
+  return new Promise(function(res,rej){
+    var c=ac(), done=false;
+    var p=c.decodeAudioData(buf,function(b){ if(!done){ done=true; res(b); } },function(e){ if(!done){ done=true; rej(e||new Error('format audio tidak dikenal')); } });
+    if(p && p.then) p.then(function(b){ if(!done){ done=true; res(b); } },function(e){ if(!done){ done=true; rej(e||new Error('format audio tidak dikenal')); } });
+  });
+}
+/* jadikan mono 22050 Hz (syarat Basic Pitch), maks AUD_MAX detik */
+function toMono22k(ab){
+  var sr=22050, dur=Math.min(ab.duration,AUD_MAX), OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  var oc=new OAC(1,Math.max(1,Math.ceil(dur*sr)),sr), src=oc.createBufferSource();
+  src.buffer=ab; src.connect(oc.destination); src.start(0);
+  var r=oc.startRendering();
+  return (r && r.then) ? r : new Promise(function(res){ oc.oncomplete=function(e){ res(e.renderedBuffer); }; });
+}
+/* buang not "hantu": terlalu pendek, atau harmonik (oktaf/kuint di atas) dari nada lain yang berbunyi bersamaan & lebih kuat */
+function cleanNotes(ev){
+  var H=[12,19,24,28,31,36];
+  ev=ev.filter(function(n){ return n.durationSeconds>=0.09; });
+  return ev.filter(function(n){
+    return !ev.some(function(k){
+      if(k===n || k.pitchMidi>=n.pitchMidi || H.indexOf(n.pitchMidi-k.pitchMidi)<0) return false;
+      var ov=Math.min(n.startTimeSeconds+n.durationSeconds,k.startTimeSeconds+k.durationSeconds)-Math.max(n.startTimeSeconds,k.startTimeSeconds);
+      return ov>0.6*n.durationSeconds && Math.abs(n.startTimeSeconds-k.startTimeSeconds)<0.12 && k.amplitude>=0.7*n.amplitude;
+    });
+  });
+}
+/* tebak tempo (60-180 BPM) dari awal-awal not: autokorelasi kekuatan serangan, lebih condong ke sekitar 100 BPM */
+function guessBpm(ev){
+  if(ev.length<4) return 100;
+  var FPS=100, end=0, i;
+  ev.forEach(function(n){ end=Math.max(end,n.startTimeSeconds); });
+  var L=Math.ceil(end*FPS)+2, o=new Float32Array(L);
+  ev.forEach(function(n){ var k=Math.round(n.startTimeSeconds*FPS); o[k]+=0.3+n.amplitude; if(k+1<L) o[k+1]+=0.5*(0.3+n.amplitude); });
+  var best=100, bv=-1;
+  for(var bpm=60;bpm<=180;bpm++){
+    var lag=60*FPS/bpm, s=0;
+    for(var h=1;h<=4;h++){ var lg=Math.round(lag*h); for(i=0;i+lg<L;i++) s+=o[i]*o[i+lg]/h; }
+    s*=Math.exp(-0.5*Math.pow(Math.log2(bpm/100)/0.6,2));
+    if(s>bv){ bv=s; best=bpm; }
+  }
+  return best;
+}
+/* file MIDI berisi SEMUA not hasil dengar (bisa akor), untuk diunduh */
+function notesToMidi(ev,bpm,title){
+  var us=Math.round(60000000/bpm), name=strBytes(title||'FerTune'), list=[];
+  ev.forEach(function(n){
+    var s=Math.round(n.startTimeSeconds*bpm/60*PPQ), e=Math.max(s+1,Math.round((n.startTimeSeconds+n.durationSeconds)*bpm/60*PPQ)), v=clamp(Math.round(40+87*n.amplitude),1,127), m=clamp(n.pitchMidi,0,127);
+    list.push([s,1,0x90,m,v]); list.push([e,0,0x80,m,0]);
+  });
+  list.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+  var trk=[0,0xFF,0x03].concat(vlq(name.length),name,[0,0xFF,0x51,0x03,(us>>16)&255,(us>>8)&255,us&255],[0,0xFF,0x58,0x04,4,2,24,8],[0,0xC0,0]), last=0;
+  list.forEach(function(x){ trk=trk.concat(vlq(x[0]-last),[x[2],x[3],x[4]]); last=x[0]; });
+  trk=trk.concat([0,0xFF,0x2F,0x00]);
+  var head=[0x4D,0x54,0x68,0x64].concat(u32(6),[0,0,0,1,(PPQ>>8)&255,PPQ&255]);
+  return new Uint8Array(head.concat([0x4D,0x54,0x72,0x6B],u32(trk.length),trk));
+}
+function downloadAudMidi(){
+  if(!audMidi) return;
+  var url=URL.createObjectURL(new Blob([audMidi.bytes],{type:'audio/midi'})), a=document.createElement('a');
+  a.href=url; a.download=audMidi.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); },4000);
+}
+function importAudio(e){
+  var f=e.target.files && e.target.files[0], msg=$('#smidiMsg'); e.target.value='';
+  if(!f || audBusy) return;
+  audBusy=true; audMidi=null;
+  var base=(f.name||'Lagu').replace(/\.[^.]+$/,'').slice(0,60)||'Lagu', cut=false, BP;
+  function say(t){ msg.textContent=t; }
+  say('Membuka lagu...');
+  var rd=new FileReader();
+  rd.onerror=function(){ audBusy=false; say('File tidak bisa dibuka.'); };
+  rd.onload=function(){
+    decodeAudioFile(rd.result).then(function(ab){
+      cut=ab.duration>AUD_MAX+0.5;
+      say('Menyiapkan pengubah lagu jadi not (pertama kali butuh mengunduh ±1,7 MB)...');
+      return Promise.all([toMono22k(ab),loadBasicPitch()]);
+    }).then(function(r){
+      var mono=r[0]; BP=r[1];
+      var bp=new BP.BasicPitch('vendor/basic-pitch-model/model.json'), fr=[], on=[], ct=[], lastPct=-1;
+      return bp.evaluateModel(mono.getChannelData(0),function(a,b,c){ Array.prototype.push.apply(fr,a); Array.prototype.push.apply(on,b); Array.prototype.push.apply(ct,c); },
+        function(p){ var q=Math.floor(p*100); if(q!==lastPct){ lastPct=q; say('Mendengarkan lagu dan menulis not... '+q+'%'); } })
+        .then(function(){ return [fr,on,ct]; });
+    }).then(function(o){
+      var ev=BP.noteFramesToTime(BP.addPitchBendsToNoteEvents(o[2],BP.outputToNotesPoly(o[0],o[1],0.5,0.3,5)));
+      ev=cleanNotes(ev).sort(function(a,b){ return a.startTimeSeconds-b.startTimeSeconds; });
+      if(!ev.length){ audBusy=false; say('Tidak ada nada yang bisa dikenali di lagu ini. Coba rekaman yang lebih jelas (satu alat musik atau nyanyian saja).'); return; }
+      var bpm=guessBpm(ev), bs=bpm/60;
+      audMidi={bytes:notesToMidi(ev,bpm,base),name:(base.replace(/[^\w\- ]+/g,'').trim()||'lagu')+'.mid'};
+      /* not pertama jatuh tepat di ketukan; not yang berhenti sedikit sebelum not berikutnya dipanjangkan sampai not itu
+         (bunyi rekaman cepat meluruh, jadi akhir not terdengar lebih awal dari yang dimaksud pemain) */
+      var t0=ev[0].startTimeSeconds, starts=ev.map(function(n){ return n.startTimeSeconds; });
+      var pm={notes:ev.map(function(n){
+        var s=n.startTimeSeconds, e=s+n.durationSeconds, nx=Infinity;
+        for(var j=0;j<starts.length;j++) if(starts[j]>s+0.05 && starts[j]<nx) nx=starts[j];
+        if(nx!==Infinity && nx>e && (nx-e)*bs<=1) e=nx;
+        return {s:(s-t0)*bs,e:(e-t0)*bs,m:n.pitchMidi,ch:0};
+      }),bpm:bpm,ts:[4,4],title:base,format:0};
+      var res=midiToScore(pm,base);
+      audBusy=false;
+      if(!res){ say('Tidak ada melodi yang bisa dibaca dari lagu ini.'); return; }
+      var cnt=addImportedScore(res);
+      msg.innerHTML='';
+      msg.appendChild(document.createTextNode('Lagu jadi partitur: '+cnt+' not, tempo ±'+bpm+' BPM'+(cut?', hanya '+Math.round(AUD_MAX/60)+' menit pertama':'')+(res.cut?', dipotong karena terlalu panjang':'')+'. Melodi diambil dari nada teratas; periksa & rapikan not yang kurang pas. '));
+      var a=document.createElement('a'); a.href='#'; a.textContent='Unduh MIDI lengkap (semua nada)';
+      a.addEventListener('click',function(ev2){ ev2.preventDefault(); downloadAudMidi(); });
+      msg.appendChild(a);
+    }).catch(function(err){
+      audBusy=false;
+      var m=err&&err.message||'';
+      say(m==='offline' ? 'Pengubah lagu belum bisa diunduh. Sambungkan internet sekali, lalu coba lagi.' : 'Lagu tidak bisa diproses'+(m?': '+m:'')+'. Coba file mp3/wav lain.');
+    });
+  };
+  rd.readAsArrayBuffer(f);
 }
 
 /* ---------- gambar partitur + baca otomatis (jika tersedia) ---------- */
@@ -4313,7 +4459,7 @@ function applyEntitlements(){
   $('#sdel').hidden = !prem && !trial;
   $('#sdel').textContent = (!prem && trial) ? 'Buang coba menulis' : 'Hapus partitur';
   ['#smidiOut','#sprac'].forEach(function(q){ var b=$(q); if(!b._t){ b._t=b.textContent; } b.textContent=b._t+(prem?'':' ⭐'); });
-  [['#smidiIn','Impor file MIDI'],['#simg','Unggah gambar partitur']].forEach(function(x){
+  [['#smidiIn','Impor file MIDI'],['#saudIn','🎵 Impor lagu (audio)'],['#simg','Unggah gambar partitur']].forEach(function(x){
     var lab=$(x[0]).parentNode; lab.firstChild.nodeValue=x[1]+(prem?'':' ⭐')+' ';
   });
   syncScoreFields();
