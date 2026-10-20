@@ -298,6 +298,7 @@ header .sel select{max-width:100%;min-width:0}
 .instList button:nth-child(2){--c:var(--pSky);--cd:var(--dSky)}
 .instList button:nth-child(3){--c:var(--pMint);--cd:var(--dMint)}
 .instList button:disabled{opacity:.45;cursor:default}
+#sundo:disabled,#sredo:disabled{opacity:.4;cursor:default}
 .instList button:active{transform:translateY(3px) scale(.98);box-shadow:0 1px 0 var(--cd)}
 .instList .ic{grid-row:span 2;font-size:30px;text-align:center;line-height:1}
 .instList b{font-size:17px}
@@ -1089,6 +1090,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button class="chip" type="button" id="sright" style="flex:1" aria-label="Kursor ke kanan">Kanan ▶</button>
     </div>
     <div class="chips" style="margin-top:6px"><button class="chip" type="button" id="sauto" style="flex:1" aria-pressed="false">Maju otomatis: mati</button></div>
+    <div class="chips" style="margin-top:6px"><button class="chip" type="button" id="sundo" style="flex:1" title="Ctrl+Z" disabled>↶ Urungkan</button><button class="chip" type="button" id="sredo" style="flex:1" title="Ctrl+Y" disabled>↷ Ulangi</button></div>
     <div class="row" style="margin-top:10px;align-items:center">
       <div class="stepper" style="flex:1;justify-content:space-between">
         <button class="ctl" id="soctdn" type="button" aria-label="Oktaf lebih rendah">−</button>
@@ -1265,6 +1267,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Tombol nilai not (penuh sampai 1/16), titik, ♯/♭, rehat, dinamika, dan kursor ada <b>di atas</b> partitur; tuts piano <b>tepat di bawah</b> partitur. Ketuk tuts untuk menulis not.</li>
         <li><b>Dinamika</b>: pilih satu not (atau tulis not baru), lalu ketuk <i>pp, p, mp, mf, f, ff</i>, <i>cresc.</i> atau <i>dim.</i> Ketuk lagi untuk menghapus. Dinamika ikut terdengar saat diputar dan ikut tersimpan saat diekspor ke MIDI.</li>
         <li><b>Piano 2 tangan</b>: di pilihan <i>Kunci</i> pilih <i>Piano 2 tangan (G + F)</i>. Paranada atas (kunci G) untuk <b>tangan kanan</b>, paranada bawah (kunci F) untuk <b>tangan kiri</b>. Pilih tangan yang mau ditulis dengan tombol <i>Tangan kanan / Tangan kiri</i>, atau cukup <b>ketuk paranadanya</b> (paranada yang sedang ditulis berwarna biru muda). Tiap tangan ditulis sendiri-sendiri: tulis tangan kanan sampai selesai, lalu pindah ke tangan kiri dan mulai lagi dari birama 1. Saat diputar dan diekspor ke MIDI kedua tangan berbunyi bersamaan; Latihan memakai tangan kanan (melodi).</li>
+        <li><b>Urungkan / Ulangi</b>: tombol <b>↶ Urungkan</b> dan <b>↷ Ulangi</b> (di bawah "Maju otomatis"), atau di keyboard laptop <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (Mac: ⌘Z / ⌘⇧Z). Tombol <b>Spasi</b> = Putar / Berhenti.</li>
         <li>Tombol ◀ ▶ memindahkan kursor. Ketuk not untuk memilih dan mengubahnya. Tombol hapus menghapus bertahap.</li>
         <li><b>Mengganti panjang not</b>: ketuk not, lalu ketuk nilai not lain (mis. ¼ jadi ½). Kalau biramanya tidak cukup, muncul pilihan: <b>Geser semua</b> (semua not sesudahnya mundur, birama berikutnya ikut bergeser) atau <b>Hanya di birama ini</b> (not sesudahnya di birama itu bergeser, not paling belakang di birama itu dihapus).</li>
         <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
@@ -3578,7 +3581,50 @@ function loadScores(){
   lastRealId=curId;
   initSnap();
 }
-function saveScores(){ trackChanges(); store.set('yg.scores',JSON.stringify(scores)); store.set('yg.curScore',curIsTrial()?lastRealId:curId); schedulePush(); }
+/* ---------- Urungkan / Ulangi (Ctrl+Z / Ctrl+Y) ----------
+   Setiap kali partitur disimpan, keadaan sebelumnya (salinan JSON partitur yang sedang dibuka) masuk tumpukan urungkan
+   per partitur. Perubahan yang terjadi < 350 ms dari sebelumnya (mis. akor dari keyboard MIDI) digabung jadi satu langkah. */
+var undo={stk:{},redo:{},last:{},t:{},busy:false};
+function undoSnap(s){ var o={}; Object.keys(s).forEach(function(k){ if(k!=='updatedAt') o[k]=s[k]; }); return JSON.stringify(o); }
+function undoBase(s){ if(s && undo.last[s.id]===undefined) undo.last[s.id]=undoSnap(s); }
+function undoTrack(){
+  if(undo.busy) return;
+  var s=curScore(); if(!s) return;
+  var id=s.id, now=undoSnap(s), prev=undo.last[id], t=Date.now();
+  if(prev===undefined || prev===now){ undo.last[id]=now; return; }
+  var st=undo.stk[id]=undo.stk[id]||[];
+  if(!(st.length && t-(undo.t[id]||0)<350)){ st.push(prev); if(st.length>200) st.shift(); }
+  undo.t[id]=t; undo.redo[id]=[]; undo.last[id]=now;
+}
+function undoApply(json){
+  var s=curScore(), o=JSON.parse(json);
+  Object.keys(s).forEach(function(k){ if(k!=='id' && k!=='updatedAt' && k!=='trial') delete s[k]; });
+  Object.keys(o).forEach(function(k){ s[k]=o[k]; });
+  undo.last[s.id]=json; undo.t[s.id]=0;
+  stopPlay(); sel=-1; editing=false; pitchSel=0;
+  undo.busy=true; saveScores(); undo.busy=false;
+  syncScoreFields(); buildScoreList(); renderScoreView();
+}
+function doUndo(){
+  if(rec.on) return;
+  undoTrack();
+  var s=curScore(), st=undo.stk[s.id];
+  if(!st || !st.length){ showScoreAlert('Tidak ada yang bisa diurungkan lagi.'); return; }
+  (undo.redo[s.id]=undo.redo[s.id]||[]).push(undoSnap(s));
+  undoApply(st.pop());
+}
+function doRedo(){
+  if(rec.on) return;
+  var s=curScore(), rd=undo.redo[s.id];
+  if(!rd || !rd.length){ showScoreAlert('Tidak ada yang bisa diulangi.'); return; }
+  (undo.stk[s.id]=undo.stk[s.id]||[]).push(undoSnap(s));
+  undoApply(rd.pop());
+}
+function syncUndoUI(){
+  var s=curScore(), u=$('#sundo'), r=$('#sredo'); if(!u||!s) return;
+  u.disabled=!(undo.stk[s.id]&&undo.stk[s.id].length); r.disabled=!(undo.redo[s.id]&&undo.redo[s.id].length);
+}
+function saveScores(){ undoTrack(); trackChanges(); store.set('yg.scores',JSON.stringify(scores)); store.set('yg.curScore',curIsTrial()?lastRealId:curId); schedulePush(); }
 
 /* =====================================================================
    Akun & cloud (opsional). Akun = akun Gitar Sakti (Supabase). Tanpa login, semuanya
@@ -3906,6 +3952,7 @@ function syncScoreFields(){
 }
 function renderScoreView(){
   var s=curScore(), EN=edScore().notes, eP=(s.grand && hand==='lh') ? 1 : 0;
+  undoBase(s); syncUndoUI();
   if(sel<0 || sel>=EN.length){ if(sel>=EN.length) sel=-1; editing=false; }
   /* bagian p: 0 = paranada atas / satu-satunya, 1 = tangan kiri; sorotan pilih/peringatan hanya di tangan yang sedang ditulis */
   drawScore($('#sscore'),s,app.mode,function(i,p){
@@ -4483,12 +4530,31 @@ function bindScore(){
   syncAuto();
   document.addEventListener('keydown',function(e){
     if(app.tab!=='score' || e.target.closest && e.target.closest('input,select,textarea')) return;
+    if($$('.pwOv').some(function(o){ return !o.hidden; })) return;   /* ada dialog terbuka */
+    var k=(e.key||'').toLowerCase();
+    if((e.ctrlKey||e.metaKey) && !e.altKey && (k==='z'||k==='y')){
+      e.preventDefault();
+      if(k==='y' || e.shiftKey) doRedo(); else doUndo();
+      return;
+    }
+    if(e.key===' ' || e.code==='Space'){
+      /* Spasi = Putar / Berhenti (saat merekam: selesai rekam) */
+      e.preventDefault(); if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      if(!e.repeat){ if(rec.on) recStop(); else playScore(); }
+      return;
+    }
     if(e.key==='ArrowLeft'){ e.preventDefault(); navMove(-1); }
     else if(e.key==='ArrowRight'){ e.preventDefault(); navMove(1); }
     else if(e.key==='ArrowUp'){ e.preventDefault(); pitchMove(1); }
     else if(e.key==='ArrowDown'){ e.preventDefault(); pitchMove(-1); }
     else if(e.key==='Delete' || e.key==='Backspace'){ e.preventDefault(); delNote(); }
   });
+  /* Spasi tidak boleh ikut "menekan" tombol yang sedang terfokus (keyup), karena sudah dipakai untuk Putar */
+  document.addEventListener('keyup',function(e){
+    if(app.tab==='score' && (e.key===' '||e.code==='Space') && !(e.target.closest && e.target.closest('input,select,textarea'))) e.preventDefault();
+  });
+  $('#sundo').addEventListener('click',doUndo);
+  $('#sredo').addEventListener('click',doRedo);
   $('#srest').addEventListener('click',addRest);
   $('#sdelnote').addEventListener('click',delNote);
   $('#soctdn').addEventListener('click',function(){ inp.oct=clamp(inp.oct-1,1,6); buildKeyboard(); });
