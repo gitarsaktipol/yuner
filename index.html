@@ -288,6 +288,29 @@ header .sel select{max-width:100%;min-width:0}
 .pwBox h2{margin:2px 0 6px;font-size:20px}
 .pwBox p{margin:0 0 14px;font-size:14px;line-height:1.55;color:var(--muted)}
 .pwBox .row{gap:8px}
+/* Bikin Partitur Baru: pilih instrumen */
+.snewbig{display:block;width:100%;margin:0 0 14px}
+.instList{display:flex;flex-direction:column;gap:10px;margin:4px 0 14px}
+.instList button{--c:var(--pPink);--cd:var(--dPink);display:grid;grid-template-columns:44px 1fr;align-items:center;gap:2px 10px;text-align:left;padding:12px 14px;border-radius:18px;border:0;background:var(--c);color:var(--ink);box-shadow:0 4px 0 var(--cd);font:inherit;cursor:pointer;transition:transform .15s var(--bounce)}
+.instList button:nth-child(2){--c:var(--pSky);--cd:var(--dSky)}
+.instList button:nth-child(3){--c:var(--pMint);--cd:var(--dMint)}
+.instList button:active{transform:translateY(3px) scale(.98);box-shadow:0 1px 0 var(--cd)}
+.instList .ic{grid-row:span 2;font-size:30px;text-align:center;line-height:1}
+.instList b{font-size:17px}
+.instList small{font-size:12.5px;color:var(--muted);line-height:1.35}
+/* Piano asli (MIDI): sambung, rekam, kecepatan */
+.srec .row{gap:8px}
+.srec .row .start{flex:1;padding:11px 12px;font-size:16px}
+.srec .cstat{font-size:13px;color:var(--muted);margin:8px 2px 4px;text-align:center;line-height:1.45}
+.srec .cstat.ok{color:var(--ok);font-weight:600}
+.srecSet{display:flex;align-items:center;gap:10px;margin-top:8px}
+.srecSet .lbl{font-size:13px;color:var(--muted);min-width:92px;line-height:1.3}
+.srecSet .stepper,.srecSet .chips{flex:1}
+.srecSet .chips .chip{flex:1}
+#srecMsg{margin:8px 2px 0;text-align:center}
+#srecMsg.live{color:var(--ink);font-weight:700;font-size:15px}
+#tab-score .fields:not(.fields2){grid-template-columns:repeat(2,1fr)}
+@media (min-width:700px){ #tab-score .fields:not(.fields2){grid-template-columns:repeat(4,1fr)} }
 /* ---------- halaman Pengaturan ---------- */
 #tab-set h2.sh{margin:0 0 10px;font-size:16px;font-weight:800;color:var(--ink)}
 #tab-set .themes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -979,10 +1002,15 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
   <div class="card sfree" id="sfree" hidden></div>
 
+  <button class="start snewbig" id="snewBig" type="button">＋ Bikin Partitur Baru</button>
+
   <div class="card">
     <label class="sr" for="stitle">Judul</label>
     <input class="txt" id="stitle" type="text" placeholder="Judul lagu" maxlength="60" autocomplete="off">
     <div class="fields">
+      <label>Instrumen
+        <select id="sinst"><option value="">Bebas</option><option value="vocal">Vokal</option><option value="guitar">Gitar</option><option value="piano">Piano</option></select>
+      </label>
       <label>Tempo
         <input id="sbpm" type="number" min="30" max="240" value="90" inputmode="numeric">
       </label>
@@ -1064,6 +1092,28 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </section>
 
   <div class="card skb"><div class="kb" id="kb"></div></div>
+
+  <div class="card srec" id="srecCard">
+    <div class="row">
+      <button class="sound" id="smidiCon" type="button">🎹 Sambungkan piano (MIDI)</button>
+      <button class="start" id="srec" type="button">⏺ Rekam</button>
+    </div>
+    <p class="cstat" id="smidiStat">Colok piano / keyboard MIDI (di HP pakai kabel OTG), lalu tekan <b>Sambungkan</b>. Setelah tersambung, tuts piano asli langsung menulis not, atau tekan <b>Rekam</b> untuk bermain bebas dan langsung jadi partitur.</p>
+    <div class="srecSet">
+      <span class="lbl">Kecepatan putar &amp; rekam</span>
+      <div class="stepper"><button class="ctl" id="sspdDn" type="button" aria-label="Lebih lambat">−</button><output id="sspdVal" aria-live="polite" style="flex:1">100%</output><button class="ctl" id="sspdUp" type="button" aria-label="Lebih cepat">+</button></div>
+    </div>
+    <div class="srecSet">
+      <span class="lbl"></span>
+      <div class="chips" id="sspdQuick"><button class="chip" type="button" data-s="50">50%</button><button class="chip" type="button" data-s="75">75%</button><button class="chip" type="button" data-s="100">100%</button></div>
+    </div>
+    <div class="srecSet">
+      <span class="lbl">Rapikan rekaman ke</span>
+      <div class="chips" id="sgrid" role="group" aria-label="Rapikan rekaman ke nilai not"><button class="chip" type="button" data-q="1">¼</button><button class="chip" type="button" data-q="0.5">⅛</button><button class="chip" type="button" data-q="0.25">1/16</button></div>
+    </div>
+    <p class="hint" id="srecMsg"></p>
+    <div class="row" style="margin-top:8px"><button class="sound" id="srecUndo" type="button" hidden>↶ Batalkan rekaman terakhir</button></div>
+  </div>
 
   <div class="row">
     <button class="start" id="splay" type="button" style="flex:1.4">▶ Putar</button>
@@ -1195,6 +1245,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Tombol ◀ ▶ memindahkan kursor. Ketuk not untuk memilih dan mengubahnya. Tombol hapus menghapus bertahap.</li>
         <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
         <li><b>Putar</b> membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
+        <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>Save/Create</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
+        <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan piano (MIDI)</b>. Setelah tersambung, tuts piano asli langsung menulis not seperti tuts di layar (tekan bersamaan = akor).</li>
+        <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, nada di bawah C tengah (C4) masuk tangan kiri. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
+        <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
         <li><b>Save/Create</b> membuat partitur kosong baru. <b>Ekspor ke MIDI</b> dan <b>Impor file MIDI</b> ada di bawah tombol itu.</li>
         <li><b>🎵 Impor lagu (audio)</b>: pilih rekaman (mp3, wav, m4a). FerTune mendengarkannya langsung di HP, mengubahnya jadi not, lalu jadi partitur (maks. 2 menit pertama). Hasil terbaik dari rekaman satu alat musik atau nyanyian saja; lagu lengkap dengan band hasilnya kurang rapi. Setelah selesai ada tautan <b>Unduh MIDI lengkap</b> berisi semua nada yang terdengar.</li>
       </ol>
@@ -1252,6 +1306,19 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 <p class="foot"><a class="gsback" href="/" hidden>← Gitar Sakti</a>FerTune • <a href="privacy.html">Kebijakan Privasi</a></p>
 </main>
+
+<div class="pwOv" id="snewOv" hidden role="dialog" aria-modal="true" aria-labelledby="snewT">
+  <div class="pwBox">
+    <h2 id="snewT">Bikin Partitur Baru</h2>
+    <p>Pilih instrumennya:</p>
+    <div class="instList">
+      <button type="button" data-inst="vocal"><span class="ic" aria-hidden="true">🎤</span><b>Vokal</b><small>1 suara (satu nada sekaligus) · 1 paranada</small></button>
+      <button type="button" data-inst="guitar"><span class="ic" aria-hidden="true">🎸</span><b>Gitar</b><small>Sampai 10 nada bersamaan · 1 paranada kunci G</small></button>
+      <button type="button" data-inst="piano"><span class="ic" aria-hidden="true">🎹</span><b>Piano</b><small>Sampai 10 nada bersamaan · 2 paranada (kunci G + kunci F)</small></button>
+    </div>
+    <div class="row"><button class="sound" id="snewCancel" type="button">Batal</button></div>
+  </div>
+</div>
 
 <div class="pwOv" id="paywall" hidden role="dialog" aria-modal="true" aria-labelledby="pwTitle">
   <div class="pwBox">
@@ -1607,7 +1674,7 @@ async function midiConnect(){
   if(!midiSupported()){
     st.className='cstat';
     st.textContent='Browser ini belum mendukung MIDI. Pakai Google Chrome atau Microsoft Edge (Android, Windows, Mac, Linux). Safari/iPhone belum bisa.';
-    return;
+    smidiSync(); return;
   }
   try{
     midi.access=await navigator.requestMIDIAccess({sysex:false});
@@ -1617,6 +1684,7 @@ async function midiConnect(){
   }catch(e){
     st.className='cstat';
     st.textContent='Akses MIDI ditolak. Izinkan "perangkat MIDI" untuk situs ini di pengaturan browser, lalu coba lagi.';
+    smidiSync();
   }
 }
 function midiBindInputs(){
@@ -1643,6 +1711,13 @@ function syncMidiUI(){
     b.textContent='Cari ulang alat MIDI'; b.classList.toggle('on',midiConnected());
   }
   renderHeld(); if(pr.score) renderPractice();
+  smidiSync();
+}
+/* Status MIDI juga ditampilkan di menu Partitur (kartu Piano asli) */
+function smidiSync(){
+  var a=$('#midiStat'), b=$('#smidiStat'), k=$('#smidiCon'); if(!a||!b||!midi.access&&!a.textContent) return;
+  if(a.textContent){ b.className=a.className; b.textContent=a.textContent; }
+  if(k) k.textContent = midiConnected() ? '🎹 Cari ulang piano' : '🎹 Sambungkan piano (MIDI)';
 }
 function midiMessage(e){
   var d=e.data; if(!d || d.length<2) return;
@@ -1661,11 +1736,13 @@ function midiNoteOn(n,v){
   if(midi.synth) synthOn(n,v);
   renderHeld();
   if((app.tab==='latih'||app.tab==='arcade') && pr.playing) practiceHit(n,true);
+  else if(app.tab==='score' && rec.on) recNoteOn(n);
   else if(app.tab==='score' && !playing) midiScoreNote(n,midi.synth);
   else if(app.tab==='tuner') midiTunerShow(n);
 }
 function midiNoteOff(n){
   delete midi.held[n];
+  if(rec.on) recNoteOff(n);
   if(!midi.sustain) synthOff(n);
   renderHeld();
 }
@@ -3690,6 +3767,7 @@ var PW={
   audio:['Impor lagu khusus Premium','Ubah rekaman lagu jadi MIDI dan partitur. Berlangganan Premium untuk membukanya.'],
   ekspor:['Ekspor MIDI khusus Premium','Simpan partiturmu sebagai file MIDI. Berlangganan Premium untuk membukanya.'],
   gambar:['Impor gambar khusus Premium','Unggah gambar partitur sebagai acuan. Berlangganan Premium untuk membukanya.'],
+  rekam:['Rekam dari piano khusus Premium','Mainkan lagu di piano asli (MIDI) dan langsung jadi partitur. Berlangganan Premium untuk membukanya.'],
   akor:['Akor khusus Premium','Akor (beberapa nada sekaligus) dan mengubah not yang sudah ada khusus Premium. Di mode coba, tulis not satu per satu.']
 };
 function showPaywall(key){
@@ -3708,6 +3786,9 @@ function edScore(){
   if(!s.lh) s.lh=[];
   var e=Object.create(s); e.notes=s.lh; e.clef='bass'; return e;
 }
+/* Instrumen partitur (s.inst): vokal 1 suara; gitar & piano sampai 10 nada sekaligus. Partitur lama tanpa instrumen = bebas (10). */
+var INST={vocal:{name:'Vokal',max:1},guitar:{name:'Gitar',max:10},piano:{name:'Piano',max:10}};
+function maxVoices(s){ var i=INST[s && s.inst]; return i ? i.max : 10; }
 function hasPitch(N){ return !!N && N.some(function(n){ return n.m!==null; }); }
 /* Pindah tangan yang ditulis (piano 2 tangan): sorotan dilepas, tuts piano pindah ke oktaf yang cocok */
 function setHand(h){
@@ -3722,9 +3803,13 @@ function syncHandUI(){
   $('#shand').hidden=!s.grand;
   $$('#shand button').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-hand')===hand?'true':'false'); });
 }
-function startTrial(){
+function startTrial(inst){
   stopPlay();
-  if(!trialScore) trialScore={id:'trial',title:'Coba menulis',ts:[4,4],bpm:90,clef:'treble',notes:[],trial:true};
+  if(!trialScore || inst){
+    trialScore={id:'trial',title:'Coba menulis',ts:[4,4],bpm:90,clef:'treble',notes:[],trial:true};
+    if(inst){ trialScore.inst=inst; if(inst==='piano'){ trialScore.grand=true; trialScore.lh=[]; } }
+    hand='rh';
+  }
   if(!curIsTrial()) lastRealId=curId;
   curId='trial'; sel=-1; editing=false;
   buildScoreList(); syncScoreFields(); renderScoreView(); applyEntitlements();
@@ -3752,13 +3837,22 @@ function buildScoreList(){
   });
   if(trialScore){ var t=document.createElement('option'); t.value='trial'; t.textContent='✏️ Coba menulis (tidak disimpan)'; if(curIsTrial()) t.selected=true; sl.appendChild(t); }
 }
+/* "Bikin Partitur Baru": pilih instrumen dulu */
+function openNewDialog(){ $('#snewOv').hidden=false; try{ $('#snewOv .instList button').focus(); }catch(e){} }
+function chooseNewInst(inst){
+  $('#snewOv').hidden=true;
+  if(isPremium()) newScore(inst); else startTrial(inst);
+}
 function syncScoreFields(){
   var s=curScore();
   $('#stitle').value=s.title||''; $('#sbpm').value=s.bpm; $('#sts').value=s.ts[0]+'/'+s.ts[1]; $('#sclef').value=s.grand?'grand':s.clef;
-  syncHandUI();
+  $('#sinst').value=s.inst||'';
+  /* gitar: selalu 1 paranada kunci G; piano: selalu 2 paranada; vokal: kunci G atau F */
+  $('#sclef').querySelector('option[value="grand"]').disabled = s.inst==='vocal' || s.inst==='guitar';
+  syncHandUI(); syncSpd();
   $('#ssub').value=s.sub||''; $('#scomp').value=s.comp||''; $('#stempo').value=s.tempoTxt||'';
   var ok=canEditNow();
-  $('#stitle').disabled=!ok; $('#sbpm').disabled=!ok; $('#sclef').disabled=!ok; $('#sts').disabled=!ok || curIsTrial();
+  $('#stitle').disabled=!ok; $('#sbpm').disabled=!ok; $('#sclef').disabled=!ok || s.inst==='guitar' || s.inst==='piano'; $('#sinst').disabled=!ok; $('#sts').disabled=!ok || curIsTrial();
   $('#ssub').disabled=!ok; $('#scomp').disabled=!ok; $('#stempo').disabled=!ok;
 }
 function renderScoreView(){
@@ -3976,6 +4070,12 @@ function toggleChordPitch(i,m,a){
   for(j=i; N[j] && N[j].tie && N[j+1] && N[j+1].m===oldm; j++) chain.push(j+1);
   var pl=pitchList(it), idx=-1;
   pl.forEach(function(p,q){ if(p.m===m) idx=q; });
+  var mv=maxVoices(curScore());
+  if(idx<0 && mv===1){
+    /* vokal: hanya satu suara — nada baru menggantikan nada not ini (bukan jadi akor) */
+    chain.forEach(function(ci){ setPitchList(N[ci],[{m:m,a:a}]); });
+    pitchSel=0; saveScores(); renderScoreView(); return;
+  }
   if(idx>=0){
     if(pl.length===1){
       /* nada terakhir dibuang: not jadi rehat */
@@ -3985,7 +4085,7 @@ function toggleChordPitch(i,m,a){
     pl.splice(idx,1);
     pitchSel=Math.max(0,Math.min(idx-1,pl.length-1));
   } else {
-    if(pl.length>=6){ showScoreAlert('Satu akor maksimal 6 nada.'); return; }
+    if(pl.length>=mv){ showScoreAlert('Satu akor maksimal '+mv+' nada.'); return; }
     pl.push({m:m,a:a});
   }
   chain.forEach(function(ci){ setPitchList(N[ci],pl.map(function(p){ return {m:p.m,a:p.a}; })); });
@@ -4068,7 +4168,9 @@ function playScore(){
   var s=curScore(), EN=edScore().notes, eP=(s.grand && hand==='lh') ? 1 : 0;
   var parts = s.grand ? [s.notes,s.lh||[]] : [s.notes];
   if(!parts.some(function(N){ return N.length; })) return;
-  var c=ac(), spb=60/clamp(s.bpm||90,30,240), t=c.currentTime+0.15, end=0;
+  recStop();
+  /* kecepatan (%) memperlambat/mempercepat putar tanpa mengubah tempo yang tertulis */
+  var c=ac(), spb=60/(clamp(s.bpm||90,30,240)*spdF()), t=c.currentTime+0.15, end=0;
   playGain=c.createGain(); playGain.gain.value=1; playGain.connect(c.destination);
   /* Kalau ada not yang disorot (dipilih), putar mulai dari not itu (bukan dari awal); piano 2 tangan: kedua tangan mulai dari ketukan itu */
   var startIdx = (editing && sel>=0 && sel<EN.length) ? sel : 0, startB=0, k;
@@ -4091,11 +4193,13 @@ function playScore(){
   playTimers.push(setTimeout(stopPlay,150+end*spb*1000+200));
   renderScoreView();
 }
-function newScore(){
-  stopPlay();
+function newScore(inst){
+  stopPlay(); recStop(true);
   var ts=[4,4];
   var s={id:'s'+Date.now(),title:'Partitur baru',ts:ts,bpm:90,clef:'treble',notes:[]};
-  scores.push(s); curId=s.id; sel=-1; saveScores();
+  if(inst){ s.inst=inst; if(inst==='piano'){ s.grand=true; s.lh=[]; } }
+  hand='rh'; inp.oct=4; buildKeyboard();
+  scores.push(s); curId=s.id; sel=-1; editing=false; saveScores();
   buildScoreList(); syncScoreFields(); renderScoreView();
 }
 var delArmed=false, delTimer=0;
@@ -4114,12 +4218,12 @@ function delScore(){
   buildScoreList(); syncScoreFields(); renderScoreView();
 }
 function bindScore(){
-  $('#slist').addEventListener('change',function(e){ stopPlay(); curId=e.target.value; if(curId!=='trial') lastRealId=curId; sel=-1; editing=false; saveScores(); syncScoreFields(); renderScoreView(); applyEntitlements(); });
+  $('#slist').addEventListener('change',function(e){ stopPlay(); recStop(true); curId=e.target.value; if(curId!=='trial') lastRealId=curId; sel=-1; editing=false; saveScores(); syncScoreFields(); renderScoreView(); applyEntitlements(); });
   $('#stitle').addEventListener('input',function(e){
     var s=curScore(); s.title=e.target.value; saveScores();
     var o=$('#slist').querySelector('option[value="'+s.id+'"]'); if(o) o.textContent=s.title||'Tanpa judul';
   });
-  $('#sbpm').addEventListener('change',function(e){ var s=curScore(); s.bpm=clamp(parseInt(e.target.value,10)||90,30,240); e.target.value=s.bpm; saveScores(); renderScoreView(); });
+  $('#sbpm').addEventListener('change',function(e){ var s=curScore(); s.bpm=clamp(parseInt(e.target.value,10)||90,30,240); e.target.value=s.bpm; saveScores(); renderScoreView(); syncSpd(); });
   /* Keterangan lagu (tampil di kepala partitur): keterangan/subjudul, komposer/arranger, tanda tempo */
   [['#ssub','sub'],['#scomp','comp'],['#stempo','tempoTxt']].forEach(function(f){
     $(f[0]).addEventListener('input',function(e){ var s=curScore(), v=e.target.value.trim(); if(v) s[f[1]]=e.target.value; else delete s[f[1]]; saveScores(); renderScoreView(); });
@@ -4136,6 +4240,19 @@ function bindScore(){
   /* Kunci: G / F / Piano 2 tangan (paranada atas = tangan kanan kunci G, bawah = tangan kiri kunci F) */
   $('#sclef').addEventListener('change',function(e){
     var s=curScore(), v=e.target.value;
+    if(!setClefMode(s,v)){ e.target.value='grand'; return; }
+    saveScores(); renderScoreView();
+  });
+  /* Instrumen: Piano = 2 paranada; Gitar = 1 paranada kunci G; Vokal = 1 suara */
+  $('#sinst').addEventListener('change',function(e){
+    var s=curScore(), v=e.target.value, ok=true;
+    if(v==='piano') ok=setClefMode(s,'grand');
+    else if(v==='guitar' || (v==='vocal' && s.grand)) ok=setClefMode(s,'treble');
+    if(!ok){ e.target.value=s.inst||''; return; }
+    if(v) s.inst=v; else delete s.inst;
+    saveScores(); syncScoreFields(); renderScoreView();
+  });
+  function setClefMode(s,v){
     if(v==='grand'){
       if(!s.grand){
         s.grand=true; s.lh=s.lh||[];
@@ -4146,14 +4263,15 @@ function bindScore(){
     } else if(s.grand){
       /* kembali ke satu paranada: Kunci G menyimpan tangan kanan, Kunci F menyimpan tangan kiri */
       var lose = v==='bass' ? s.notes : s.lh;
-      if(hasPitch(lose) && !confirm('Not '+(v==='bass'?'tangan kanan (paranada atas)':'tangan kiri (paranada bawah)')+' akan dihapus. Lanjutkan?')){ e.target.value='grand'; return; }
+      if(hasPitch(lose) && !confirm('Not '+(v==='bass'?'tangan kanan (paranada atas)':'tangan kiri (paranada bawah)')+' akan dihapus. Lanjutkan?')) return false;
       if(v==='bass') s.notes=s.lh||[];
       delete s.grand; delete s.lh; s.clef=v;
     } else s.clef=v;
     stopPlay(); sel=-1; editing=false;
     if(!s.grand && hand!=='rh'){ hand='rh'; inp.oct=4; buildKeyboard(); }
-    syncHandUI(); saveScores(); renderScoreView();
-  });
+    syncHandUI();
+    return true;
+  }
   $$('#shand button').forEach(function(b){ b.addEventListener('click',function(){ setHand(b.getAttribute('data-hand')); }); });
   $('#sscore').addEventListener('click',function(e){
     var g=e.target.closest ? e.target.closest('.n') : null; if(!g) return;
@@ -4237,8 +4355,13 @@ function bindScore(){
     var b=e.target.closest('[data-m]'); if(!b) return; addNote(parseInt(b.getAttribute('data-m'),10));
   });
   $('#splay').addEventListener('click',playScore);
+  $('#snewBig').addEventListener('click',openNewDialog);
+  $$('#snewOv [data-inst]').forEach(function(b){ b.addEventListener('click',function(){ chooseNewInst(b.getAttribute('data-inst')); }); });
+  $('#snewCancel').addEventListener('click',function(){ $('#snewOv').hidden=true; });
+  $('#snewOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) e.currentTarget.hidden=true; });
+  bindRec();
   $('#snew').addEventListener('click',function(){
-    if(isPremium()) return newScore();
+    if(isPremium()) return openNewDialog();
     if(!curIsTrial()) startTrial(); else showPaywall('simpan');
   });
   $('#sdel').addEventListener('click',function(){
@@ -4258,6 +4381,148 @@ function bindScore(){
   $('#smidiIn').addEventListener('change',function(e){ if(!isPremium()) return; importMidi(e); });
   $('#saudIn').addEventListener('click',function(e){ if(!isPremium()){ e.preventDefault(); showPaywall('audio'); } else if(audBusy){ e.preventDefault(); } });
   $('#saudIn').addEventListener('change',function(e){ if(!isPremium()) return; importAudio(e); });
+}
+
+/* ---------- Kecepatan putar & rekam (tanpa mengubah tempo partitur) ---------- */
+var spd=clamp(parseInt(store.get('yg.sspeed','100'),10)||100,25,200);
+function spdF(){ return spd/100; }
+function setSpd(v){ spd=clamp(Math.round(v/5)*5,25,200); store.set('yg.sspeed',String(spd)); syncSpd(); }
+function syncSpd(){
+  var o=$('#sspdVal'); if(!o) return;
+  var b=clamp(curScore().bpm||90,30,240);
+  o.textContent=spd+'%  ·  '+Math.round(b*spd/100)+' bpm';
+  $$('#sspdQuick .chip').forEach(function(x){ x.setAttribute('aria-pressed',parseInt(x.getAttribute('data-s'),10)===spd?'true':'false'); });
+}
+
+/* ---------- Rekam dari piano asli (MIDI) -> langsung jadi partitur ----------
+   1 birama ketukan pembuka (metronom), lalu setiap tuts dicatat (mulai & lepas, dalam ketukan). Selesai: waktu dirapikan ke
+   ¼/⅛/1/16 (recQ), not yang mulai bersamaan jadi akor (vokal: nada teratas saja), jeda jadi rehat, not yang melewati garis
+   birama dipecah dengan tie. Hasil ditambahkan di akhir partitur (mulai birama baru). Piano 2 tangan: < C4 (60) = tangan kiri. */
+var rec={on:false,ev:[],open:{},timer:0,next:0,beat:0,spb:0.6,bb:4,t0:0,p0:0,msg:'',undo:null};
+var recQ=[1,0.5,0.25].indexOf(parseFloat(store.get('yg.recQ','0.5')))>=0 ? parseFloat(store.get('yg.recQ','0.5')) : 0.5;
+function recBeatNow(){ return (performance.now()-rec.p0)/1000/rec.spb; }
+function recNoteOn(n){ if(rec.open[n]) recNoteOff(n); rec.open[n]={m:n,s:recBeatNow()}; }
+function recNoteOff(n){ var o=rec.open[n]; if(!o) return; delete rec.open[n]; o.e=recBeatNow(); rec.ev.push(o); }
+function recStart(){
+  if(!isPremium()){ showPaywall('rekam'); return; }
+  if(!midiConnected()){
+    midiConnect();
+    $('#srecMsg').className='hint'; $('#srecMsg').textContent='Sambungkan piano MIDI dulu: colok keyboard MIDI (di HP pakai kabel OTG), tunggu tulisan "Terhubung", lalu tekan Rekam lagi.';
+    return;
+  }
+  if(playing) stopPlay();
+  var s=curScore(), c=ac(), bb=s.ts[0]*4/s.ts[1];
+  rec.spb=60/(clamp(s.bpm||90,30,240)*spdF()); rec.bb=bb; rec.ev=[]; rec.open={};
+  var cnt=Math.max(2,Math.round(bb));                 /* ketukan pembuka = 1 birama */
+  /* waktu not dari MIDI (performance.now) disejajarkan dengan bunyi metronom yang benar-benar terdengar (latensi speaker) */
+  var lat=(c.outputLatency||0)+(c.baseLatency||0), start=c.currentTime+0.12;
+  rec.t0=start+cnt*rec.spb; rec.p0=performance.now()+(rec.t0-c.currentTime+lat)*1000;
+  rec.next=start; rec.beat=-cnt; rec.on=true; rec.msg='';
+  sel=-1; editing=false; renderScoreView();
+  recSched(); rec.timer=setInterval(recSched,25);
+  recUI();
+}
+function recSched(){
+  var c=ac(), per=Math.max(1,Math.round(rec.bb));
+  while(rec.next<c.currentTime+0.12){
+    metClick(rec.next, ((rec.beat%per)+per)%per===0);
+    rec.next+=rec.spb; rec.beat++;
+  }
+  var cb=Math.floor((c.currentTime-rec.t0)/rec.spb), m;
+  m = cb<0 ? 'Siap-siap… '+(-cb) : 'Merekam… birama '+(Math.floor(cb/rec.bb)+1)+'. Tekan ■ Selesai rekam kalau sudah.';
+  if(m!==rec.msg){ rec.msg=m; var el=$('#srecMsg'); el.className='hint live'; el.textContent=m; }
+}
+function recStop(cancel){
+  if(!rec.on) return;
+  clearInterval(rec.timer); rec.timer=0; rec.on=false;
+  Object.keys(rec.open).forEach(function(k){ recNoteOff(+k); });
+  var el=$('#srecMsg'); el.className='hint';
+  if(cancel){ el.textContent='Rekaman dibatalkan.'; recUI(); return; }
+  var cnt=recApply();
+  el.textContent = cnt ? 'Selesai! '+cnt+' not ditambahkan di akhir partitur. Tekan ▶ Putar untuk mendengar.' : 'Tidak ada not yang terekam.';
+  recUI();
+}
+function recSpell(m,key){ return isBlack(m) ? (key<0?'b':'#') : ''; }
+/* tulis satu potong (not/akor atau rehat) mulai ketukan 'start', dipecah di garis birama; not dipecah disambung tie */
+function recPush(out,start,len,ms,bb,key){
+  var t=start, left=len, pieces=[];
+  while(left>1e-6){
+    var room=bb-(t%bb); if(room<1e-6) room=bb;
+    var chunk=Math.min(left,room);
+    pieces=pieces.concat(splitDur(chunk)); t+=chunk; left-=chunk;
+  }
+  pieces.forEach(function(d,i){
+    if(!ms){ out.push({m:null,d:d,a:''}); return; }
+    var n={m:ms[0],d:d,a:''};
+    setPitchList(n,ms.map(function(m){ return {m:m,a:recSpell(m,key)}; }));
+    if(i<pieces.length-1) n.tie=true;
+    out.push(n);
+  });
+}
+/* daftar not terekam (sudah dirapikan) -> not satu tangan/paranada; akor = not yang mulai bersamaan */
+function recLine(ev,L,bb,key,mv){
+  var by={}, out=[], pos=0;
+  ev.forEach(function(e){ (by[e.s]=by[e.s]||[]).push(e); });
+  var starts=Object.keys(by).map(Number).sort(function(a,b){ return a-b; });
+  starts.forEach(function(t,i){
+    var g=by[t], nx=i+1<starts.length ? starts[i+1] : Infinity, e=0, ms=[];
+    g.forEach(function(x){ e=Math.max(e,x.e); if(ms.indexOf(x.m)<0) ms.push(x.m); });
+    e=Math.min(e,nx);
+    ms.sort(function(a,b){ return a-b; });
+    if(ms.length>mv) ms=ms.slice(ms.length-mv);      /* vokal: nada teratas (melodi) */
+    if(t>pos+1e-6) recPush(out,pos,t-pos,null,bb,key);
+    recPush(out,t,e-t,ms,bb,key); pos=e;
+  });
+  if(L>pos+1e-6) recPush(out,pos,L-pos,null,bb,key);
+  return out;
+}
+function recApply(){
+  var s=curScore(), Q=recQ, bb=s.ts[0]*4/s.ts[1], key=s.key||0;
+  var ev=rec.ev.filter(function(e){ return e.s>=-Q/2 && e.e>e.s; }).map(function(e){
+    var qs=Math.max(0,Math.round(e.s/Q)*Q), qe=Math.max(qs+Q,Math.round(e.e/Q)*Q);
+    return {m:e.m,s:qs,e:qe};
+  });
+  if(!ev.length) return 0;
+  var end=0; ev.forEach(function(e){ end=Math.max(end,e.e); });
+  var L=Math.ceil(end/bb-1e-9)*bb;
+  var groups = s.grand ? [ev.filter(function(e){ return e.m>=60; }), ev.filter(function(e){ return e.m<60; })] : [ev];
+  var built=groups.map(function(g){ return recLine(g,L,bb,key,maxVoices(s)); });
+  /* simpan keadaan sebelum rekaman (untuk "Batalkan rekaman terakhir") */
+  rec.undo={id:s.id,notes:JSON.stringify(s.notes),lh:s.grand?JSON.stringify(s.lh||[]):null};
+  if(s.grand && !s.lh) s.lh=[];
+  var parts = s.grand ? [s.notes,s.lh] : [s.notes];
+  var lens=parts.map(function(N){ return N.reduce(function(a,n){ return a+n.d; },0); });
+  var L0=Math.ceil(Math.max.apply(null,lens)/bb-1e-9)*bb;
+  parts.forEach(function(N,p){
+    if(lens[p]<L0-1e-6) recPush(N,lens[p],L0-lens[p],null,bb,key);   /* rapikan sampai akhir birama, rekaman mulai di birama baru */
+    Array.prototype.push.apply(N,built[p]);
+  });
+  sel=-1; editing=false; saveScores(); renderScoreView();
+  var cnt=0; built.forEach(function(N){ N.forEach(function(n,i){ if(n.m!==null && !tieFrom(N,i)) cnt++; }); });
+  return cnt;
+}
+function recUndo(){
+  var u=rec.undo; if(!u) return;
+  var s=scores.filter(function(x){ return x.id===u.id; })[0];
+  rec.undo=null;
+  if(s){ s.notes=JSON.parse(u.notes); if(u.lh!==null) s.lh=JSON.parse(u.lh); sel=-1; editing=false; saveScores(); renderScoreView(); $('#srecMsg').textContent='Rekaman terakhir dibatalkan.'; }
+  recUI();
+}
+function recUI(){
+  var b=$('#srec'); if(!b) return;
+  b.textContent = rec.on ? '■ Selesai rekam' : '⏺ Rekam'; b.classList.toggle('on',rec.on);
+  $('#srecUndo').hidden = rec.on || !rec.undo || rec.undo.id!==curScore().id;
+  $$('#sgrid .chip').forEach(function(x){ x.setAttribute('aria-pressed',parseFloat(x.getAttribute('data-q'))===recQ?'true':'false'); });
+}
+function bindRec(){
+  $('#smidiCon').addEventListener('click',function(){ midiConnect(); });
+  $('#srec').addEventListener('click',function(){ if(rec.on) recStop(); else recStart(); });
+  $('#srecUndo').addEventListener('click',recUndo);
+  $('#sspdDn').addEventListener('click',function(){ setSpd(spd-5); });
+  $('#sspdUp').addEventListener('click',function(){ setSpd(spd+5); });
+  $$('#sspdQuick .chip').forEach(function(x){ x.addEventListener('click',function(){ setSpd(parseInt(x.getAttribute('data-s'),10)); }); });
+  $$('#sgrid .chip').forEach(function(x){ x.addEventListener('click',function(){ recQ=parseFloat(x.getAttribute('data-q')); store.set('yg.recQ',String(recQ)); recUI(); }); });
+  syncSpd(); recUI();
 }
 
 /* ---------- file MIDI (.mid): ekspor partitur & impor lagu untuk latihan ---------- */
@@ -4803,7 +5068,7 @@ function bindMetro(){
     met.taps.push(t); if(met.taps.length>6) met.taps.shift();
     if(met.taps.length>=2){ var sum=0; for(var i=1;i<met.taps.length;i++) sum+=met.taps[i]-met.taps[i-1]; metSetBpm(60000/(sum/(met.taps.length-1))); }
   });
-  document.addEventListener('visibilitychange',function(){ if(document.hidden) metStop(); });
+  document.addEventListener('visibilitychange',function(){ if(document.hidden){ metStop(); recStop(); } });
   metRender();
 }
 
@@ -4826,7 +5091,7 @@ function showTab(name){
   var prevTab=app.tab;
   if(pr.playing && name!==(pr.src==='arcade'?'arcade':'latih')) closePractice(true);
   if(name==='score' && mic.active) micStop();
-  if(name!=='score') stopPlay();
+  if(name!=='score'){ stopPlay(); recStop(); }
   if(name!=='tuner') metStop();
   app.tab=name; document.body.classList.toggle('on-latih',name==='latih'); document.body.classList.toggle('on-score',name==='score');
   var dk=$('#pdock'); if(dk) dk.hidden = !(name==='latih' && !pr.playing);
