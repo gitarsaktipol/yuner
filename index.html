@@ -2288,6 +2288,8 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
     if(num) notes.forEach(function(n){ if(n.m!==null) P.maxLift=Math.max(P.maxLift,(pitchList(n).length-1)*GAP); });
     P.topM = num ? 44+P.maxLift : 22+Math.max(0,(maxStep-8)*S/2);
     P.botM = (num ? 40 : Math.max(26,-minStep*S/2+14)) + (P.hasDyn ? 22 : 0);   /* ruang dinamika di bawah paranada */
+    /* not angka piano 2 tangan: baris kanan & kiri dirapatkan (satu pasangan), jarak antar sistem dibuat lebih lega */
+    if(grand && num){ if(p===0) P.botM = 24+(P.hasDyn ? 22 : 0); else P.topM = 34+P.maxLift; }
     P.pos={};
   });
   var nM = Math.max.apply(null,parts.map(function(P){ return P.ms.length; }));
@@ -2296,6 +2298,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
   /* tinggi satu baris sistem; letak atas tiap bagian (relatif terhadap atas sistem) */
   var sysH=0;
   parts.forEach(function(P){ P.yOff=sysH+P.topM; sysH+=P.topM+staffH+P.botM; });
+  if(grand && num) sysH+=26;
 
   /* Tata letak birama: lebar & letak tiap not (x relatif awal birama, belum diskala) */
   function measureLayout(mIdx){
@@ -3958,13 +3961,28 @@ function syncScoreFields(){
   $('#stitle').disabled=!ok; $('#sbpm').disabled=!ok; $('#sclef').disabled=!ok || s.inst==='guitar' || s.inst==='piano'; $('#sinst').disabled=!ok; $('#sts').disabled=!ok || curIsTrial();
   $('#ssub').disabled=!ok; $('#scomp').disabled=!ok; $('#stempo').disabled=!ok;
 }
+/* Partitur di editor: di layar lebar not diperbesar (sampai 1,9x); kalau lagunya makin panjang dan partitur lebih
+   tinggi dari ±70% layar, otomatis diperkecil bertahap (lebih banyak birama per baris) sampai ukuran normal
+   (HP: sampai 0,85x) supaya tetap rapi, tidak sebesar satu halaman. */
+function drawEditorScore(host,s,fn,cur,ed){
+  var Wpx=Math.max(240,Math.floor(host.clientWidth||320));
+  var sc = Wpx>600 ? Math.min(1.9,Wpx/520) : 1, min = Wpx>600 ? 1 : 0.85;
+  var target=Math.max(360,(window.innerHeight||800)*0.7), svg, h;
+  for(var guard=0; guard<12; guard++){
+    drawScore.force=sc;
+    try{ drawScore(host,s,app.mode,fn,cur,ed); } finally { drawScore.force=0; }
+    svg=host.firstChild; h=svg ? parseFloat(svg.getAttribute('height'))||0 : 0;
+    if(h<=target || sc<=min+1e-6) break;
+    sc=Math.max(min, sc-0.15);
+  }
+}
 function renderScoreView(){
   var s=curScore(), EN=edScore().notes, eP=(s.grand && hand==='lh') ? 1 : 0;
   undoBase(s); syncUndoUI();
   if(!editing || selA>=EN.length) selA=-1;
   if(sel<0 || sel>=EN.length){ if(sel>=EN.length) sel=-1; editing=false; }
   /* bagian p: 0 = paranada atas / satu-satunya, 1 = tangan kiri; sorotan pilih/peringatan hanya di tangan yang sedang ditulis */
-  drawScore($('#sscore'),s,app.mode,function(i,p){
+  drawEditorScore($('#sscore'),s,function(i,p){
     if(p ? i===playIdxL : i===playIdx) return 'cur';
     if((p||0)!==eP) return '';
     return flashIdx[i] ? 'bad' : ((!playing && editing && i===sel) ? 'sel blink' : ((!playing && inRange(i)) ? 'sel' : ''));
@@ -4854,7 +4872,7 @@ function recPreview(){
     if(lh){ pv.lh=N; } else pv.notes=N;
     for(k=N.length-1;k>=base.length;k--) if(N[k].m!==null){ lastP=k; break; }
     var host=$('#sscore');
-    drawScore(host,pv,app.mode,function(i,p){ return ((p||0)===(lh?1:0) && held && i===lastP) ? 'cur' : ''; }, -1, true);
+    drawEditorScore(host,pv,function(i,p){ return ((p||0)===(lh?1:0) && held && i===lastP) ? 'cur' : ''; }, -1, true);
     /* kursor tetap terlihat di layar */
     var c=host.querySelector('.caret');
     if(c && c.getBoundingClientRect){ var b=c.getBoundingClientRect(); if(b.top<60 || b.bottom>innerHeight-140) c.scrollIntoView({block:'center',behavior:'smooth'}); }
