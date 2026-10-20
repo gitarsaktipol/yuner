@@ -293,6 +293,16 @@ header .sel select{max-width:100%;min-width:0}
 .sv .handbg.act{fill:var(--pSky);opacity:.45}
 /* Bikin Partitur Baru: pilih instrumen */
 .snewbig{display:block;width:100%;margin:0 0 14px}
+/* Info lagu diringkas jadi satu baris; dibuka penuh hanya saat membuat partitur baru atau menekan Ubah */
+.sinfoHead{display:flex;align-items:center;gap:10px}
+.sinfoSum{flex:1;min-width:0;font-size:14px;color:var(--muted);line-height:1.35;overflow:hidden;text-overflow:ellipsis}
+.sinfoSum b{color:var(--ink);font-size:16px}
+.sinfoHead .chip{flex:none;padding:8px 12px}
+#sinfoBody{margin-top:10px}
+/* tuts piano 2 oktaf */
+.kb.k2 .w{gap:2px;padding:3px}
+.kb.k2 .key{font-size:11px;padding-bottom:6px;border-radius:3px 3px 9px 9px}
+.skbOct{margin-top:10px;align-items:center}
 .instList{display:flex;flex-direction:column;gap:10px;margin:4px 0 14px}
 .instList button{--c:var(--pPink);--cd:var(--dPink);display:grid;grid-template-columns:44px 1fr;align-items:center;gap:2px 10px;text-align:left;padding:12px 14px;border-radius:18px;border:0;background:var(--c);color:var(--ink);box-shadow:0 4px 0 var(--cd);font:inherit;cursor:pointer;transition:transform .15s var(--bounce)}
 .instList button:nth-child(2){--c:var(--pSky);--cd:var(--dSky)}
@@ -521,13 +531,13 @@ body.dock-inflow .app{padding-bottom:110px}
   display:flex;align-items:flex-end;justify-content:center;padding:0 0 8px;font-size:13px;font-weight:800;cursor:pointer;
   box-shadow:0 4px 0 rgba(120,80,160,.18);transform-origin:top;
 }
-.kb .w .key:nth-child(1),.kb .w .key:nth-child(8){--kc:var(--dPink)}
-.kb .w .key:nth-child(2){--kc:var(--dPeach)}
-.kb .w .key:nth-child(3){--kc:var(--dLemon)}
-.kb .w .key:nth-child(4){--kc:var(--dMint)}
-.kb .w .key:nth-child(5){--kc:var(--dSky)}
-.kb .w .key:nth-child(6){--kc:var(--dLilac)}
-.kb .w .key:nth-child(7){--kc:#F7A8D8}
+.kb .w .key:nth-child(7n+1){--kc:var(--dPink)}
+.kb .w .key:nth-child(7n+2){--kc:var(--dPeach)}
+.kb .w .key:nth-child(7n+3){--kc:var(--dLemon)}
+.kb .w .key:nth-child(7n+4){--kc:var(--dMint)}
+.kb .w .key:nth-child(7n+5){--kc:var(--dSky)}
+.kb .w .key:nth-child(7n+6){--kc:var(--dLilac)}
+.kb .w .key:nth-child(7n){--kc:#F7A8D8}
 .key:active{transform:scaleY(.96);box-shadow:0 1px 0 rgba(120,80,160,.18);filter:brightness(1.05)}
 .bk{
   position:absolute;top:4px;height:62%;width:7.5%;border:0;border-radius:3px 3px 9px 9px;background:var(--black);cursor:pointer;
@@ -1022,7 +1032,12 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
   <button class="start snewbig" id="snewBig" type="button">＋ Bikin Partitur Baru</button>
 
-  <div class="card">
+  <div class="card sinfo" id="sinfo">
+    <div class="sinfoHead">
+      <div class="sinfoSum" id="sinfoSum"></div>
+      <button class="chip" type="button" id="sinfoBtn" aria-expanded="false" aria-controls="sinfoBody">✏️ Ubah</button>
+    </div>
+    <div id="sinfoBody" hidden>
     <label class="sr" for="stitle">Judul</label>
     <input class="txt" id="stitle" type="text" placeholder="Judul lagu" maxlength="60" autocomplete="off">
     <div class="fields">
@@ -1050,6 +1065,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <input class="txt sm" id="stempo" type="text" placeholder="mis. Andante" maxlength="40" list="stempoList" autocomplete="off">
         <datalist id="stempoList"><option value="Largo"><option value="Adagio"><option value="Andante"><option value="Moderato"><option value="Allegretto"><option value="Allegro"><option value="Vivace"><option value="Presto"><option value="Molto Rubato"><option value="Cantabile"><option value="Rit."><option value="Accel."></datalist>
       </label>
+    </div>
     </div>
   </div>
 
@@ -1096,11 +1112,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <div class="chips" style="margin-top:6px"><button class="chip" type="button" id="sundo" style="flex:1" title="Ctrl+Z" disabled>↶ Urungkan</button><button class="chip" type="button" id="sredo" style="flex:1" title="Ctrl+Y" disabled>↷ Ulangi</button></div>
     <div class="chips" id="sclip" style="margin-top:6px"><button class="chip" type="button" id="smulti" style="flex:1.3" aria-pressed="false" title="Shift+klik">⬚ Pilih banyak</button><button class="chip" type="button" id="scopy" style="flex:1" title="Ctrl+C">📋 Salin</button><button class="chip" type="button" id="scut" style="flex:1" title="Ctrl+X">✂️ Potong</button><button class="chip" type="button" id="spaste" style="flex:1" title="Ctrl+V">📥 Tempel</button></div>
     <div class="row" style="margin-top:10px;align-items:center">
-      <div class="stepper" style="flex:1;justify-content:space-between">
-        <button class="ctl" id="soctdn" type="button" aria-label="Oktaf lebih rendah">−</button>
-        <output id="soctval" aria-live="polite">Oktaf 4</output>
-        <button class="ctl" id="soctup" type="button" aria-label="Oktaf lebih tinggi">+</button>
-      </div>
+      <button class="sound" id="smidiW" type="button" aria-pressed="false" style="flex:1.2"></button>
       <button class="sound" id="sdelnote" type="button" style="flex:.8">Hapus not</button>
     </div>
   </div>
@@ -1111,7 +1123,15 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <div class="held" id="sheld" hidden></div>
   </section>
 
-  <div class="card skb"><div class="kb" id="kb"></div></div>
+  <div class="card skb"><div class="kb" id="kb"></div>
+    <div class="row skbOct">
+      <div class="stepper" style="flex:1;justify-content:space-between">
+        <button class="ctl" id="soctdn" type="button" aria-label="Oktaf lebih rendah">−</button>
+        <output id="soctval" aria-live="polite">Oktaf 4</output>
+        <button class="ctl" id="soctup" type="button" aria-label="Oktaf lebih tinggi">+</button>
+      </div>
+    </div>
+  </div>
 
   <div class="card srec" id="srecCard">
     <div class="row">
@@ -1119,7 +1139,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button class="start" id="splay" type="button">▶ Putar</button>
       <button class="sound" id="srec" type="button">⏺ Rekam</button>
     </div>
-    <div class="row" style="margin-top:10px"><button class="sound" id="smidiW" type="button" aria-pressed="false"></button></div>
     <div class="srecSet" id="srecHandRow" hidden>
       <span class="lbl">Tulis &amp; rekam ke</span>
       <div class="chips" id="srecHand" role="group" aria-label="Tangan yang ditulis dan direkam"><button class="chip" type="button" data-hand="rh">Kanan (kunci G)</button><button class="chip" type="button" data-hand="lh">Kiri (kunci F)</button></div>
@@ -1782,7 +1801,7 @@ var midiWrite = store.get('yg.midiWrite','0')==='1';
 function syncMidiWrite(){
   var b=$('#smidiW'); if(!b) return;
   b.setAttribute('aria-pressed',midiWrite?'true':'false');
-  b.textContent = midiWrite ? '✍️ MIDI ON · tuts menulis not' : '🎹 MIDI OFF · latihan bebas';
+  b.textContent = midiWrite ? '✍️ MIDI ON · menulis' : '🎹 MIDI OFF · latihan';
   b.setAttribute('aria-label', midiWrite ? 'MIDI ON: tuts piano menulis not. Ketuk untuk mematikan.' : 'MIDI OFF: piano hanya berbunyi, tidak menulis not. Ketuk untuk menyalakan.');
 }
 function smidiSync(){
@@ -4002,8 +4021,21 @@ function chooseNewInst(inst){
   $('#snewOv').hidden=true;
   if(isPremium()) newScore(inst); else startTrial(inst);
 }
+/* ringkasan info lagu (judul · instrumen · birama · tempo) */
+function syncInfoSum(){
+  var s=curScore(), el=$('#sinfoSum'); if(!el) return;
+  var parts=[(INST[s.inst]&&INST[s.inst].name)||'', s.ts[0]+'/'+s.ts[1], 'tempo '+(s.bpm||90), s.tempoTxt||''].filter(Boolean);
+  el.innerHTML='<b></b><br><span></span>';
+  el.querySelector('b').textContent=s.title||'Tanpa judul';
+  el.querySelector('span').textContent=parts.join(' · ');
+}
+function setInfoOpen(on){
+  var b=$('#sinfoBody'), t=$('#sinfoBtn'); if(!b) return;
+  b.hidden=!on; t.setAttribute('aria-expanded',on?'true':'false'); t.textContent=on?'✓ Selesai':'✏️ Ubah';
+}
 function syncScoreFields(){
   var s=curScore();
+  syncInfoSum();
   $('#stitle').value=s.title||''; $('#sbpm').value=s.bpm; $('#sts').value=s.ts[0]+'/'+s.ts[1]; $('#sclef').value=s.grand?'grand':s.clef;
   $('#sinst').value=s.inst||'';
   /* gitar: selalu 1 paranada kunci G; piano: selalu 2 paranada; vokal: kunci G atau F */
@@ -4047,19 +4079,21 @@ function renderScoreView(){
   $('#sprac').disabled = !s.notes.some(function(n){return n.m!==null;});
 }
 var inp = { dur:1, dot:false, flat:false, oct:4 };
+/* Tuts piano di layar: 2 oktaf (C sampai C dua oktaf di atasnya), mulai dari oktaf inp.oct */
+var KB_OCT=2;
 function buildKeyboard(){
-  var kb=$('#kb'), W=[0,2,4,5,7,9,11,12], lab=['C','D','E','F','G','A','B','C'], h='<div class="w">', i;
-  for(i=0;i<8;i++){
-    var m=(inp.oct+1)*12+W[i];
-    h+='<button type="button" class="key" data-m="'+m+'" aria-label="Nada '+lab[i]+(inp.oct+(i===7?1:0))+'">'+lab[i]+(i===0||i===7?(inp.oct+(i===7?1:0)):'')+'</button>';
+  var kb=$('#kb'), W=[0,2,4,5,7,9,11], lab=['C','D','E','F','G','A','B'], nw=7*KB_OCT+1, h='<div class="w">', i, o;
+  for(i=0;i<nw;i++){
+    var oo=Math.floor(i/7), li=i%7, m=(inp.oct+1+oo)*12+W[li], on=inp.oct+oo;
+    h+='<button type="button" class="key" data-m="'+m+'" aria-label="Nada '+lab[li]+on+'">'+lab[li]+(li===0?on:'')+'</button>';
   }
   h+='</div>';
-  [[1,0.7],[3,1.7],[6,3.7],[8,4.7],[10,5.7]].forEach(function(b){
-    var m=(inp.oct+1)*12+b[0];
-    h+='<button type="button" class="bk" style="left:'+(b[1]*12.5)+'%" data-m="'+m+'" data-black="1" aria-label="Nada hitam '+nameOf(m,inp.flat?'b':'#')+'"></button>';
+  for(o=0;o<KB_OCT;o++) [[1,0.7],[3,1.7],[6,3.7],[8,4.7],[10,5.7]].forEach(function(b){
+    var m=(inp.oct+1+o)*12+b[0];
+    h+='<button type="button" class="bk" style="left:'+((o*7+b[1])*100/nw)+'%;width:'+(60/nw)+'%" data-m="'+m+'" data-black="1" aria-label="Nada hitam '+nameOf(m,inp.flat?'b':'#')+'"></button>';
   });
-  kb.innerHTML=h;
-  $('#soctval').textContent='Oktaf '+inp.oct;
+  kb.innerHTML=h; kb.classList.toggle('k2',KB_OCT>1);
+  $('#soctval').textContent='Oktaf '+inp.oct+(KB_OCT>1?'–'+(inp.oct+KB_OCT-1):'');
 }
 var DURS=[4,3,2,1.5,1,0.75,0.5,0.375,0.25];
 function splitDur(x){
@@ -4369,7 +4403,8 @@ function syncInputFromNote(n){
   if(n.m!==null){
     var pl=pitchList(n), pp=pl[Math.min(pitchSel,pl.length-1)];
     if(isBlack(pp.m)) inp.flat=(pp.a==='b');
-    inp.oct=clamp(Math.floor(pp.m/12)-1,1,6);
+    var po=Math.floor(pp.m/12)-1;   /* tuts 2 oktaf: geser hanya kalau nada itu di luar tuts yang tampil */
+    if(po<inp.oct || po>inp.oct+KB_OCT-1) inp.oct=clamp(po,1,7-KB_OCT);
   }
   syncInputUI();
 }
@@ -4599,7 +4634,7 @@ function newScore(inst){
   var ts=[4,4];
   var s={id:'s'+Date.now(),title:'Partitur baru',ts:ts,bpm:90,clef:'treble',notes:[]};
   if(inst){ s.inst=inst; if(inst==='piano'){ s.grand=true; s.lh=[]; } }
-  hand='rh'; inp.oct=4; buildKeyboard();
+  hand='rh'; inp.oct=4; buildKeyboard(); setInfoOpen(true);
   scores.push(s); curId=s.id; sel=-1; editing=false; saveScores();
   buildScoreList(); syncScoreFields(); renderScoreView();
 }
@@ -4619,7 +4654,9 @@ function delScore(){
   buildScoreList(); syncScoreFields(); renderScoreView();
 }
 function bindScore(){
-  $('#slist').addEventListener('change',function(e){ stopPlay(); recStop(true); curId=e.target.value; if(curId!=='trial') lastRealId=curId; sel=-1; editing=false; saveScores(); syncScoreFields(); renderScoreView(); applyEntitlements(); });
+  $('#sinfoBtn').addEventListener('click',function(){ setInfoOpen($('#sinfoBody').hidden); });
+  ['#stitle','#sbpm','#sts','#sinst','#stempo'].forEach(function(q){ ['input','change'].forEach(function(ev){ $(q).addEventListener(ev,function(){ setTimeout(syncInfoSum,0); }); }); });   /* sesudah nilai partitur diperbarui */
+  $('#slist').addEventListener('change',function(e){ setInfoOpen(false); stopPlay(); recStop(true); curId=e.target.value; if(curId!=='trial') lastRealId=curId; sel=-1; editing=false; saveScores(); syncScoreFields(); renderScoreView(); applyEntitlements(); });
   $('#stitle').addEventListener('input',function(e){
     var s=curScore(); s.title=e.target.value; saveScores();
     var o=$('#slist').querySelector('option[value="'+s.id+'"]'); if(o) o.textContent=s.title||'Tanpa judul';
@@ -4792,8 +4829,8 @@ function bindScore(){
   $('#sredo').addEventListener('click',doRedo);
   $('#srest').addEventListener('click',addRest);
   $('#sdelnote').addEventListener('click',delNote);
-  $('#soctdn').addEventListener('click',function(){ inp.oct=clamp(inp.oct-1,1,6); buildKeyboard(); });
-  $('#soctup').addEventListener('click',function(){ inp.oct=clamp(inp.oct+1,1,6); buildKeyboard(); });
+  $('#soctdn').addEventListener('click',function(){ inp.oct=clamp(inp.oct-1,1,7-KB_OCT); buildKeyboard(); });
+  $('#soctup').addEventListener('click',function(){ inp.oct=clamp(inp.oct+1,1,7-KB_OCT); buildKeyboard(); });
   $('#kb').addEventListener('click',function(e){
     var b=e.target.closest('[data-m]'); if(!b) return; addNote(parseInt(b.getAttribute('data-m'),10));
   });
