@@ -294,6 +294,7 @@ header .sel select{max-width:100%;min-width:0}
 .instList button{--c:var(--pPink);--cd:var(--dPink);display:grid;grid-template-columns:44px 1fr;align-items:center;gap:2px 10px;text-align:left;padding:12px 14px;border-radius:18px;border:0;background:var(--c);color:var(--ink);box-shadow:0 4px 0 var(--cd);font:inherit;cursor:pointer;transition:transform .15s var(--bounce)}
 .instList button:nth-child(2){--c:var(--pSky);--cd:var(--dSky)}
 .instList button:nth-child(3){--c:var(--pMint);--cd:var(--dMint)}
+.instList button:disabled{opacity:.45;cursor:default}
 .instList button:active{transform:translateY(3px) scale(.98);box-shadow:0 1px 0 var(--cd)}
 .instList .ic{grid-row:span 2;font-size:30px;text-align:center;line-height:1}
 .instList b{font-size:17px}
@@ -1254,6 +1255,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>Dinamika</b>: pilih satu not (atau tulis not baru), lalu ketuk <i>pp, p, mp, mf, f, ff</i>, <i>cresc.</i> atau <i>dim.</i> Ketuk lagi untuk menghapus. Dinamika ikut terdengar saat diputar dan ikut tersimpan saat diekspor ke MIDI.</li>
         <li><b>Piano 2 tangan</b>: di pilihan <i>Kunci</i> pilih <i>Piano 2 tangan (G + F)</i>. Paranada atas (kunci G) untuk <b>tangan kanan</b>, paranada bawah (kunci F) untuk <b>tangan kiri</b>. Pilih tangan yang mau ditulis dengan tombol <i>Tangan kanan / Tangan kiri</i> di atas tombol nilai not, atau langsung ketuk not di paranada itu. Saat diputar dan diekspor ke MIDI kedua tangan berbunyi bersamaan; Latihan memakai tangan kanan (melodi).</li>
         <li>Tombol ◀ ▶ memindahkan kursor. Ketuk not untuk memilih dan mengubahnya. Tombol hapus menghapus bertahap.</li>
+        <li><b>Mengganti panjang not</b>: ketuk not, lalu ketuk nilai not lain (mis. ¼ jadi ½). Kalau biramanya tidak cukup, muncul pilihan: <b>Geser semua</b> (semua not sesudahnya mundur, birama berikutnya ikut bergeser) atau <b>Hanya di birama ini</b> (not sesudahnya di birama itu bergeser, not paling belakang di birama itu dihapus).</li>
         <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
         <li><b>▶ Putar</b> (di tengah, antara Sambungkan dan Rekam) membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
         <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>Save/Create</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
@@ -1328,6 +1330,18 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button type="button" data-inst="piano"><span class="ic" aria-hidden="true">🎹</span><b>Piano</b><small>Sampai 10 nada bersamaan · 2 paranada (kunci G + kunci F)</small></button>
     </div>
     <div class="row"><button class="sound" id="snewCancel" type="button">Batal</button></div>
+  </div>
+</div>
+
+<div class="pwOv" id="sdurOv" hidden role="dialog" aria-modal="true" aria-labelledby="sdurT">
+  <div class="pwBox">
+    <h2 id="sdurT">Not jadi lebih panjang</h2>
+    <p>Birama ini tidak cukup untuk not yang lebih panjang. Mau digeser bagaimana?</p>
+    <div class="instList">
+      <button type="button" id="sdurAll"><span class="ic" aria-hidden="true">➡️</span><b>Geser semua</b><small>Semua not sesudahnya mundur, birama-birama berikutnya ikut bergeser</small></button>
+      <button type="button" id="sdurBar"><span class="ic" aria-hidden="true">✂️</span><b>Hanya di birama ini</b><small>Not sesudahnya di birama ini bergeser, not paling belakang di birama ini dihapus</small></button>
+    </div>
+    <div class="row"><button class="sound" id="sdurNo" type="button">Batal</button></div>
   </div>
 </div>
 
@@ -4016,13 +4030,99 @@ function changeDur(at,newD){
         swallowed+=need; need=0;
       }
     }
-    if(barSum+delta-swallowed>bb+1e-6){ showScoreAlert('Tidak cukup ruang di birama ini untuk not yang lebih panjang.'); return; }
+    if(barSum+delta-swallowed>bb+1e-6){ askDurShift(at,newD); return; }
     edits.sort(function(a,b){ return b.j-a.j; });
     for(j=0;j<edits.length;j++) N.splice.apply(N,[edits[j].j,1].concat(edits[j].repl));
     sel=N.indexOf(it);
     it.d=newD; it.tie=false;
   }
   saveScores(); renderScoreView();
+}
+/* ---- Not dipanjangkan tapi biramanya tidak cukup: tanya mau digeser bagaimana ----
+   1) "Geser semua": not-not sesudahnya mundur, birama berikutnya ikut bergeser (not yang jadi melewati garis birama
+      dipecah + tie). Piano 2 tangan: tangan lain diberi jeda (rehat) yang sama di titik itu supaya kedua tangan tetap sejajar.
+   2) "Hanya di birama ini": not sesudahnya di birama yang sama bergeser, not paling belakang di birama itu dihapus. */
+var durAsk=null;
+function notePieces(n,d){
+  /* pecah not/rehat n jadi potongan bernilai not standar sepanjang d; not bernada disambung tie */
+  var ps=splitDur(d);
+  return ps.map(function(pd,i){
+    var o={m:n.m,d:pd,a:n.a||''};
+    if(n.x) o.x=n.x.map(function(p){ return {m:p.m,a:p.a}; });
+    if(n.e) o.e=true;
+    if(i===0){ if(n.dyn) o.dyn=n.dyn; if(n.hp) o.hp=n.hp; }
+    if(n.m!==null) o.tie = i<ps.length-1 ? true : !!n.tie;
+    return o;
+  });
+}
+function reflowBars(N,bb){
+  /* not yang melewati garis birama dipecah di garis itu (not bernada disambung tie); objek pertama tetap dipakai */
+  var out=[], t=0;
+  N.forEach(function(n){
+    var room=bb-(t%bb); if(room<1e-6) room=bb;
+    if(n.d<=room+1e-6){ out.push(n); t+=n.d; return; }
+    var left=n.d, first=true, origTie=!!n.tie;
+    while(left>1e-6){
+      room=bb-(t%bb); if(room<1e-6) room=bb;
+      var chunk=Math.min(left,room), ps=notePieces({m:n.m,a:n.a,x:n.x,e:n.e,dyn:first?n.dyn:null,hp:first?n.hp:null,tie:(left-chunk>1e-6)?true:origTie},chunk);
+      if(first){ var p0=ps.shift(); n.d=p0.d; if(n.m!==null) n.tie=p0.tie; out.push(n); first=false; }
+      out=out.concat(ps); t+=chunk; left-=chunk;
+    }
+  });
+  N.splice.apply(N,[0,N.length].concat(out));
+}
+function insertGapAt(M,t,gap,bb){
+  /* sisipkan rehat sepanjang gap di ketukan t (not yang sedang berbunyi di t dipecah) */
+  var acc=0, i;
+  for(i=0;i<M.length;i++){
+    if(acc>=t-1e-6) break;
+    if(acc+M[i].d>t+1e-6){
+      var n=M[i], d1=t-acc, d2=n.d-d1;
+      var a=notePieces({m:n.m,a:n.a,x:n.x,e:n.e,dyn:n.dyn,hp:n.hp,tie:n.m!==null},d1), b=notePieces({m:n.m,a:n.a,x:n.x,e:n.e,tie:n.tie},d2);
+      M.splice.apply(M,[i,1].concat(a,b)); i+=a.length; acc=t; break;
+    }
+    acc+=M[i].d;
+  }
+  if(acc<t-1e-6) return;   /* tangan ini sudah selesai sebelum titik itu: tidak perlu digeser */
+  M.splice.apply(M,[i,0].concat(splitDur(gap).map(function(d){ return {m:null,d:d,a:''}; })));
+  reflowBars(M,bb);
+}
+function askDurShift(at,newD){
+  var s=edScore(), N=s.notes, it=N[at], bb=s.ts[0]*4/s.ts[1], start=0, k;
+  for(k=0;k<at;k++) start+=N[k].d;
+  var inBar=start%bb; if(bb-inBar<1e-6) inBar=0;
+  durAsk={at:at,newD:newD,it:it};
+  var b2=$('#sdurBar'), fits = inBar+newD<=bb+1e-6;
+  b2.disabled=!fits;
+  b2.querySelector('small').textContent = fits ? 'Not sesudahnya di birama ini bergeser, not paling belakang di birama ini dihapus' : 'Tidak bisa: not ini sendiri lebih panjang dari sisa birama';
+  $('#sdurOv').hidden=false;
+}
+function doDurShift(mode){
+  var q=durAsk; durAsk=null; $('#sdurOv').hidden=true;
+  if(!q || !guardEdit()) return;
+  var cs=curScore(), s=edScore(), N=s.notes, at=N.indexOf(q.it), bb=s.ts[0]*4/s.ts[1];
+  if(at<0) return;
+  var it=N[at], oldD=it.d, delta=q.newD-oldD, start=0, k;
+  for(k=0;k<at;k++) start+=N[k].d;
+  if(mode==='all'){
+    if(cs.grand){ var other = (s.notes===cs.notes) ? (cs.lh||[]) : cs.notes; insertGapAt(other,start+oldD,delta,bb); }
+    it.d=q.newD; it.tie=false;
+    reflowBars(N,bb);
+  } else {
+    var barStart=Math.floor((start+1e-6)/bb)*bb, barEnd=barStart+bb, oldPos=start+oldD, acc=start+q.newD, j=at+1, keep=[], full=false;
+    it.d=q.newD; it.tie=false;
+    /* not sesudahnya di birama yang sama tetap urut; yang tidak muat lagi (paling belakang) dibuang, sisa ruang jadi rehat */
+    while(j<N.length && oldPos<barEnd-1e-6){
+      if(!full && acc+N[j].d<=barEnd+1e-6){ keep.push(N[j]); acc+=N[j].d; } else full=true;
+      oldPos+=N[j].d; j++;
+    }
+    if(keep.length && full){ var last=keep[keep.length-1]; if(last.tie) last.tie=false; }
+    var fill = acc<barEnd-1e-6 ? splitDur(barEnd-acc).map(function(d){ return {m:null,d:d,a:''}; }) : [];
+    if(j>=N.length && !keep.length && !full) fill=[];   /* not terakhir partitur: tidak perlu rehat di ujung */
+    N.splice.apply(N,[at+1,j-at-1].concat(keep,fill));
+  }
+  sel=N.indexOf(it); editing=true;
+  syncInputFromNote(it); saveScores(); renderScoreView();
 }
 function syncInputFromNote(n){
   var bd=baseDur(n.d);
@@ -4379,6 +4479,10 @@ function bindScore(){
   $('#snewCancel').addEventListener('click',function(){ $('#snewOv').hidden=true; });
   $('#snewOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) e.currentTarget.hidden=true; });
   bindRec();
+  $('#sdurAll').addEventListener('click',function(){ doDurShift('all'); });
+  $('#sdurBar').addEventListener('click',function(){ doDurShift('bar'); });
+  $('#sdurNo').addEventListener('click',function(){ durAsk=null; $('#sdurOv').hidden=true; syncInputFromNote(edScore().notes[sel]||{d:inp.dur,m:null}); });
+  $('#sdurOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) $('#sdurNo').click(); });
   $('#snew').addEventListener('click',function(){
     if(isPremium()) return openNewDialog();
     if(!curIsTrial()) startTrial(); else showPaywall('simpan');
