@@ -2119,8 +2119,11 @@ function numSvg(n,x,yb,i,cls,bm,key,sp){
   for(k=0;k<ul;k++) o+=ulSvg(x,yb-lift,k,bm);
   return o+'</g>';
 }
-var CLEF_TREBLE = '<path d="M14 -13 L12 50 C12 60 4 62 4 56" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 -13 C24 -6 22 8 12 16 C2 24 -1 36 6 42 C12 47 22 44 22 35 C22 27 12 24 8 30 C5 35 10 39 14 37" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
-var CLEF_BASS = '<path d="M6 10 C6 4 20 4 22 14 C24 26 14 38 2 44" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="6" cy="10" r="3.6" fill="currentColor"/><circle cx="30" cy="5" r="1.9" fill="currentColor"/><circle cx="30" cy="15" r="1.9" fill="currentColor"/>';
+/* Kunci G & kunci F: bentuk asli dari font musik Bravura (Steinberg, SIL Open Font License 1.1 — fonts/LICENSE-bravura.txt).
+   Koordinat font: 1 spasi paranada = 250 satuan, sumbu y ke atas; diskala ke S=10 px. Titik nol kunci G = garis ke-2 dari bawah (y=30),
+   kunci F = garis ke-4 dari bawah (y=10). */
+var CLEF_TREBLE = '<path transform="translate(0 30) scale(0.04 -0.04)" fill="currentColor" d="M376 415C374 427 376 428 382 434C490 535 572 662 572 815C572 902 548 988 507 1048C492 1070 466 1098 455 1098C441 1098 410 1072 390 1050C316 968 292 843 292 739C292 681 299 616 306 575C308 563 309 561 297 551C153 432 0 289 0 87C0 -87 119 -252 364 -252C387 -252 413 -250 433 -246C444 -244 446 -243 448 -255C460 -322 475 -409 475 -456C475 -604 375 -622 316 -622C262 -622 236 -606 236 -593C236 -586 245 -583 268 -576C299 -567 335 -540 335 -482C335 -427 300 -380 239 -380C172 -380 132 -433 132 -495C132 -560 171 -658 322 -658C389 -658 519 -628 519 -458C519 -401 501 -306 490 -244C488 -232 489 -233 503 -227C604 -187 671 -102 671 11C671 139 577 252 430 252C404 252 404 252 401 270ZM470 943C503 943 530 916 530 861C530 750 435 660 356 591C349 585 345 586 343 599C339 625 337 659 337 691C337 847 409 943 470 943ZM361 262C364 243 364 244 346 238C258 208 201 129 201 44C201 -46 248 -110 316 -133C324 -136 336 -139 343 -139C351 -139 355 -134 355 -128C355 -121 347 -118 340 -115C298 -97 268 -54 268 -8C268 49 307 92 368 109C384 113 386 112 388 101L438 -197C440 -208 439 -208 424 -211C408 -214 388 -216 368 -216C193 -216 80 -119 80 20C80 79 90 158 173 252C233 319 279 356 326 394C336 402 338 401 340 390ZM430 103C428 115 429 118 441 117C522 110 589 42 589 -46C589 -109 551 -160 495 -188C483 -194 481 -194 479 -182Z"/>';
+var CLEF_BASS = '<path transform="translate(0 10) scale(0.04 -0.04)" fill="currentColor" d="M252 262C78 262 0 135 0 39C0 -41 42 -110 123 -110C186 -110 229 -66 229 -4C229 60 182 100 133 100C106 100 96 93 83 93C70 93 67 101 67 111C67 151 127 224 229 224C335 224 381 120 381 -37C381 -316 243 -472 10 -605C1 -610 -5 -615 -5 -623C-5 -629 -1 -635 8 -635C13 -635 19 -633 25 -630C271 -510 531 -332 531 -28C531 146 425 262 252 262ZM629 180C598 180 574 156 574 125C574 94 598 70 629 70C660 70 684 94 684 125C684 156 660 180 629 180ZM630 -71C599 -71 576 -94 576 -125C576 -156 599 -179 630 -179C661 -179 684 -156 684 -125C684 -94 661 -71 630 -71Z"/>';
 
 /* Partitur digambar sebagai SVG. Satu paranada (score.clef), atau PIANO 2 TANGAN (score.grand): paranada atas = tangan kanan
    (score.notes, kunci G), paranada bawah = tangan kiri (score.lh, kunci F), disatukan kurung kurawal & garis birama menerus.
@@ -2136,7 +2139,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
   var unit = num ? 26 : 28;
   var key=score.key||0, nAcc=Math.abs(key);
   /* lebar tanda kunci (♯/♭ setelah kunci G/F), digambar di awal setiap baris */
-  var ksW = (num||!nAcc) ? 0 : nAcc*9+6;
+  var ksW = (num||!nAcc) ? 0 : nAcc*9+9;
   /* kunci F diberi ruang sedikit lebih lebar supaya titiknya tidak menempel ke angka birama */
   var margin=grand?16:(num?6:4), clefW=num?0:34+ksW+((grand||score.clef==='bass')?6:0), tsW=num?0:20;
   var staffH = num ? 0 : 4*S;
@@ -2259,7 +2262,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
           var kpos = key>0 ? [38,35,39,36,33,37,34] : [34,37,33,36,32,35,31], shiftB = P.clef==='bass' ? 14 : 0;
           for(i=0;i<nAcc;i++){
             var kst=kpos[i]-shiftB-P.base, ky=y0+4*S-kst*S/2;
-            out+=accSvg(key>0?'#':'b',margin+34+6+i*9,ky,0.95);
+            out+=accSvg(key>0?'#':'b',margin+34+9+i*9,ky,0.95);
           }
         }
         if(si===0){

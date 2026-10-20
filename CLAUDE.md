@@ -17,7 +17,7 @@ sw.js                 <- service worker untuk cache offline; CACHE name di dalam
                           dinaikkan versinya (mis. fertune-v2 -> fertune-v3) setiap kali
                           index.html/manifest/sw.js diubah, supaya HP mengambil versi baru
 privacy.html          <- Kebijakan Privasi (wajib untuk Play Store); ditautkan dari footer aplikasi
-fonts/                <- font Bricolage Grotesque (woff2, subset latin) + OFL.txt; disimpan sendiri,
+fonts/                <- font Bricolage Grotesque (woff2, subset latin) + OFL.txt, lisensi Bravura (bentuk kunci G/F); disimpan sendiri,
                           TIDAK memakai Google Fonts (privasi: sebisa mungkin tanpa server pihak ketiga)
 playstore/            <- bahan Play Store: PANDUAN-PLAYSTORE.md (langkah upload via PWABuilder/TWA),
                           deskripsi-toko.md, ikon 512, feature graphic 1024x500, screenshot/ (berbingkai),
@@ -148,6 +148,7 @@ Mekanisme penilaian not yang dimainkan (fungsi `practiceHit`):
 ## Detail rendering notasi
 
 - Not balok (staff notation) dan not angka (numbered/jianpu notation) **digambar sendiri sebagai SVG** dari nol (fungsi `drawScore`, `noteSvg`, `numSvg`) — tidak pakai library notasi musik pihak ketiga (bukan VexFlow/abcjs/dll).
+- **Kunci G & kunci F** (`CLEF_TREBLE`/`CLEF_BASS`) = bentuk asli dari font musik **Bravura** (Steinberg, SIL OFL 1.1, lisensi di `fonts/LICENSE-bravura.txt`), disalin sebagai path SVG (bukan memuat font): 250 satuan font = 1 spasi paranada (S=10 px → skala 0,04), titik nol kunci G di garis ke-2 dari bawah, kunci F di garis ke-4. Diminta Ferdi (Okt 2026) karena gambar kunci buatan sendiri kurang mirip aslinya.
 - Not balok: not seperdelapan/seperenambelas yang berurutan dalam SATU ketukan digabung dengan balok (beam) alih-alih bendera terpisah (`gs`/`grp` di `drawScore`; arah tangkai ikut rata-rata posisi nada, balok kedua untuk 1/16; rehat memutus kelompok; beam tidak ikut berubah warna saat state benar/salah).
 - Not angka: garis panjang (beam) untuk not 1/8 & 1/16 digambar **DI ATAS** angka (bukan di bawah — sempat diminta dipindah), garis-garis pendek yang berdekatan dalam satu ketukan disambung jadi satu garis menerus, bukan garis terpisah per not.
 - Not angka bertitik (mis. 3 bertitik + 2 seperdelapan, `numSvg`): titik dijauhkan dari angka, diletakkan di dekat not berikutnya sejajar dasar angka, dan garis di atas not seperdelapan yang mengikutinya diperpanjang ke kiri sampai tepat di atas titik (`bm.dl`), sesuai tulisan tangan standar not angka.
