@@ -468,7 +468,8 @@ body.dock-inflow .app{padding-bottom:110px}
 .connSheet{position:absolute;left:calc(12px + env(safe-area-inset-left,0px));right:calc(12px + env(safe-area-inset-right,0px));top:52px;bottom:8px;z-index:3;overflow:auto;background:var(--bg);border:2px solid var(--line);border-radius:20px;padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 30px rgba(160,110,200,.28)}
 .connSheet[hidden]{display:none}
 /* Jika layar masih tegak (kunci landscape tidak diizinkan browser), layar berlatih diputar 90° supaya HP tinggal dimiringkan */
-@media (orientation:portrait){
+/* Hanya HP/tablet (layar sentuh); di laptop/PC jendela browser yang tegak tidak ikut diputar */
+@media (orientation:portrait) and (pointer:coarse){
   .play{inset:auto;top:0;left:0;width:100vh;height:100vw;transform-origin:top left;transform:rotate(90deg) translateY(-100%)}
 }
 .noteGrid{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:8px}
@@ -629,6 +630,8 @@ body{
 #tab-score .stepper .ctl{background:var(--surf);box-shadow:0 4px 0 var(--dLilac)}
 #sdelnote,#sdel{--c:var(--pPeach);--cd:var(--dPeach)}
 #tab-score label.sound,#snew{--c:var(--pMint);--cd:var(--dMint)}
+#ssave{--c:var(--pSky);--cd:var(--dSky)}
+#ssaveInfo .linkbtn{border:0;background:none;padding:0;font:inherit;font-weight:800;color:var(--brass);text-decoration:underline;cursor:pointer}
 #sprac{--c:var(--pLilac);--cd:var(--dLilac)}
 /* Nilai besar di layar berlatih */
 .pgrade{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;overflow:hidden}
@@ -1148,10 +1151,14 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 
   <div class="row">
+    <button class="sound" id="ssave" type="button">💾 Simpan</button>
+    <button class="sound" id="snew" type="button">＋ Buat baru</button>
+  </div>
+  <p class="hint" id="ssaveInfo" style="margin:6px 4px 10px;text-align:center"></p>
+  <div class="row">
     <label class="sound" style="cursor:pointer">Unggah gambar partitur
       <input type="file" accept="image/*" id="simg" hidden>
     </label>
-    <button class="sound" id="snew" type="button">Save/Create</button>
     <button class="sound" id="sdel" type="button">Hapus partitur</button>
   </div>
   <div class="row">
@@ -1267,7 +1274,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Buka menu <b>Partitur</b>. Isi judul, tempo, birama, dan kunci. Bila perlu isi juga <b>Keterangan</b>, <b>Komposer / Arranger</b>, dan <b>Tanda tempo</b> (mis. Andante); semuanya tampil di kepala partitur.</li>
         <li>Tombol nilai not (penuh sampai 1/16), titik, ♯/♭, rehat, dinamika, dan kursor ada <b>di atas</b> partitur; tuts piano <b>tepat di bawah</b> partitur. Ketuk tuts untuk menulis not.</li>
         <li><b>Dinamika</b>: pilih satu not (atau tulis not baru), lalu ketuk <i>pp, p, mp, mf, f, ff</i>, <i>cresc.</i> atau <i>dim.</i> Ketuk lagi untuk menghapus. Dinamika ikut terdengar saat diputar dan ikut tersimpan saat diekspor ke MIDI.</li>
-        <li><b>Piano 2 tangan</b>: di pilihan <i>Kunci</i> pilih <i>Piano 2 tangan (G + F)</i>. Paranada atas (kunci G) untuk <b>tangan kanan</b>, paranada bawah (kunci F) untuk <b>tangan kiri</b>. Pilih tangan yang mau ditulis dengan tombol <i>Tangan kanan / Tangan kiri</i>, atau cukup <b>ketuk paranadanya</b> (paranada yang sedang ditulis berwarna biru muda). Tiap tangan ditulis sendiri-sendiri: tulis tangan kanan sampai selesai, lalu pindah ke tangan kiri dan mulai lagi dari birama 1. Saat diputar dan diekspor ke MIDI kedua tangan berbunyi bersamaan; Latihan memakai tangan kanan (melodi).</li>
+        <li><b>Piano 2 tangan</b>: di pilihan <i>Kunci</i> pilih <i>Piano 2 tangan (G + F)</i>. Paranada atas (kunci G) untuk <b>tangan kanan</b>, paranada bawah (kunci F) untuk <b>tangan kiri</b>. Pilih tangan yang mau ditulis dengan tombol <i>Tangan kanan / Tangan kiri</i>, atau cukup <b>ketuk paranadanya</b> (paranada yang sedang ditulis berwarna biru muda). Tiap tangan ditulis sendiri-sendiri: tulis tangan kanan sampai selesai, lalu pindah ke tangan kiri dan mulai lagi dari birama 1. Saat diputar dan diekspor ke MIDI kedua tangan berbunyi bersamaan. <b>Latih lagu ini</b> memakai kedua tangan: not kanan & kiri yang bersamaan dihitung satu langkah (lewat piano MIDI semua nadanya harus ditekan; lewat mikrofon cukup salah satu).</li>
         <li><b>Salin / Potong / Tempel</b>: pilih not (ketuk), untuk beberapa not ketuk not pertama lalu <b>Shift+klik</b> not terakhir (di HP: nyalakan <b>⬚ Pilih banyak</b> dulu), atau Shift+◀ ▶, atau <b>Ctrl+A</b> untuk semua. Lalu <b>📋 Salin</b> (Ctrl+C) / <b>✂️ Potong</b> (Ctrl+X). Pilih tempat tujuan (ketuk not, atau kursor di akhir/di depan lagu) lalu <b>📥 Tempel</b> (Ctrl+V). Maju otomatis <b>NYALA</b> = disisipkan (not di belakangnya bergeser); <b>MATI</b> = menimpa not mulai dari yang disorot. Salinan bisa ditempel ke partitur lain juga. Beberapa not terpilih + Hapus not = dihapus sekaligus.</li>
         <li><b>Urungkan / Ulangi</b>: tombol <b>↶ Urungkan</b> dan <b>↷ Ulangi</b> (di bawah "Maju otomatis"), atau di keyboard laptop <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (Mac: ⌘Z / ⌘⇧Z). Tombol <b>Spasi</b> = Putar / Berhenti.</li>
         <li>Tombol ◀ ▶ memindahkan kursor. Ketuk not untuk memilih dan mengubahnya. Tombol hapus menghapus bertahap.</li>
@@ -1277,11 +1284,11 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>Maju otomatis NYALA</b> = <b>mengisi / menyisipkan</b>: setiap tuts menulis not baru dan kursor maju sendiri. Kalau ada not yang dipilih, not baru disisipkan <b>di depan</b> not itu dan not-not di belakangnya ikut bergeser. Untuk menambah not (atau rehat 0) di <b>awal lagu</b>, tekan ◀ dari not pertama sampai kursor berada di depan not pertama.</li>
         <li><b>Rehat</b>: Maju otomatis <b>MATI</b> = not yang disorot <b>diganti jadi 0</b> (seperti dihapus). Maju otomatis <b>NYALA</b> = 0 <b>disisipkan di depan</b> not yang disorot (not di belakangnya bergeser). Ketuk bagian kosong partitur untuk melepas sorotan (kursor kembali ke akhir lagu).</li>
         <li><b>▶ Putar</b> (di tengah, antara Sambungkan dan Rekam) membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
-        <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>Save/Create</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
+        <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>＋ Buat baru</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
         <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan</b> (di kartu di bawah tuts piano, di samping <b>▶ Putar</b> dan <b>⏺ Rekam</b>). Setelah tersambung, tombol <b>MIDI OFF / MIDI ON</b> menentukan apakah tuts menulis not: <b>OFF</b> = piano hanya berbunyi, bebas berlatih dulu tanpa mengubah partitur; <b>ON</b> = setiap tuts langsung menulis not seperti tuts di layar (tekan bersamaan = akor). Tombol <b>Rekam</b> tetap merekam walau MIDI OFF.</li>
         <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. Selama merekam, not yang kamu mainkan langsung tergambar di partitur dan kursor ikut berjalan mengikuti ketukan. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, rekaman masuk ke tangan yang sedang dipilih saja (<i>Tulis &amp; rekam ke</i>: Kanan / Kiri), mulai di birama baru setelah not terakhir tangan itu, dan tangan yang lain ikut berbunyi supaya bisa diikuti (bisa dimatikan). Jadi tangan kanan bisa direkam dulu, lalu tangan kiri dari awal lagu. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
         <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
-        <li><b>Save/Create</b> membuat partitur kosong baru. <b>Ekspor ke MIDI</b> dan <b>Impor file MIDI</b> ada di bawah tombol itu.</li>
+        <li><b>💾 Simpan</b> menyimpan partitur (sebenarnya juga tersimpan otomatis tiap ada perubahan). Tanpa masuk akun, partitur <b>hanya ada di perangkat itu</b> — partitur dari laptop tidak muncul di HP. Supaya sama di semua perangkat, masuk akun Gitar Sakti di <b>Pengaturan › Akun</b> di setiap perangkat (laptop dan HP) dengan akun yang sama. <b>＋ Buat baru</b> membuat partitur kosong baru. <b>Ekspor ke MIDI</b> dan <b>Impor file MIDI</b> ada di bawah tombol itu.</li>
         <li><b>🎵 Impor lagu (audio)</b>: pilih rekaman (mp3, wav, m4a). FerTune mendengarkannya langsung di HP, mengubahnya jadi not, lalu jadi partitur (maks. 2 menit pertama). Hasil terbaik dari rekaman satu alat musik atau nyanyian saja; lagu lengkap dengan band hasilnya kurang rapi. Setelah selesai ada tautan <b>Unduh MIDI lengkap</b> berisi semua nada yang terdengar.</li>
       </ol>
       <div class="tip">Dengan keyboard MIDI tersambung, tuts yang kamu tekan langsung menjadi not di partitur.</div>
@@ -1361,6 +1368,18 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button type="button" id="sdurBar"><span class="ic" aria-hidden="true">✂️</span><b>Hanya di birama ini</b><small>Not sesudahnya di birama ini bergeser, not paling belakang di birama ini dihapus</small></button>
     </div>
     <div class="row"><button class="sound" id="sdurNo" type="button">Batal</button></div>
+  </div>
+</div>
+
+<div class="pwOv" id="sloginOv" hidden role="dialog" aria-modal="true" aria-labelledby="sloginT">
+  <div class="pwBox">
+    <div style="font-size:38px" aria-hidden="true">☁️</div>
+    <h2 id="sloginT">Tersimpan di perangkat ini saja</h2>
+    <p>Partitur sudah tersimpan, tapi <b>hanya di perangkat ini</b>. Supaya bisa dibuka di HP / laptop lain dan tidak hilang kalau ganti HP, masuk dengan akun Gitar Sakti (akunnya sama dengan gitarsakti.com). Setelah masuk, semua partitur otomatis tersimpan di akun.</p>
+    <div class="row">
+      <button class="sound" id="sloginNo" type="button">Nanti saja</button>
+      <button class="start" id="sloginGo" type="button" style="flex:1.4;padding:11px 8px;font-size:15px">🔐 Masuk / Daftar</button>
+    </div>
   </div>
 </div>
 
@@ -2549,7 +2568,7 @@ function loadCustNotes(){
   try{ var v=JSON.parse(store.get('yg.custNotes','[]')); if(Array.isArray(v)&&v.length) return v; }catch(e){}
   return [60,62,64,65,67,69,71,72];
 }
-var pr = { playing:false, inst: store.get('yg.inst','piano')==='guitar' ? 'guitar' : 'piano', src:'random', clef:'treble', range:'mid', len:8, sharps:false, anyOct:false,
+var pr = { got:{}, grp:{}, playing:false, inst: store.get('yg.inst','piano')==='guitar' ? 'guitar' : 'piano', src:'random', clef:'treble', range:'mid', len:8, sharps:false, anyOct:false,
            arcLetter: parseInt(store.get('yg.arcLetter','0'),10)||0, arcSub: parseInt(store.get('yg.arcSub','1'),10)||1,
            custNotes: loadCustNotes(), custMeasures: parseInt(store.get('yg.custMeasures','2'),10)||2,
            key: clamp(parseInt(store.get('yg.key','0'),10)||0,-7,7),
@@ -2671,8 +2690,17 @@ function spellIn(m,key){
 }
 function curScoreCopy(){
   var s=curScore();
-  return {title:s.title,ts:s.ts.slice(),clef:s.clef,key:s.key||0,notes:s.notes.map(function(n){ var o={m:n.m,d:n.d,a:n.a||''}; if(n.x) o.x=n.x.map(function(p){ return {m:p.m,a:p.a}; }); if(n.tie) o.tie=true; if(n.e) o.e=true; return o; })};
+  function cp(N){ return N.map(function(n){ var o={m:n.m,d:n.d,a:n.a||''}; if(n.x) o.x=n.x.map(function(p){ return {m:p.m,a:p.a}; }); if(n.tie) o.tie=true; if(n.e) o.e=true; return o; }); }
+  var o={title:s.title,ts:s.ts.slice(),clef:s.clef,key:s.key||0,notes:cp(s.notes)};
+  /* piano 2 tangan: latihan memakai kedua tangan */
+  if(s.grand && s.lh && s.lh.some(function(n){ return n.m!==null; })){ o.grand=true; o.lh=cp(s.lh); }
+  return o;
 }
+/* Latihan memakai "id" not: tangan kanan = indeks, tangan kiri = indeks + LH_OFF (sama dengan data-i di gambar).
+   Piano 2 tangan: not kanan & kiri yang mulai di ketukan yang sama = SATU langkah (pr.grp[idPertama] = semua id-nya). */
+function prN(id){ return id>=LH_OFF ? pr.score.lh[id-LH_OFF] : pr.score.notes[id]; }
+function prIds(id){ return (pr.grp && pr.grp[id]) || [id]; }
+function prPitches(id){ var o=[]; prIds(id).forEach(function(q){ pitchList(prN(q)).forEach(function(p){ o.push(p); }); }); return o; }
 var autoT=0;
 function newRound(keep){
   clearTimeout(autoT); hideGrade(); hideHill(); tempoStop();
@@ -2682,7 +2710,17 @@ function newRound(keep){
     else if(pr.src==='custom') pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genCustom()};
     else pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genRandom()};
   }
-  pr.idx=[]; pr.score.notes.forEach(function(n,i){ if(n.m!==null && !tieFrom(pr.score.notes,i)) pr.idx.push(i); });
+  pr.idx=[]; pr.grp={}; pr.got={};
+  if(pr.score.grand && pr.score.lh){
+    var ev=[];
+    [pr.score.notes,pr.score.lh].forEach(function(N,p){ var t=0; N.forEach(function(n,i){ if(n.m!==null && !tieFrom(N,i)) ev.push({t:t,id:p?i+LH_OFF:i}); t+=n.d; }); });
+    ev.sort(function(a,b){ return a.t-b.t || a.id-b.id; });
+    var lastT=null, lead=null;
+    ev.forEach(function(e){
+      if(lead===null || Math.abs(e.t-lastT)>1e-6){ lead=e.id; lastT=e.t; pr.idx.push(lead); pr.grp[lead]=[lead]; }
+      else pr.grp[lead].push(e.id);
+    });
+  } else pr.score.notes.forEach(function(n,i){ if(n.m!==null && !tieFrom(pr.score.notes,i)) pr.idx.push(i); });
   { var sl=$('#pstageLbl'); if(sl){ if(pr.src==='arcade'){ sl.textContent='Stage '+ARC_LETTERS[pr.arcLetter]+pr.arcSub; sl.hidden=false; } else sl.hidden=true; } }
   pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
   pr.lastAdvanceT=0; pr.fast=false;
@@ -2780,7 +2818,7 @@ function practiceData(f,rms,now){
   if(f && pr.idx && pr.idx.length){
     if(pr.lo===undefined || pr.loScore!==pr.score){
       var lo=1e9, hi=-1e9;
-      pr.idx.forEach(function(q){ pitchList(pr.score.notes[q]).forEach(function(pp){ var nm=pp.m; if(nm<lo) lo=nm; if(nm>hi) hi=nm; }); });
+      pr.idx.forEach(function(q){ prPitches(q).forEach(function(pp){ var nm=pp.m; if(nm<lo) lo=nm; if(nm>hi) hi=nm; }); });
       pr.lo=lo; pr.hi=hi; pr.loScore=pr.score;
     }
     var fm=Math.round(69+12*Math.log2(f/A4))+instShift();
@@ -2793,7 +2831,7 @@ function practiceData(f,rms,now){
 function practiceTarget(f){
   /* hasil: {m: not yang cocok, f: frekuensi terukur} atau null */
   if(pr.done || !pr.idx.length || pr.pos>=pr.idx.length) return null;
-  var n=pr.score.notes[pr.idx[pr.pos]], ps=pitchList(n), sh=instShift(), i, m, hz;
+  var ps=prPitches(pr.idx[pr.pos]), sh=instShift(), i, m, hz;
   if(f){
     var fm=Math.round(69+12*Math.log2(f/A4));
     for(i=0;i<ps.length;i++){ m=ps[i].m-sh; if(fm===m || (pr.anyOct && (fm-m)%12===0)) return {m:fm,f:f}; }
@@ -2819,6 +2857,7 @@ function tempoMaybeStart(){
   if(!inputReady()) return;
   var b=0; tp.beat=[]; tp.win=[];
   pr.score.notes.forEach(function(n,i){ tp.beat[i]=b; tp.win[i]=Math.max(0.2,Math.min(0.45,0.6*n.d)); b+=n.d; });
+  if(pr.score.grand && pr.score.lh){ var b2=0; pr.score.lh.forEach(function(n,i){ tp.beat[i+LH_OFF]=b2; tp.win[i+LH_OFF]=Math.max(0.2,Math.min(0.45,0.6*n.d)); b2+=n.d; }); b=Math.max(b,b2); }
   tp.end=b; tp.beatMs=60000/pr.bpm;
   var cnt=tp.first?4:2; tp.first=false;
   tp.t0=performance.now()+cnt*tp.beatMs; tp.lastInt=-cnt-1; tp.run=true; pr.t0=tp.t0;
@@ -2835,7 +2874,7 @@ function tempoAttach(){
     var bb=g.getBBox(), m=inv.multiply(g.getScreenCTM()), pt=new DOMPoint(bb.x+bb.width/2,bb.y+bb.height/2).matrixTransform(m), h=bb.height*Math.hypot(m.c,m.d);
     list.push({i:i,x:pt.x,y:pt.y,h:h});
   });
-  list.sort(function(a,b){ return a.i-b.i; });
+  list.sort(function(a,b){ return (tp.beat[a.i]-tp.beat[b.i]) || (a.i-b.i); });
   list.forEach(function(q){
     if(q.x<prevX-10 || row<0){ row++; rows[row]={y1:1e9,y2:-1e9,xs:[]}; }
     prevX=q.x; q.row=row; var r=rows[row]; r.y1=Math.min(r.y1,q.y-q.h/2-10); r.y2=Math.max(r.y2,q.y+q.h/2+10); r.xs.push(q.x);
@@ -2876,7 +2915,7 @@ function tempoLoop(now){
   while(!pr.done && pr.pos<pr.idx.length){
     var ni=pr.idx[pr.pos];
     if(t>tp.beat[ni]+tp.win[ni]){
-      pr.tries++; pr.wrong++; pr.marks[ni]='bad'; pr.pos++; pr.missStreak=0; pr.lastMsg={t:'Terlewat! Bunyikan saat garis lewat.',c:'bad'}; changed=true;
+      pr.tries++; pr.wrong++; prIds(ni).forEach(function(q){ pr.marks[q]='bad'; }); pr.got={}; pr.pos++; pr.missStreak=0; pr.lastMsg={t:'Terlewat! Bunyikan saat garis lewat.',c:'bad'}; changed=true;
       if(pr.pos>=pr.idx.length){ finishRound(); break; }
     } else break;
   }
@@ -2895,7 +2934,7 @@ function bindTempoUI(){
 /* ===== Tuts petunjuk: keyboard kecil di bawah partitur (hanya untuk piano) ===== */
 function buildPkeys(box){
   var lo=1e9, hi=-1e9;
-  pr.idx.forEach(function(q){ pitchList(pr.score.notes[q]).forEach(function(p){ if(p.m<lo) lo=p.m; if(p.m>hi) hi=p.m; }); });
+  pr.idx.forEach(function(q){ prPitches(q).forEach(function(p){ if(p.m<lo) lo=p.m; if(p.m>hi) hi=p.m; }); });
   if(lo>hi){ lo=60; hi=71; }
   /* rentang dibulatkan per oktaf (C..B), minimal 2 oktaf supaya tampak seperti keyboard sungguhan */
   var a=Math.floor(lo/12)*12, b=Math.floor(hi/12)*12+11;
@@ -2921,7 +2960,7 @@ function renderPkeys(){
   if(!on) return;
   if(box._sc!==pr.score) buildPkeys(box);
   var tg={}, fl=(pr.flash && performance.now()-pr.flash.t<420) ? pr.flash : null;
-  if(!pr.done && pr.pos<pr.idx.length) pitchList(pr.score.notes[pr.idx[pr.pos]]).forEach(function(p){ tg[p.m]=1; });
+  if(!pr.done && pr.pos<pr.idx.length) prPitches(pr.idx[pr.pos]).forEach(function(p){ if(!pr.got[p.m]) tg[p.m]=1; });
   box._keys.forEach(function(k){
     var m=+k.getAttribute('data-m'), c=(isBlack(m)?'b':'w')+(tg[m]?' tgt':'')+(fl && fl.m===m ? (fl.ok?' hit':' miss') : '');
     if(k.className!==c) k.className=c;
@@ -2932,18 +2971,25 @@ function practiceHit(m,exact){
   if(pr.done || pr.paused || !pr.idx.length) return;
   m += instShift();
   if(!pr.t0) pr.t0=performance.now();
-  var ni=pr.idx[pr.pos], n=pr.score.notes[ni];
+  var ni=pr.idx[pr.pos], ps=prPitches(ni), multi=prIds(ni).length>1;
   if(pr.tempoOn){
     if(!tp.run) return;
     /* kompensasi jeda deteksi mikrofon (jendela ±43 ms terbaru + 1 putaran analisis) */
     var tb=((performance.now()-(exact?0:(mic.interval<20?50:90)))-tp.t0)/tp.beatMs;
     if(tb<tp.beat[ni]-tp.win[ni]) return;   /* terlalu cepat: belum waktunya, abaikan */
   }
-  var ok = pitchList(n).some(function(pp){ return pr.anyOct ? (m%12===pp.m%12) : (m===pp.m); });
+  var ok = ps.some(function(pp){ return pr.anyOct ? (m%12===pp.m%12) : (m===pp.m); });
   if(ok || exact || pr.missStreak>=1) pr.flash={m:m,ok:ok,t:performance.now()};
+  /* piano 2 tangan lewat MIDI: semua nada langkah ini (kanan + kiri) harus ditekan dulu baru lanjut */
+  if(ok && exact && multi){
+    pr.got[m]=1;
+    var left=ps.filter(function(pp){ return !pr.got[pp.m]; });
+    if(left.length){ pr.lastMsg={t:'Bagus! Tekan juga: '+left.map(function(pp){ return labelOf(pp.m,pp.a,pr.score.key||0); }).join(', '),c:'ok'}; renderPractice(); return; }
+  }
   if(ok){
+    pr.got={};
     pr.tries++; pr.missStreak=0;
-    pr.marks[ni]='ok'; pr.pos++;
+    prIds(ni).forEach(function(q){ pr.marks[q]='ok'; }); pr.pos++;
     pr.lastMsg={t:'Benar!',c:'ok'};
     if(pr.pos>=pr.idx.length) finishRound();
   } else {
@@ -2954,12 +3000,12 @@ function practiceHit(m,exact){
     pr.missStreak++;
     if(!exact && pr.missStreak<2) return;
     pr.tries++;
-    pr.marks[ni]='bad'; pr.wrong++;
+    prIds(ni).forEach(function(q){ pr.marks[q]='bad'; }); pr.wrong++;
     var sk=pr.score.key||0, a = spellIn(m,sk);
     pr.lastMsg={t:'Belum tepat, yang terdengar: '+labelOf(m,a,sk),c:'bad'};
     pr.missStreak=0;
     /* Tetap di not yang sama; harus benar-benar dimainkan dengan benar sebelum lanjut (mode tempo: waktu terus berjalan, lanjut ke not berikutnya). */
-    if(pr.tempoOn){ pr.pos++; if(pr.pos>=pr.idx.length) finishRound(); }
+    if(pr.tempoOn){ pr.got={}; pr.pos++; if(pr.pos>=pr.idx.length) finishRound(); }
   }
   renderPractice();
 }
@@ -3323,10 +3369,11 @@ function finishRound(){
 }
 /* Pratinjau di menu: hanya 2 birama pertama */
 function previewScore(sc){
-  var bb=sc.ts[0]*4/sc.ts[1], ms=buildMeasures(sc.notes,bb), n=0, o={}, k;
-  ms.slice(0,2).forEach(function(m){ n+=m.length; });
+  var bb=sc.ts[0]*4/sc.ts[1], o={}, k;
+  function first2(N){ var n=0; buildMeasures(N,bb).slice(0,2).forEach(function(m){ n+=m.length; }); return N.slice(0,n); }
   for(k in sc) o[k]=sc[k];
-  o.notes=sc.notes.slice(0,n);
+  o.notes=first2(sc.notes);
+  if(sc.grand && sc.lh) o.lh=first2(sc.lh);
   return o;
 }
 /* Gambar partitur sebesar mungkin yang masih muat di tinggi tempatnya (layar berlatih). */
@@ -3378,12 +3425,12 @@ var shownMsg=null;
 function renderPractice(){
   var sc=pr.score; if(!sc) return;
   renderPkeys();   /* tampilkan/sembunyikan tuts dulu, supaya ukuran partitur dihitung dengan ruang yang benar */
-  var cur = pr.done ? -1 : pr.idx[pr.pos];
+  var curIds = pr.done ? [] : prIds(pr.idx[pr.pos]);
   var host=$('#pscore'), redrawn=false;
   if(pr.playing){
-    var stFn=function(i){
-      var s = pr.marks[i] || '';
-      if(i===cur) s += ' cur';   /* satu sorotan saja (fitur dua sorotan saat main cepat sudah dihapus) */
+    var stFn=function(i,p){
+      var id = p ? i+LH_OFF : i, s = pr.marks[id] || '';
+      if(curIds.indexOf(id)>=0) s += ' cur';   /* satu langkah disorot (piano 2 tangan: not kanan & kiri yang bersamaan) */
       return s;
     };
     /* Partitur yang sama di ukuran layar yang sama: cukup ganti warna/sorotan not (class), tidak digambar ulang.
@@ -3418,7 +3465,7 @@ function renderPractice(){
   if(pr.lastMsg && pr.lastMsg!==shownMsg){ void st.offsetWidth; st.classList.add('bump'); }
   shownMsg=pr.lastMsg;
   if(pr.tempoOn && pr.playing && tp.run && (redrawn || !tp.geo || !host.contains(tp.geo.line))) tempoAttach();
-  var tooLow = pr.inst==='guitar' && pr.idx.some(function(i){ return sc.notes[i].m-12<40; });
+  var tooLow = pr.inst==='guitar' && pr.idx.some(function(i){ return prN(i).m-12<40; });
   $('#pwarn').hidden = !tooLow;
 }
 function refreshPractice(){
@@ -3768,6 +3815,12 @@ function schedulePush(){
   },2000);
 }
 function renderAcct(){
+  /* keterangan di bawah tombol Simpan (menu Partitur): di mana partitur tersimpan */
+  var si=$('#ssaveInfo');
+  if(si){
+    if(sbUser){ si.textContent=''; si.appendChild(document.createTextNode('☁ Tersimpan otomatis di akun '+(sbUser.email||'Gitar Sakti')+(syncMsg?' · '+syncMsg:''))); }
+    else si.innerHTML='⚠️ Partitur hanya tersimpan di perangkat ini. <button type="button" class="linkbtn">Masuk akun</button> supaya bisa dibuka di HP / laptop lain.';
+  }
   var m=$('#acctMsg'), b=$('#acctBtn'); if(!m||!b) return;
   if(sbUser){
     m.innerHTML='☁ Masuk sebagai <b></b> · <span></span>';
@@ -4754,9 +4807,35 @@ function bindScore(){
   $('#sdurBar').addEventListener('click',function(){ doDurShift('bar'); });
   $('#sdurNo').addEventListener('click',function(){ durAsk=null; $('#sdurOv').hidden=true; syncInputFromNote(edScore().notes[sel]||{d:inp.dur,m:null}); });
   $('#sdurOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) $('#sdurNo').click(); });
+  /* Simpan dan Buat baru dipisah (diminta Ferdi): partitur sebenarnya sudah tersimpan otomatis tiap perubahan;
+     Simpan menyimpan sekarang juga (+ kirim ke cloud bila masuk akun) dan memberi tanda "Tersimpan". */
+  $('#ssave').addEventListener('click',function(){
+    if(curIsTrial()){ showPaywall('simpan'); return; }
+    if(!isPremium()){ guardEdit(); return; }
+    saveScores();
+    var b=this; b.textContent='✓ Tersimpan'; clearTimeout(b._t); b._t=setTimeout(function(){ b.textContent='💾 Simpan'; },1800);
+    if(sbUser){
+      syncNow();
+      showScoreAlert('Partitur "'+(curScore().title||'Tanpa judul')+'" tersimpan di perangkat ini dan di akun '+(sbUser.email||'')+'. Buka FerTune di HP/laptop lain dengan akun yang sama.',true);
+    } else {
+      showScoreAlert('Partitur "'+(curScore().title||'Tanpa judul')+'" tersimpan di perangkat ini.',true);
+      $('#sloginOv').hidden=false;   /* belum masuk akun: ingatkan supaya data tidak hilang & bisa dibuka di perangkat lain */
+    }
+  });
+  function openLogin(){
+    $('#sloginOv').hidden=true; goTab('set');
+    setTimeout(function(){
+      var f=$('#acctForm'); if(!sbUser && f.hidden) $('#acctBtn').click();
+      try{ $('#acct').scrollIntoView({block:'start',behavior:'smooth'}); }catch(e){}
+    },80);
+  }
+  $('#sloginGo').addEventListener('click',openLogin);
+  $('#sloginNo').addEventListener('click',function(){ $('#sloginOv').hidden=true; });
+  $('#sloginOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) e.currentTarget.hidden=true; });
+  $('#ssaveInfo').addEventListener('click',function(e){ if(e.target.closest('button')) openLogin(); });
   $('#snew').addEventListener('click',function(){
-    if(isPremium()) return openNewDialog();
-    if(!curIsTrial()) startTrial(); else showPaywall('simpan');
+    if(isPremium() || curIsTrial()) return openNewDialog();
+    startTrial();
   });
   $('#sdel').addEventListener('click',function(){
     if(isPremium()) return delScore();
@@ -5417,7 +5496,8 @@ function applyEntitlements(){
       +'<div class="row"><button class="sound" type="button" data-act="reset">Kosongkan</button><button class="sound" type="button" data-act="back">Kembali ke lagu</button></div>'
       +'<div class="row" style="margin-top:8px"><button class="start" type="button" data-act="prem" style="padding:9px 8px;font-size:14px">⭐ Lihat Premium untuk menyimpan</button></div>';
   }
-  $('#snew').textContent = prem ? 'Save/Create' : (trial ? '⭐ Simpan (Premium)' : '✏️ Coba menulis');
+  $('#snew').textContent = (prem || trial) ? '＋ Buat baru' : '✏️ Coba menulis';
+  $('#ssave').textContent = prem ? '💾 Simpan' : '💾 Simpan ⭐';
   $('#sdel').hidden = !prem && !trial;
   $('#sdel').textContent = (!prem && trial) ? 'Buang coba menulis' : 'Hapus partitur';
   ['#smidiOut','#sprac'].forEach(function(q){ var b=$(q); if(!b._t){ b._t=b.textContent; } b.textContent=b._t+(prem?'':' ⭐'); });
