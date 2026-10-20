@@ -1273,7 +1273,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
         <li><b>Maju otomatis MATI</b> (bawaan) = <b>mengganti</b>: ketuk not (atau pilih dengan ◀ ▶), lalu tekan tuts yang benar (di layar atau di piano MIDI). Nadanya diganti dan sorotan tetap di not itu, tidak menambah not baru. Tekan beberapa tuts bersamaan untuk akor. Pindah ke not lain dengan ◀ ▶.</li>
         <li><b>Maju otomatis NYALA</b> = <b>mengisi / menyisipkan</b>: setiap tuts menulis not baru dan kursor maju sendiri. Kalau ada not yang dipilih, not baru disisipkan <b>di depan</b> not itu dan not-not di belakangnya ikut bergeser. Untuk menambah not (atau rehat 0) di <b>awal lagu</b>, tekan ◀ dari not pertama sampai kursor berada di depan not pertama.</li>
-        <li><b>Rehat</b> selalu disisipkan <b>di depan</b> not yang disorot (not di belakangnya bergeser). Untuk mengubah not menjadi rehat, pakai <b>Hapus not</b>. Ketuk bagian kosong partitur untuk melepas sorotan (kursor kembali ke akhir lagu).</li>
+        <li><b>Rehat</b>: Maju otomatis <b>MATI</b> = not yang disorot <b>diganti jadi 0</b> (seperti dihapus). Maju otomatis <b>NYALA</b> = 0 <b>disisipkan di depan</b> not yang disorot (not di belakangnya bergeser). Ketuk bagian kosong partitur untuk melepas sorotan (kursor kembali ke akhir lagu).</li>
         <li><b>▶ Putar</b> (di tengah, antara Sambungkan dan Rekam) membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
         <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>Save/Create</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
         <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan</b> (di kartu di bawah tuts piano, di samping <b>▶ Putar</b> dan <b>⏺ Rekam</b>). Setelah tersambung, tombol <b>MIDI OFF / MIDI ON</b> menentukan apakah tuts menulis not: <b>OFF</b> = piano hanya berbunyi, bebas berlatih dulu tanpa mengubah partitur; <b>ON</b> = setiap tuts langsung menulis not seperti tuts di layar (tekan bersamaan = akor). Tombol <b>Rekam</b> tetap merekam walau MIDI OFF.</li>
@@ -4364,9 +4364,13 @@ function midiScoreNote(m,silent){
 function addRest(){
   if(!guardEdit()) return;
   var s=edScore(), N=s.notes;
-  /* Rehat selalu DISISIPKAN di depan not/rehat yang disorot (not-not sesudahnya bergeser).
-     Mengubah not jadi rehat: pakai "Hapus not" (not -> rehat). */
-  fillOrInsert({m:null,d:curDur(),a:''}, editing && sel>=0 && !!N[sel]);
+  /* Maju otomatis MATI (mengganti): not yang disorot DIGANTI jadi rehat (0), sorotan tetap di situ — seperti Hapus not.
+     Maju otomatis NYALA (menyisipkan): rehat DISISIPKAN di depan not/rehat yang disorot, not sesudahnya bergeser. */
+  if(!advOn() && editing && sel>=0 && N[sel] && N[sel].m!==null){
+    N[sel]={m:null,d:N[sel].d,a:''}; if(sel>0) N[sel-1].tie=false;
+    saveScores(); renderScoreView(); return;
+  }
+  fillOrInsert({m:null,d:curDur(),a:''}, advOn() && editing && sel>=0 && !!N[sel]);
 }
 /* Hapus bertahap: not -> rehat -> kosong (ruang tetap, tidak menggeser not di sampingnya) -> (kosong paling belakang) dibuang. */
 function delNote(){
