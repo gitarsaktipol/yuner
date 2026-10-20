@@ -990,7 +990,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <select id="sts"><option value="4/4">4/4</option><option value="3/4">3/4</option><option value="2/4">2/4</option><option value="6/8">6/8</option></select>
       </label>
       <label>Kunci
-        <select id="sclef"><option value="treble">Kunci G</option><option value="bass">Kunci F</option></select>
+        <select id="sclef"><option value="treble">Kunci G</option><option value="bass">Kunci F</option><option value="grand">Piano 2 tangan (G + F)</option></select>
       </label>
     </div>
     <div class="fields fields2">
@@ -1013,6 +1013,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
 
   <div class="card stools" id="stools">
+    <div class="chips" id="shand" role="group" aria-label="Tangan yang sedang ditulis" style="margin-bottom:8px" hidden>
+      <button class="chip" type="button" data-hand="rh" aria-pressed="true" style="flex:1">Tangan kanan (atas)</button>
+      <button class="chip" type="button" data-hand="lh" aria-pressed="false" style="flex:1">Tangan kiri (bawah)</button>
+    </div>
     <button class="chip" type="button" id="sview" style="width:100%;margin-bottom:8px" aria-label="Lihat berdasarkan"></button>
     <div class="chips" id="sdur" role="group" aria-label="Nilai not">
       <button class="chip" type="button" data-d="4" aria-pressed="false">Penuh</button>
@@ -1187,6 +1191,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Buka menu <b>Partitur</b>. Isi judul, tempo, birama, dan kunci. Bila perlu isi juga <b>Keterangan</b>, <b>Komposer / Arranger</b>, dan <b>Tanda tempo</b> (mis. Andante); semuanya tampil di kepala partitur.</li>
         <li>Tombol nilai not (penuh sampai 1/16), titik, ♯/♭, rehat, dinamika, dan kursor ada <b>di atas</b> partitur; tuts piano <b>tepat di bawah</b> partitur. Ketuk tuts untuk menulis not.</li>
         <li><b>Dinamika</b>: pilih satu not (atau tulis not baru), lalu ketuk <i>pp, p, mp, mf, f, ff</i>, <i>cresc.</i> atau <i>dim.</i> Ketuk lagi untuk menghapus. Dinamika ikut terdengar saat diputar dan ikut tersimpan saat diekspor ke MIDI.</li>
+        <li><b>Piano 2 tangan</b>: di pilihan <i>Kunci</i> pilih <i>Piano 2 tangan (G + F)</i>. Paranada atas (kunci G) untuk <b>tangan kanan</b>, paranada bawah (kunci F) untuk <b>tangan kiri</b>. Pilih tangan yang mau ditulis dengan tombol <i>Tangan kanan / Tangan kiri</i> di atas tombol nilai not, atau langsung ketuk not di paranada itu. Saat diputar dan diekspor ke MIDI kedua tangan berbunyi bersamaan; Latihan memakai tangan kanan (melodi).</li>
         <li>Tombol ◀ ▶ memindahkan kursor. Ketuk not untuk memilih dan mengubahnya. Tombol hapus menghapus bertahap.</li>
         <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
         <li><b>Putar</b> membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
@@ -2117,43 +2122,90 @@ function numSvg(n,x,yb,i,cls,bm,key,sp){
 var CLEF_TREBLE = '<path d="M14 -13 L12 50 C12 60 4 62 4 56" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 -13 C24 -6 22 8 12 16 C2 24 -1 36 6 42 C12 47 22 44 22 35 C22 27 12 24 8 30 C5 35 10 39 14 37" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
 var CLEF_BASS = '<path d="M6 10 C6 4 20 4 22 14 C24 26 14 38 2 44" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="6" cy="10" r="3.6" fill="currentColor"/><circle cx="30" cy="5" r="1.9" fill="currentColor"/><circle cx="30" cy="15" r="1.9" fill="currentColor"/>';
 
+/* Partitur digambar sebagai SVG. Satu paranada (score.clef), atau PIANO 2 TANGAN (score.grand): paranada atas = tangan kanan
+   (score.notes, kunci G), paranada bawah = tangan kiri (score.lh, kunci F), disatukan kurung kurawal & garis birama menerus.
+   Di mode 2 tangan, not yang dibunyikan bersamaan diletakkan sejajar (tata letak per "ketukan mulai" gabungan kedua tangan).
+   stateFn(i, bagian) -> class; data-i not tangan kiri = i + LH_OFF. */
+var LH_OFF=10000;
 function drawScore(host,score,mode,stateFn,cursorAfter,editor){
   var Wpx=Math.max(240,Math.floor(host.clientWidth||320));
   /* Layar lebar/miring: seluruh not (garis, kepala not, jarak) diperbesar seragam, bukan hanya diregangkan ke samping. */
   var scale = drawScore.force || (Wpx>600 ? Math.min(1.9, Wpx/520) : 1), W = Wpx/scale;
-  var notes=score.notes, num=(mode==='num');
-  var hasDyn=notes.some(function(n){ return n.m!==null && (n.dyn || n.hp); });
+  var num=(mode==='num'), grand=!!score.grand;
   var barBeats=score.ts[0]*4/score.ts[1];
-  var ms=buildMeasures(notes,barBeats);
-  if(!ms.length) ms=[[]];
-  /* Di editor: kalau birama terakhir sudah penuh, tampilkan birama kosong berikutnya (kursor pindah ke sana) — bukan garis akhir ganda */
-  var extraBar = !!editor && notes.length>0 && ms[ms.length-1].reduce(function(t,i){ return t+notes[i].d; },0)>=barBeats-1e-6;
-  if(extraBar) ms=ms.concat([[]]);
-  var unit = num ? 26 : 28, pos={};
+  var unit = num ? 26 : 28;
   var key=score.key||0, nAcc=Math.abs(key);
   /* lebar tanda kunci (♯/♭ setelah kunci G/F), digambar di awal setiap baris */
   var ksW = (num||!nAcc) ? 0 : nAcc*9+6;
-  var margin=num?6:4, clefW=num?0:34+ksW, tsW=num?0:20;
-  var base = score.clef==='bass' ? 18 : 30;
+  /* kunci F diberi ruang sedikit lebih lebar supaya titiknya tidak menempel ke angka birama */
+  var margin=grand?16:(num?6:4), clefW=num?0:34+ksW+((grand||score.clef==='bass')?6:0), tsW=num?0:20;
+  var staffH = num ? 0 : 4*S;
+  var editP = (grand && editor && hand==='lh') ? 1 : 0;
+  var parts = grand ? [{notes:score.notes,clef:'treble'},{notes:score.lh||[],clef:'bass'}] : [{notes:score.notes,clef:score.clef}];
+  parts.forEach(function(P,p){
+    var notes=P.notes;
+    P.base = P.clef==='bass' ? 18 : 30;
+    P.hasDyn = notes.some(function(n){ return n.m!==null && (n.dyn || n.hp); });
+    P.ms = buildMeasures(notes,barBeats);
+    /* Di editor: kalau birama terakhir sudah penuh, tampilkan birama kosong berikutnya (kursor pindah ke sana) — bukan garis akhir ganda */
+    P.extraBar = !!editor && p===editP && notes.length>0 && P.ms[P.ms.length-1].reduce(function(t,i){ return t+notes[i].d; },0)>=barBeats-1e-6;
+    if(P.extraBar) P.ms=P.ms.concat([[]]);
+    var minStep=0, maxStep=8;
+    if(!num) notes.forEach(function(n){ if(n.m!==null) pitchList(n).forEach(function(pp){ var st=diaOf({m:pp.m,a:pp.a})-P.base; if(st<minStep) minStep=st; if(st>maxStep) maxStep=st; }); });
+    P.maxLift=0;
+    if(num) notes.forEach(function(n){ if(n.m!==null) P.maxLift=Math.max(P.maxLift,(pitchList(n).length-1)*GAP); });
+    P.topM = num ? 44+P.maxLift : 22+Math.max(0,(maxStep-8)*S/2);
+    P.botM = (num ? 40 : Math.max(26,-minStep*S/2+14)) + (P.hasDyn ? 22 : 0);   /* ruang dinamika di bawah paranada */
+    P.pos={};
+  });
+  var nM = Math.max.apply(null,parts.map(function(P){ return P.ms.length; }));
+  if(!nM) nM=1;
+  parts.forEach(function(P){ while(P.ms.length<nM) P.ms.push([]); });
+  /* tinggi satu baris sistem; letak atas tiap bagian (relatif terhadap atas sistem) */
+  var sysH=0;
+  parts.forEach(function(P){ P.yOff=sysH+P.topM; sysH+=P.topM+staffH+P.botM; });
 
-  var minStep=0, maxStep=8;
-  if(!num) notes.forEach(function(n){ if(n.m!==null) pitchList(n).forEach(function(p){ var st=diaOf({m:p.m,a:p.a})-base; if(st<minStep) minStep=st; if(st>maxStep) maxStep=st; }); });
-  var maxLift=0;
-  if(num) notes.forEach(function(n){ if(n.m!==null) maxLift=Math.max(maxLift,(pitchList(n).length-1)*GAP); });
-  var topM = num ? 44+maxLift : 22+Math.max(0,(maxStep-8)*S/2);
-  var botM = (num ? 40 : Math.max(26,-minStep*S/2+14)) + (hasDyn ? 22 : 0);   /* ruang dinamika di bawah paranada */
-  var sysH = num ? topM+botM : topM+4*S+botM;
+  /* Tata letak birama: lebar & letak tiap not (x relatif awal birama, belum diskala) */
+  function measureLayout(mIdx){
+    var lay={w:0,pl:[]};
+    if(!grand){
+      var P=parts[0], m=P.ms[mIdx], x0=10, list=[];
+      m.forEach(function(i){ var a=advOf(P.notes[i],mode,key); list.push({ni:i,off:x0,adv:a}); x0+=a; });
+      var w=10+list.reduce(function(s,e){ return s+e.adv; },0)+6, usedB=m.reduce(function(s,i){ return s+P.notes[i].d; },0);
+      /* birama terakhir yang belum penuh tetap diberi ruang untuk sisa ketuknya */
+      if(mIdx===nM-1 && usedB<barBeats-1e-6) w+=(barBeats-usedB)*unit;
+      lay.w=w; lay.pl=[list]; return lay;
+    }
+    /* 2 tangan: kumpulkan "ketukan mulai" kedua tangan, tiap ketukan dapat satu kolom selebar not terlebar yang mulai di situ */
+    var starts=[], ev=[], maxUsed=0;
+    parts.forEach(function(P,p){
+      var t=0; ev[p]=[];
+      P.ms[mIdx].forEach(function(i){ ev[p].push({ni:i,t:t}); if(starts.indexOf(t)<0) starts.push(t); t+=P.notes[i].d; });
+      maxUsed=Math.max(maxUsed,t);
+    });
+    starts.sort(function(a,b){ return a-b; });
+    var colW={}, xs={}, x=10;
+    starts.forEach(function(t,c){
+      var nx = c+1<starts.length ? starts[c+1] : Math.max(maxUsed,t+1e-6), cw=num?24:18;
+      parts.forEach(function(P,p){ ev[p].forEach(function(e){ if(Math.abs(e.t-t)<1e-6){ var n=P.notes[e.ni]; cw=Math.max(cw,advOf(n,mode,key)*Math.min(1,(nx-t)/n.d)); } }); });
+      colW[c]=cw; xs[c]=x; x+=cw;
+    });
+    var w=x+6;
+    if(mIdx===nM-1 && maxUsed<barBeats-1e-6) w+=(barBeats-maxUsed)*unit;
+    lay.w=w;
+    parts.forEach(function(P,p){
+      lay.pl[p]=ev[p].map(function(e){ var c=0; while(c<starts.length && Math.abs(starts[c]-e.t)>1e-6) c++; return {ni:e.ni,off:xs[c],adv:colW[c]}; });
+    });
+    return lay;
+  }
 
   var systems=[], cur={ms:[],w:0};
-  ms.forEach(function(m,mIdx){
-    var w=10+m.reduce(function(s,i){ return s+advOf(notes[i],mode,key); },0)+6;
-    /* birama terakhir yang belum penuh tetap diberi ruang untuk sisa ketuknya */
-    var usedB=m.reduce(function(s,i){ return s+notes[i].d; },0);
-    if(mIdx===ms.length-1 && usedB<barBeats-1e-6) w+=(barBeats-usedB)*unit;
+  for(var mIdx=0;mIdx<nM;mIdx++){
+    var lay=measureLayout(mIdx);
     var avail=W-margin*2-clefW-(systems.length===0?tsW:0);
-    if(cur.ms.length && cur.w+w>avail){ systems.push(cur); cur={ms:[],w:0}; }
-    cur.ms.push({idx:m,w:w}); cur.w+=w;
-  });
+    if(cur.ms.length && cur.w+lay.w>avail){ systems.push(cur); cur={ms:[],w:0}; }
+    cur.ms.push({mIdx:mIdx,w:lay.w,lay:lay}); cur.w+=lay.w;
+  }
   if(cur.ms.length) systems.push(cur);
 
   /* Kepala partitur (hanya di editor): judul, keterangan, komposer/arranger, tanda tempo — seperti partitur cetak */
@@ -2175,146 +2227,171 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
   }
   var head = hdr + (num ? 26 : 0);
   var H = head + systems.length*sysH + 6;
-  var out='', si, mi, ni;
+  var out='';
+  var EP=parts[editP], eNotes=EP.notes;
   var hasCursor = (cursorAfter!==undefined && cursorAfter!==null);
-  var targetNi = hasCursor ? (cursorAfter>=0 ? cursorAfter : notes.length-1) : -2;
-  var cursorOnSlot = hasCursor && cursorAfter>=0 && notes[cursorAfter] && notes[cursorAfter].m===null;
+  var targetNi = hasCursor ? (cursorAfter>=0 ? cursorAfter : eNotes.length-1) : -2;
+  var cursorOnSlot = hasCursor && cursorAfter>=0 && eNotes[cursorAfter] && eNotes[cursorAfter].m===null;
   var cx=null, cy=null, startX=null, startY=null;
   out+=hdrOut;
   if(num) out+='<text x="'+margin+'" y="'+(hdr+18)+'" font-size="15" font-weight="700">1 = '+KEY_NAMES[String(key)]+'   '+score.ts[0]+'/'+score.ts[1]+'</text>';
 
   systems.forEach(function(sys,si){
-    var yTop=head+si*sysH, y0=yTop+topM;
+    var yTop=head+si*sysH;
     var avail=W-margin*2-clefW-(si===0?tsW:0);
     var isLast=(si===systems.length-1);
     /* Baris direnggangkan memenuhi lebar layar (layar miring/lebar); baris terakhir dari banyak baris tetap rapat */
     var k = sys.w>avail ? avail/sys.w : ((isLast && systems.length>1) ? 1 : Math.min(avail/sys.w, systems.length===1 ? 4 : 2.5));
-    var x=margin+clefW+(si===0?tsW:0), i;
-    if(si===0){ startX=x+10; startY=y0; }
+    var xStart=margin+clefW+(si===0?tsW:0), i;
+    var Y=parts.map(function(P){ return yTop+P.yOff; });
+    if(si===0){ startX=xStart+10; startY=Y[editP]; }
     if(!num){
       /* garis paranada berhenti di garis birama terakhir (bukan sampai tepi layar), jadi tidak tampak ada birama kosong ekstra */
-      var lineEnd=Math.min(W-margin, x+sys.ms.reduce(function(t,m){ return t+m.w*k; },0)+(isLast?3:0));
-      for(i=0;i<5;i++){ var ly=y0+i*S; out+='<line class="stf" x1="'+margin+'" x2="'+lineEnd+'" y1="'+ly+'" y2="'+ly+'"/>'; }
-      out+='<line class="bar" x1="'+margin+'" x2="'+margin+'" y1="'+y0+'" y2="'+(y0+4*S)+'"/>';
-      out+='<g transform="translate('+(margin+6)+' '+y0+')" style="color:var(--ink)">'+(score.clef==='bass'?CLEF_BASS:CLEF_TREBLE)+'</g>';
-      if(nAcc){
-        /* posisi standar tanda kunci; kunci F dua oktaf (14 langkah) lebih rendah dari kunci G */
-        var kpos = key>0 ? [38,35,39,36,33,37,34] : [34,37,33,36,32,35,31], shiftB = score.clef==='bass' ? 14 : 0;
-        for(i=0;i<nAcc;i++){
-          var kst=kpos[i]-shiftB-base, ky=y0+4*S-kst*S/2;
-          out+=accSvg(key>0?'#':'b',margin+34+6+i*9,ky,0.95);
+      var lineEnd=Math.min(W-margin, xStart+sys.ms.reduce(function(t,m){ return t+m.w*k; },0)+(isLast?3:0));
+      parts.forEach(function(P,p){
+        var y0=Y[p];
+        for(i=0;i<5;i++){ var ly=y0+i*S; out+='<line class="stf" x1="'+margin+'" x2="'+lineEnd+'" y1="'+ly+'" y2="'+ly+'"/>'; }
+        /* garis birama awal: menerus melintasi semua paranada (digambar bersama paranada terakhir) */
+        if(p===parts.length-1) out+='<line class="bar" x1="'+margin+'" x2="'+margin+'" y1="'+Y[0]+'" y2="'+(y0+4*S)+'"/>';
+        out+='<g transform="translate('+(margin+6)+' '+y0+')" style="color:var(--ink)">'+(P.clef==='bass'?CLEF_BASS:CLEF_TREBLE)+'</g>';
+        if(nAcc){
+          /* posisi standar tanda kunci; kunci F dua oktaf (14 langkah) lebih rendah dari kunci G */
+          var kpos = key>0 ? [38,35,39,36,33,37,34] : [34,37,33,36,32,35,31], shiftB = P.clef==='bass' ? 14 : 0;
+          for(i=0;i<nAcc;i++){
+            var kst=kpos[i]-shiftB-P.base, ky=y0+4*S-kst*S/2;
+            out+=accSvg(key>0?'#':'b',margin+34+6+i*9,ky,0.95);
+          }
         }
-      }
-      if(si===0){
-        var tx=margin+clefW+10;
-        out+='<text x="'+tx+'" y="'+(y0+19)+'" font-size="22" font-weight="800" text-anchor="middle">'+score.ts[0]+'</text>';
-        out+='<text x="'+tx+'" y="'+(y0+39)+'" font-size="22" font-weight="800" text-anchor="middle">'+score.ts[1]+'</text>';
-      }
+        if(si===0){
+          var tx=margin+clefW+10;
+          out+='<text x="'+tx+'" y="'+(y0+19)+'" font-size="22" font-weight="800" text-anchor="middle">'+score.ts[0]+'</text>';
+          out+='<text x="'+tx+'" y="'+(y0+39)+'" font-size="22" font-weight="800" text-anchor="middle">'+score.ts[1]+'</text>';
+        }
+      });
     }
-    sys.ms.forEach(function(m,mi){
-      var wk=m.w*k, px=x+10*k;
-      var beatLen = (score.ts[1]===8 && score.ts[0]%3===0) ? 1.5 : 1;
-      var tt=0, cells=[], lv=[];
-      m.idx.forEach(function(q){ var b=baseDur(notes[q].d); cells.push(Math.floor(tt/beatLen+1e-6)); lv.push(b<1?(b<0.5?2:1):0); tt+=notes[q].d; });
-      /* tinggi garis balok not angka: ikut tumpukan akor tertinggi di dalam kelompok balok yang sama */
-      var runLift=[];
-      if(num){
-        var stkOf=function(j){ return notes[m.idx[j]].m!==null ? (pitchList(notes[m.idx[j]]).length-1)*GAP : 0; }, rs=0, re, jj, mx;
-        while(rs<m.idx.length){
-          re=rs;
-          while(re+1<m.idx.length && lv[re+1]>0 && lv[re]>0 && cells[re+1]===cells[re]) re++;
-          mx=0; for(jj=rs;jj<=re;jj++) mx=Math.max(mx,stkOf(jj));
-          for(jj=rs;jj<=re;jj++) runLift[jj]=mx;
-          rs=re+1;
-        }
-      }
-      /* Not balok: not seperdelapan/seperenambelas yang berdekatan dalam satu ketukan digabung dengan balok (beam), bukan bendera terpisah */
-      var grp={}, gs=[];
-      if(!num){
-        var curG=null;
-        m.idx.forEach(function(q,j){
-          var ok = lv[j]>0 && notes[q].m!==null;
-          if(ok && curG && curG.last===j-1 && cells[j]===cells[j-1]){ curG.js.push(j); curG.last=j; }
-          else { curG = ok ? {js:[j],last:j} : null; if(curG) gs.push(curG); }
-        });
-        gs=gs.filter(function(g){ return g.js.length>=2; });
-        gs.forEach(function(g){
-          var st=[]; g.js.forEach(function(j){ pitchList(notes[m.idx[j]]).forEach(function(p){ st.push(diaOf({m:p.m,a:p.a})-base); }); });
-          g.up = (st.reduce(function(a,b){ return a+b; },0)/st.length) < 4;
-          var ys=st.map(function(v){ return y0+4*S-v*S/2; });
-          g.yb = g.up ? Math.min.apply(null,ys)-3.5*S : Math.max.apply(null,ys)+3.5*S;
-          g.xs={}; g.js.forEach(function(j){ grp[j]=g; });
-        });
-      }
-      m.idx.forEach(function(ni,j){
-        var n=notes[ni], adv=advOf(n,mode,key)*k, cls=stateFn?stateFn(ni):'';
-        var bm=null;
+    /* piano 2 tangan: kedua paranada (not angka: kedua baris) disatukan kurung kurawal */
+    if(grand){
+      var bt=num ? Y[0]-22-parts[0].maxLift : Y[0], bb=num ? Y[1]+22 : Y[1]+4*S, bmid=(bt+bb)/2, bxr=margin-3, bxl=margin-12;
+      out+='<path class="brace" d="M'+bxr+' '+bt+' C'+(bxl-2)+' '+(bt+6)+' '+(bxr+1)+' '+(bmid-10)+' '+bxl+' '+bmid+' C'+(bxr+1)+' '+(bmid+10)+' '+(bxl-2)+' '+(bb-6)+' '+bxr+' '+bb
+          +' C'+(bxl+3)+' '+(bb-8)+' '+(bxr+4)+' '+(bmid+8)+' '+(bxl+1)+' '+bmid+' C'+(bxr+4)+' '+(bmid-8)+' '+(bxl+3)+' '+(bt+8)+' '+bxr+' '+bt+'Z" fill="currentColor"/>';
+    }
+    var x=xStart;
+    sys.ms.forEach(function(M,mi){
+      var wk=M.w*k, lastM=(isLast && mi===sys.ms.length-1);
+      parts.forEach(function(P,p){
+        var notes=P.notes, m=P.ms[M.mIdx], pl=M.lay.pl[p], y0=Y[p], base=P.base, pos=P.pos;
+        var beatLen = (score.ts[1]===8 && score.ts[0]%3===0) ? 1.5 : 1;
+        var tt=0, cells=[], lv=[];
+        m.forEach(function(q){ var b=baseDur(notes[q].d); cells.push(Math.floor(tt/beatLen+1e-6)); lv.push(b<1?(b<0.5?2:1):0); tt+=notes[q].d; });
+        /* tinggi garis balok not angka: ikut tumpukan akor tertinggi di dalam kelompok balok yang sama */
+        var runLift=[];
         if(num){
-          var pOk = j>0 && lv[j]>0 && lv[j-1]>0 && cells[j]===cells[j-1];
-          var nOk = j<m.idx.length-1 && lv[j]>0 && lv[j+1]>0 && cells[j]===cells[j+1];
-          var pdn = j>0 ? notes[m.idx[j-1]] : null, pgap = pdn ? advOf(pdn,mode,key)*k : 0;
-          var dotBefore = pdn && pdn.d>baseDur(pdn.d) && baseDur(pdn.d)<2 && lv[j]>0 && !pOk;
-          bm={ dl: dotBefore ? (pgap-Math.max(14,pgap/2))+4 : 0, L1:pOk, R1:nOk, L2:pOk&&lv[j]>1&&lv[j-1]>1, R2:nOk&&lv[j]>1&&lv[j+1]>1,
-               gL: j>0 ? advOf(notes[m.idx[j-1]],mode,key)*k : 0, gR: adv };
+          var stkOf=function(j){ return notes[m[j]].m!==null ? (pitchList(notes[m[j]]).length-1)*GAP : 0; }, rs=0, re, jj, mx;
+          while(rs<m.length){
+            re=rs;
+            while(re+1<m.length && lv[re+1]>0 && lv[re]>0 && cells[re+1]===cells[re]) re++;
+            mx=0; for(jj=rs;jj<=re;jj++) mx=Math.max(mx,stkOf(jj));
+            for(jj=rs;jj<=re;jj++) runLift[jj]=mx;
+            rs=re+1;
+          }
         }
-        cls = cls ? ' '+cls.split(' ').filter(Boolean).map(function(c){return 'st-'+c;}).join(' ') : '';
-        var extra = (!num && accShown(n,key)) ? 10*k : 0;
-        var noteCX = num ? (px+12) : (px+extra+(adv-extra)/2);
-        var selP = (editor && editing && !playing && ni===sel) ? pitchSel : -1;
-        if(num){ bm.lift=runLift[j]||0; out+=numSvg(n,px+12,y0+0,ni,cls,bm,key,selP); }
-        else out+=noteSvg(n,noteCX,y0,base,ni,cls,key,grp[j]?{up:grp[j].up,yb:grp[j].yb}:null,selP);
-        if(grp[j]) grp[j].xs[j]=noteCX+(grp[j].up?5.4:-5.4);
-        if(n.m!==null) pos[ni]={x:noteCX,y:(num?y0:y0+4*S-(diaOf(n)-base)*S/2),si:si,up:(num?false:(diaOf(n)-base)<4),xe:W-margin};
-        if(ni===targetNi && cursorOnSlot){ cx=noteCX+16; cy=y0; }
-        px+=adv;
-        if(ni===targetNi && !cursorOnSlot){ cx=px+(num?4:2); cy=y0; }
-      });
-      gs.forEach(function(g){
-        var xs=g.js.map(function(j){ return g.xs[j]; }), dy=g.up?2.2:-2.2, sgn=g.up?1:-1, k2;
-        out+='<line x1="'+(xs[0]-0.8)+'" x2="'+(xs[xs.length-1]+0.8)+'" y1="'+(g.yb+dy)+'" y2="'+(g.yb+dy)+'" stroke="currentColor" stroke-width="4.6"/>';
-        for(k2=0;k2<g.js.length;k2++){
-          if(lv[g.js[k2]]<2) continue;
-          var y2b=g.yb+dy+sgn*6;
-          if(k2+1<g.js.length && lv[g.js[k2+1]]>=2) out+='<line x1="'+xs[k2]+'" x2="'+xs[k2+1]+'" y1="'+y2b+'" y2="'+y2b+'" stroke="currentColor" stroke-width="3.2"/>';
-          else if(k2===0 || lv[g.js[k2-1]]<2) out+='<line x1="'+(k2+1<g.js.length ? xs[k2] : xs[k2]-7)+'" x2="'+(k2+1<g.js.length ? xs[k2]+7 : xs[k2])+'" y1="'+y2b+'" y2="'+y2b+'" stroke="currentColor" stroke-width="3.2"/>';
+        /* Not balok: not seperdelapan/seperenambelas yang berdekatan dalam satu ketukan digabung dengan balok (beam), bukan bendera terpisah */
+        var grp={}, gs=[];
+        if(!num){
+          var curG=null;
+          m.forEach(function(q,j){
+            var ok = lv[j]>0 && notes[q].m!==null;
+            if(ok && curG && curG.last===j-1 && cells[j]===cells[j-1]){ curG.js.push(j); curG.last=j; }
+            else { curG = ok ? {js:[j],last:j} : null; if(curG) gs.push(curG); }
+          });
+          gs=gs.filter(function(g){ return g.js.length>=2; });
+          gs.forEach(function(g){
+            var st=[]; g.js.forEach(function(j){ pitchList(notes[m[j]]).forEach(function(pp){ st.push(diaOf({m:pp.m,a:pp.a})-base); }); });
+            g.up = (st.reduce(function(a,b){ return a+b; },0)/st.length) < 4;
+            var ys=st.map(function(v){ return y0+4*S-v*S/2; });
+            g.yb = g.up ? Math.min.apply(null,ys)-3.5*S : Math.max.apply(null,ys)+3.5*S;
+            g.xs={}; g.js.forEach(function(j){ grp[j]=g; });
+          });
         }
+        var isEd=(p===editP), run=x+10*k;
+        m.forEach(function(ni,j){
+          /* satu paranada: x dijumlahkan berurutan (sama persis seperti dulu); 2 tangan: x dari kolom ketukan */
+          var n=notes[ni], L=pl[j], px=grand ? x+L.off*k : run, adv=L.adv*k, cls=stateFn?stateFn(ni,p):'';
+          run+=adv;
+          var bm=null;
+          if(num){
+            var pOk = j>0 && lv[j]>0 && lv[j-1]>0 && cells[j]===cells[j-1];
+            var nOk = j<m.length-1 && lv[j]>0 && lv[j+1]>0 && cells[j]===cells[j+1];
+            var pdn = j>0 ? notes[m[j-1]] : null, pgap = pdn ? pl[j-1].adv*k : 0;
+            var dotBefore = pdn && pdn.d>baseDur(pdn.d) && baseDur(pdn.d)<2 && lv[j]>0 && !pOk;
+            bm={ dl: dotBefore ? (pgap-Math.max(14,pgap/2))+4 : 0, L1:pOk, R1:nOk, L2:pOk&&lv[j]>1&&lv[j-1]>1, R2:nOk&&lv[j]>1&&lv[j+1]>1,
+                 gL: j>0 ? pl[j-1].adv*k : 0, gR: adv };
+          }
+          cls = cls ? ' '+cls.split(' ').filter(Boolean).map(function(c){return 'st-'+c;}).join(' ') : '';
+          var extra = (!num && accShown(n,key)) ? 10*k : 0;
+          var noteCX = num ? (px+12) : (px+extra+(adv-extra)/2);
+          var selP = (editor && isEd && editing && !playing && ni===sel) ? pitchSel : -1, di = p ? ni+LH_OFF : ni;
+          if(num){ bm.lift=runLift[j]||0; out+=numSvg(n,px+12,y0+0,di,cls,bm,key,selP); }
+          else out+=noteSvg(n,noteCX,y0,base,di,cls,key,grp[j]?{up:grp[j].up,yb:grp[j].yb}:null,selP);
+          if(grp[j]) grp[j].xs[j]=noteCX+(grp[j].up?5.4:-5.4);
+          if(n.m!==null) pos[ni]={x:noteCX,y:(num?y0:y0+4*S-(diaOf(n)-base)*S/2),si:si,up:(num?false:(diaOf(n)-base)<4),xe:W-margin};
+          if(isEd && ni===targetNi && cursorOnSlot){ cx=noteCX+16; cy=y0; }
+          if(isEd && ni===targetNi && !cursorOnSlot){ cx=(grand ? px+adv : run)+(num?4:2); cy=y0; }
+        });
+        gs.forEach(function(g){
+          var xs=g.js.map(function(j){ return g.xs[j]; }), dy=g.up?2.2:-2.2, sgn=g.up?1:-1, k2;
+          out+='<line x1="'+(xs[0]-0.8)+'" x2="'+(xs[xs.length-1]+0.8)+'" y1="'+(g.yb+dy)+'" y2="'+(g.yb+dy)+'" stroke="currentColor" stroke-width="4.6"/>';
+          for(k2=0;k2<g.js.length;k2++){
+            if(lv[g.js[k2]]<2) continue;
+            var y2b=g.yb+dy+sgn*6;
+            if(k2+1<g.js.length && lv[g.js[k2+1]]>=2) out+='<line x1="'+xs[k2]+'" x2="'+xs[k2+1]+'" y1="'+y2b+'" y2="'+y2b+'" stroke="currentColor" stroke-width="3.2"/>';
+            else if(k2===0 || lv[g.js[k2-1]]<2) out+='<line x1="'+(k2+1<g.js.length ? xs[k2] : xs[k2]-7)+'" x2="'+(k2+1<g.js.length ? xs[k2]+7 : xs[k2])+'" y1="'+y2b+'" y2="'+y2b+'" stroke="currentColor" stroke-width="3.2"/>';
+          }
+        });
+        /* garis birama: not angka per baris; not balok satu garis menerus melintasi semua paranada (digambar oleh bagian terakhir) */
+        var bx=x+wk-2;
+        if(num || p===parts.length-1){
+          var by1= num ? y0-22-P.maxLift : Y[0], by2 = num ? y0+22 : y0+4*S;
+          out+='<line class="bar" x1="'+bx+'" x2="'+bx+'" y1="'+by1+'" y2="'+by2+'"/>';
+          var lastFull = parts.every(function(Q){ var lm=Q.ms[Q.ms.length-1]; return !Q.notes.length || lm.reduce(function(s,i){ return s+Q.notes[i].d; },0)>=barBeats-1e-6; }) && parts.some(function(Q){ return Q.notes.length; });
+          if(num) lastFull = notes.length && m===P.ms[P.ms.length-1] && P.ms[P.ms.length-1].reduce(function(s,i){ return s+notes[i].d; },0)>=barBeats-1e-6;
+          if(lastM && lastFull){
+            out+='<line class="bar" x1="'+(bx+4)+'" x2="'+(bx+4)+'" y1="'+by1+'" y2="'+by2+'" style="stroke-width:3.2"/>';
+          }
+        }
+        if(isEd && EP.extraBar && lastM && hasCursor && targetNi===eNotes.length-1 && !cursorOnSlot){ cx=x+10*k+4; cy=y0; }
       });
-      var bx=x+wk-2, lastM=(isLast && mi===sys.ms.length-1);
-      var by1= num ? y0-22-maxLift : y0, by2 = num ? y0+22 : y0+4*S;
-      out+='<line class="bar" x1="'+bx+'" x2="'+bx+'" y1="'+by1+'" y2="'+by2+'"/>';
-      var lastFull = notes.length && ms[ms.length-1].reduce(function(s,i){ return s+notes[i].d; },0)>=barBeats-1e-6;
-      if(lastM && lastFull){
-        out+='<line class="bar" x1="'+(bx+4)+'" x2="'+(bx+4)+'" y1="'+by1+'" y2="'+by2+'" style="stroke-width:3.2"/>';
-      }
-      if(extraBar && lastM && hasCursor && targetNi===notes.length-1 && !cursorOnSlot){ cx=x+10*k+4; cy=y0; }
       x+=wk;
     });
   });
-  /* Tie (busur penyambung) antara not bernada sama */
-  Object.keys(pos).forEach(function(k){
-    var a=pos[k], ni2=parseInt(k,10), b=pos[ni2+1];
-    if(!notes[ni2].tie || notes[ni2+1]===undefined || notes[ni2+1].m!==notes[ni2].m) return;
-    var dy = a.up ? 8 : -8, cd = a.up ? 8 : -8, x1=a.x+8, y1=a.y+dy, x2, y2;
-    if(b && b.si===a.si){ x2=b.x-8; y2=b.y+dy; }
-    else { x2=a.xe-4; y2=y1; }
-    out+='<path class="tie" d="M'+x1+' '+y1+' Q'+((x1+x2)/2)+' '+(Math.max(y1,y2)+cd)+' '+x2+' '+y2+'"/>';
-    if(b && b.si!==a.si) out+='<path class="tie" d="M'+(b.x-34)+' '+(b.y+dy)+' Q'+(b.x-21)+' '+(b.y+dy+cd)+' '+(b.x-8)+' '+(b.y+dy)+'"/>';
+  parts.forEach(function(P,p){
+    var notes=P.notes, pos=P.pos;
+    /* Tie (busur penyambung) antara not bernada sama */
+    Object.keys(pos).forEach(function(kk){
+      var a=pos[kk], ni2=parseInt(kk,10), b=pos[ni2+1];
+      if(!notes[ni2].tie || notes[ni2+1]===undefined || notes[ni2+1].m!==notes[ni2].m) return;
+      var dy = a.up ? 8 : -8, cd = a.up ? 8 : -8, x1=a.x+8, y1=a.y+dy, x2, y2;
+      if(b && b.si===a.si){ x2=b.x-8; y2=b.y+dy; }
+      else { x2=a.xe-4; y2=y1; }
+      out+='<path class="tie" d="M'+x1+' '+y1+' Q'+((x1+x2)/2)+' '+(Math.max(y1,y2)+cd)+' '+x2+' '+y2+'"/>';
+      if(b && b.si!==a.si) out+='<path class="tie" d="M'+(b.x-34)+' '+(b.y+dy)+' Q'+(b.x-21)+' '+(b.y+dy+cd)+' '+(b.x-8)+' '+(b.y+dy)+'"/>';
+    });
+    /* Dinamika (pp..ff) & crescendo/diminuendo di bawah paranada / di bawah not angka */
+    if(P.hasDyn) Object.keys(pos).forEach(function(kk){
+      var ni2=parseInt(kk,10), n=notes[ni2], a=pos[kk]; if(!n.dyn && !n.hp) return;
+      var dy=head+a.si*sysH+P.yOff+staffH+P.botM-10, x0=a.x;
+      if(n.dyn) out+='<text class="dyn" x="'+x0+'" y="'+dy+'" text-anchor="middle" font-size="16">'+n.dyn+'</text>';
+      if(n.hp){
+        var nx=null, j;
+        for(j=ni2+1;j<notes.length;j++) if(pos[j]){ if(pos[j].si===a.si) nx=pos[j].x; break; }
+        var x1=x0+(n.dyn?13:-4), x2=nx!==null ? nx-8 : Math.min(a.xe-4,x0+46), yc=dy-5;
+        if(x2<x1+12) x2=x1+12;
+        var o1=n.hp==='<'?x1:x2, o2=n.hp==='<'?x2:x1;
+        out+='<path class="hairpin" d="M'+o2+' '+(yc-5)+' L'+o1+' '+yc+' L'+o2+' '+(yc+5)+'" fill="none" stroke="currentColor" stroke-width="1.4"/>';
+      }
+    });
   });
-  /* Dinamika (pp..ff) & crescendo/diminuendo di bawah paranada / di bawah not angka */
-  if(hasDyn) Object.keys(pos).forEach(function(k){
-    var ni2=parseInt(k,10), n=notes[ni2], a=pos[k]; if(!n.dyn && !n.hp) return;
-    var dy=head+a.si*sysH+topM+(num?0:4*S)+botM-10, x0=a.x;
-    if(n.dyn) out+='<text class="dyn" x="'+x0+'" y="'+dy+'" text-anchor="middle" font-size="16">'+n.dyn+'</text>';
-    if(n.hp){
-      var nx=null, j;
-      for(j=ni2+1;j<notes.length;j++) if(pos[j]){ if(pos[j].si===a.si) nx=pos[j].x; break; }
-      var x1=x0+(n.dyn?13:-4), x2=nx!==null ? nx-8 : Math.min(a.xe-4,x0+46), yc=dy-5;
-      if(x2<x1+12) x2=x1+12;
-      var o1=n.hp==='<'?x1:x2, o2=n.hp==='<'?x2:x1;
-      out+='<path class="hairpin" d="M'+o2+' '+(yc-5)+' L'+o1+' '+yc+' L'+o2+' '+(yc+5)+'" fill="none" stroke="currentColor" stroke-width="1.4"/>';
-    }
-  });
-  if(hasCursor && cx===null && !notes.length && startX!==null){ cx=startX; cy=startY; }
+  if(hasCursor && cx===null && !eNotes.length && startX!==null){ cx=startX; cy=startY; }
   if(hasCursor && cx!==null){
     /* kursor seperti di Word: garis tipis berkedip di sebelah kanan not terakhir */
     if(num) out+='<line class="caret" x1="'+cx+'" x2="'+cx+'" y1="'+(cy-24)+'" y2="'+(cy+24)+'"/>';
@@ -3358,6 +3435,8 @@ function maryLamb(){
 }
 var flashIdx={}, flashT=0, alertT=0, editing=false, pitchSel=0, autoAdv=(store.get('yg.autoAdv','0')==='1'), midiChordT=0;
 var scores=[], curId=null, sel=-1, playing=false, playIdx=-1, playTimers=[], playGain=null;
+/* Piano 2 tangan: tangan yang sedang ditulis ('rh' = paranada atas, 'lh' = paranada bawah); playIdxL = not tangan kiri yang sedang diputar */
+var hand='rh', playIdxL=-1;
 function loadScores(){
   try{ scores=JSON.parse(store.get('yg.scores','[]')); }catch(e){ scores=[]; }
   if(!Array.isArray(scores)||!scores.length) scores=[twinkle()];
@@ -3618,6 +3697,28 @@ function curScore(){
   if(curIsTrial()) return trialScore;
   return scores.filter(function(s){return s.id===curId;})[0]||scores[0];
 }
+/* Partitur yang sedang DITULIS: biasanya partitur itu sendiri; di mode piano 2 tangan saat menulis tangan kiri,
+   "pandangan" yang notes-nya = s.lh (kunci F). Semua fungsi edit memakai ini, jadi menulis tangan kiri sama persis dengan kanan. */
+function edScore(){
+  var s=curScore();
+  if(!s.grand || hand!=='lh') return s;
+  if(!s.lh) s.lh=[];
+  var e=Object.create(s); e.notes=s.lh; e.clef='bass'; return e;
+}
+function hasPitch(N){ return !!N && N.some(function(n){ return n.m!==null; }); }
+/* Pindah tangan yang ditulis (piano 2 tangan): sorotan dilepas, tuts piano pindah ke oktaf yang cocok */
+function setHand(h){
+  if(h===hand) return;
+  hand=h; sel=-1; editing=false; pitchSel=0;
+  inp.oct = h==='lh' ? 3 : 4;
+  syncHandUI(); buildKeyboard(); renderScoreView();
+}
+function syncHandUI(){
+  var s=curScore();
+  if(!s.grand) hand='rh';
+  $('#shand').hidden=!s.grand;
+  $$('#shand button').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-hand')===hand?'true':'false'); });
+}
 function startTrial(){
   stopPlay();
   if(!trialScore) trialScore={id:'trial',title:'Coba menulis',ts:[4,4],bpm:90,clef:'treble',notes:[],trial:true};
@@ -3650,22 +3751,26 @@ function buildScoreList(){
 }
 function syncScoreFields(){
   var s=curScore();
-  $('#stitle').value=s.title||''; $('#sbpm').value=s.bpm; $('#sts').value=s.ts[0]+'/'+s.ts[1]; $('#sclef').value=s.clef;
+  $('#stitle').value=s.title||''; $('#sbpm').value=s.bpm; $('#sts').value=s.ts[0]+'/'+s.ts[1]; $('#sclef').value=s.grand?'grand':s.clef;
+  syncHandUI();
   $('#ssub').value=s.sub||''; $('#scomp').value=s.comp||''; $('#stempo').value=s.tempoTxt||'';
   var ok=canEditNow();
   $('#stitle').disabled=!ok; $('#sbpm').disabled=!ok; $('#sclef').disabled=!ok; $('#sts').disabled=!ok || curIsTrial();
   $('#ssub').disabled=!ok; $('#scomp').disabled=!ok; $('#stempo').disabled=!ok;
 }
 function renderScoreView(){
-  var s=curScore();
-  if(sel<0 || sel>=s.notes.length){ if(sel>=s.notes.length) sel=-1; editing=false; }
-  drawScore($('#sscore'),s,app.mode,function(i){
-    return i===playIdx ? 'cur' : (flashIdx[i] ? 'bad' : ((!playing && editing && i===sel) ? 'sel blink' : ''));
+  var s=curScore(), EN=edScore().notes, eP=(s.grand && hand==='lh') ? 1 : 0;
+  if(sel<0 || sel>=EN.length){ if(sel>=EN.length) sel=-1; editing=false; }
+  /* bagian p: 0 = paranada atas / satu-satunya, 1 = tangan kiri; sorotan pilih/peringatan hanya di tangan yang sedang ditulis */
+  drawScore($('#sscore'),s,app.mode,function(i,p){
+    if(p ? i===playIdxL : i===playIdx) return 'cur';
+    if((p||0)!==eP) return '';
+    return flashIdx[i] ? 'bad' : ((!playing && editing && i===sel) ? 'sel blink' : '');
   }, (playing || editing) ? null : sel, !playing);
-  $('#sempty').hidden = s.notes.length>0;
+  $('#sempty').hidden = s.notes.length>0 || !!(s.grand && s.lh && s.lh.length);
   syncDynUI();
   $('#splay').textContent = playing ? '■ Berhenti' : '▶ Putar';
-  $('#splay').disabled = !s.notes.some(function(n){return n.m!==null;}) && !playing;
+  $('#splay').disabled = !hasPitch(s.notes) && !(s.grand && hasPitch(s.lh)) && !playing;
   $('#sprac').disabled = !s.notes.some(function(n){return n.m!==null;});
 }
 var inp = { dur:1, dot:false, flat:false, oct:4 };
@@ -3709,7 +3814,7 @@ function showScoreAlert(msg){
 function fillOrInsert(item){
   editing=!advOn();   /* bawaan: sorotan tetap di not yang baru ditulis (nada berikutnya menambah akor; ▶ untuk lanjut) */
   pitchSel=0;
-  var s=curScore(), bb=s.ts[0]*4/s.ts[1], N=s.notes;
+  var s=edScore(), bb=s.ts[0]*4/s.ts[1], N=s.notes;
   /* 1) kursor di rehat (slot kosong): not menggantikan rehat itu, sisa ketuknya tetap rehat */
   if(sel>=0 && N[sel] && N[sel].m===null){
     var r=N[sel], repl=null, cnt=1;
@@ -3757,7 +3862,7 @@ function curDur(){ return inp.dur*(inp.dot&&inp.dur>0.25?1.5:1); }
    lebih pendek -> sisanya jadi rehat (atau kosong), lebih panjang -> memakai rehat/kosong sesudahnya. */
 function changeDur(at,newD){
   if(!guardEdit()) return;
-  var s=curScore(), N=s.notes, it=N[at];
+  var s=edScore(), N=s.notes, it=N[at];
   if(!it || Math.abs(newD-it.d)<1e-6) return;
   var delta=newD-it.d, left=[];
   function mk(d){ var o={m:null,d:d,a:''}; if(it.e) o.e=true; return o; }
@@ -3820,7 +3925,7 @@ function syncInputUI(){
   buildKeyboard();
 }
 function selectAt(i){
-  var s=curScore();
+  var s=edScore();
   if(i>=s.notes.length || i<0){ sel=-1; editing=false; renderScoreView(); return; }
   sel=i; editing=true;
   var n=s.notes[i];
@@ -3833,14 +3938,14 @@ function selectAt(i){
 var DYN_VOL={pp:0.3,p:0.45,mp:0.7,mf:1,f:1.25,ff:1.5}, DYN_VEL={pp:33,p:49,mp:64,mf:80,f:96,ff:112};
 function setDyn(dyn,hp){
   if(!guardEdit()) return;
-  var s=curScore(), n=(editing && sel>=0) ? s.notes[sel] : null;
+  var s=edScore(), n=(editing && sel>=0) ? s.notes[sel] : null;
   if(!n || n.m===null){ showScoreAlert('Ketuk satu not di partitur dulu (atau tulis not baru), lalu pilih dinamikanya.'); return; }
   if(dyn){ if(n.dyn===dyn) delete n.dyn; else n.dyn=dyn; }
   if(hp){ if(n.hp===hp) delete n.hp; else n.hp=hp; }
   saveScores(); renderScoreView();
 }
 function syncDynUI(){
-  var s=curScore(), n=(editing && sel>=0 && sel<s.notes.length) ? s.notes[sel] : null;
+  var s=edScore(), n=(editing && sel>=0 && sel<s.notes.length) ? s.notes[sel] : null;
   $$('#sdyn button').forEach(function(b){
     var on = !!n && ((b.getAttribute('data-dyn') && n.dyn===b.getAttribute('data-dyn')) || (b.getAttribute('data-hp') && n.hp===b.getAttribute('data-hp')));
     b.setAttribute('aria-pressed',on?'true':'false');
@@ -3848,7 +3953,7 @@ function syncDynUI(){
 }
 /* Navigasi kursor: ◀ / ▶ pindah antar not (termasuk rehat & slot kosong). */
 function navMove(dir){
-  var s=curScore(), N=s.notes; if(!N.length || playing) return;
+  var s=edScore(), N=s.notes; if(!N.length || playing) return;
   if(editing && sel>=0){
     if(dir<0) selectAt(Math.max(0,sel-1));
     else if(sel+1>=N.length){ sel=-1; editing=false; renderScoreView(); }   /* lewat not terakhir: kembali ke kursor ketik di akhir */
@@ -3863,7 +3968,7 @@ function navMove(dir){
 /* Menambah / membuang satu nada pada not (akor) terpilih; berlaku juga untuk not-not yang tersambung tie */
 function toggleChordPitch(i,m,a){
   if(!isPremium()){ showPaywall('akor'); return; }
-  var N=curScore().notes, it=N[i], oldm=it.m, chain=[i], k, j;
+  var N=edScore().notes, it=N[i], oldm=it.m, chain=[i], k, j;
   for(k=i; k>0 && N[k-1].tie && N[k-1].m===oldm; k--) chain.push(k-1);
   for(j=i; N[j] && N[j].tie && N[j+1] && N[j+1].m===oldm; j++) chain.push(j+1);
   var pl=pitchList(it), idx=-1;
@@ -3886,7 +3991,7 @@ function toggleChordPitch(i,m,a){
 }
 /* ▲ ▼ : pindah antar nada di dalam akor terpilih (untuk memilih kepala not yang mau dihapus) */
 function pitchMove(dir){
-  var N=curScore().notes, n=N[sel];
+  var N=edScore().notes, n=N[sel];
   if(!(editing && sel>=0 && n && n.m!==null) || playing) return;
   var pl=pitchList(n);
   pitchSel=clamp(pitchSel+dir,0,pl.length-1);
@@ -3895,7 +4000,7 @@ function pitchMove(dir){
 }
 function addNote(m,silent){
   if(!guardEdit()) return;
-  var s=curScore(), N=s.notes;
+  var s=edScore(), N=s.notes;
   var a = isBlack(m) ? (inp.flat?'b':'#') : '';
   if(editing && sel>=0 && N[sel] && N[sel].m!==null){
     toggleChordPitch(sel,m,a);
@@ -3907,14 +4012,14 @@ function addNote(m,silent){
 }
 /* Dari keyboard MIDI: tuts yang ditekan hampir bersamaan (<160 ms) jadi satu akor; jeda lebih lama = not baru */
 function midiScoreNote(m,silent){
-  var t=performance.now(), N=curScore().notes;
+  var t=performance.now(), N=edScore().notes;
   if(t-midiChordT>160 && editing && sel>=0 && N[sel] && N[sel].m!==null) editing=false;
   midiChordT=t;
   addNote(m,silent);
 }
 function addRest(){
   if(!guardEdit()) return;
-  var s=curScore(), N=s.notes;
+  var s=edScore(), N=s.notes;
   if(editing && sel>=0 && N[sel] && N[sel].m!==null){
     N[sel]={m:null,d:N[sel].d,a:''}; if(sel>0) N[sel-1].tie=false;
     saveScores(); renderScoreView(); return;
@@ -3924,7 +4029,7 @@ function addRest(){
 /* Hapus bertahap: not -> rehat -> kosong (ruang tetap, tidak menggeser not di sampingnya) -> (kosong paling belakang) dibuang. */
 function delNote(){
   if(!guardEdit()) return;
-  var s=curScore(), N=s.notes; if(!N.length) return;
+  var s=edScore(), N=s.notes; if(!N.length) return;
   var at;
   if(editing && sel>=0 && N[sel]) at=sel;
   else {
@@ -3953,28 +4058,34 @@ function delNote(){
 function stopPlay(){
   playTimers.forEach(clearTimeout); playTimers=[];
   if(playGain){ try{playGain.disconnect();}catch(e){} playGain=null; }
-  playing=false; playIdx=-1; renderScoreView();
+  playing=false; playIdx=-1; playIdxL=-1; renderScoreView();
 }
 function playScore(){
   if(playing){ stopPlay(); return; }
-  var s=curScore(); if(!s.notes.length) return;
-  var c=ac(), spb=60/clamp(s.bpm||90,30,240), t=c.currentTime+0.15, acc=0;
+  var s=curScore(), EN=edScore().notes, eP=(s.grand && hand==='lh') ? 1 : 0;
+  var parts = s.grand ? [s.notes,s.lh||[]] : [s.notes];
+  if(!parts.some(function(N){ return N.length; })) return;
+  var c=ac(), spb=60/clamp(s.bpm||90,30,240), t=c.currentTime+0.15, end=0;
   playGain=c.createGain(); playGain.gain.value=1; playGain.connect(c.destination);
-  /* Kalau ada not yang disorot (dipilih), putar mulai dari not itu (bukan dari awal) */
-  var startIdx = (editing && sel>=0 && sel<s.notes.length) ? sel : 0;
-  while(startIdx>0 && tieFrom(s.notes,startIdx)) startIdx--;
+  /* Kalau ada not yang disorot (dipilih), putar mulai dari not itu (bukan dari awal); piano 2 tangan: kedua tangan mulai dari ketukan itu */
+  var startIdx = (editing && sel>=0 && sel<EN.length) ? sel : 0, startB=0, k;
+  while(startIdx>0 && tieFrom(EN,startIdx)) startIdx--;
+  for(k=0;k<startIdx;k++) startB+=EN[k].d;
   playing=true;
-  var vol=1;   /* dinamika terakhir sebelum titik mulai tetap berlaku */
-  for(var k=0;k<startIdx;k++) if(s.notes[k].dyn) vol=DYN_VOL[s.notes[k].dyn]||1;
-  s.notes.forEach(function(n,i){
-    if(n.dyn) vol=DYN_VOL[n.dyn]||vol;
-    if(i<startIdx) return;
-    var at=acc*spb, dur=n.d*spb;
-    if(n.m!==null && !tieFrom(s.notes,i)) pitchList(n).forEach(function(pp){ pluck(pp.m,t+at,tieLen(s.notes,i)*spb,playGain,vol); });
-    playTimers.push(setTimeout(function(){ playIdx=i; renderScoreView(); },150+at*1000));
-    acc+=n.d;
+  parts.forEach(function(N,p){
+    var vol=1, acc=0;   /* dinamika terakhir sebelum titik mulai tetap berlaku (tiap tangan punya dinamikanya sendiri) */
+    N.forEach(function(n,i){
+      if(n.dyn) vol=DYN_VOL[n.dyn]||vol;
+      var skip = p===eP ? i<startIdx : acc<startB-1e-6;
+      if(skip){ acc+=n.d; return; }
+      var at=(acc-startB)*spb;
+      if(n.m!==null && !tieFrom(N,i)) pitchList(n).forEach(function(pp){ pluck(pp.m,t+at,tieLen(N,i)*spb,playGain,vol); });
+      playTimers.push(setTimeout(function(){ if(p) playIdxL=i; else playIdx=i; renderScoreView(); },150+at*1000));
+      acc+=n.d;
+    });
+    end=Math.max(end,acc-startB);
   });
-  playTimers.push(setTimeout(stopPlay,150+acc*spb*1000+200));
+  playTimers.push(setTimeout(stopPlay,150+end*spb*1000+200));
   renderScoreView();
 }
 function newScore(){
@@ -4016,12 +4127,36 @@ function bindScore(){
   $('#sts').addEventListener('change',function(e){
     var s=curScore(), p=e.target.value.split('/'); s.ts=[parseInt(p[0],10),parseInt(p[1],10)];
     if(s.notes.every(function(n){ return n.m===null; })){ s.notes=[]; sel=-1; }
+    if(s.lh && s.lh.every(function(n){ return n.m===null; })) s.lh=[];
     saveScores(); renderScoreView();
   });
-  $('#sclef').addEventListener('change',function(e){ curScore().clef=e.target.value; saveScores(); renderScoreView(); });
+  /* Kunci: G / F / Piano 2 tangan (paranada atas = tangan kanan kunci G, bawah = tangan kiri kunci F) */
+  $('#sclef').addEventListener('change',function(e){
+    var s=curScore(), v=e.target.value;
+    if(v==='grand'){
+      if(!s.grand){
+        s.grand=true; s.lh=s.lh||[];
+        /* partitur kunci F yang sudah berisi not: notnya dipindah ke tangan kiri */
+        if(s.clef==='bass' && hasPitch(s.notes) && !hasPitch(s.lh)){ s.lh=s.notes; s.notes=[]; }
+        s.clef='treble';
+      }
+    } else if(s.grand){
+      /* kembali ke satu paranada: Kunci G menyimpan tangan kanan, Kunci F menyimpan tangan kiri */
+      var lose = v==='bass' ? s.notes : s.lh;
+      if(hasPitch(lose) && !confirm('Not '+(v==='bass'?'tangan kanan (paranada atas)':'tangan kiri (paranada bawah)')+' akan dihapus. Lanjutkan?')){ e.target.value='grand'; return; }
+      if(v==='bass') s.notes=s.lh||[];
+      delete s.grand; delete s.lh; s.clef=v;
+    } else s.clef=v;
+    stopPlay(); sel=-1; editing=false;
+    if(!s.grand && hand!=='rh'){ hand='rh'; inp.oct=4; buildKeyboard(); }
+    syncHandUI(); saveScores(); renderScoreView();
+  });
+  $$('#shand button').forEach(function(b){ b.addEventListener('click',function(){ setHand(b.getAttribute('data-hand')); }); });
   $('#sscore').addEventListener('click',function(e){
     var g=e.target.closest ? e.target.closest('.n') : null; if(!g) return;
     var i=parseInt(g.getAttribute('data-i'),10);
+    /* piano 2 tangan: mengetuk not di paranada lain sekaligus pindah tangan */
+    if(curScore().grand){ var h=i>=LH_OFF?'lh':'rh'; if(i>=LH_OFF) i-=LH_OFF; setHand(h); }
     if(editing && sel===i){ sel=-1; editing=false; renderScoreView(); } else selectAt(i);
   });
   var DUR_LABELS={
@@ -4070,7 +4205,7 @@ function bindScore(){
   $('#sflat').addEventListener('click',function(e){
     inp.flat=!inp.flat; e.currentTarget.setAttribute('aria-pressed',inp.flat?'true':'false');
     e.currentTarget.textContent='Hitam: '+(inp.flat?'♭':'♯'); buildKeyboard();
-    var n=curScore().notes[sel];
+    var n=edScore().notes[sel];
     if(editing && n && n.m!==null){
       var pl=pitchList(n), pp=pl[Math.min(pitchSel,pl.length-1)];
       if(isBlack(pp.m) && canEditNow()){ pp.a=inp.flat?'b':'#'; setPitchList(n,pl); saveScores(); renderScoreView(); }
@@ -4137,26 +4272,31 @@ function scoreToMidi(sc){
   ev=ev.concat([0,0xFF,0x51,0x03,(us>>16)&255,(us>>8)&255,us&255]);
   ev=ev.concat([0,0xFF,0x58,0x04,sc.ts[0],Math.round(Math.log2(sc.ts[1])),24,8]);
   ev=ev.concat([0,0xC0,0]); /* program 0: piano */
-  var wait=0, vel=90;
-  sc.notes.forEach(function(n,i){
-    var len=Math.round(n.d*PPQ);
-    if(n.dyn) vel=DYN_VEL[n.dyn]||vel;
-    if(n.m===null){ wait+=len; return; }
-    if(tieFrom(sc.notes,i)) return;
-    len=Math.round(tieLen(sc.notes,i)*PPQ);
-    var pls=pitchList(n).map(function(pp){ return clamp(pp.m,0,127); });
-    pls.forEach(function(m,q){ ev=ev.concat(vlq(q===0?wait:0),[0x90,m,vel]); });
-    pls.forEach(function(m,q){ ev=ev.concat(vlq(q===0?len:0),[0x80,m,0]); });
-    wait=0;
+  /* not dari semua bagian (piano 2 tangan: tangan kanan & kiri) dikumpulkan sebagai kejadian berwaktu, lalu diurutkan */
+  var parts = sc.grand ? [sc.notes,sc.lh||[]] : [sc.notes], es=[], total=0, seq=0;
+  parts.forEach(function(N){
+    var acc=0, vel=90;
+    N.forEach(function(n,i){
+      if(n.dyn) vel=DYN_VEL[n.dyn]||vel;
+      var t0=Math.round(acc*PPQ); acc+=n.d;
+      if(n.m===null || tieFrom(N,i)) return;
+      var t1=t0+Math.round(tieLen(N,i)*PPQ), pls=pitchList(n).map(function(pp){ return clamp(pp.m,0,127); });
+      pls.forEach(function(m){ es.push({t:t0,on:1,m:m,v:vel,q:seq++}); });
+      pls.forEach(function(m){ es.push({t:t1,on:0,m:m,v:0,q:seq++}); });
+    });
+    total=Math.max(total,Math.round(acc*PPQ));
   });
-  ev=ev.concat(vlq(wait),[0xFF,0x2F,0x00]);
+  es.sort(function(a,b){ return a.t-b.t || a.on-b.on || a.q-b.q; });   /* di waktu yang sama: lepas not dulu, baru tekan */
+  var last=0;
+  es.forEach(function(e){ ev=ev.concat(vlq(e.t-last),[e.on?0x90:0x80,e.m,e.v]); last=e.t; });
+  ev=ev.concat(vlq(Math.max(0,total-last)),[0xFF,0x2F,0x00]);
   var head=[0x4D,0x54,0x68,0x64].concat(u32(6),[0,0,0,1,(PPQ>>8)&255,PPQ&255]);
   var trk=[0x4D,0x54,0x72,0x6B].concat(u32(ev.length),ev);
   return new Uint8Array(head.concat(trk));
 }
 function exportMidi(){
   var sc=curScore(), msg=$('#smidiMsg');
-  if(!sc.notes.some(function(n){ return n.m!==null; })){ msg.textContent='Partitur ini belum punya not untuk diekspor.'; return; }
+  if(!hasPitch(sc.notes) && !(sc.grand && hasPitch(sc.lh))){ msg.textContent='Partitur ini belum punya not untuk diekspor.'; return; }
   var blob=new Blob([scoreToMidi(sc)],{type:'audio/midi'});
   var fname=((sc.title||'partitur').replace(/[^\w\- ]+/g,'').trim()||'partitur')+'.mid';
   var url=URL.createObjectURL(blob), a=document.createElement('a');
