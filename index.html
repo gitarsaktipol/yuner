@@ -300,7 +300,14 @@ header .sel select{max-width:100%;min-width:0}
 .instList small{font-size:12.5px;color:var(--muted);line-height:1.35}
 /* Piano asli (MIDI): sambung, rekam, kecepatan */
 .srec .row{gap:8px}
-.srec .row .start{flex:1;padding:11px 12px;font-size:16px}
+.srec .row .start{flex:1.15;padding:11px 8px;font-size:16px}
+.srec .row .sound{padding:11px 8px}
+/* Rekam: merah-oranye; saat merekam berdenyut */
+#srec{--c:var(--pPeach);--cd:var(--dPeach)}
+#srec.on{--c:var(--brass);--cd:var(--brassDeep);color:var(--brassText);animation:recPulse 1.4s ease-out infinite}
+@keyframes recPulse{ 0%{box-shadow:0 5px 0 var(--brassDeep),0 0 0 0 rgba(255,111,168,.5)} 100%{box-shadow:0 5px 0 var(--brassDeep),0 0 0 14px rgba(255,111,168,0)} }
+/* HP sempit: label kecepatan/rapikan di atas tombolnya supaya tidak keluar kartu */
+@media (max-width:440px){ .srecSet{flex-direction:column;align-items:stretch;gap:4px} .srecSet .lbl:empty{display:none} .srecSet .lbl{min-width:0} }
 .srec .cstat{font-size:13px;color:var(--muted);margin:8px 2px 4px;text-align:center;line-height:1.45}
 .srec .cstat.ok{color:var(--ok);font-weight:600}
 /* MIDI ON/OFF: OFF = piano hanya berbunyi (latihan bebas), ON = tuts menulis not */
@@ -1098,8 +1105,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
   <div class="card srec" id="srecCard">
     <div class="row">
-      <button class="sound" id="smidiCon" type="button">🎹 Sambungkan piano (MIDI)</button>
-      <button class="start" id="srec" type="button">⏺ Rekam</button>
+      <button class="sound" id="smidiCon" type="button">🎹 Sambungkan</button>
+      <button class="start" id="splay" type="button">▶ Putar</button>
+      <button class="sound" id="srec" type="button">⏺ Rekam</button>
     </div>
     <div class="row" style="margin-top:10px"><button class="sound" id="smidiW" type="button" aria-pressed="false"></button></div>
     <p class="cstat" id="smidiStat">Colok piano / keyboard MIDI (di HP pakai kabel OTG), lalu tekan <b>Sambungkan</b>. Setelah tersambung, nyalakan <b>MIDI ON</b> supaya tuts piano asli menulis not, atau tekan <b>Rekam</b> untuk bermain bebas dan langsung jadi partitur.</p>
@@ -1120,7 +1128,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
 
   <div class="row">
-    <button class="start" id="splay" type="button" style="flex:1.4">▶ Putar</button>
     <button class="sound" id="sprac" type="button">Latih lagu ini</button>
   </div>
 
@@ -1248,9 +1255,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>Piano 2 tangan</b>: di pilihan <i>Kunci</i> pilih <i>Piano 2 tangan (G + F)</i>. Paranada atas (kunci G) untuk <b>tangan kanan</b>, paranada bawah (kunci F) untuk <b>tangan kiri</b>. Pilih tangan yang mau ditulis dengan tombol <i>Tangan kanan / Tangan kiri</i> di atas tombol nilai not, atau langsung ketuk not di paranada itu. Saat diputar dan diekspor ke MIDI kedua tangan berbunyi bersamaan; Latihan memakai tangan kanan (melodi).</li>
         <li>Tombol ◀ ▶ memindahkan kursor. Ketuk not untuk memilih dan mengubahnya. Tombol hapus menghapus bertahap.</li>
         <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
-        <li><b>Putar</b> membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
+        <li><b>▶ Putar</b> (di tengah, antara Sambungkan dan Rekam) membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
         <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>Save/Create</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
-        <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan piano (MIDI)</b>. Setelah tersambung, tombol <b>MIDI OFF / MIDI ON</b> menentukan apakah tuts menulis not: <b>OFF</b> = piano hanya berbunyi, bebas berlatih dulu tanpa mengubah partitur; <b>ON</b> = setiap tuts langsung menulis not seperti tuts di layar (tekan bersamaan = akor). Tombol <b>Rekam</b> tetap merekam walau MIDI OFF.</li>
+        <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan</b> (di kartu di bawah tuts piano, di samping <b>▶ Putar</b> dan <b>⏺ Rekam</b>). Setelah tersambung, tombol <b>MIDI OFF / MIDI ON</b> menentukan apakah tuts menulis not: <b>OFF</b> = piano hanya berbunyi, bebas berlatih dulu tanpa mengubah partitur; <b>ON</b> = setiap tuts langsung menulis not seperti tuts di layar (tekan bersamaan = akor). Tombol <b>Rekam</b> tetap merekam walau MIDI OFF.</li>
         <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, nada di bawah C tengah (C4) masuk tangan kiri. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
         <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
         <li><b>Save/Create</b> membuat partitur kosong baru. <b>Ekspor ke MIDI</b> dan <b>Impor file MIDI</b> ada di bawah tombol itu.</li>
@@ -1729,7 +1736,7 @@ function syncMidiWrite(){
 function smidiSync(){
   var a=$('#midiStat'), b=$('#smidiStat'), k=$('#smidiCon'); if(!a||!b||!midi.access&&!a.textContent) return;
   if(a.textContent){ b.className=a.className; b.textContent=a.textContent; }
-  if(k) k.textContent = midiConnected() ? '🎹 Cari ulang piano' : '🎹 Sambungkan piano (MIDI)';
+  if(k) k.textContent = midiConnected() ? '🎹 Cari ulang' : '🎹 Sambungkan';
 }
 function midiMessage(e){
   var d=e.data; if(!d || d.length<2) return;
