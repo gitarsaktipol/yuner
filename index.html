@@ -1271,6 +1271,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Tombol ◀ ▶ memindahkan kursor. Ketuk not untuk memilih dan mengubahnya. Tombol hapus menghapus bertahap.</li>
         <li><b>Mengganti panjang not</b>: ketuk not, lalu ketuk nilai not lain (mis. ¼ jadi ½). Kalau biramanya tidak cukup, muncul pilihan: <b>Geser semua</b> (semua not sesudahnya mundur, birama berikutnya ikut bergeser) atau <b>Hanya di birama ini</b> (not sesudahnya di birama itu bergeser, not paling belakang di birama itu dihapus).</li>
         <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
+        <li><b>Mengganti nada</b>: ketuk not (atau pilih dengan ◀ ▶), lalu tekan tuts yang benar (di layar atau di piano MIDI). Nadanya diganti, tidak menambah not baru. Tuts di layar sesudahnya menambah nada akor di not itu; di piano MIDI tekan beberapa tuts bersamaan untuk mengganti jadi akor. Pindah ke not lain dengan ◀ ▶.</li>
         <li><b>▶ Putar</b> (di tengah, antara Sambungkan dan Rekam) membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
         <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>Save/Create</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
         <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan</b> (di kartu di bawah tuts piano, di samping <b>▶ Putar</b> dan <b>⏺ Rekam</b>). Setelah tersambung, tombol <b>MIDI OFF / MIDI ON</b> menentukan apakah tuts menulis not: <b>OFF</b> = piano hanya berbunyi, bebas berlatih dulu tanpa mengubah partitur; <b>ON</b> = setiap tuts langsung menulis not seperti tuts di layar (tekan bersamaan = akor). Tombol <b>Rekam</b> tetap merekam walau MIDI OFF.</li>
@@ -3583,7 +3584,7 @@ function loadScores(){
 }
 /* ---------- Urungkan / Ulangi (Ctrl+Z / Ctrl+Y) ----------
    Setiap kali partitur disimpan, keadaan sebelumnya (salinan JSON partitur yang sedang dibuka) masuk tumpukan urungkan
-   per partitur. Perubahan yang terjadi < 350 ms dari sebelumnya (mis. akor dari keyboard MIDI) digabung jadi satu langkah. */
+   per partitur. Perubahan yang terjadi < 200 ms dari sebelumnya (mis. akor dari keyboard MIDI) digabung jadi satu langkah. */
 var undo={stk:{},redo:{},last:{},t:{},busy:false};
 function undoSnap(s){ var o={}; Object.keys(s).forEach(function(k){ if(k!=='updatedAt') o[k]=s[k]; }); return JSON.stringify(o); }
 function undoBase(s){ if(s && undo.last[s.id]===undefined) undo.last[s.id]=undoSnap(s); }
@@ -3593,7 +3594,7 @@ function undoTrack(){
   var id=s.id, now=undoSnap(s), prev=undo.last[id], t=Date.now();
   if(prev===undefined || prev===now){ undo.last[id]=now; return; }
   var st=undo.stk[id]=undo.stk[id]||[];
-  if(!(st.length && t-(undo.t[id]||0)<350)){ st.push(prev); if(st.length>200) st.shift(); }
+  if(!(st.length && t-(undo.t[id]||0)<200)){ st.push(prev); if(st.length>200) st.shift(); }
   undo.t[id]=t; undo.redo[id]=[]; undo.last[id]=now;
 }
 function undoApply(json){
@@ -4005,6 +4006,7 @@ function showScoreAlert(msg){
   clearTimeout(alertT); alertT=setTimeout(function(){ el.hidden=true; },6000);
 }
 function fillOrInsert(item){
+  selUser=false;
   editing=!advOn();   /* bawaan: sorotan tetap di not yang baru ditulis (nada berikutnya menambah akor; ▶ untuk lanjut) */
   pitchSel=0;
   var s=edScore(), bb=s.ts[0]*4/s.ts[1], N=s.notes;
@@ -4205,8 +4207,8 @@ function syncInputUI(){
 }
 function selectAt(i){
   var s=edScore();
-  if(i>=s.notes.length || i<0){ sel=-1; editing=false; renderScoreView(); return; }
-  sel=i; editing=true;
+  if(i>=s.notes.length || i<0){ sel=-1; editing=false; selUser=false; renderScoreView(); return; }
+  sel=i; editing=true; selUser=true;   /* dipilih sendiri (ketuk/panah): tuts berikutnya MENGGANTI nadanya */
   var n=s.notes[i];
   pitchSel = n.m!==null ? pitchList(n).length-1 : 0;
   syncInputFromNote(n);
@@ -4283,11 +4285,29 @@ function pitchMove(dir){
   try{ pluck(pl[pitchSel].m,ac().currentTime,0.5); }catch(e){}
   syncInputFromNote(n); renderScoreView();
 }
-function addNote(m,silent){
+/* Not yang dipilih sendiri (diketuk / panah ◀ ▶) lalu ditekan tutsnya: nadanya DIGANTI (bukan ditambah jadi akor,
+   bukan menulis not baru sesudahnya). Not lain yang ikut tersambung tie ikut berganti. */
+var selUser=false;
+function replacePitch(i,m,a){
+  if(!isPremium()){ showPaywall('akor'); return; }
+  var N=edScore().notes, it=N[i], oldm=it.m, chain=[i], k, j;
+  for(k=i; k>0 && N[k-1].tie && N[k-1].m===oldm; k--) chain.push(k-1);
+  for(j=i; N[j] && N[j].tie && N[j+1] && N[j+1].m===oldm; j++) chain.push(j+1);
+  chain.forEach(function(ci){ setPitchList(N[ci],[{m:m,a:a}]); });
+  pitchSel=0; syncInputFromNote(it); saveScores(); renderScoreView();
+}
+function addNote(m,silent,fromMidi){
   if(!guardEdit()) return;
   var s=edScore(), N=s.notes;
   var a = isBlack(m) ? (inp.flat?'b':'#') : '';
   if(editing && sel>=0 && N[sel] && N[sel].m!==null){
+    if(selUser){
+      replacePitch(sel,m,a);
+      /* tuts di layar: tuts berikutnya menambah akor di not ini; MIDI: tuts berikutnya (>160 ms) mengganti lagi */
+      if(!fromMidi) selUser=false;
+      if(!silent) pluck(m,ac().currentTime,0.7);
+      return;
+    }
     toggleChordPitch(sel,m,a);
     if(!silent) pluck(m,ac().currentTime,0.7);
     return;
@@ -4297,10 +4317,18 @@ function addNote(m,silent){
 }
 /* Dari keyboard MIDI: tuts yang ditekan hampir bersamaan (<160 ms) jadi satu akor; jeda lebih lama = not baru */
 function midiScoreNote(m,silent){
-  var t=performance.now(), N=edScore().notes;
-  if(t-midiChordT>160 && editing && sel>=0 && N[sel] && N[sel].m!==null) editing=false;
+  var t=performance.now(), N=edScore().notes, quick=t-midiChordT<=160;
   midiChordT=t;
-  addNote(m,silent);
+  if(editing && sel>=0 && N[sel] && N[sel].m!==null){
+    if(selUser){
+      /* not dipilih sendiri: tuts pertama mengganti nadanya, tuts yang hampir bersamaan (<160 ms) jadi akornya */
+      if(quick){ var a=isBlack(m)?(inp.flat?'b':'#'):''; if(!pitchList(N[sel]).some(function(p){ return p.m===m; })) toggleChordPitch(sel,m,a); if(!silent) pluck(m,ac().currentTime,0.7); }
+      else addNote(m,silent,true);
+      return;
+    }
+    if(!quick) editing=false;   /* not yang baru saja ditulis: jeda lebih lama = not baru sesudahnya */
+  }
+  addNote(m,silent,true);
 }
 function addRest(){
   if(!guardEdit()) return;
