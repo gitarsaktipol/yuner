@@ -523,6 +523,7 @@ body.dock-inflow .app{padding-bottom:110px}
   body.on-score #tab-score .board{padding:16px 18px 18px}
 }
 .chip[aria-pressed="true"]{background:var(--brass);color:var(--brassText);box-shadow:0 3px 0 var(--brassDeep);animation:pop .4s var(--bounce)}
+.scorehost svg{user-select:none;-webkit-user-select:none}
 .kb{position:relative;height:120px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .kb .w{display:flex;height:100%;gap:4px;background:var(--track);padding:4px;border-radius:16px}
 /* tuts pelangi: tiap nada punya warna sendiri supaya mudah diingat anak-anak */
@@ -1297,7 +1298,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Tombol nilai not (penuh sampai 1/16), titik, ♯/♭, rehat, dinamika, dan kursor ada <b>di atas</b> partitur; tuts piano <b>tepat di bawah</b> partitur. Ketuk tuts untuk menulis not.</li>
         <li><b>Dinamika</b>: pilih satu not (atau tulis not baru), lalu ketuk <i>pp, p, mp, mf, f, ff</i>, <i>cresc.</i> atau <i>dim.</i> Ketuk lagi untuk menghapus. Dinamika ikut terdengar saat diputar dan ikut tersimpan saat diekspor ke MIDI.</li>
         <li><b>Piano 2 tangan</b>: di pilihan <i>Kunci</i> pilih <i>Piano 2 tangan (G + F)</i>. Paranada atas (kunci G) untuk <b>tangan kanan</b>, paranada bawah (kunci F) untuk <b>tangan kiri</b>. Pilih tangan yang mau ditulis dengan tombol <i>Tangan kanan / Tangan kiri</i>, atau cukup <b>ketuk paranadanya</b> (paranada yang sedang ditulis berwarna biru muda). Tiap tangan ditulis sendiri-sendiri: tulis tangan kanan sampai selesai, lalu pindah ke tangan kiri dan mulai lagi dari birama 1. Saat diputar dan diekspor ke MIDI kedua tangan berbunyi bersamaan. <b>Latih lagu ini</b> memakai kedua tangan: not kanan & kiri yang bersamaan dihitung satu langkah (lewat piano MIDI semua nadanya harus ditekan; lewat mikrofon cukup salah satu).</li>
-        <li><b>Salin / Potong / Tempel</b>: pilih not (ketuk), untuk beberapa not ketuk not pertama lalu <b>Shift+klik</b> not terakhir (di HP: nyalakan <b>⬚ Pilih banyak</b> dulu), atau Shift+◀ ▶, atau <b>Ctrl+A</b> untuk semua. Lalu <b>📋 Salin</b> (Ctrl+C) / <b>✂️ Potong</b> (Ctrl+X). Pilih tempat tujuan (ketuk not, atau kursor di akhir/di depan lagu) lalu <b>📥 Tempel</b> (Ctrl+V). Maju otomatis <b>NYALA</b> = disisipkan (not di belakangnya bergeser); <b>MATI</b> = menimpa not mulai dari yang disorot. Salinan bisa ditempel ke partitur lain juga. Beberapa not terpilih + Hapus not = dihapus sekaligus.</li>
+        <li><b>Salin / Potong / Tempel</b>: pilih not (ketuk), untuk beberapa not ketuk not pertama lalu <b>Shift+klik</b> not terakhir (di laptop juga bisa <b>diseret dengan mouse</b> seperti memblok teks) (di HP: nyalakan <b>⬚ Pilih banyak</b> dulu), atau Shift+◀ ▶, atau <b>Ctrl+A</b> untuk semua. Lalu <b>📋 Salin</b> (Ctrl+C) / <b>✂️ Potong</b> (Ctrl+X). Pilih tempat tujuan (ketuk not, atau kursor di akhir/di depan lagu) lalu <b>📥 Tempel</b> (Ctrl+V). Maju otomatis <b>NYALA</b> = disisipkan (not di belakangnya bergeser); <b>MATI</b> = menimpa not mulai dari yang disorot. Salinan bisa ditempel ke partitur lain juga. Beberapa not terpilih + Hapus not = dihapus sekaligus.</li>
         <li><b>Urungkan / Ulangi</b>: tombol <b>↶ Urungkan</b> dan <b>↷ Ulangi</b> (di bawah "Maju otomatis"), atau di keyboard laptop <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (Mac: ⌘Z / ⌘⇧Z). Tombol <b>Spasi</b> = Putar / Berhenti.</li>
         <li>Tombol ◀ ▶ memindahkan kursor. Ketuk not untuk memilih dan mengubahnya. Tombol hapus menghapus bertahap.</li>
         <li><b>Mengganti panjang not</b>: ketuk not, lalu ketuk nilai not lain (mis. ¼ jadi ½). Kalau biramanya tidak cukup, muncul pilihan: <b>Geser semua</b> (semua not sesudahnya mundur, birama berikutnya ikut bergeser) atau <b>Hanya di birama ini</b> (not sesudahnya di birama itu bergeser, not paling belakang di birama itu dihapus).</li>
@@ -2320,13 +2321,16 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
   var staffH = num ? 0 : 4*S;
   var editP = (grand && editor && hand==='lh') ? 1 : 0;
   var parts = grand ? [{notes:score.notes,clef:'treble'},{notes:score.lh||[],clef:'bass'}] : [{notes:score.notes,clef:score.clef}];
+  parts.forEach(function(P){ P.ms = buildMeasures(P.notes,barBeats); });
+  var maxMs = Math.max.apply(null,parts.map(function(P){ return P.ms.length; }));
   parts.forEach(function(P,p){
     var notes=P.notes;
     P.base = P.clef==='bass' ? 18 : 30;
     P.hasDyn = notes.some(function(n){ return n.m!==null && (n.dyn || n.hp); });
-    P.ms = buildMeasures(notes,barBeats);
-    /* Di editor: kalau birama terakhir sudah penuh, tampilkan birama kosong berikutnya (kursor pindah ke sana) — bukan garis akhir ganda */
-    P.extraBar = !!editor && p===editP && notes.length>0 && P.ms[P.ms.length-1].reduce(function(t,i){ return t+notes[i].d; },0)>=barBeats-1e-6;
+    /* Di editor: kalau birama terakhir sudah penuh, tampilkan birama kosong berikutnya (kursor pindah ke sana) — bukan garis akhir ganda.
+       Piano 2 tangan: tangan yang paling panjang juga selalu diberi birama kosong itu, supaya jumlah birama (dan letak not)
+       tidak berubah saat pindah tangan kanan/kiri. */
+    P.extraBar = !!editor && (p===editP || (grand && P.ms.length===maxMs)) && notes.length>0 && P.ms[P.ms.length-1].reduce(function(t,i){ return t+notes[i].d; },0)>=barBeats-1e-6;
     if(P.extraBar) P.ms=P.ms.concat([[]]);
     var minStep=0, maxStep=8;
     if(!num) notes.forEach(function(n){ if(n.m!==null) pitchList(n).forEach(function(pp){ var st=diaOf({m:pp.m,a:pp.a})-P.base; if(st<minStep) minStep=st; if(st>maxStep) maxStep=st; }); });
@@ -4359,8 +4363,14 @@ function cutRange(r){
   var s=edScore(), N=s.notes, bb=s.ts[0]*4/s.ts[1], k;
   if(r[0]>0 && N[r[0]-1].tie) N[r[0]-1].tie=false;
   if(!advOn()){
-    for(k=r[0];k<=r[1];k++) N[k]={m:null,d:N[k].d,a:''};
-    sel=r[0]; editing=true;
+    /* bertahap seperti Hapus not satu-satu: not -> rehat -> kosong -> (kalau di ujung partitur) dibuang; pilihan tetap */
+    var anyNote=false, anyRest=false;
+    for(k=r[0];k<=r[1];k++){ if(N[k].m!==null) anyNote=true; else if(!N[k].e) anyRest=true; }
+    if(anyNote){ for(k=r[0];k<=r[1];k++) if(N[k].m!==null) N[k]={m:null,d:N[k].d,a:''}; }
+    else if(anyRest){ for(k=r[0];k<=r[1];k++) N[k]={m:null,d:N[k].d,a:'',e:true}; }
+    else if(r[1]===N.length-1){ N.splice(r[0]); selA=-1; sel=N.length-1; editing=sel>=0; saveScores(); renderScoreView(); return; }
+    else return;
+    selA=r[0]; sel=r[1]; editing=true; saveScores(); renderScoreView(); return;
   } else {
     N.splice(r[0],r[1]-r[0]+1); reflowBars(N,bb);
     if(r[0]<N.length){ sel=r[0]; editing=true; } else { sel=-1; editing=false; }
@@ -4715,7 +4725,30 @@ function bindScore(){
     return true;
   }
   $$('#shand button').forEach(function(b){ b.addEventListener('click',function(){ setHand(b.getAttribute('data-hand')); }); });
+  /* Laptop: seret mouse dari satu not ke not lain = blok (pilih banyak), seperti memblok teks */
+  var sdrag=null, sdragT=0;
+  $('#sscore').addEventListener('pointerdown',function(e){
+    if(e.pointerType!=='mouse' || e.button!==0 || rec.on || playing) return;
+    var g=e.target.closest ? e.target.closest('.n') : null;
+    sdrag = g ? {i:parseInt(g.getAttribute('data-i'),10),last:-1} : null;
+    /* piano 2 tangan: pindah tangan SEBELUM menyeret (gambar bisa bergeser sedikit saat ganti tangan) */
+    if(sdrag && curScore().grand){ var hh = sdrag.i>=LH_OFF ? 'lh' : 'rh'; if(hh!==hand) setHand(hh); }
+  });
+  $('#sscore').addEventListener('pointermove',function(e){
+    if(!sdrag || !(e.buttons&1)) return;
+    var el=document.elementFromPoint(e.clientX,e.clientY), g=el && el.closest ? el.closest('#sscore .n') : null;
+    if(!g) return;
+    var j=parseInt(g.getAttribute('data-i'),10);
+    if(j===sdrag.last || (sdrag.last<0 && j===sdrag.i) || (j>=LH_OFF)!==(sdrag.i>=LH_OFF)) return;
+    e.preventDefault();
+    if(sdrag.last<0){
+      selectAt(sdrag.i>=LH_OFF ? sdrag.i-LH_OFF : sdrag.i);
+    }
+    sdrag.last=j; selectAt(j>=LH_OFF ? j-LH_OFF : j, true);
+  });
+  document.addEventListener('pointerup',function(){ if(sdrag && sdrag.last>=0) sdragT=Date.now(); sdrag=null; });
   $('#sscore').addEventListener('click',function(e){
+    if(Date.now()-sdragT<300) return;   /* klik sisa dari seret: pilihan jangan diubah */
     var g=e.target.closest ? e.target.closest('.n') : null;
     if(!g){
       /* ketuk paranada (bukan not) di piano 2 tangan: pilih tangan itu, kursor ke akhir tangan itu */
@@ -4825,8 +4858,11 @@ function bindScore(){
     if(app.tab==='score' && (e.key===' '||e.code==='Space') && !(e.target.closest && e.target.closest('input,select,textarea'))) e.preventDefault();
   });
   $('#sundo').addEventListener('click',doUndo);
-  $('#smulti').addEventListener('click',function(){ multiSel=!multiSel; multiFresh=multiSel; this.setAttribute('aria-pressed',multiSel?'true':'false');
-    if(multiSel) showScoreAlert('Pilih banyak NYALA: ketuk not pertama lalu not terakhir yang mau disalin.',true); });
+  $('#smulti').addEventListener('click',function(){
+    /* sudah ada not yang disorot: itulah awal pilihan, ketukan berikutnya = ujung pilihan (dulu ketukan berikutnya memulai pilihan baru) */
+    var has=editing && sel>=0;
+    multiSel=!multiSel; multiFresh=multiSel && !has; this.setAttribute('aria-pressed',multiSel?'true':'false');
+    if(multiSel) showScoreAlert(has ? 'Pilih banyak NYALA: ketuk not terakhir. Lalu Hapus not / Salin / Potong.' : 'Pilih banyak NYALA: ketuk not pertama lalu not terakhir. Lalu Hapus not / Salin / Potong.',true); });
   $('#scopy').addEventListener('click',function(){ clipCopy(false); });
   $('#scut').addEventListener('click',function(){ clipCopy(true); });
   $('#spaste').addEventListener('click',clipPaste);
