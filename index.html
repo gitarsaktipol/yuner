@@ -4273,22 +4273,6 @@ function reflowBars(N,bb){
   });
   N.splice.apply(N,[0,N.length].concat(out));
 }
-function insertGapAt(M,t,gap,bb){
-  /* sisipkan rehat sepanjang gap di ketukan t (not yang sedang berbunyi di t dipecah) */
-  var acc=0, i;
-  for(i=0;i<M.length;i++){
-    if(acc>=t-1e-6) break;
-    if(acc+M[i].d>t+1e-6){
-      var n=M[i], d1=t-acc, d2=n.d-d1;
-      var a=notePieces({m:n.m,a:n.a,x:n.x,e:n.e,dyn:n.dyn,hp:n.hp,tie:n.m!==null},d1), b=notePieces({m:n.m,a:n.a,x:n.x,e:n.e,tie:n.tie},d2);
-      M.splice.apply(M,[i,1].concat(a,b)); i+=a.length; acc=t; break;
-    }
-    acc+=M[i].d;
-  }
-  if(acc<t-1e-6) return;   /* tangan ini sudah selesai sebelum titik itu: tidak perlu digeser */
-  M.splice.apply(M,[i,0].concat(splitDur(gap).map(function(d){ return {m:null,d:d,a:''}; })));
-  reflowBars(M,bb);
-}
 function askDurShift(at,newD){
   var s=edScore(), N=s.notes, it=N[at], bb=s.ts[0]*4/s.ts[1], start=0, k;
   for(k=0;k<at;k++) start+=N[k].d;
@@ -4297,17 +4281,19 @@ function askDurShift(at,newD){
   var b2=$('#sdurBar'), fits = inBar+newD<=bb+1e-6;
   b2.disabled=!fits;
   b2.querySelector('small').textContent = fits ? 'Not sesudahnya di birama ini bergeser, not paling belakang di birama ini dihapus' : 'Tidak bisa: not ini sendiri lebih panjang dari sisa birama';
+  /* piano 2 tangan: hanya tangan yang sedang ditulis yang bergeser, tangan lain tidak disentuh */
+  var hw = curScore().grand ? (hand==='lh' ? ' (hanya tangan kiri; tangan kanan tidak berubah)' : ' (hanya tangan kanan; tangan kiri tidak berubah)') : '';
+  $('#sdurAll small').textContent='Semua not sesudahnya mundur, birama-birama berikutnya ikut bergeser'+hw;
   $('#sdurOv').hidden=false;
 }
 function doDurShift(mode){
   var q=durAsk; durAsk=null; $('#sdurOv').hidden=true;
   if(!q || !guardEdit()) return;
-  var cs=curScore(), s=edScore(), N=s.notes, at=N.indexOf(q.it), bb=s.ts[0]*4/s.ts[1];
+  var s=edScore(), N=s.notes, at=N.indexOf(q.it), bb=s.ts[0]*4/s.ts[1];
   if(at<0) return;
-  var it=N[at], oldD=it.d, delta=q.newD-oldD, start=0, k;
+  var it=N[at], oldD=it.d, start=0, k;
   for(k=0;k<at;k++) start+=N[k].d;
   if(mode==='all'){
-    if(cs.grand){ var other = (s.notes===cs.notes) ? (cs.lh||[]) : cs.notes; insertGapAt(other,start+oldD,delta,bb); }
     it.d=q.newD; it.tie=false;
     reflowBars(N,bb);
   } else {
