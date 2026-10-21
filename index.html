@@ -4616,7 +4616,22 @@ function stopPlay(){
   playing=false; playIdx=-1; playIdxL=-1; renderScoreView();
 }
 function playScore(){
-  if(playing){ stopPlay(); return; }
+  if(playing){
+    /* dihentikan di tengah lagu: sorotan BERHENTI di not yang sedang dibunyikan (bukan kembali ke sorotan awal),
+       supaya not yang salah langsung bisa dikoreksi; Putar lagi = mulai dari not itu */
+    var s0=curScore(), lh0=(s0.grand && hand==='lh'), ip=lh0 ? playIdxL : playIdx, op=s0.grand ? (lh0 ? playIdx : playIdxL) : -1;
+    stopPlay();
+    if(ip<0 && op>=0){ setHand(lh0 ? 'rh' : 'lh'); ip=op; }
+    var EN=edScore().notes;
+    while(ip>0 && tieFrom(EN,ip)) ip--;
+    if(ip>=0 && ip<EN.length){
+      selA=-1; sel=ip; editing=true; selUser=true;
+      pitchSel = EN[ip].m!==null ? pitchList(EN[ip]).length-1 : 0;
+      syncInputFromNote(EN[ip]); renderScoreView();
+      var g=$('#sscore .st-blink'); if(g && g.scrollIntoView) try{ g.scrollIntoView({block:'nearest'}); }catch(e){}
+    }
+    return;
+  }
   var s=curScore(), EN=edScore().notes, eP=(s.grand && hand==='lh') ? 1 : 0;
   var parts = s.grand ? [s.notes,s.lh||[]] : [s.notes];
   if(!parts.some(function(N){ return N.length; })) return;
