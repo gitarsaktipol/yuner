@@ -5400,7 +5400,7 @@ function exportMidi(){
    (baris tidak pernah terbelah antar halaman), disusun per halaman, lalu tiap halaman jadi satu gambar di PDF
    yang ukuran kertas & marginnya sama. Pratinjau = gambar yang sama persis dengan isi file. */
 var WX_PAPER={A4:[210,297],F4:[215,330]}, WX_MM=96/25.4, WX_DPI=200;
-var wx={paper:'A4',orient:'p',mode:'num',zoom:85,mv:15,mh:15,gap:5,fill:false,last:true,title:100}, wxFont=null, wxUrls=[], wxT=0, wxPages=null;
+var wx={paper:'A4',orient:'p',mode:'num',zoom:85,mv:15,mh:15,gap:5,fill:false,last:true,title:100}, wxFont=null, wxT=0, wxPages=null;
 try{ var wxs=JSON.parse(store.get('yg.wordExp','null')); if(wxs) for(var wk in wxs) if(wk in wx) wx[wk]=wxs[wk]; }catch(e){}
 var WX_LIM={zoom:[50,150],mv:[5,40],mh:[5,40],gap:[0,30],title:[60,250]};
 function wxDims(){ var d=WX_PAPER[wx.paper]||WX_PAPER.A4; return wx.orient==='l' ? [d[1],d[0]] : [d[0],d[1]]; }
@@ -5462,20 +5462,32 @@ function wxPreview(){
     wxLoadFont().then(function(){
       var pages=wxLayout(), d=wxDims(), box=$('#wxPrev');
       wxPages=pages;
-      wxUrls.forEach(function(x){ URL.revokeObjectURL(x); }); wxUrls=[];
-      box.innerHTML='';
+      /* tanpa kedip: gambar lama tetap tampil sampai gambar baru siap, lalu langsung ditukar */
+      var figs=[].slice.call(box.querySelectorAll('figure'));
+      if(!figs.length) box.innerHTML='';
       pages.forEach(function(pg,i){
-        /* kertas utuh: area tulis diletakkan di dalam margin */
         var full='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+d[0]+' '+d[1]+'" width="'+(d[0]*4)+'" height="'+(d[1]*4)+'"><rect width="100%" height="100%" fill="#fff"/>'
           +'<rect x="'+wx.mh+'" y="'+wx.mv+'" width="'+pg.w+'" height="'+pg.h+'" fill="none" stroke="#c9d6f2" stroke-width=".3" stroke-dasharray="2 1.5"/>'
           +'<image x="'+wx.mh+'" y="'+wx.mv+'" width="'+pg.w+'" height="'+pg.h+'" href="data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(pg.svg)))+'"/></svg>';
-        var url=URL.createObjectURL(new Blob([full],{type:'image/svg+xml'})); wxUrls.push(url);
-        var f=document.createElement('figure'); f.innerHTML='<img alt="Halaman '+(i+1)+'" src="'+url+'"><figcaption>Halaman '+(i+1)+' dari '+pages.length+'</figcaption>';
-        box.appendChild(f);
+        var url=URL.createObjectURL(new Blob([full],{type:'image/svg+xml'}));
+        var f=figs[i];
+        if(!f){ f=document.createElement('figure'); f.innerHTML='<img alt=""><figcaption></figcaption>'; box.appendChild(f); }
+        var img=f.querySelector('img'), pre=new Image(), seq=(f.wxSeq=(f.wxSeq||0)+1);
+        var cap=f.querySelector('figcaption'), ct='Halaman '+(i+1)+' dari '+pages.length; if(cap.textContent!==ct) cap.textContent=ct;
+        img.alt='Halaman '+(i+1);
+        var swap=function(){
+          if(f.wxSeq!==seq){ URL.revokeObjectURL(url); return; }   /* sudah ada pratinjau yang lebih baru */
+          var old=img.getAttribute('src'); img.src=url;
+          if(old && old.indexOf('blob:')===0) setTimeout(function(){ URL.revokeObjectURL(old); },2000);
+        };
+        pre.onload=function(){ (pre.decode ? pre.decode() : Promise.resolve()).then(swap,swap); };
+        pre.onerror=swap;
+        pre.src=url;
       });
+      figs.slice(pages.length).forEach(function(f){ var o=f.querySelector('img').getAttribute('src'); if(o && o.indexOf('blob:')===0) URL.revokeObjectURL(o); f.remove(); });
       $('#wxInfo').textContent='Kertas '+wx.paper+' '+(wx.orient==='l'?'mendatar':'tegak')+' ('+d[0]+' × '+d[1]+' mm) · '+pages.length+' halaman. Garis putus-putus di pratinjau = batas margin (tidak ikut tercetak).';
     });
-  },120);
+  },60);
 }
 function openWordExport(){
   var sc=curScore();
