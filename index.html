@@ -505,7 +505,9 @@ body.playing{overflow:hidden}
 .pstageLbl{margin-left:auto;background:var(--surf);border:3px solid var(--dMint);border-radius:22px;padding:4px 20px;font-weight:900;font-size:clamp(22px,7vh,34px);line-height:1.2;box-shadow:0 4px 0 var(--dMint);white-space:nowrap}
 .pstage{flex:1;min-height:0;display:flex;flex-direction:column}
 .play .board{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:8px 10px}
-.play .scorehost{flex:1;min-height:0;overflow:auto;display:flex;align-items:center}
+.play .scorehost{flex:1;min-height:0;overflow:auto;display:flex;align-items:flex-start}
+/* lagu panjang yang tidak muat: margin auto (bukan align-items:center) supaya bagian atas partitur tidak terpotong & bisa digulir */
+.play .scorehost>svg{margin:auto 0;flex:none}
 .play .pstatus{font-size:clamp(20px,6vh,32px);min-height:0;margin:2px 8px}
 .prebtns{display:flex;gap:12px;justify-content:center;margin:6px 0 2px}
 .prebtns .start{flex:1;max-width:340px;padding:11px 12px;font-size:17px}
@@ -3668,6 +3670,7 @@ function renderPractice(){
     pr.drawn=null;
     drawScore(host,previewScore(sc),app.mode,function(){ return ''; });
   }
+  if(pr.playing) followCur(host, redrawn);
   $('#pprebtns').hidden = !(pr.playing && !(mic.active || midiConnected()));
   var st=$('#pstatus'), t, c='';
   if(!pr.idx.length){ t = pr.src==='custom' ? 'Pilih minimal 2 nada dulu di atas.' : 'Partitur ini belum punya not. Tambahkan not di menu Partitur.'; }
@@ -3683,6 +3686,19 @@ function renderPractice(){
   if(pr.tempoOn && pr.playing && tp.run && (redrawn || !tp.geo || !host.contains(tp.geo.line))) tempoAttach();
   var tooLow = pr.inst==='guitar' && pr.idx.some(function(i){ return prN(i).m-12<40; });
   $('#pwarn').hidden = !tooLow;
+}
+/* Lagu panjang yang tidak muat satu layar: gulir partitur mengikuti not yang sedang dimainkan (seperti halaman buku berganti). */
+function followCur(host, now){
+  if(host.scrollHeight <= host.clientHeight+2) return;
+  var g = host.querySelector('g.st-cur');
+  if(!g){ if(now) host.scrollTop=0; return; }
+  var hb=host.getBoundingClientRect(), b=g.getBoundingClientRect(), H=host.clientHeight;
+  var top=b.top-hb.top, bot=b.bottom-hb.top;
+  if(top>=H*0.08 && bot<=H*0.7 && !now) return;   /* masih terlihat nyaman: jangan digulir (tidak goyang tiap not) */
+  var to=Math.max(0, Math.min(host.scrollHeight-H, host.scrollTop+top-H*0.18));
+  if(Math.abs(to-host.scrollTop)<4) return;
+  var smooth=!now && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  try{ host.scrollTo({top:to, behavior: smooth?'smooth':'auto'}); }catch(e){ host.scrollTop=to; }
 }
 function refreshPractice(){
   if(!pr.score) return;
