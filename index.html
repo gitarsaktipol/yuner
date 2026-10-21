@@ -4081,7 +4081,7 @@ function renderScoreView(){
     if(p ? i===playIdxL : i===playIdx) return 'cur';
     if((p||0)!==eP) return '';
     /* Maju otomatis NYALA: garis merah di kanan not yang disorot = not baru disisipkan di situ */
-    return flashIdx[i] ? 'bad' : ((!playing && editing && i===sel) ? 'sel blink'+((advOn() && EN[i] && EN[i].m!==null && !rec.on) ? ' ins' : '') : ((!playing && inRange(i)) ? 'sel' : ''));
+    return flashIdx[i] ? 'bad' : ((!playing && editing && i===sel) ? 'sel blink'+((advOn() && EN[i] && !rec.on) ? ' ins' : '') : ((!playing && inRange(i)) ? 'sel' : ''));
   }, (playing || editing) ? null : sel, !playing);
   $('#sempty').hidden = s.notes.length>0 || !!(s.grand && s.lh && s.lh.length);
   syncDynUI();
@@ -4146,7 +4146,7 @@ function fillOrInsert(item,before){
   var ins=advOn(), wasSel=(editing && sel>=0), s=edScore(), bb=s.ts[0]*4/s.ts[1], N=s.notes, k;
   lastIns=item;
   /* after: disisipkan di BELAKANG item terpilih apa pun modenya (dipakai tombol Rehat); not yang bersambung tie dilewati */
-  if(wasSel && N[sel] && (before || (ins && (N[sel].m!==null || item.m===null)))){
+  if(wasSel && N[sel] && (before || ins)){   /* NYALA: juga saat rehat/kosong yang disorot (garis merah = tempat masuk) */
     if(trialFull(s,item,bb)) return;
     var at0=sel+1; while(at0<N.length && tieFrom(N,at0)) at0++;
     N.splice(at0,0,item); reflowBars(N,bb);
