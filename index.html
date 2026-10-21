@@ -2205,10 +2205,11 @@ function restSvg(d,x,y0){
   if(d>bd) o+='<circle cx="'+(x+9)+'" cy="'+(y0+2*S-3)+'" r="1.9" fill="currentColor"/>';
   return o;
 }
-function noteSvg(n,x,y0,base,i,cls,key,bm,sp){
+function noteSvg(n,x,y0,base,i,cls,key,bm,sp,ix){
   var o='<g class="n'+cls+'" data-i="'+i+'">';
   o+='<rect class="hl" x="'+(x-15)+'" y="'+(y0-18)+'" width="30" height="'+(4*S+36)+'" rx="9"/>';
-  o+='<line class="insl" x1="'+(x+15)+'" x2="'+(x+15)+'" y1="'+(y0-16)+'" y2="'+(y0+4*S+16)+'"/>';
+  var lx=Math.max(x+15,ix||0);   /* garis sisip: di ujung ruang not (setelah titik/garis panjangnya), bukan menempel di kepala not */
+  o+='<line class="insl" x1="'+lx+'" x2="'+lx+'" y1="'+(y0-16)+'" y2="'+(y0+4*S+16)+'"/>';
   if(n.m===null){ if(!n.e) o+=restSvg(n.d,x,y0); return o+'</g>'; }
   var pl=pitchList(n), bd=baseDur(n.d), hs=[], s, lo=1e9, hi=-1e9;
   pl.forEach(function(p,pi){
@@ -2267,7 +2268,8 @@ function numSvg(n,x,yb,i,cls,bm,key,sp){
   var pl = n.m===null ? null : pitchList(n), stk = pl ? pl.length : 1, own=(stk-1)*GAP, lift=(bm&&bm.lift)||0;
   /* bm.hb: batas bawah kotak sorotan (piano 2 tangan: lebih pendek supaya tidak menutupi baris tangan kiri) */
   o+='<rect class="hl" x="'+(x-15)+'" y="'+(yb-34-own)+'" width="30" height="'+(((bm&&bm.hb)||40)+34+own)+'" rx="9"/>';
-  o+='<line class="insl" x1="'+(x+15)+'" x2="'+(x+15)+'" y1="'+(yb-32-own)+'" y2="'+(yb+((bm&&bm.hb)||40)-2)+'"/>';
+  var lx=Math.max(x+15,(bm&&bm.ix)||0);   /* garis sisip di ujung not: setelah titik (not bertitik) / garis panjang (minim, semibreve) */
+  o+='<line class="insl" x1="'+lx+'" x2="'+lx+'" y1="'+(yb-32-own)+'" y2="'+(yb+((bm&&bm.hb)||40)-2)+'"/>';
   var k, beats=Math.max(1,Math.floor(n.d));
   if(n.m===null && n.e) return o+'</g>';
   if(n.m===null){
@@ -2516,8 +2518,9 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
           var extra = (!num && accShown(n,key)) ? 10*k : 0;
           var noteCX = num ? (px+12) : (px+extra+(adv-extra)/2);
           var selP = (editor && isEd && editing && !playing && ni===sel) ? pitchSel : -1, di = p ? ni+LH_OFF : ni;
-          if(num){ bm.lift=runLift[j]||0; if(grand && p===0) bm.hb=24; out+=numSvg(n,px+12,y0+0,di,cls,bm,key,selP); }
-          else out+=noteSvg(n,noteCX,y0,base,di,cls,key,grp[j]?{up:grp[j].up,yb:grp[j].yb}:null,selP);
+          var insX = px+adv-4;
+          if(num){ bm.lift=runLift[j]||0; bm.ix=insX; if(grand && p===0) bm.hb=24; out+=numSvg(n,px+12,y0+0,di,cls,bm,key,selP); }
+          else out+=noteSvg(n,noteCX,y0,base,di,cls,key,grp[j]?{up:grp[j].up,yb:grp[j].yb}:null,selP,insX);
           if(grp[j]) grp[j].xs[j]=noteCX+(grp[j].up?5.4:-5.4);
           if(n.m!==null) pos[ni]={x:noteCX,y:(num?y0:y0+4*S-(diaOf(n)-base)*S/2),si:si,up:(num?false:(diaOf(n)-base)<4),xe:W-margin};
           if(isEd && ni===targetNi && cursorOnSlot){ cx=noteCX+16; cy=y0; }
