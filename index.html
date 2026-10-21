@@ -2926,6 +2926,14 @@ function newRound(keep){
       else pr.grp[lead].push(e.id);
     });
   } else pr.score.notes.forEach(function(n,i){ if(n.m!==null && !tieFrom(pr.score.notes,i)) pr.idx.push(i); });
+  /* posisi ketukan semua item (juga rehat & not sambungan tie) supaya yang sudah dilewati ikut berwarna (tahu sampai mana) */
+  pr.at={}; pr.tieHead={};
+  [pr.score.notes, pr.score.grand ? pr.score.lh : null].forEach(function(N,p){
+    if(!N) return; var t=0, head=null;
+    N.forEach(function(n,i){ var id=p?i+LH_OFF:i; pr.at[id]={s:t,e:t+n.d};
+      if(n.m!==null && tieFrom(N,i) && head!==null) pr.tieHead[id]=head; else head=id;
+      t+=n.d; });
+  });
   { var sl=$('#pstageLbl'); if(sl){ if(pr.src==='arcade'){ sl.textContent='Stage '+ARC_LETTERS[pr.arcLetter]+pr.arcSub; sl.hidden=false; } else sl.hidden=true; } }
   pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
   pr.lastAdvanceT=0; pr.fast=false;
@@ -3631,10 +3639,13 @@ function renderPractice(){
   var sc=pr.score; if(!sc) return;
   renderPkeys();   /* tampilkan/sembunyikan tuts dulu, supaya ukuran partitur dihitung dengan ruang yang benar */
   var curIds = pr.done ? [] : prIds(pr.idx[pr.pos]);
+  var curBeat = pr.done ? Infinity : ((pr.at && pr.at[pr.idx[pr.pos]]) ? pr.at[pr.idx[pr.pos]].s : 0);
   var host=$('#pscore'), redrawn=false;
   if(pr.playing){
     var stFn=function(i,p){
       var id = p ? i+LH_OFF : i, s = pr.marks[id] || '';
+      if(!s && pr.tieHead && pr.tieHead[id]!=null) s = pr.marks[pr.tieHead[id]] || '';   /* sambungan tie ikut warna not awalnya */
+      else if(!s && (pr.pos>0 || pr.done) && pr.at && pr.at[id] && prN(id) && prN(id).m===null && pr.at[id].e <= curBeat+1e-6) s='ok';   /* rehat yang sudah lewat */
       if(curIds.indexOf(id)>=0) s += ' cur';   /* satu langkah disorot (piano 2 tangan: not kanan & kiri yang bersamaan) */
       return s;
     };
