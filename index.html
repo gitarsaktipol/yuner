@@ -2380,7 +2380,12 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
     if(mIdx===nM-1 && maxUsed<barBeats-1e-6) w+=(barBeats-maxUsed)*unit;
     lay.w=w;
     parts.forEach(function(P,p){
-      lay.pl[p]=ev[p].map(function(e){ var c=0; while(c<starts.length && Math.abs(starts[c]-e.t)>1e-6) c++; return {ni:e.ni,off:xs[c],adv:colW[c]}; });
+      lay.pl[p]=ev[p].map(function(e){
+        var c=0; while(c<starts.length && Math.abs(starts[c]-e.t)>1e-6) c++;
+        /* end: ujung ruang not (kolom ketukan tempat not ini selesai) — untuk garis sisip merah, sama seperti 1 paranada */
+        var tE=e.t+P.notes[e.ni].d, c2=0; while(c2<starts.length && starts[c2]<tE-1e-6) c2++;
+        return {ni:e.ni,off:xs[c],adv:colW[c],end:c2<starts.length ? xs[c2] : x};
+      });
     });
     return lay;
   }
@@ -2523,7 +2528,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
           var extra = (!num && accShown(n,key)) ? 10*k : 0;
           var noteCX = num ? (px+12) : (px+extra+(adv-extra)/2);
           var selP = (editor && isEd && editing && !playing && ni===sel) ? pitchSel : -1, di = p ? ni+LH_OFF : ni;
-          var insX = px+adv-4;
+          var insX = (grand && L.end!=null) ? x+L.end*k-4 : px+adv-4;
           if(num){ bm.lift=runLift[j]||0; bm.ix=insX; if(grand && p===0) bm.hb=24; out+=numSvg(n,px+12,y0+0,di,cls,bm,key,selP); }
           else out+=noteSvg(n,noteCX,y0,base,di,cls,key,grp[j]?{up:grp[j].up,yb:grp[j].yb}:null,selP,insX);
           if(grp[j]) grp[j].xs[j]=noteCX+(grp[j].up?5.4:-5.4);
