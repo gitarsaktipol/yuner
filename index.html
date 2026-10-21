@@ -1356,7 +1356,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. Selama merekam, not yang kamu mainkan langsung tergambar di partitur dan kursor ikut berjalan mengikuti ketukan. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, rekaman masuk ke tangan yang sedang dipilih saja (<i>Tulis &amp; rekam ke</i>: Kanan / Kiri), mulai di birama baru setelah not terakhir tangan itu, dan tangan yang lain ikut berbunyi supaya bisa diikuti (bisa dimatikan). Jadi tangan kanan bisa direkam dulu, lalu tangan kiri dari awal lagu. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
         <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
         <li><b>💾 Simpan</b> menyimpan partitur (sebenarnya juga tersimpan otomatis tiap ada perubahan). Tanpa masuk akun, partitur <b>hanya ada di perangkat itu</b> — partitur dari laptop tidak muncul di HP. Supaya sama di semua perangkat, masuk akun Gitar Sakti di <b>Pengaturan › Akun</b> di setiap perangkat (laptop dan HP) dengan akun yang sama. <b>＋ Buat baru</b> membuat partitur kosong baru. <b>Ekspor ke MIDI</b> dan <b>Impor file MIDI</b> ada di bawah tombol itu.</li>
-        <li><b>📄 Ekspor ke PDF</b>: membuat file PDF siap cetak. Pilih kertas <b>A4</b> atau <b>F4</b>, tegak/mendatar, not balok/not angka, lalu atur <b>ukuran not</b>, <b>margin</b>, dan <b>jarak antar baris</b> sambil melihat pratinjau halamannya. Baris partitur tidak pernah terpotong di antara dua halaman. Tekan <b>Unduh PDF</b>, lalu buka dan cetak dengan ukuran kertas yang sama (skala 100%).</li>
+        <li><b>📄 Ekspor ke PDF</b>: membuat file PDF siap cetak. Pilih kertas <b>A4</b> atau <b>F4</b>, tegak/mendatar, not balok/not angka, lalu atur <b>ukuran not</b>, <b>ukuran judul</b>, <b>margin</b>, dan <b>jarak antar baris</b> sambil melihat pratinjau halamannya. Baris partitur tidak pernah terpotong di antara dua halaman. Tekan <b>Unduh PDF</b>, lalu buka dan cetak dengan ukuran kertas yang sama (skala 100%).</li>
         <li><b>🎵 Impor lagu (audio)</b>: pilih rekaman (mp3, wav, m4a). FerTune mendengarkannya langsung di HP, mengubahnya jadi not, lalu jadi partitur (maks. 2 menit pertama). Hasil terbaik dari rekaman satu alat musik atau nyanyian saja; lagu lengkap dengan band hasilnya kurang rapi. Setelah selesai ada tautan <b>Unduh MIDI lengkap</b> berisi semua nada yang terdengar.</li>
       </ol>
       <div class="tip">Dengan keyboard MIDI tersambung, tuts yang kamu tekan langsung menjadi not di partitur.</div>
@@ -1436,6 +1436,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <div class="srecSet"><span class="lbl">Arah kertas</span><div class="chips" id="wxOrient"><button class="chip" type="button" data-v="p">Tegak</button><button class="chip" type="button" data-v="l">Mendatar</button></div></div>
         <div class="srecSet"><span class="lbl">Notasi</span><div class="chips" id="wxMode"><button class="chip" type="button" data-v="staff">Not balok</button><button class="chip" type="button" data-v="num">Not angka</button></div></div>
         <div class="srecSet"><span class="lbl">Ukuran not</span><div class="stepper"><button class="ctl" type="button" data-k="zoom" data-s="-5" aria-label="Lebih kecil">−</button><output id="wxZoom" style="flex:1"></output><button class="ctl" type="button" data-k="zoom" data-s="5" aria-label="Lebih besar">+</button></div></div>
+        <div class="srecSet"><span class="lbl">Ukuran judul</span><div class="stepper"><button class="ctl" type="button" data-k="title" data-s="-10" aria-label="Judul lebih kecil">−</button><output id="wxTitle" style="flex:1"></output><button class="ctl" type="button" data-k="title" data-s="10" aria-label="Judul lebih besar">+</button></div></div>
         <div class="srecSet"><span class="lbl">Margin atas &amp; bawah</span><div class="stepper"><button class="ctl" type="button" data-k="mv" data-s="-1" aria-label="Kurangi">−</button><output id="wxMv" style="flex:1"></output><button class="ctl" type="button" data-k="mv" data-s="1" aria-label="Tambah">+</button></div></div>
         <div class="srecSet"><span class="lbl">Margin kiri &amp; kanan</span><div class="stepper"><button class="ctl" type="button" data-k="mh" data-s="-1" aria-label="Kurangi">−</button><output id="wxMh" style="flex:1"></output><button class="ctl" type="button" data-k="mh" data-s="1" aria-label="Tambah">+</button></div></div>
         <div class="srecSet"><span class="lbl">Jarak antar baris</span><div class="stepper"><button class="ctl" type="button" data-k="gap" data-s="-1" aria-label="Rapatkan">−</button><output id="wxGap" style="flex:1"></output><button class="ctl" type="button" data-k="gap" data-s="1" aria-label="Renggangkan">+</button></div></div>
@@ -2487,7 +2488,8 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
   if(editor || drawScore.print){
     var xe=function(t){ return String(t).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
     var yy=2;
-    if(score.title){ yy+=26; hdrOut+='<text class="shT" x="'+(W/2)+'" y="'+yy+'" text-anchor="middle" font-size="22" font-weight="800">'+xe(score.title)+'</text>'; }
+    var tf=(drawScore.print && drawScore.titleF) || 1;   /* ekspor PDF: ukuran judul bisa diperbesar/diperkecil */
+    if(score.title){ yy+=Math.round(26*tf); hdrOut+='<text class="shT" x="'+(W/2)+'" y="'+yy+'" text-anchor="middle" font-size="'+Math.round(22*tf)+'" font-weight="800">'+xe(score.title)+'</text>'; }
     if(score.sub){ yy+=19; hdrOut+='<text class="shS" x="'+(W/2)+'" y="'+yy+'" text-anchor="middle" font-size="14">'+xe(score.sub)+'</text>'; }
     if(score.comp){ yy+=17; hdrOut+='<text class="shC" x="'+(W-margin)+'" y="'+yy+'" text-anchor="end" font-size="12">'+xe(score.comp)+'</text>'; }
     if(score.tempoTxt){ yy+=21; hdrOut+='<text class="shM" x="'+margin+'" y="'+yy+'" font-size="14" font-weight="800">'+xe(score.tempoTxt)+'</text>'; }
@@ -5398,9 +5400,9 @@ function exportMidi(){
    (baris tidak pernah terbelah antar halaman), disusun per halaman, lalu tiap halaman jadi satu gambar di PDF
    yang ukuran kertas & marginnya sama. Pratinjau = gambar yang sama persis dengan isi file. */
 var WX_PAPER={A4:[210,297],F4:[215,330]}, WX_MM=96/25.4, WX_DPI=200;
-var wx={paper:'A4',orient:'p',mode:'num',zoom:85,mv:15,mh:15,gap:5,fill:false,last:true}, wxFont=null, wxUrls=[], wxT=0, wxPages=null;
+var wx={paper:'A4',orient:'p',mode:'num',zoom:85,mv:15,mh:15,gap:5,fill:false,last:true,title:100}, wxFont=null, wxUrls=[], wxT=0, wxPages=null;
 try{ var wxs=JSON.parse(store.get('yg.wordExp','null')); if(wxs) for(var wk in wxs) if(wk in wx) wx[wk]=wxs[wk]; }catch(e){}
-var WX_LIM={zoom:[50,150],mv:[5,40],mh:[5,40],gap:[0,30]};
+var WX_LIM={zoom:[50,150],mv:[5,40],mh:[5,40],gap:[0,30],title:[60,250]};
 function wxDims(){ var d=WX_PAPER[wx.paper]||WX_PAPER.A4; return wx.orient==='l' ? [d[1],d[0]] : [d[0],d[1]]; }
 var WX_CSS='svg{color:#1d1b2b}text{fill:currentColor;font-family:"Bricolage Grotesque",Arial,sans-serif}.stf{stroke:#6d6880;stroke-width:1.2}.bar{stroke:#1d1b2b;stroke-width:1.6}'
   +'.tie{fill:none;stroke:#1d1b2b;stroke-width:1.6;stroke-linecap:round}.hl,.insl,.handbg,.caret,.inscur{display:none}'
@@ -5419,8 +5421,8 @@ function wxLayout(){
   var sc=curScore(), d=wxDims(), cw=d[0]-2*wx.mh, ch=d[1]-2*wx.mv, u=WX_MM/(wx.zoom/100);
   var Wv=Math.max(240,Math.round(cw*u)), host=document.createElement('div');
   host.style.cssText='position:absolute;left:-99999px;top:0;width:'+Wv+'px'; document.body.appendChild(host);
-  drawScore.force=1; drawScore.print=true; drawScore.fullLast=!!wx.last;
-  try{ drawScore(host,sc,wx.mode,null,null,false); } finally{ drawScore.force=0; drawScore.print=false; drawScore.fullLast=false; }
+  drawScore.force=1; drawScore.print=true; drawScore.fullLast=!!wx.last; drawScore.titleF=(wx.title||100)/100;
+  try{ drawScore(host,sc,wx.mode,null,null,false); } finally{ drawScore.force=0; drawScore.print=false; drawScore.fullLast=false; drawScore.titleF=1; }
   var L=drawScore.lay, sv=host.querySelector('svg'), inner=sv ? sv.innerHTML : ''; host.remove();
   var blocks=[], i; if(L.head>0) blocks.push([0,L.head]);
   for(i=0;i<L.n;i++) blocks.push([L.head+i*L.sysH, i===L.n-1 ? L.sysH+6 : L.sysH]);
@@ -5449,7 +5451,7 @@ function wxSync(){
   $$('#wxPaper .chip').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-v')===wx.paper?'true':'false'); });
   $$('#wxOrient .chip').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-v')===wx.orient?'true':'false'); });
   $$('#wxMode .chip').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-v')===wx.mode?'true':'false'); });
-  $('#wxZoom').textContent=wx.zoom+'%'; $('#wxMv').textContent=wx.mv+' mm'; $('#wxMh').textContent=wx.mh+' mm'; $('#wxGap').textContent=wx.gap+' mm';
+  $('#wxZoom').textContent=wx.zoom+'%'; $('#wxTitle').textContent=(wx.title||100)+'%'; $('#wxMv').textContent=wx.mv+' mm'; $('#wxMh').textContent=wx.mh+' mm'; $('#wxGap').textContent=wx.gap+' mm';
   $('#wxFill').setAttribute('aria-pressed',wx.fill?'true':'false');
   $('#wxLast').setAttribute('aria-pressed',wx.last?'true':'false');
 }
