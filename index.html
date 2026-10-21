@@ -1139,6 +1139,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button class="start" id="splay" type="button">▶ Putar</button>
       <button class="sound" id="srec" type="button">⏺ Rekam</button>
     </div>
+    <div class="chips" style="margin-top:10px"><button class="chip" type="button" id="smet" style="flex:1" aria-pressed="true">🥁 Metronom: ON</button></div>
     <div class="srecSet" id="srecHandRow" hidden>
       <span class="lbl">Tulis &amp; rekam ke</span>
       <div class="chips" id="srecHand" role="group" aria-label="Tangan yang ditulis dan direkam"><button class="chip" type="button" data-hand="rh">Kanan (kunci G)</button><button class="chip" type="button" data-hand="lh">Kiri (kunci F)</button></div>
@@ -3643,7 +3644,8 @@ function maryLamb(){
     notes:P.map(function(m,i){ return {m:m,d:D[i],a:''}; })};
 }
 var flashIdx={}, flashT=0, alertT=0, editing=false, pitchSel=0, autoAdv=(store.get('yg.autoAdv','0')==='1'), midiChordT=0;
-var scores=[], curId=null, sel=-1, playing=false, playIdx=-1, playTimers=[], playGain=null;
+var scores=[], curId=null, sel=-1, playing=false, playIdx=-1, playTimers=[], playGain=null, playMet=null;
+var smet = store.get('yg.smet','1')!=='0';   /* metronom saat Putar & Rekam (ketukan pembuka rekam selalu bunyi) */
 /* Piano 2 tangan: tangan yang sedang ditulis ('rh' = paranada atas, 'lh' = paranada bawah); playIdxL = not tangan kiri yang sedang diputar */
 var hand='rh', playIdxL=-1;
 function loadScores(){
@@ -4584,6 +4586,7 @@ function delNote(){
 function stopPlay(){
   playTimers.forEach(clearTimeout); playTimers=[];
   if(playGain){ try{playGain.disconnect();}catch(e){} playGain=null; }
+  playMet=null;
   playing=false; playIdx=-1; playIdxL=-1; renderScoreView();
 }
 function playScore(){
@@ -4613,6 +4616,10 @@ function playScore(){
     });
     end=Math.max(end,acc-startB);
   });
+  /* metronom saat Putar (saklar #smet; bisa dinyalakan/dimatikan sambil memutar): klik tiap ketuk, ketuk pertama birama lebih tinggi */
+  var bl = s.ts[1]>=8 ? 0.5 : 1, bb=s.ts[0]*4/s.ts[1], b0=Math.ceil(startB/bl-1e-6)*bl;
+  playMet=c.createGain(); playMet.gain.value=smet?1:0; playMet.connect(playGain);
+  for(var bt=b0; bt<startB+end-1e-6; bt+=bl) metClick(t+(bt-startB)*spb, Math.abs(bt/bb-Math.round(bt/bb))<1e-6, playMet);
   playTimers.push(setTimeout(stopPlay,150+end*spb*1000+200));
   renderScoreView();
 }
@@ -4940,7 +4947,7 @@ function recStart(){
 function recSched(){
   var c=ac(), per=Math.max(1,Math.round(rec.bb));
   while(rec.next<c.currentTime+0.12){
-    metClick(rec.next, ((rec.beat%per)+per)%per===0);
+    if(smet || rec.next<rec.t0-1e-6) metClick(rec.next, ((rec.beat%per)+per)%per===0);
     rec.next+=rec.spb; rec.beat++;
   }
   var cb=Math.floor((c.currentTime-rec.t0)/rec.spb), m;
@@ -5055,6 +5062,8 @@ function recUI(){
   var b=$('#srec'); if(!b) return;
   b.textContent = rec.on ? '■ Selesai rekam' : '⏺ Rekam'; b.classList.toggle('on',rec.on);
   $('#srecUndo').hidden = rec.on || !rec.undo || rec.undo.id!==curScore().id;
+  $('#smet').setAttribute('aria-pressed',smet?'true':'false');
+  $('#smet').textContent = smet ? '🥁 Metronom: ON' : '🔇 Metronom: OFF';
   $('#srecOther').setAttribute('aria-pressed',recOther?'true':'false');
   $('#srecOther').textContent = recOther ? '🔊 Tangan lain ikut bunyi' : '🔇 Tangan lain diam';
   $$('#sgrid .chip').forEach(function(x){ x.setAttribute('aria-pressed',parseFloat(x.getAttribute('data-q'))===recQ?'true':'false'); });
@@ -5066,6 +5075,7 @@ function bindRec(){
   $('#srec').addEventListener('click',function(){ if(rec.on) recStop(); else recStart(); });
   $('#srecUndo').addEventListener('click',recUndo);
   $$('#srecHand button').forEach(function(b){ b.addEventListener('click',function(){ setHand(b.getAttribute('data-hand')); }); });
+  $('#smet').addEventListener('click',function(){ smet=!smet; store.set('yg.smet',smet?'1':'0'); if(playMet) playMet.gain.value=smet?1:0; recUI(); });
   $('#srecOther').addEventListener('click',function(){ recOther=!recOther; store.set('yg.recOther',recOther?'1':'0'); recUI(); });
   $('#sspdDn').addEventListener('click',function(){ setSpd(spd-5); });
   $('#sspdUp').addEventListener('click',function(){ setSpd(spd+5); });
@@ -5562,11 +5572,11 @@ function bindPremium(){
 var met={on:false,bpm:clamp(parseInt(store.get('yg.metBpm','100'),10)||100,30,240),beats:[2,3,4,6].indexOf(parseInt(store.get('yg.metBeats','4'),10))>=0?parseInt(store.get('yg.metBeats','4'),10):4,next:0,beat:0,timer:0,vis:[],taps:[]};
 function metTempoName(b){ return b<60?'Largo':b<66?'Larghetto':b<76?'Adagio':b<108?'Andante':b<120?'Moderato':b<156?'Allegro':b<176?'Vivace':'Presto'; }
 function metAccent(b){ return b===0 || (met.beats===6 && b===3); }
-function metClick(t,acc){
+function metClick(t,acc,dest){
   var c=ac(), o=c.createOscillator(), g=c.createGain();
   o.type='square'; o.frequency.value=acc?1500:1000;
   g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(acc?0.5:0.32,t+0.002); g.gain.exponentialRampToValueAtTime(0.0001,t+0.055);
-  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.07);
+  o.connect(g); g.connect(dest||c.destination); o.start(t); o.stop(t+0.07);
 }
 function metDot(b){ $$('#metDots i').forEach(function(d,i){ d.classList.toggle('on',i===b); }); }
 function metSched(){
