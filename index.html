@@ -329,6 +329,32 @@ header .sel select{max-width:100%;min-width:0}
 #smidiW{--c:var(--pLilac);--cd:var(--dLilac);font-size:15px}
 #smidiW[aria-pressed="true"]{--c:var(--pMint);--cd:var(--dMint)}
 .srecSet{display:flex;align-items:center;gap:10px;margin-top:8px}
+/* Halaman "Partitur Saya": daftar partitur (buka / latih / hapus) */
+.snewRow{gap:10px;align-items:stretch}
+.snewRow #slibGo{flex:1;--c:var(--pSky);--cd:var(--dSky)}
+.snewRow .snewbig{flex:1.4;margin:0}
+.libTop{gap:10px}
+.libTop #libBack{flex:.8}
+.libTop #libNew{flex:1.4}
+.libSearch{margin-top:12px}
+.libInfo{font-size:13px;color:var(--muted);text-align:center;margin:10px 0 4px}
+.libList{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.libCard{padding:12px 14px}
+.libCard.cur{outline:3px solid var(--brass);outline-offset:-3px}
+.libHead{display:flex;gap:10px;align-items:center}
+.libIc{font-size:26px;flex:none}
+.libMain{min-width:0;flex:1}
+.libMain b{display:block;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.libMain small{display:block;font-size:12.5px;color:var(--muted);line-height:1.4}
+.libTag{font-size:11px;font-weight:700;color:var(--brassText,#fff);background:var(--brass);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:middle}
+.libThumb{margin:6px 0 2px;border-radius:12px;background:var(--panel);overflow:hidden;cursor:pointer;max-height:150px}
+.libThumb .sv{pointer-events:none}
+.libBtns{display:flex;gap:8px;margin-top:8px}
+.libBtns .chip{flex:1}
+.libBtns .chip[data-act="del"]{--c:var(--pPeach)}
+.libUndo{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom));z-index:500;display:flex;gap:10px;align-items:center;background:var(--ink);color:var(--bg);padding:10px 12px 10px 16px;border-radius:16px;box-shadow:0 8px 26px rgba(0,0,0,.3);max-width:calc(100% - 32px);font-size:14px}
+.libUndo .chip{flex:none}
+.libUndo span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56vw}
 /* Ekspor Word: pengaturan di kiri, pratinjau halaman di kanan (HP: bertumpuk) */
 .wxBox{max-width:1040px;max-height:94vh;display:flex;flex-direction:column;text-align:left;padding:16px}
 .wxBox h2{text-align:center}
@@ -1051,6 +1077,26 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 </section>
 
 <!-- ================= PARTITUR ================= -->
+<section class="tab" id="tab-lib" hidden>
+  <header><h1>📂 Partitur Saya</h1></header>
+  <div class="row libTop">
+    <button class="sound" id="libBack" type="button">← Editor</button>
+    <button class="start" id="libNew" type="button">＋ Bikin Partitur Baru</button>
+  </div>
+  <input class="txt libSearch" id="libSearch" type="search" placeholder="🔍 Cari judul partitur…" autocomplete="off">
+  <p class="libInfo" id="libInfo"></p>
+  <div class="libList" id="libList"></div>
+  <div class="libUndo" id="libUndo" hidden role="status"><span id="libUndoTxt"></span><button class="chip" type="button" id="libUndoBtn">↶ Batalkan</button></div>
+</section>
+
+<div class="pwOv" id="libDelOv" hidden role="dialog" aria-modal="true" aria-labelledby="libDelT">
+  <div class="pwBox">
+    <h2 id="libDelT">Hapus partitur?</h2>
+    <p id="libDelTxt"></p>
+    <div class="row"><button class="sound" id="libDelNo" type="button">Batal</button><button class="start" id="libDelYes" type="button">🗑 Ya, hapus</button></div>
+  </div>
+</div>
+
 <section class="tab" id="tab-score" hidden>
   <header>
     <h1><svg class="mascot" viewBox="0 0 40 40" aria-hidden="true"><path class="mf" d="M25 29V6c4 1 8 4 9 9"/><ellipse class="mb" cx="17" cy="29" rx="10" ry="8"/><circle class="me" cx="13.5" cy="27.5" r="1.6"/><circle class="me" cx="20.5" cy="27.5" r="1.6"/><path d="M14 31.5q3 2.6 6 0" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/><circle class="mc" cx="10.5" cy="31" r="1.8"/><circle class="mc" cx="23.5" cy="31" r="1.8"/></svg>Partitur</h1>
@@ -1059,7 +1105,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
   <div class="card sfree" id="sfree" hidden></div>
 
-  <button class="start snewbig" id="snewBig" type="button">＋ Bikin Partitur Baru</button>
+  <div class="row snewRow">
+    <button class="sound" id="slibGo" type="button">📂 Partitur Saya</button>
+    <button class="start snewbig" id="snewBig" type="button">＋ Bikin Partitur Baru</button>
+  </div>
 
   <div class="card sinfo" id="sinfo">
     <div class="sinfoHead">
@@ -1355,6 +1404,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan</b> (di kartu di bawah tuts piano, di samping <b>▶ Putar</b> dan <b>⏺ Rekam</b>). Setelah tersambung, tombol <b>MIDI OFF / MIDI ON</b> menentukan apakah tuts menulis not: <b>OFF</b> = piano hanya berbunyi, bebas berlatih dulu tanpa mengubah partitur; <b>ON</b> = setiap tuts langsung menulis not seperti tuts di layar (tekan bersamaan = akor). Tombol <b>Rekam</b> tetap merekam walau MIDI OFF.</li>
         <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. Selama merekam, not yang kamu mainkan langsung tergambar di partitur dan kursor ikut berjalan mengikuti ketukan. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, rekaman masuk ke tangan yang sedang dipilih saja (<i>Tulis &amp; rekam ke</i>: Kanan / Kiri), mulai di birama baru setelah not terakhir tangan itu, dan tangan yang lain ikut berbunyi supaya bisa diikuti (bisa dimatikan). Jadi tangan kanan bisa direkam dulu, lalu tangan kiri dari awal lagu. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
         <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
+        <li><b>📂 Partitur Saya</b> (tombol di atas, samping "Bikin Partitur Baru"): halaman berisi semua partitur yang sudah kamu buat, yang terakhir diubah di paling atas, lengkap dengan pratinjau kecil. Tiap partitur punya tombol <b>✏️ Buka</b>, <b>▶ Latih</b>, dan <b>🗑 Hapus</b> (ada konfirmasi, dan bisa <b>↶ Batalkan</b> beberapa detik setelah dihapus). Ada juga kotak cari judul.</li>
         <li><b>💾 Simpan</b> menyimpan partitur (sebenarnya juga tersimpan otomatis tiap ada perubahan). Tanpa masuk akun, partitur <b>hanya ada di perangkat itu</b> — partitur dari laptop tidak muncul di HP. Supaya sama di semua perangkat, masuk akun Gitar Sakti di <b>Pengaturan › Akun</b> di setiap perangkat (laptop dan HP) dengan akun yang sama. <b>＋ Buat baru</b> membuat partitur kosong baru. <b>Ekspor ke MIDI</b> dan <b>Impor file MIDI</b> ada di bawah tombol itu.</li>
         <li><b>📄 Ekspor ke PDF</b>: membuat file PDF siap cetak. Pilih kertas <b>A4</b> atau <b>F4</b>, tegak/mendatar, not balok/not angka, lalu atur <b>ukuran not</b>, <b>ukuran judul</b>, <b>margin</b>, dan <b>jarak antar baris</b> sambil melihat pratinjau halamannya. Baris partitur tidak pernah terpotong di antara dua halaman. Tekan <b>Unduh PDF</b>, lalu buka dan cetak dengan ukuran kertas yang sama (skala 100%).</li>
         <li><b>🎵 Impor lagu (audio)</b>: pilih rekaman (mp3, wav, m4a). FerTune mendengarkannya langsung di HP, mengubahnya jadi not, lalu jadi partitur (maks. 2 menit pertama). Hasil terbaik dari rekaman satu alat musik atau nyanyian saja; lagu lengkap dengan band hasilnya kurang rapi. Setelah selesai ada tautan <b>Unduh MIDI lengkap</b> berisi semua nada yang terdengar.</li>
@@ -4153,6 +4203,7 @@ function openNewDialog(){ $('#snewOv').hidden=false; try{ $('#snewOv .instList b
 function chooseNewInst(inst){
   $('#snewOv').hidden=true;
   if(isPremium()) newScore(inst); else startTrial(inst);
+  if(app.tab==='lib') goTab('score');
 }
 /* ringkasan info lagu (judul · instrumen · birama · tempo) */
 function syncInfoSum(){
@@ -4888,7 +4939,87 @@ function delScore(){
   curId=scores[0].id; sel=-1; saveScores();
   buildScoreList(); syncScoreFields(); renderScoreView();
 }
+/* ===== Halaman "Partitur Saya" (#tab-lib): semua partitur yang sudah dibuat — buka, latih, hapus (diminta Ferdi) ===== */
+var libDelId=null, libUndoData=null, libUndoT=0;
+function openScoreById(id){
+  if(!scores.some(function(s){ return s.id===id; })) return;
+  setInfoOpen(false); stopPlay(); recStop(true);
+  curId=id; lastRealId=id; sel=-1; editing=false; selA=-1; saveScores();
+  buildScoreList(); syncScoreFields(); applyEntitlements();
+  goTab('score'); renderScoreView();
+}
+function libCount(sc){ return buildMeasures(sc.notes||[],sc.ts[0]*4/sc.ts[1]).length; }
+function renderLib(){
+  var list=$('#libList'), q=($('#libSearch').value||'').trim().toLowerCase();
+  var arr=scores.slice().sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
+  var shown=arr.filter(function(sc){ return !q || (sc.title||'').toLowerCase().indexOf(q)>=0; });
+  $('#libInfo').textContent = scores.length+' partitur'+(q ? ' · '+shown.length+' cocok dengan "'+q+'"' : '')+' · yang terakhir diubah di paling atas';
+  list.innerHTML='';
+  if(!shown.length){ list.innerHTML='<p class="libInfo">Tidak ada partitur yang cocok.</p>'; return; }
+  var xe=function(t){ return String(t).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  shown.forEach(function(sc){
+    var ic = sc.inst==='piano' || sc.grand ? '🎹' : sc.inst==='guitar' ? '🎸' : sc.inst==='vocal' ? '🎤' : '🎼';
+    var meta=[(INST[sc.inst]&&INST[sc.inst].name)||(sc.grand?'Piano':'Bebas'), sc.ts[0]+'/'+sc.ts[1], 'tempo '+(sc.bpm||90), libCount(sc)+' birama'].join(' · ');
+    var when = sc.updatedAt ? 'Diubah '+new Date(sc.updatedAt).toLocaleString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    var c=document.createElement('div'); c.className='card libCard'+(sc.id===curId?' cur':''); c.setAttribute('data-id',sc.id);
+    c.innerHTML='<div class="libHead"><div class="libIc" aria-hidden="true">'+ic+'</div><div class="libMain"><b>'+xe(sc.title||'Tanpa judul')+(sc.id===curId?'<span class="libTag">sedang dibuka</span>':'')+'</b><small>'+xe(meta)+'</small>'+(when?'<small>'+when+'</small>':'')+'</div></div>'
+      +'<div class="libThumb" data-act="open" title="Buka partitur"></div>'
+      +'<div class="libBtns"><button class="chip" type="button" data-act="open">✏️ Buka</button><button class="chip" type="button" data-act="prac">▶ Latih</button><button class="chip" type="button" data-act="del">🗑 Hapus</button></div>';
+    list.appendChild(c);
+    var th=c.querySelector('.libThumb');
+    if((sc.notes||[]).length || (sc.grand && (sc.lh||[]).length)){ drawScore.force=0.72; try{ drawScore(th,previewScore(sc),app.mode); }catch(e){ th.remove(); } finally{ drawScore.force=0; } }
+    else th.innerHTML='<p class="libInfo" style="margin:10px">Belum ada not</p>';
+  });
+}
+function libAsk(id){
+  var sc=scores.filter(function(s){ return s.id===id; })[0]; if(!sc) return;
+  if(!isPremium()){ guardEdit(); return; }
+  libDelId=id; $('#libDelTxt').textContent='"'+(sc.title||'Tanpa judul')+'" akan dihapus dari daftar. Setelah dihapus masih bisa dibatalkan sebentar.';
+  $('#libDelOv').hidden=false;
+}
+function libDelete(){
+  var id=libDelId; libDelId=null; $('#libDelOv').hidden=true;
+  var i=-1; scores.forEach(function(s,k){ if(s.id===id) i=k; }); if(i<0) return;
+  var sc=scores[i];
+  if(id===curId){ stopPlay(); recStop(true); }
+  scores.splice(i,1);
+  if(!scores.length) scores=[{id:'s'+Date.now(),title:'Partitur baru',ts:[4,4],bpm:90,clef:'treble',notes:[]}];
+  if(id===curId){ curId=scores[0].id; lastRealId=curId; sel=-1; editing=false; }
+  saveScores(); buildScoreList(); syncScoreFields();
+  libUndoData={sc:sc,i:i};
+  clearTimeout(libUndoT);
+  $('#libUndoTxt').textContent='🗑 Partitur dihapus'; $('#libUndo').hidden=false;
+  libUndoT=setTimeout(function(){ $('#libUndo').hidden=true; libUndoData=null; },8000);
+  renderLib();
+}
+function libUndoDel(){
+  var u=libUndoData; libUndoData=null; clearTimeout(libUndoT); $('#libUndo').hidden=true;
+  if(!u || scores.some(function(s){ return s.id===u.sc.id; })) return;
+  scores.splice(Math.min(u.i,scores.length),0,u.sc);
+  saveScores(); buildScoreList(); renderLib();
+}
+function bindLib(){
+  $('#slibGo').addEventListener('click',function(){ goTab('lib'); });
+  $('#libBack').addEventListener('click',function(){ goTab('score'); });
+  $('#libNew').addEventListener('click',openNewDialog);
+  $('#libSearch').addEventListener('input',renderLib);
+  $('#libList').addEventListener('click',function(e){
+    var b=e.target.closest('[data-act]'), card=e.target.closest('.libCard'); if(!b || !card) return;
+    var id=card.getAttribute('data-id'), act=b.getAttribute('data-act');
+    if(act==='open') openScoreById(id);
+    else if(act==='del') libAsk(id);
+    else if(act==='prac'){
+      if(!isPremium()){ showPaywall('score'); return; }
+      openScoreById(id); stopPlay(); pr.src='score'; syncPracticeOpts(); goTab('latih'); newRound();
+    }
+  });
+  $('#libDelYes').addEventListener('click',libDelete);
+  $('#libDelNo').addEventListener('click',function(){ libDelId=null; $('#libDelOv').hidden=true; });
+  $('#libDelOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) $('#libDelNo').click(); });
+  $('#libUndoBtn').addEventListener('click',libUndoDel);
+}
 function bindScore(){
+  bindLib();
   $('#sinfoBtn').addEventListener('click',function(){ setInfoOpen($('#sinfoBody').hidden); });
   ['#stitle','#sbpm','#sts','#sinst','#stempo'].forEach(function(q){ ['input','change'].forEach(function(ev){ $(q).addEventListener(ev,function(){ setTimeout(syncInfoSum,0); }); }); });   /* sesudah nilai partitur diperbarui */
   $('#slist').addEventListener('change',function(e){ setInfoOpen(false); stopPlay(); recStop(true); curId=e.target.value; if(curId!=='trial') lastRealId=curId; sel=-1; editing=false; saveScores(); syncScoreFields(); renderScoreView(); applyEntitlements(); });
@@ -6120,12 +6251,14 @@ function showTab(name){
   var activeTab=$('#tab-'+name);
   if(activeTab){ activeTab.classList.remove('tabIn'); void activeTab.offsetWidth; activeTab.classList.add('tabIn'); }
   $$('.tabs button').forEach(function(b){
-    if(b.getAttribute('data-tab')===name) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+    var t=b.getAttribute('data-tab');
+    if(t===name || (name==='lib' && t==='score')) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
   });
   window.scrollTo(0,0);
   if(name==='tuner'){ reading=null; hist.length=0; renderTuner(); }
   if(name==='latih'){ if(!pr.score) newRound(); else renderPractice(); }
   if(name==='score'){ applyEntitlements(); syncScoreFields(); renderScoreView(); }
+  if(name==='lib') renderLib();
   if(name==='arcade'){ if(prevTab!=='arcade') arc.step=1; renderArcade(); }
 }
 function setMode(m){
