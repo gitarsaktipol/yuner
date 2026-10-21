@@ -402,6 +402,8 @@ header .sel select{max-width:100%;min-width:0}
 @keyframes blink{ 0%,55%{opacity:1} 56%,100%{opacity:0} }
 .n.st-blink{animation:blink 1s steps(1,end) infinite}
 .n.st-sel .hl{fill:var(--hl)}
+.insl{stroke:var(--bad);stroke-width:3;stroke-linecap:round;opacity:0}
+.n.st-ins .insl{opacity:1}
 .tie{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
 .n.st-cur .hl,.n.st-sel .hl{opacity:1}
 .n.st-ok{color:var(--ok)}
@@ -1301,8 +1303,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>Mengganti panjang not</b>: ketuk not, lalu ketuk nilai not lain (mis. ¼ jadi ½). Kalau biramanya tidak cukup, muncul pilihan: <b>Geser semua</b> (semua not sesudahnya mundur, birama berikutnya ikut bergeser) atau <b>Hanya di birama ini</b> (not sesudahnya di birama itu bergeser, not paling belakang di birama itu dihapus).</li>
         <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
         <li><b>Maju otomatis MATI</b> (bawaan) = <b>mengganti</b>: ketuk not (atau pilih dengan ◀ ▶), lalu tekan tuts yang benar (di layar atau di piano MIDI). Nadanya diganti dan sorotan tetap di not itu, tidak menambah not baru. Tekan beberapa tuts bersamaan untuk akor. Pindah ke not lain dengan ◀ ▶.</li>
-        <li><b>Maju otomatis NYALA</b> = <b>mengisi / menyisipkan</b>: setiap tuts menulis not baru dan kursor maju sendiri. Kalau ada not yang dipilih, not baru disisipkan <b>di depan</b> not itu dan not-not di belakangnya ikut bergeser. Untuk menambah not (atau rehat 0) di <b>awal lagu</b>, tekan ◀ dari not pertama sampai kursor berada di depan not pertama.</li>
-        <li><b>Rehat</b>: Maju otomatis <b>MATI</b> = not yang disorot <b>diganti jadi 0</b> (seperti dihapus). Maju otomatis <b>NYALA</b> = 0 <b>disisipkan di depan</b> not yang disorot (not di belakangnya bergeser). Ketuk bagian kosong partitur untuk melepas sorotan (kursor kembali ke akhir lagu).</li>
+        <li><b>Maju otomatis NYALA</b> = <b>mengisi / menyisipkan</b>: setiap tuts menulis not baru dan kursor maju sendiri. Kalau ada not yang dipilih (ada <b style="color:var(--bad)">garis merah</b> di kanan sorotan), not baru disisipkan <b>di belakang (kanan)</b> not itu, sorotan pindah ke not baru, dan not-not sesudahnya ikut bergeser. Maju otomatis <b>MATI</b> = tanpa garis merah: not yang disorot yang <b>diganti</b>. Untuk menambah not (atau rehat 0) di <b>awal lagu</b>, tekan ◀ dari not pertama sampai kursor berada di depan not pertama.</li>
+        <li><b>Rehat</b>: Maju otomatis <b>MATI</b> = not yang disorot <b>diganti jadi 0</b> (seperti dihapus). Maju otomatis <b>NYALA</b> = 0 <b>disisipkan di belakang (kanan)</b> not yang disorot (not di belakangnya bergeser). Ketuk bagian kosong partitur untuk melepas sorotan (kursor kembali ke akhir lagu).</li>
         <li><b>▶ Putar</b> (di tengah, antara Sambungkan dan Rekam) membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
         <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>＋ Buat baru</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
         <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan</b> (di kartu di bawah tuts piano, di samping <b>▶ Putar</b> dan <b>⏺ Rekam</b>). Setelah tersambung, tombol <b>MIDI OFF / MIDI ON</b> menentukan apakah tuts menulis not: <b>OFF</b> = piano hanya berbunyi, bebas berlatih dulu tanpa mengubah partitur; <b>ON</b> = setiap tuts langsung menulis not seperti tuts di layar (tekan bersamaan = akor). Tombol <b>Rekam</b> tetap merekam walau MIDI OFF.</li>
@@ -2206,6 +2208,7 @@ function restSvg(d,x,y0){
 function noteSvg(n,x,y0,base,i,cls,key,bm,sp){
   var o='<g class="n'+cls+'" data-i="'+i+'">';
   o+='<rect class="hl" x="'+(x-15)+'" y="'+(y0-18)+'" width="30" height="'+(4*S+36)+'" rx="9"/>';
+  o+='<line class="insl" x1="'+(x+15)+'" x2="'+(x+15)+'" y1="'+(y0-16)+'" y2="'+(y0+4*S+16)+'"/>';
   if(n.m===null){ if(!n.e) o+=restSvg(n.d,x,y0); return o+'</g>'; }
   var pl=pitchList(n), bd=baseDur(n.d), hs=[], s, lo=1e9, hi=-1e9;
   pl.forEach(function(p,pi){
@@ -2264,6 +2267,7 @@ function numSvg(n,x,yb,i,cls,bm,key,sp){
   var pl = n.m===null ? null : pitchList(n), stk = pl ? pl.length : 1, own=(stk-1)*GAP, lift=(bm&&bm.lift)||0;
   /* bm.hb: batas bawah kotak sorotan (piano 2 tangan: lebih pendek supaya tidak menutupi baris tangan kiri) */
   o+='<rect class="hl" x="'+(x-15)+'" y="'+(yb-34-own)+'" width="30" height="'+(((bm&&bm.hb)||40)+34+own)+'" rx="9"/>';
+  o+='<line class="insl" x1="'+(x+15)+'" x2="'+(x+15)+'" y1="'+(yb-32-own)+'" y2="'+(yb+((bm&&bm.hb)||40)-2)+'"/>';
   var k, beats=Math.max(1,Math.floor(n.d));
   if(n.m===null && n.e) return o+'</g>';
   if(n.m===null){
@@ -4073,7 +4077,8 @@ function renderScoreView(){
   drawEditorScore($('#sscore'),s,function(i,p){
     if(p ? i===playIdxL : i===playIdx) return 'cur';
     if((p||0)!==eP) return '';
-    return flashIdx[i] ? 'bad' : ((!playing && editing && i===sel) ? 'sel blink' : ((!playing && inRange(i)) ? 'sel' : ''));
+    /* Maju otomatis NYALA: garis merah di kanan not yang disorot = not baru disisipkan di situ */
+    return flashIdx[i] ? 'bad' : ((!playing && editing && i===sel) ? 'sel blink'+((advOn() && EN[i] && EN[i].m!==null && !rec.on) ? ' ins' : '') : ((!playing && inRange(i)) ? 'sel' : ''));
   }, (playing || editing) ? null : sel, !playing);
   $('#sempty').hidden = s.notes.length>0 || !!(s.grand && s.lh && s.lh.length);
   syncDynUI();
@@ -4122,7 +4127,8 @@ function showScoreAlert(msg,ok){
   clearTimeout(alertT); alertT=setTimeout(function(){ el.hidden=true; },6000);
 }
 /* Maju otomatis MATI: sorotan tetap di not yang ditulis (tuts berikutnya mengganti / akor; ▶ untuk lanjut).
-   Maju otomatis NYALA (mode mengisi): not baru DISISIPKAN; kalau ada not terpilih, disisipkan di DEPAN not itu;
+   Maju otomatis NYALA (mode mengisi): not baru DISISIPKAN; kalau ada not terpilih, disisipkan di BELAKANG (kanan) not itu
+   dan sorotan pindah ke not baru (garis merah di kanan sorotan = tempat not berikutnya masuk);
    not-not sesudahnya bergeser dan garis birama dirapikan (reflowBars). */
 var lastIns=null;
 function trialFull(s,item,bb){
@@ -4136,11 +4142,13 @@ function fillOrInsert(item,before){
   pitchSel=0;
   var ins=advOn(), wasSel=(editing && sel>=0), s=edScore(), bb=s.ts[0]*4/s.ts[1], N=s.notes, k;
   lastIns=item;
-  /* before: disisipkan di DEPAN item terpilih apa pun modenya (dipakai tombol Rehat) */
+  /* after: disisipkan di BELAKANG item terpilih apa pun modenya (dipakai tombol Rehat); not yang bersambung tie dilewati */
   if(wasSel && N[sel] && (before || (ins && (N[sel].m!==null || item.m===null)))){
     if(trialFull(s,item,bb)) return;
-    var tgt=N[sel]; N.splice(sel,0,item); reflowBars(N,bb);
-    sel=N.indexOf(tgt); editing=true;
+    var at0=sel+1; while(at0<N.length && tieFrom(N,at0)) at0++;
+    N.splice(at0,0,item); reflowBars(N,bb);
+    sel=N.indexOf(item); if(sel<0) sel=Math.min(at0,N.length-1);
+    editing=true;
     saveScores(); renderScoreView(); return;
   }
   editing=!ins;
@@ -4362,10 +4370,11 @@ function clipPaste(){
   var s=edScore(), N=s.notes, bb=s.ts[0]*4/s.ts[1], items=cloneNotes(clip), L=0, k, tot=0;
   items.forEach(function(n){ L+=n.d; });
   if(s.trial){ N.forEach(function(n){ tot+=n.d; }); if(tot+L>4*bb+1e-6){ showPaywall('trial4'); return; } }
-  var r=rangeOf(), ins=advOn(), i0, tgt=null;
-  if(r) i0=r[0]; else i0 = sel>=0 ? sel+1 : (sel===-2 ? 0 : N.length);
+  var r=rangeOf(), ins=advOn(), i0;
+  /* NYALA + pilihan: disisipkan di BELAKANG (kanan) pilihan; MATI: menimpa mulai pilihan */
+  if(r){ i0 = ins ? r[1]+1 : r[0]; if(ins) while(i0<N.length && tieFrom(N,i0)) i0++; }
+  else i0 = sel>=0 ? sel+1 : (sel===-2 ? 0 : N.length);
   var t0=0; for(k=0;k<i0;k++) t0+=N[k].d;
-  if(r && ins) tgt=N[r[0]];
   if(i0>0 && N[i0-1].tie) N[i0-1].tie=false;
   if(ins || i0>=N.length){
     N.splice.apply(N,[i0,0].concat(items));
@@ -4377,12 +4386,10 @@ function clipPaste(){
   }
   reflowBars(N,bb);
   selA=-1;
-  if(tgt){ sel=N.indexOf(tgt); editing=true; }           /* NYALA + pilihan: tetap di not itu (tempel lagi = sisip lagi di depannya) */
-  else {
-    /* lanjut setelah bagian yang ditempel (tempel lagi = menyambung) */
-    var acc2=0, nxt=N.length; for(k=0;k<N.length;k++){ if(acc2>=t0+L-1e-6){ nxt=k; break; } acc2+=N[k].d; }
-    if(r && nxt<N.length){ sel=nxt; editing=true; } else { sel=nxt-1; editing=false; }
-  }
+  var acc2=0, nxt=N.length; for(k=0;k<N.length;k++){ if(acc2>=t0+L-1e-6){ nxt=k; break; } acc2+=N[k].d; }
+  if(r && ins){ sel=nxt-1; editing=true; }               /* NYALA + pilihan: sorotan di not terakhir yang ditempel (tempel lagi = menyambung) */
+  else if(r && nxt<N.length){ sel=nxt; editing=true; }   /* MATI: lanjut ke not setelah bagian yang ditempel */
+  else { sel=nxt-1; editing=false; }
   selUser=true; saveScores(); renderScoreView();
   showScoreAlert('Ditempel: '+items.length+' not'+(ins?' (disisipkan).':' (menimpa).'),true);
 }
@@ -4546,7 +4553,7 @@ function addRest(){
   if(!guardEdit()) return;
   var s=edScore(), N=s.notes;
   /* Maju otomatis MATI (mengganti): not yang disorot DIGANTI jadi rehat (0), sorotan tetap di situ — seperti Hapus not.
-     Maju otomatis NYALA (menyisipkan): rehat DISISIPKAN di depan not/rehat yang disorot, not sesudahnya bergeser. */
+     Maju otomatis NYALA (menyisipkan): rehat DISISIPKAN di belakang (kanan) not/rehat yang disorot, not sesudahnya bergeser. */
   if(!advOn() && editing && sel>=0 && N[sel] && N[sel].m!==null){
     N[sel]={m:null,d:N[sel].d,a:''}; if(sel>0) N[sel-1].tie=false;
     saveScores(); renderScoreView(); return;
@@ -4782,7 +4789,7 @@ function bindScore(){
   $('#sup').addEventListener('click',function(){ pitchMove(1); });
   $('#sdown').addEventListener('click',function(){ pitchMove(-1); });
   function syncAuto(){ var b=$('#sauto'); b.textContent='Maju otomatis: '+(autoAdv?'NYALA · mengisi & menyisipkan':'mati · mengganti not'); b.setAttribute('aria-pressed',autoAdv?'true':'false'); }
-  $('#sauto').addEventListener('click',function(){ autoAdv=!autoAdv; store.set('yg.autoAdv',autoAdv?'1':'0'); syncAuto(); });
+  $('#sauto').addEventListener('click',function(){ autoAdv=!autoAdv; store.set('yg.autoAdv',autoAdv?'1':'0'); syncAuto(); renderScoreView(); });
   syncAuto();
   document.addEventListener('keydown',function(e){
     if(app.tab!=='score' || e.target.closest && e.target.closest('input,select,textarea')) return;
