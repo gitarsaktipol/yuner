@@ -2956,7 +2956,7 @@ function centsOf(f){ return 1200*Math.log2(f/A4); }
    kekerasan menuju puncak di jendela itu. Hasil: ms, atau -1 kalau belum bisa diukur (masih membesar di ujung jendela,
    tidak ada lonjakan jelas, atau tanjakannya sudah mulai sebelum jendela). */
 var atkE=null;
-function attackMs(){
+function attackMs(rep){
   var b=mic.buf; if(!b || !mic.ctx) return -1;
   var L=Math.max(32,Math.round(mic.ctx.sampleRate*0.005)), B=Math.floor(b.length/L), i, j, s, mx=0, k90=-1, base=1e9, kLo=-1;
   if(!atkE || atkE.length!==B) atkE=new Float32Array(B);
@@ -2964,17 +2964,24 @@ function attackMs(){
   for(i=0;i<B;i++) if(atkE[i]>=0.9*mx){ k90=i; break; }
   if(k90<1 || k90>B-3) return -1;                 /* puncak di awal jendela, atau masih membesar di ujung */
   for(i=0;i<k90;i++) if(atkE[i]<base) base=atkE[i];
-  if(mx-base<0.5*mx) return -1;                   /* tidak ada lonjakan jelas (naik < 2x) */
+  /* lonjakan minimal 2x; not SAMA yang dipencet ulang (rep) naik dari sisa dengungan not sebelumnya: cukup ±1,25x */
+  if(mx-base<(rep?0.2:0.5)*mx) return -1;
   var lo=base+0.2*(mx-base);
   for(i=k90-1;i>=0;i--) if(atkE[i]<lo){ kLo=i; break; }
   if(kLo<0) return -1;
-  if(kLo===0 && atkE[0]>0.25*mx) return -1;       /* tanjakan sudah mulai sebelum jendela: tidak bisa dinilai */
+  if(kLo===0 && atkE[0]>(rep ? base+0.1*(mx-base) : 0.25*mx)) return -1;   /* tanjakan sudah mulai sebelum jendela: tidak bisa dinilai */
   return (k90-kLo)*L*1000/mic.ctx.sampleRate;
 }
 /* ukuran pertama yang sah di sekitar serangan ini (paling cepat 120 ms sebelum serangan tercatat) */
 function struck(){ return pd.atkOn!==null && pd.atkOn<=25; }
+/* Not yang diminta = not yang baru saja dimainkan (masih berdengung)? Serangan ulangnya naik dari sisa bunyi, bukan dari sunyi,
+   jadi syarat lonjakan/turun-dulu dilonggarkan HANYA di kasus ini (bicara di nada lain tetap disaring ketat). */
+function pdRep(now){
+  if(pd.last===null || now-(pd.hitT||-1e9)>2500 || !pr.idx || pr.done || pr.pos>=pr.idx.length) return false;
+  var sh=instShift(); return prPitches(pr.idx[pr.pos]).some(function(pp){ return pp.m-sh===pd.last; });
+}
 function trackAttack(now){
-  var a=attackMs(); if(a<0) return;
+  var a=attackMs(pdRep(now)); if(a<0) return;
   pd.atk=a; pd.atkT=now;
   if(pd.armed && pd.atkOn===null) pd.atkOn=a;
 }
@@ -2984,11 +2991,11 @@ function pdFeed(f,rms,now,target){
      (bukan sekadar lanjutan tanjakan serangan atau goyangan bunyi yang masih menyambung). */
   /* "Sempat turun" dinilai dari puncak & lembah SEBELUM bingkai ini. Dulu dinilai sesudahnya, sehingga petikan yang
      lebih keras dari not sebelumnya (dan not pertama) langsung menimpa puncak & lembah dan tidak pernah dianggap serangan baru. */
-  var dipped = pd.peak<=0.016 || pd.dip<=0.6*pd.peak;
+  var rep=pdRep(now), dipped = pd.peak<=0.016 || pd.dip<=(rep?0.75:0.6)*pd.peak;
   if(rms>pd.peak){ pd.peak=rms; pd.dip=rms; } else if(rms<pd.dip) pd.dip=rms;
   if(pd.rms.length>=4){
     var prev=pd.rms.slice(0,-1), mn=Math.min.apply(null,prev);
-    if(rms>0.016 && rms>2*mn+0.006 && now-pd.lastOnset>90 && dipped){ pd.armed=true; pd.lastOnset=now; pd.cand=null; pd.count=0; pd.tm=null; pd.atkOn=(now-pd.atkT<=120) ? pd.atk : null; pd.peak=rms; pd.dip=rms; }
+    if(rms>0.016 && rms>(rep?1.3:2)*mn+0.006 && now-pd.lastOnset>90 && dipped){ pd.armed=true; pd.lastOnset=now; pd.cand=null; pd.count=0; pd.tm=null; pd.atkOn=(now-pd.atkT<=120) ? pd.atk : null; pd.peak=rms; pd.dip=rms; }
   }
   if(pd.armed){
     if(now-pd.lastOnset>1000){ pd.armed=false; return null; }
