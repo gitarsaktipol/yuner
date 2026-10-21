@@ -1441,6 +1441,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <div class="srecSet"><span class="lbl">Margin kiri &amp; kanan</span><div class="stepper"><button class="ctl" type="button" data-k="mh" data-s="-1" aria-label="Kurangi">−</button><output id="wxMh" style="flex:1"></output><button class="ctl" type="button" data-k="mh" data-s="1" aria-label="Tambah">+</button></div></div>
         <div class="srecSet"><span class="lbl">Jarak antar baris</span><div class="stepper"><button class="ctl" type="button" data-k="gap" data-s="-1" aria-label="Rapatkan">−</button><output id="wxGap" style="flex:1"></output><button class="ctl" type="button" data-k="gap" data-s="1" aria-label="Renggangkan">+</button></div></div>
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxFill" aria-pressed="false">↕ Ratakan baris sampai bawah halaman</button></div></div>
+        <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxBal" aria-pressed="true">⚖ Bagi birama rata per baris</button></div></div>
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxLast" aria-pressed="true">↔ Baris terakhir penuh sampai pojok</button></div></div>
         <p class="wxInfo" id="wxInfo"></p>
         <div class="row" style="margin-top:10px"><button class="start" id="wxGo" type="button" style="flex:1">⬇️ Unduh PDF</button></div>
@@ -2474,14 +2475,28 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
     return lay;
   }
 
-  var systems=[], cur={ms:[],w:0};
-  for(var mIdx=0;mIdx<nM;mIdx++){
-    var lay=measureLayout(mIdx);
-    var avail=W-margin*2-clefW-(systems.length===0?tsW:0);
-    if(cur.ms.length && cur.w+lay.w>avail){ systems.push(cur); cur={ms:[],w:0}; }
-    cur.ms.push({mIdx:mIdx,w:lay.w,lay:lay}); cur.w+=lay.w;
+  var allLay=[], mIdx;
+  for(mIdx=0;mIdx<nM;mIdx++) allLay.push(measureLayout(mIdx));
+  /* susun birama ke baris: isi sampai lebar 'cap' (bawaan = selebar baris) */
+  function breakLines(cap){
+    var sy=[], cu={ms:[],w:0};
+    allLay.forEach(function(lay,mi){
+      var avail=Math.min(cap,W-margin*2-clefW-(sy.length===0?tsW:0));
+      if(cu.ms.length && cu.w+lay.w>avail){ sy.push(cu); cu={ms:[],w:0}; }
+      cu.ms.push({mIdx:mi,w:lay.w,lay:lay}); cu.w+=lay.w;
+    });
+    if(cu.ms.length) sy.push(cu);
+    return sy;
   }
-  if(cur.ms.length) systems.push(cur);
+  var systems=breakLines(1e9);
+  /* cetak/PDF: birama dibagi RATA ke semua baris (jumlah baris tetap) — baris atas tidak berdempetan,
+     baris terakhir tidak tinggal sedikit lalu terlalu renggang */
+  if(drawScore.print && drawScore.balance && systems.length>1){
+    var nSys=systems.length, lo=0, hi=W-margin*2-clefW, it2;
+    allLay.forEach(function(l){ lo=Math.max(lo,l.w); });
+    for(it2=0;it2<24 && hi-lo>0.5;it2++){ var mid=(lo+hi)/2; if(breakLines(mid).length<=nSys) hi=mid; else lo=mid; }
+    var bal=breakLines(hi); if(bal.length<=nSys) systems=bal;
+  }
 
   /* Kepala partitur (hanya di editor): judul, keterangan, komposer/arranger, tanda tempo — seperti partitur cetak */
   var hdr=0, hdrOut='';
@@ -5400,7 +5415,7 @@ function exportMidi(){
    (baris tidak pernah terbelah antar halaman), disusun per halaman, lalu tiap halaman jadi satu gambar di PDF
    yang ukuran kertas & marginnya sama. Pratinjau = gambar yang sama persis dengan isi file. */
 var WX_PAPER={A4:[210,297],F4:[215,330]}, WX_MM=96/25.4, WX_DPI=200;
-var wx={paper:'A4',orient:'p',mode:'num',zoom:85,mv:15,mh:15,gap:5,fill:false,last:true,title:100}, wxFont=null, wxT=0, wxPages=null;
+var wx={paper:'A4',orient:'p',mode:'num',zoom:85,mv:15,mh:15,gap:5,fill:false,last:true,bal:true,title:100}, wxFont=null, wxT=0, wxPages=null;
 try{ var wxs=JSON.parse(store.get('yg.wordExp','null')); if(wxs) for(var wk in wxs) if(wk in wx) wx[wk]=wxs[wk]; }catch(e){}
 var WX_LIM={zoom:[50,150],mv:[5,40],mh:[5,40],gap:[0,30],title:[60,250]};
 function wxDims(){ var d=WX_PAPER[wx.paper]||WX_PAPER.A4; return wx.orient==='l' ? [d[1],d[0]] : [d[0],d[1]]; }
@@ -5421,8 +5436,8 @@ function wxLayout(){
   var sc=curScore(), d=wxDims(), cw=d[0]-2*wx.mh, ch=d[1]-2*wx.mv, u=WX_MM/(wx.zoom/100);
   var Wv=Math.max(240,Math.round(cw*u)), host=document.createElement('div');
   host.style.cssText='position:absolute;left:-99999px;top:0;width:'+Wv+'px'; document.body.appendChild(host);
-  drawScore.force=1; drawScore.print=true; drawScore.fullLast=!!wx.last; drawScore.titleF=(wx.title||100)/100;
-  try{ drawScore(host,sc,wx.mode,null,null,false); } finally{ drawScore.force=0; drawScore.print=false; drawScore.fullLast=false; drawScore.titleF=1; }
+  drawScore.force=1; drawScore.print=true; drawScore.fullLast=!!wx.last; drawScore.titleF=(wx.title||100)/100; drawScore.balance=wx.bal!==false;
+  try{ drawScore(host,sc,wx.mode,null,null,false); } finally{ drawScore.force=0; drawScore.print=false; drawScore.fullLast=false; drawScore.titleF=1; drawScore.balance=false; }
   var L=drawScore.lay, sv=host.querySelector('svg'), inner=sv ? sv.innerHTML : ''; host.remove();
   var blocks=[], i; if(L.head>0) blocks.push([0,L.head]);
   for(i=0;i<L.n;i++) blocks.push([L.head+i*L.sysH, i===L.n-1 ? L.sysH+6 : L.sysH]);
@@ -5454,6 +5469,7 @@ function wxSync(){
   $('#wxZoom').textContent=wx.zoom+'%'; $('#wxTitle').textContent=(wx.title||100)+'%'; $('#wxMv').textContent=wx.mv+' mm'; $('#wxMh').textContent=wx.mh+' mm'; $('#wxGap').textContent=wx.gap+' mm';
   $('#wxFill').setAttribute('aria-pressed',wx.fill?'true':'false');
   $('#wxLast').setAttribute('aria-pressed',wx.last?'true':'false');
+  $('#wxBal').setAttribute('aria-pressed',wx.bal!==false?'true':'false');
 }
 function wxPreview(){
   clearTimeout(wxT);
@@ -5573,6 +5589,7 @@ function bindWordExport(){
     var k=b.getAttribute('data-k'), lim=WX_LIM[k]; wx[k]=clamp(wx[k]+parseFloat(b.getAttribute('data-s')),lim[0],lim[1]); wxSync(); wxPreview(); }); });
   $('#wxFill').addEventListener('click',function(){ wx.fill=!wx.fill; wxSync(); wxPreview(); });
   $('#wxLast').addEventListener('click',function(){ wx.last=!wx.last; wxSync(); wxPreview(); });
+  $('#wxBal').addEventListener('click',function(){ wx.bal=(wx.bal===false); wxSync(); wxPreview(); });
   $('#wxGo').addEventListener('click',wxExport);
 }
 /* Membaca file MIDI standar (format 0/1). Hasilnya daftar not {s,e,m} dalam ketukan, plus tempo & birama. */
