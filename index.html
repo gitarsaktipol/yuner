@@ -2332,7 +2332,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
        Piano 2 tangan: tangan yang paling panjang juga selalu diberi birama kosong itu, supaya jumlah birama (dan letak not)
        tidak berubah saat pindah tangan kanan/kiri. */
     P.extraBar = !!editor && (p===editP || (grand && P.ms.length===maxMs)) && notes.length>0 && P.ms[P.ms.length-1].reduce(function(t,i){ return t+notes[i].d; },0)>=barBeats-1e-6;
-    if(P.extraBar) P.ms=P.ms.concat([[]]);
+    if(P.extraBar){ P.ms=P.ms.concat([[]]); P.extraIdx=P.ms.length-1; }
     var minStep=0, maxStep=8;
     if(!num) notes.forEach(function(n){ if(n.m!==null) pitchList(n).forEach(function(pp){ var st=diaOf({m:pp.m,a:pp.a})-P.base; if(st<minStep) minStep=st; if(st>maxStep) maxStep=st; }); });
     P.maxLift=0;
@@ -2557,7 +2557,9 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
             out+='<line class="bar" x1="'+(bx+4)+'" x2="'+(bx+4)+'" y1="'+by1+'" y2="'+by2+'" style="stroke-width:3.2"/>';
           }
         }
-        if(isEd && EP.extraBar && lastM && hasCursor && targetNi===eNotes.length-1 && !cursorOnSlot){ cx=x+10*k+4; cy=y0; }
+        /* kursor di birama kosong sesudah not terakhir tangan yang sedang ditulis (piano 2 tangan: birama itu belum tentu
+           birama terakhir partitur — tangan lain bisa lebih panjang) */
+        if(isEd && p===editP && EP.extraBar && M.mIdx===EP.extraIdx && hasCursor && targetNi===eNotes.length-1 && !cursorOnSlot){ cx=x+10*k+4; cy=y0; }
       });
       x+=wk;
     });
@@ -4831,11 +4833,13 @@ function bindScore(){
     var b=e.target.closest('.chip'); if(!b) return;
     inp.dur=parseFloat(b.getAttribute('data-d'));
     $$('#sdur .chip').forEach(function(x){ x.setAttribute('aria-pressed',x===b?'true':'false'); });
-    if(editing && sel>=0) changeDur(sel,curDur());
+    /* MATI (mengganti): nilai not yang disorot diganti. NYALA (menyisipkan, garis merah): hanya memilih nilai untuk
+       not BERIKUTNYA yang disisipkan di kanan sorotan — not yang disorot tidak berubah */
+    if(editing && sel>=0 && !advOn()) changeDur(sel,curDur());
   });
   $('#sdot').addEventListener('click',function(e){
     inp.dot=!inp.dot; e.currentTarget.setAttribute('aria-pressed',inp.dot?'true':'false');
-    if(editing && sel>=0) changeDur(sel,curDur());
+    if(editing && sel>=0 && !advOn()) changeDur(sel,curDur());
   });
   $('#sflat').addEventListener('click',function(e){
     inp.flat=!inp.flat; e.currentTarget.setAttribute('aria-pressed',inp.flat?'true':'false');
