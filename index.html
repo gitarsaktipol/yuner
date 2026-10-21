@@ -1440,6 +1440,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <div class="srecSet"><span class="lbl">Margin kiri &amp; kanan</span><div class="stepper"><button class="ctl" type="button" data-k="mh" data-s="-1" aria-label="Kurangi">−</button><output id="wxMh" style="flex:1"></output><button class="ctl" type="button" data-k="mh" data-s="1" aria-label="Tambah">+</button></div></div>
         <div class="srecSet"><span class="lbl">Jarak antar baris</span><div class="stepper"><button class="ctl" type="button" data-k="gap" data-s="-1" aria-label="Rapatkan">−</button><output id="wxGap" style="flex:1"></output><button class="ctl" type="button" data-k="gap" data-s="1" aria-label="Renggangkan">+</button></div></div>
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxFill" aria-pressed="false">↕ Ratakan baris sampai bawah halaman</button></div></div>
+        <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxLast" aria-pressed="true">↔ Baris terakhir penuh sampai pojok</button></div></div>
         <p class="wxInfo" id="wxInfo"></p>
         <div class="row" style="margin-top:10px"><button class="start" id="wxGo" type="button" style="flex:1">⬇️ Unduh Word (.docx)</button></div>
         <div class="row" style="margin-top:8px"><button class="sound" id="wxClose" type="button">Tutup</button></div>
@@ -2516,7 +2517,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
     var avail=W-margin*2-clefW-(si===0?tsW:0);
     var isLast=(si===systems.length-1);
     /* Baris direnggangkan memenuhi lebar layar (layar miring/lebar); baris terakhir dari banyak baris tetap rapat */
-    var k = sys.w>avail ? avail/sys.w : ((isLast && systems.length>1) ? 1 : Math.min(avail/sys.w, systems.length===1 ? 4 : 2.5));
+    var k = sys.w>avail ? avail/sys.w : ((isLast && drawScore.fullLast) ? avail/sys.w : ((isLast && systems.length>1) ? 1 : Math.min(avail/sys.w, systems.length===1 ? 4 : 2.5)));
     var xStart=margin+clefW+(si===0?tsW:0), i;
     var Y=parts.map(function(P){ return yTop+P.yOff; });
     if(si===0){ startX=xStart+10; startY=Y[editP]; }
@@ -5397,7 +5398,7 @@ function exportMidi(){
    (baris tidak pernah terbelah antar halaman), disusun per halaman, lalu tiap halaman jadi satu gambar PNG di dokumen Word
    yang ukuran kertas & marginnya sama. Pratinjau = gambar yang sama persis dengan isi file. */
 var WX_PAPER={A4:[210,297],F4:[215,330]}, WX_MM=96/25.4, WX_DPI=200;
-var wx={paper:'A4',orient:'p',mode:'num',zoom:85,mv:15,mh:15,gap:5,fill:false}, wxFont=null, wxUrls=[], wxT=0, wxPages=null;
+var wx={paper:'A4',orient:'p',mode:'num',zoom:85,mv:15,mh:15,gap:5,fill:false,last:true}, wxFont=null, wxUrls=[], wxT=0, wxPages=null;
 try{ var wxs=JSON.parse(store.get('yg.wordExp','null')); if(wxs) for(var wk in wxs) if(wk in wx) wx[wk]=wxs[wk]; }catch(e){}
 var WX_LIM={zoom:[50,150],mv:[5,40],mh:[5,40],gap:[0,30]};
 function wxDims(){ var d=WX_PAPER[wx.paper]||WX_PAPER.A4; return wx.orient==='l' ? [d[1],d[0]] : [d[0],d[1]]; }
@@ -5418,8 +5419,8 @@ function wxLayout(){
   var sc=curScore(), d=wxDims(), cw=d[0]-2*wx.mh, ch=d[1]-2*wx.mv, u=WX_MM/(wx.zoom/100);
   var Wv=Math.max(240,Math.round(cw*u)), host=document.createElement('div');
   host.style.cssText='position:absolute;left:-99999px;top:0;width:'+Wv+'px'; document.body.appendChild(host);
-  drawScore.force=1; drawScore.print=true;
-  try{ drawScore(host,sc,wx.mode,null,null,false); } finally{ drawScore.force=0; drawScore.print=false; }
+  drawScore.force=1; drawScore.print=true; drawScore.fullLast=!!wx.last;
+  try{ drawScore(host,sc,wx.mode,null,null,false); } finally{ drawScore.force=0; drawScore.print=false; drawScore.fullLast=false; }
   var L=drawScore.lay, sv=host.querySelector('svg'), inner=sv ? sv.innerHTML : ''; host.remove();
   var blocks=[], i; if(L.head>0) blocks.push([0,L.head]);
   for(i=0;i<L.n;i++) blocks.push([L.head+i*L.sysH, i===L.n-1 ? L.sysH+6 : L.sysH]);
@@ -5450,6 +5451,7 @@ function wxSync(){
   $$('#wxMode .chip').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-v')===wx.mode?'true':'false'); });
   $('#wxZoom').textContent=wx.zoom+'%'; $('#wxMv').textContent=wx.mv+' mm'; $('#wxMh').textContent=wx.mh+' mm'; $('#wxGap').textContent=wx.gap+' mm';
   $('#wxFill').setAttribute('aria-pressed',wx.fill?'true':'false');
+  $('#wxLast').setAttribute('aria-pressed',wx.last?'true':'false');
 }
 function wxPreview(){
   clearTimeout(wxT);
@@ -5570,6 +5572,7 @@ function bindWordExport(){
   $$('#wxOv .ctl[data-k]').forEach(function(b){ b.addEventListener('click',function(){
     var k=b.getAttribute('data-k'), lim=WX_LIM[k]; wx[k]=clamp(wx[k]+parseFloat(b.getAttribute('data-s')),lim[0],lim[1]); wxSync(); wxPreview(); }); });
   $('#wxFill').addEventListener('click',function(){ wx.fill=!wx.fill; wxSync(); wxPreview(); });
+  $('#wxLast').addEventListener('click',function(){ wx.last=!wx.last; wxSync(); wxPreview(); });
   $('#wxGo').addEventListener('click',wxExport);
 }
 /* Membaca file MIDI standar (format 0/1). Hasilnya daftar not {s,e,m} dalam ketukan, plus tempo & birama. */
