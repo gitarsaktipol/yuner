@@ -1305,6 +1305,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
         <li><b>Maju otomatis MATI</b> (bawaan) = <b>mengganti</b>: ketuk not (atau pilih dengan ◀ ▶), lalu tekan tuts yang benar (di layar atau di piano MIDI). Nadanya diganti dan sorotan tetap di not itu, tidak menambah not baru. Tekan beberapa tuts bersamaan untuk akor. Pindah ke not lain dengan ◀ ▶.</li>
         <li><b>Maju otomatis NYALA</b> = <b>mengisi / menyisipkan</b>: setiap tuts menulis not baru dan kursor maju sendiri. Kalau ada not yang dipilih (ada <b style="color:var(--bad)">garis merah</b> di kanan sorotan), not baru disisipkan <b>di belakang (kanan)</b> not itu, sorotan pindah ke not baru, dan not-not sesudahnya ikut bergeser. Maju otomatis <b>MATI</b> = tanpa garis merah: not yang disorot yang <b>diganti</b>. Untuk menambah not (atau rehat 0) di <b>awal lagu</b>, tekan ◀ dari not pertama sampai kursor berada di depan not pertama.</li>
+        <li><b>Hapus not</b>: tekan sekali = not jadi <b>0</b> (rehat, not lain tidak bergeser). Tekan lagi pada 0 = 0 itu <b>dibuang</b> dan not di kanannya <b>bergeser ke kiri</b> mengisi tempatnya. Bisa juga untuk banyak not sekaligus (blok dulu).</li>
         <li><b>Rehat</b>: Maju otomatis <b>MATI</b> = not yang disorot <b>diganti jadi 0</b> (seperti dihapus). Maju otomatis <b>NYALA</b> = 0 <b>disisipkan di belakang (kanan)</b> not yang disorot (not di belakangnya bergeser). Ketuk bagian kosong partitur untuk melepas sorotan (kursor kembali ke akhir lagu).</li>
         <li><b>▶ Putar</b> (di tengah, antara Sambungkan dan Rekam) membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
         <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>＋ Buat baru</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
@@ -4363,14 +4364,15 @@ function cutRange(r){
   var s=edScore(), N=s.notes, bb=s.ts[0]*4/s.ts[1], k;
   if(r[0]>0 && N[r[0]-1].tie) N[r[0]-1].tie=false;
   if(!advOn()){
-    /* bertahap seperti Hapus not satu-satu: not -> rehat -> kosong -> (kalau di ujung partitur) dibuang; pilihan tetap */
-    var anyNote=false, anyRest=false;
-    for(k=r[0];k<=r[1];k++){ if(N[k].m!==null) anyNote=true; else if(!N[k].e) anyRest=true; }
-    if(anyNote){ for(k=r[0];k<=r[1];k++) if(N[k].m!==null) N[k]={m:null,d:N[k].d,a:''}; }
-    else if(anyRest){ for(k=r[0];k<=r[1];k++) N[k]={m:null,d:N[k].d,a:'',e:true}; }
-    else if(r[1]===N.length-1){ N.splice(r[0]); selA=-1; sel=N.length-1; editing=sel>=0; saveScores(); renderScoreView(); return; }
-    else return;
-    selA=r[0]; sel=r[1]; editing=true; saveScores(); renderScoreView(); return;
+    /* bertahap seperti Hapus not satu-satu: not -> rehat (pilihan tetap) -> dibuang, not sesudahnya bergeser ke kiri */
+    var anyNote=false;
+    for(k=r[0];k<=r[1];k++) if(N[k].m!==null) anyNote=true;
+    if(anyNote){
+      for(k=r[0];k<=r[1];k++) if(N[k].m!==null) N[k]={m:null,d:N[k].d,a:''};
+      selA=r[0]; sel=r[1]; editing=true; saveScores(); renderScoreView(); return;
+    }
+    N.splice(r[0],r[1]-r[0]+1); reflowBars(N,bb); selA=-1;
+    sel=Math.min(r[0],N.length-1); editing=sel>=0; saveScores(); renderScoreView(); return;
   } else {
     N.splice(r[0],r[1]-r[0]+1); reflowBars(N,bb);
     if(r[0]<N.length){ sel=r[0]; editing=true; } else { sel=-1; editing=false; }
@@ -4573,7 +4575,7 @@ function addRest(){
   }
   fillOrInsert({m:null,d:curDur(),a:''}, advOn() && editing && sel>=0 && !!N[sel]);
 }
-/* Hapus bertahap: not -> rehat -> kosong (ruang tetap, tidak menggeser not di sampingnya) -> (kosong paling belakang) dibuang. */
+/* Hapus bertahap: not -> rehat (ruang tetap) -> dibuang (not di kanannya bergeser ke kiri; tidak pernah meninggalkan ruang kosong). */
 function delNote(){
   if(!guardEdit()) return;
   var rg=rangeOf(); if(rg && rg[1]>rg[0]){ cutRange(rg); return; }
@@ -4596,10 +4598,14 @@ function delNote(){
     chain.forEach(function(ci){ setPitchList(N[ci],pl.map(function(p){ return {m:p.m,a:p.a}; })); });
     sel=at; editing=true; saveScores(); renderScoreView(); return;
   }
+  /* not -> rehat (ruang tetap); rehat/kosong -> dibuang, not di kanannya bergeser ke kiri (aturan Ferdi: partitur tidak boleh
+     ada ruang kosong; kalau tidak mau bergeser, pakai rehat) */
   if(it.m!==null){ N[at]={m:null,d:it.d,a:''}; if(at>0) N[at-1].tie=false; }
-  else if(!it.e){ N[at]={m:null,d:it.d,a:'',e:true}; }
-  else if(at===N.length-1){ N.pop(); at=N.length-1; }
-  else { return; }
+  else {
+    if(at>0) N[at-1].tie=false;
+    N.splice(at,1); reflowBars(N,s.ts[0]*4/s.ts[1]);
+    if(at>=N.length) at=N.length-1;
+  }
   if(at<0){ sel=-1; editing=false; } else { sel=at; editing=true; }
   saveScores(); renderScoreView();
 }
