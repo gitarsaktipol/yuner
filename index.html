@@ -503,6 +503,8 @@ body.dock-inflow .app{padding-bottom:110px}
 #sdur.long .chip{flex:1 1 30%;font-size:13px;padding-left:6px;padding-right:6px}
 .chip:active{transform:translateY(2px) scale(.95);box-shadow:0 1px 0 var(--line)}
 /* Dinamika: huruf miring tebal seperti partitur cetak */
+.sv .secbox{fill:var(--pLemon);stroke:var(--ink);stroke-width:1.4}
+.sv text.sectxt{font-weight:800;font-size:14px}
 .sv text.dyn{font-family:'Times New Roman',Georgia,serif;font-style:italic;font-weight:700}
 .dynb{font-family:'Times New Roman',Georgia,serif;font-style:italic;font-size:16px;min-width:40px}
 #sdyn .dynb[data-hp]{font-size:14px;flex:1 1 40%}   /* di HP: cresc. & dim. satu baris sendiri */
@@ -1105,6 +1107,20 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button class="chip dynb" type="button" data-hp="&lt;" aria-label="Crescendo (makin keras)">cresc. &lt;</button>
       <button class="chip dynb" type="button" data-hp="&gt;" aria-label="Diminuendo (makin pelan)">dim. &gt;</button>
     </div>
+    <div class="chips" id="sbarl" role="group" aria-label="Garis birama di akhir birama terpilih" style="margin-top:8px">
+      <button class="chip" type="button" data-bl="dbl" style="flex:1" title="Garis birama ganda: pergantian bagian lagu">‖ Garis ganda</button>
+      <button class="chip" type="button" data-bl="end" style="flex:1" title="Garis akhir: ending / lagu selesai">┃▌ Garis akhir</button>
+    </div>
+    <div class="chips" id="ssec" role="group" aria-label="Nama bagian lagu di not terpilih" style="margin-top:6px">
+      <button class="chip" type="button" data-sec="Intro">Intro</button>
+      <button class="chip" type="button" data-sec="Verse">Verse</button>
+      <button class="chip" type="button" data-sec="Chorus">Chorus</button>
+      <button class="chip" type="button" data-sec="Reff">Reff</button>
+      <button class="chip" type="button" data-sec="Bridge">Bridge</button>
+      <button class="chip" type="button" data-sec="Interlude">Interlude</button>
+      <button class="chip" type="button" data-sec="Outro">Outro</button>
+      <button class="chip" type="button" data-sec="*" id="sseccustom">✏️ Lainnya…</button>
+    </div>
     <div class="chips" style="margin-top:6px"><button class="chip" type="button" id="sauto" style="flex:1" aria-pressed="false">Maju otomatis: mati</button></div>
     <div class="chips" style="margin-top:6px"><button class="chip" type="button" id="sundo" style="flex:1" title="Ctrl+Z" disabled>↶ Urungkan</button><button class="chip" type="button" id="sredo" style="flex:1" title="Ctrl+Y" disabled>↷ Ulangi</button></div>
     <div class="chips" id="sclip" style="margin-top:6px"><button class="chip" type="button" id="smulti" style="flex:1.3" aria-pressed="false" title="Shift+klik">⬚ Pilih banyak</button><button class="chip" type="button" id="scopy" style="flex:1" title="Ctrl+C">📋 Salin</button><button class="chip" type="button" id="scut" style="flex:1" title="Ctrl+X">✂️ Potong</button><button class="chip" type="button" id="spaste" style="flex:1" title="Ctrl+V">📥 Tempel</button></div>
@@ -1305,6 +1321,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
         <li><b>Maju otomatis MATI</b> (bawaan) = <b>mengganti</b>: ketuk not (atau pilih dengan ◀ ▶), lalu tekan tuts yang benar (di layar atau di piano MIDI). Nadanya diganti dan sorotan tetap di not itu, tidak menambah not baru. Tekan beberapa tuts bersamaan untuk akor. Pindah ke not lain dengan ◀ ▶.</li>
         <li><b>Maju otomatis NYALA</b> = <b>mengisi / menyisipkan</b>: setiap tuts menulis not baru dan kursor maju sendiri. Kalau ada not yang dipilih (ada <b style="color:var(--bad)">garis merah</b> di kanan sorotan), not baru disisipkan <b>di belakang (kanan)</b> not itu, sorotan pindah ke not baru, dan not-not sesudahnya ikut bergeser. Maju otomatis <b>MATI</b> = tanpa garis merah: not yang disorot yang <b>diganti</b>. Untuk menambah not (atau rehat 0) di <b>awal lagu</b>, tekan ◀ dari not pertama sampai kursor berada di depan not pertama.</li>
+        <li><b>Garis birama ganda / akhir</b>: ketuk satu not di birama yang dimaksud, lalu tekan <b>‖ Garis ganda</b> (pergantian bagian lagu) atau <b>┃▌ Garis akhir</b> (ending / lagu selesai). Garis dipasang di ujung birama itu; ketuk lagi untuk melepas.</li>
+        <li><b>Bagian lagu</b> (Intro, Verse, Chorus, Reff, Bridge, Interlude, Outro, atau <b>✏️ Lainnya…</b> untuk tulisan sendiri): ketuk not atau 0 tempat bagian itu dimulai, lalu pilih namanya. Tulisannya muncul di atas partitur; ketuk lagi untuk menghapus.</li>
         <li><b>Hapus not</b>: tekan sekali = not jadi <b>0</b> (rehat, not lain tidak bergeser). Tekan lagi pada 0 = 0 itu <b>dibuang</b> dan not di kanannya <b>bergeser ke kiri</b> mengisi tempatnya. Kalau di birama itu ada not di kiri atau kanan 0, muncul pilihan: <b>Hanya di birama ini · Kiri</b> (not di kiri 0 diperpanjang), <b>Hanya di birama ini · Kanan</b> (not di kanan 0 maju ke kiri dan diperpanjang) — birama lain tidak bergeser — atau <b>Geser semua</b>. Bisa juga untuk banyak not sekaligus (blok dulu).</li>
         <li><b>Rehat</b>: Maju otomatis <b>MATI</b> = not yang disorot <b>diganti jadi 0</b> (seperti dihapus). Maju otomatis <b>NYALA</b> = 0 <b>disisipkan di belakang (kanan)</b> not yang disorot (not di belakangnya bergeser). Ketuk bagian kosong partitur untuk melepas sorotan (kursor kembali ke akhir lagu).</li>
         <li><b>▶ Putar</b> (di tengah, antara Sambungkan dan Rekam) membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
@@ -2335,6 +2353,9 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
   var editP = (grand && editor && hand==='lh') ? 1 : 0;
   var parts = grand ? [{notes:score.notes,clef:'treble'},{notes:score.lh||[],clef:'bass'}] : [{notes:score.notes,clef:score.clef}];
   parts.forEach(function(P){ P.ms = buildMeasures(P.notes,barBeats); });
+  /* nama bagian lagu (Intro, Verse, Reff, ...) digambar di atas sistem; garis birama ganda/akhir per birama */
+  var hasSec = parts.some(function(P){ return P.notes.some(function(n){ return !!n.sec; }); }), secs=[];
+  function barMark(mIdx){ var t=''; parts.forEach(function(P){ (P.ms[mIdx]||[]).forEach(function(i){ var b=P.notes[i].bl; if(b==='end' || (b && !t)) t=b; }); }); return t; }
   var maxMs = Math.max.apply(null,parts.map(function(P){ return P.ms.length; }));
   parts.forEach(function(P,p){
     var notes=P.notes;
@@ -2353,6 +2374,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
     P.botM = (num ? 40 : Math.max(26,-minStep*S/2+14)) + (P.hasDyn ? 22 : 0);   /* ruang dinamika di bawah paranada */
     /* not angka piano 2 tangan: baris kanan & kiri dirapatkan (satu pasangan), jarak antar sistem dibuat lebih lega */
     if(grand && num){ if(p===0) P.botM = 24+(P.hasDyn ? 22 : 0); else P.topM = 34+P.maxLift; }
+    if(p===0 && hasSec) P.topM += 26;
     P.pos={};
   });
   var nM = Math.max.apply(null,parts.map(function(P){ return P.ms.length; }));
@@ -2545,6 +2567,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
           else out+=noteSvg(n,noteCX,y0,base,di,cls,key,grp[j]?{up:grp[j].up,yb:grp[j].yb}:null,selP,insX);
           if(grp[j]) grp[j].xs[j]=noteCX+(grp[j].up?5.4:-5.4);
           if(n.m!==null) pos[ni]={x:noteCX,y:(num?y0:y0+4*S-(diaOf(n)-base)*S/2),si:si,up:(num?false:(diaOf(n)-base)<4),xe:W-margin};
+          if(n.sec) secs.push({x:num ? px+12 : noteCX, y:yTop+6, t:String(n.sec)});
           if(isEd && ni===targetNi && cursorOnSlot){ cx=noteCX+16; cy=y0; }
           if(isEd && ni===targetNi && !cursorOnSlot){ cx=(grand ? px+adv : run)+(num?4:2); cy=y0; }
         });
@@ -2562,10 +2585,13 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
         var bx=x+wk-2;
         if(num || p===parts.length-1){
           var by1= num ? y0-22-P.maxLift : Y[0], by2 = num ? y0+22 : y0+4*S;
-          out+='<line class="bar" x1="'+bx+'" x2="'+bx+'" y1="'+by1+'" y2="'+by2+'"/>';
+          var bmk=barMark(M.mIdx);
+          if(bmk==='dbl') out+='<line class="bar" x1="'+(bx-4)+'" x2="'+(bx-4)+'" y1="'+by1+'" y2="'+by2+'"/>';
+          if(bmk==='end') out+='<line class="bar" x1="'+(bx-6)+'" x2="'+(bx-6)+'" y1="'+by1+'" y2="'+by2+'"/><line class="bar" x1="'+(bx-1)+'" x2="'+(bx-1)+'" y1="'+by1+'" y2="'+by2+'" style="stroke-width:3.4"/>';
+          else out+='<line class="bar" x1="'+bx+'" x2="'+bx+'" y1="'+by1+'" y2="'+by2+'"/>';
           var lastFull = parts.every(function(Q){ var lm=Q.ms[Q.ms.length-1]; return !Q.notes.length || lm.reduce(function(s,i){ return s+Q.notes[i].d; },0)>=barBeats-1e-6; }) && parts.some(function(Q){ return Q.notes.length; });
           if(num) lastFull = notes.length && m===P.ms[P.ms.length-1] && P.ms[P.ms.length-1].reduce(function(s,i){ return s+notes[i].d; },0)>=barBeats-1e-6;
-          if(lastM && lastFull){
+          if(lastM && lastFull && !bmk){
             out+='<line class="bar" x1="'+(bx+4)+'" x2="'+(bx+4)+'" y1="'+by1+'" y2="'+by2+'" style="stroke-width:3.2"/>';
           }
         }
@@ -2602,6 +2628,11 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
         out+='<path class="hairpin" d="M'+o2+' '+(yc-5)+' L'+o1+' '+yc+' L'+o2+' '+(yc+5)+'" fill="none" stroke="currentColor" stroke-width="1.4"/>';
       }
     });
+  });
+  secs.forEach(function(sc2){
+    var t=sc2.t.replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }), w2=Math.max(34,sc2.t.length*8.6+14);
+    var x1=Math.max(2,Math.min(W-w2-2,sc2.x-12));
+    out+='<rect class="secbox" x="'+x1+'" y="'+sc2.y+'" width="'+w2+'" height="22" rx="5"/><text class="sectxt" x="'+(x1+w2/2)+'" y="'+(sc2.y+16)+'" text-anchor="middle">'+t+'</text>';
   });
   if(hasCursor && cx===null && !eNotes.length && startX!==null){ cx=startX; cy=startY; }
   else if(atStart && startX!==null){ cx=startX-(num?2:5); cy=startY; }
@@ -2742,7 +2773,7 @@ function spellIn(m,key){
 }
 function curScoreCopy(){
   var s=curScore();
-  function cp(N){ return N.map(function(n){ var o={m:n.m,d:n.d,a:n.a||''}; if(n.x) o.x=n.x.map(function(p){ return {m:p.m,a:p.a}; }); if(n.tie) o.tie=true; if(n.e) o.e=true; return o; }); }
+  function cp(N){ return N.map(function(n){ var o={m:n.m,d:n.d,a:n.a||''}; if(n.x) o.x=n.x.map(function(p){ return {m:p.m,a:p.a}; }); if(n.tie) o.tie=true; if(n.e) o.e=true; if(n.bl) o.bl=n.bl; if(n.sec) o.sec=n.sec; return o; }); }
   var o={title:s.title,ts:s.ts.slice(),clef:s.clef,key:s.key||0,notes:cp(s.notes)};
   /* piano 2 tangan: latihan memakai kedua tangan */
   if(s.grand && s.lh && s.lh.some(function(n){ return n.m!==null; })){ o.grand=true; o.lh=cp(s.lh); }
@@ -4387,9 +4418,10 @@ function cutRange(r){
     var anyNote=false;
     for(k=r[0];k<=r[1];k++) if(N[k].m!==null) anyNote=true;
     if(anyNote){
-      for(k=r[0];k<=r[1];k++) if(N[k].m!==null) N[k]={m:null,d:N[k].d,a:''};
+      for(k=r[0];k<=r[1];k++) if(N[k].m!==null) N[k]=keepMarks(N[k],{m:null,d:N[k].d,a:''});
       selA=r[0]; sel=r[1]; editing=true; saveScores(); renderScoreView(); return;
     }
+    for(k=r[1];k>=r[0];k--) passMarks(N,k);
     N.splice(r[0],r[1]-r[0]+1); reflowBars(N,bb); selA=-1;
     sel=Math.min(r[0],N.length-1); editing=sel>=0; saveScores(); renderScoreView(); return;
   } else {
@@ -4472,6 +4504,11 @@ function setDyn(dyn,hp){
 }
 function syncDynUI(){
   var s=edScore(), n=(editing && sel>=0 && sel<s.notes.length) ? s.notes[sel] : null;
+  var blT=''; if(n){ var rr=measureRange(s.notes,sel,s.ts[0]*4/s.ts[1]); for(var q=rr[0];q<=rr[1];q++) if(s.notes[q].bl) blT=s.notes[q].bl; }
+  $$('#sbarl button').forEach(function(b){ b.setAttribute('aria-pressed', (blT && b.getAttribute('data-bl')===blT) ? 'true' : 'false'); });
+  var known=false;
+  $$('#ssec button').forEach(function(b){ var d=b.getAttribute('data-sec'), on=!!n && !!n.sec && (d===n.sec); if(on) known=true; if(d==='*') return; b.setAttribute('aria-pressed',on?'true':'false'); });
+  var cu=$('#sseccustom'); if(cu){ var cust=!!n && !!n.sec && !known; cu.setAttribute('aria-pressed',cust?'true':'false'); cu.textContent = cust ? '✏️ '+n.sec : '✏️ Lainnya…'; }
   $$('#sdyn button').forEach(function(b){
     var on = !!n && ((b.getAttribute('data-dyn') && n.dyn===b.getAttribute('data-dyn')) || (b.getAttribute('data-hp') && n.hp===b.getAttribute('data-hp')));
     b.setAttribute('aria-pressed',on?'true':'false');
@@ -4589,7 +4626,7 @@ function addRest(){
   /* Maju otomatis MATI (mengganti): not yang disorot DIGANTI jadi rehat (0), sorotan tetap di situ — seperti Hapus not.
      Maju otomatis NYALA (menyisipkan): rehat DISISIPKAN di belakang (kanan) not/rehat yang disorot, not sesudahnya bergeser. */
   if(!advOn() && editing && sel>=0 && N[sel] && N[sel].m!==null){
-    N[sel]={m:null,d:N[sel].d,a:''}; if(sel>0) N[sel-1].tie=false;
+    N[sel]=keepMarks(N[sel],{m:null,d:N[sel].d,a:''}); if(sel>0) N[sel-1].tie=false;
     saveScores(); renderScoreView(); return;
   }
   fillOrInsert({m:null,d:curDur(),a:''}, advOn() && editing && sel>=0 && !!N[sel]);
@@ -4619,7 +4656,7 @@ function delNote(){
   }
   /* not -> rehat (ruang tetap); rehat/kosong -> dibuang, not di kanannya bergeser ke kiri (aturan Ferdi: partitur tidak boleh
      ada ruang kosong; kalau tidak mau bergeser, pakai rehat) */
-  if(it.m!==null){ N[at]={m:null,d:it.d,a:''}; if(at>0) N[at-1].tie=false; }
+  if(it.m!==null){ N[at]=keepMarks(it,{m:null,d:it.d,a:''}); if(at>0) N[at-1].tie=false; }
   else {
     /* rehat di tengah birama dengan not di depannya: tanya dulu (not di depannya diperpanjang / semua bergeser) */
     var bbR=s.ts[0]*4/s.ts[1], stR=0, kR; for(kR=0;kR<at;kR++) stR+=N[kR].d;
@@ -4633,10 +4670,45 @@ function delNote(){
       $('#sdelOv').hidden=false; return;
     }
     if(at>0) N[at-1].tie=false;
-    N.splice(at,1); reflowBars(N,bbR);
+    passMarks(N,at); N.splice(at,1); reflowBars(N,bbR);
     if(at>=N.length) at=N.length-1;
   }
   if(at<0){ sel=-1; editing=false; } else { sel=at; editing=true; }
+  saveScores(); renderScoreView();
+}
+/* Garis birama ganda/akhir (n.bl di not terakhir birama) & nama bagian lagu (n.sec) ikut pindah kalau not/rehatnya dihapus */
+function keepMarks(from,to){ if(from.bl) to.bl=from.bl; if(from.sec) to.sec=from.sec; return to; }
+function passMarks(N,at){
+  var it=N[at]; if(!it) return;
+  if(it.bl && at>0 && !N[at-1].bl) N[at-1].bl=it.bl;
+  if(it.sec && N[at+1] && !N[at+1].sec) N[at+1].sec=it.sec;
+}
+function measureRange(N,i,bb){
+  var t=0, k, st; for(k=0;k<i;k++) t+=N[k].d;
+  st=Math.floor((t+1e-6)/bb)*bb;
+  var a=i; while(a>0){ var t2=0; for(k=0;k<a-1;k++) t2+=N[k].d; if(t2<st-1e-6) break; a--; }
+  var b=i, tb=t+N[i].d; while(b+1<N.length && tb<st+bb-1e-6){ b++; tb+=N[b].d; }
+  return [a,b];
+}
+function setBarLine(t){
+  if(!guardEdit()) return;
+  var s=edScore(), N=s.notes;
+  if(!(editing && sel>=0 && N[sel])){ showScoreAlert('Ketuk satu not di birama yang mau diberi garis, lalu pilih garisnya.'); return; }
+  var bb=s.ts[0]*4/s.ts[1], r=measureRange(N,sel,bb), had=null, k;
+  for(k=r[0];k<=r[1];k++){ if(N[k].bl) had=N[k].bl; delete N[k].bl; }
+  if(had!==t) N[r[1]].bl=t;
+  saveScores(); renderScoreView();
+  if(had!==t) showScoreAlert(t==='end' ? 'Garis akhir (ending) dipasang di akhir birama ini. Ketuk lagi untuk melepas.' : 'Garis birama ganda dipasang di akhir birama ini. Ketuk lagi untuk melepas.',true);
+}
+function setSection(t){
+  if(!guardEdit()) return;
+  var s=edScore(), N=s.notes, n=(editing && sel>=0) ? N[sel] : null;
+  if(!n){ showScoreAlert('Ketuk not (atau 0) tempat bagian lagu dimulai, lalu pilih Intro / Verse / Reff / ...'); return; }
+  if(t==='*'){
+    var v=window.prompt('Nama bagian lagu (mis. Pre-Chorus, Coda, Reff 2):', n.sec||'');
+    if(v===null) return; v=v.trim().slice(0,24);
+    if(v) n.sec=v; else delete n.sec;
+  } else if(n.sec===t) delete n.sec; else n.sec=t;
   saveScores(); renderScoreView();
 }
 var delAsk=null;
@@ -4650,6 +4722,7 @@ function doDelRest(mode){
     var nx=N[at+1], nd2=nx.d+N[at].d, pcs2=splitDur(nd2);
     var rep3=pcs2.map(function(d,i){ var o=JSON.parse(JSON.stringify(nx)); o.d=d; delete o.tie; if(i>0){ delete o.dyn; delete o.hp; } if(i<pcs2.length-1) o.tie=true; return o; });
     if(nx.tie) rep3[rep3.length-1].tie=true;
+    if(N[at].sec && !rep3[0].sec) rep3[0].sec=N[at].sec;
     if(at>0) N[at-1].tie=false;
     N.splice.apply(N,[at,2].concat(rep3));
     sel=at; editing=true; syncInputFromNote(N[sel]);
@@ -4658,11 +4731,12 @@ function doDelRest(mode){
     var pv=N[at-1], nd=pv.d+N[at].d, pcs=splitDur(nd), keepTie=!!pv.tie && N[at+1] && N[at+1].m===pv.m;
     var rep2=pcs.map(function(d,i){ var o=JSON.parse(JSON.stringify(pv)); o.d=d; delete o.tie; if(i>0){ delete o.dyn; delete o.hp; } if(i<pcs.length-1) o.tie=true; return o; });
     if(keepTie) rep2[rep2.length-1].tie=true;
+    if(N[at].bl) rep2[rep2.length-1].bl=N[at].bl;
     N.splice.apply(N,[at-1,2].concat(rep2));
     sel=at-1; editing=true; syncInputFromNote(N[sel]);
   } else {
     if(at>0) N[at-1].tie=false;
-    N.splice(at,1); reflowBars(N,bb);
+    passMarks(N,at); N.splice(at,1); reflowBars(N,bb);
     sel=Math.min(at,N.length-1); editing=sel>=0;
   }
   saveScores(); renderScoreView();
@@ -4762,6 +4836,8 @@ function bindScore(){
   $('#stitle').addEventListener('change',function(){ renderScoreView(); });
   /* Dinamika untuk not yang sedang dipilih: ketuk lagi untuk menghapus */
   $$('#sdyn button').forEach(function(b){ b.addEventListener('click',function(){ setDyn(b.getAttribute('data-dyn'),b.getAttribute('data-hp')); }); });
+  $$('#sbarl button').forEach(function(b){ b.addEventListener('click',function(){ setBarLine(b.getAttribute('data-bl')); }); });
+  $$('#ssec button').forEach(function(b){ b.addEventListener('click',function(){ setSection(b.getAttribute('data-sec')); }); });
   $('#sts').addEventListener('change',function(e){
     var s=curScore(), p=e.target.value.split('/'); s.ts=[parseInt(p[0],10),parseInt(p[1],10)];
     if(s.notes.every(function(n){ return n.m===null; })){ s.notes=[]; sel=-1; }
