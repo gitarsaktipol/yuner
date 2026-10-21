@@ -1229,7 +1229,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <input type="file" accept=".mid,.midi,audio/midi,audio/x-midi" id="smidiIn" hidden>
     </label>
     <button class="sound" id="smidiOut" type="button">Ekspor ke MIDI</button>
-    <button class="sound" id="swordOut" type="button">📄 Ekspor ke Word</button>
+    <button class="sound" id="swordOut" type="button">📄 Ekspor ke PDF</button>
   </div>
   <div class="row">
     <label class="sound" style="cursor:pointer">🎵 Impor lagu (audio)
@@ -1356,7 +1356,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. Selama merekam, not yang kamu mainkan langsung tergambar di partitur dan kursor ikut berjalan mengikuti ketukan. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, rekaman masuk ke tangan yang sedang dipilih saja (<i>Tulis &amp; rekam ke</i>: Kanan / Kiri), mulai di birama baru setelah not terakhir tangan itu, dan tangan yang lain ikut berbunyi supaya bisa diikuti (bisa dimatikan). Jadi tangan kanan bisa direkam dulu, lalu tangan kiri dari awal lagu. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
         <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
         <li><b>💾 Simpan</b> menyimpan partitur (sebenarnya juga tersimpan otomatis tiap ada perubahan). Tanpa masuk akun, partitur <b>hanya ada di perangkat itu</b> — partitur dari laptop tidak muncul di HP. Supaya sama di semua perangkat, masuk akun Gitar Sakti di <b>Pengaturan › Akun</b> di setiap perangkat (laptop dan HP) dengan akun yang sama. <b>＋ Buat baru</b> membuat partitur kosong baru. <b>Ekspor ke MIDI</b> dan <b>Impor file MIDI</b> ada di bawah tombol itu.</li>
-        <li><b>📄 Ekspor ke Word</b>: membuat file Word (.docx) siap cetak. Pilih kertas <b>A4</b> atau <b>F4</b>, tegak/mendatar, not balok/not angka, lalu atur <b>ukuran not</b>, <b>margin</b>, dan <b>jarak antar baris</b> sambil melihat pratinjau halamannya. Baris partitur tidak pernah terpotong di antara dua halaman. Tekan <b>Unduh Word</b>, lalu buka di Microsoft Word / WPS / Google Docs dan cetak.</li>
+        <li><b>📄 Ekspor ke PDF</b>: membuat file PDF siap cetak. Pilih kertas <b>A4</b> atau <b>F4</b>, tegak/mendatar, not balok/not angka, lalu atur <b>ukuran not</b>, <b>margin</b>, dan <b>jarak antar baris</b> sambil melihat pratinjau halamannya. Baris partitur tidak pernah terpotong di antara dua halaman. Tekan <b>Unduh PDF</b>, lalu buka dan cetak dengan ukuran kertas yang sama (skala 100%).</li>
         <li><b>🎵 Impor lagu (audio)</b>: pilih rekaman (mp3, wav, m4a). FerTune mendengarkannya langsung di HP, mengubahnya jadi not, lalu jadi partitur (maks. 2 menit pertama). Hasil terbaik dari rekaman satu alat musik atau nyanyian saja; lagu lengkap dengan band hasilnya kurang rapi. Setelah selesai ada tautan <b>Unduh MIDI lengkap</b> berisi semua nada yang terdengar.</li>
       </ol>
       <div class="tip">Dengan keyboard MIDI tersambung, tuts yang kamu tekan langsung menjadi not di partitur.</div>
@@ -1429,7 +1429,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 <div class="pwOv" id="wxOv" hidden role="dialog" aria-modal="true" aria-labelledby="wxT">
   <div class="pwBox wxBox">
-    <h2 id="wxT">📄 Ekspor ke Word</h2>
+    <h2 id="wxT">📄 Ekspor ke PDF</h2>
     <div class="wxBody">
       <div class="wxSet">
         <div class="srecSet"><span class="lbl">Kertas</span><div class="chips" id="wxPaper"><button class="chip" type="button" data-v="A4">A4<br><small>21 × 29,7 cm</small></button><button class="chip" type="button" data-v="F4">F4<br><small>21,5 × 33 cm</small></button></div></div>
@@ -1442,7 +1442,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxFill" aria-pressed="false">↕ Ratakan baris sampai bawah halaman</button></div></div>
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxLast" aria-pressed="true">↔ Baris terakhir penuh sampai pojok</button></div></div>
         <p class="wxInfo" id="wxInfo"></p>
-        <div class="row" style="margin-top:10px"><button class="start" id="wxGo" type="button" style="flex:1">⬇️ Unduh Word (.docx)</button></div>
+        <div class="row" style="margin-top:10px"><button class="start" id="wxGo" type="button" style="flex:1">⬇️ Unduh PDF</button></div>
         <div class="row" style="margin-top:8px"><button class="sound" id="wxClose" type="button">Tutup</button></div>
       </div>
       <div class="wxPrev" id="wxPrev" aria-label="Pratinjau halaman"></div>
@@ -4057,7 +4057,7 @@ var PW={
   trial4:['Batas mode coba: 4 birama','Berlangganan Premium untuk menulis tanpa batas, menyimpan, dan mengekspor.'],
   impor:['Impor MIDI khusus Premium','Ubah file MIDI jadi partitur. Berlangganan Premium untuk membukanya.'],
   audio:['Impor lagu khusus Premium','Ubah rekaman lagu jadi MIDI dan partitur. Berlangganan Premium untuk membukanya.'],
-  word:['Ekspor Word khusus Premium','Simpan partiturmu sebagai dokumen Word siap cetak (A4/F4). Berlangganan Premium untuk membukanya.'],
+  word:['Ekspor PDF khusus Premium','Simpan partiturmu sebagai PDF siap cetak (A4/F4). Berlangganan Premium untuk membukanya.'],
   ekspor:['Ekspor MIDI khusus Premium','Simpan partiturmu sebagai file MIDI. Berlangganan Premium untuk membukanya.'],
   gambar:['Impor gambar khusus Premium','Unggah gambar partitur sebagai acuan. Berlangganan Premium untuk membukanya.'],
   rekam:['Rekam dari piano khusus Premium','Mainkan lagu di piano asli (MIDI) dan langsung jadi partitur. Berlangganan Premium untuk membukanya.'],
@@ -5393,9 +5393,9 @@ function exportMidi(){
   setTimeout(function(){ URL.revokeObjectURL(url); },4000);
   msg.textContent='File "'+fname+'" sudah diunduh. Bisa dibuka di MuseScore, FL Studio, GarageBand, dll.';
 }
-/* ===== Ekspor ke Word (.docx) =====
+/* ===== Ekspor ke PDF (dulu Word; diganti atas permintaan Ferdi supaya posisi tidak bergeser) =====
    Partitur digambar ulang selebar area tulis kertas (A4/F4, margin & ukuran not bisa diatur), dipotong per baris sistem
-   (baris tidak pernah terbelah antar halaman), disusun per halaman, lalu tiap halaman jadi satu gambar PNG di dokumen Word
+   (baris tidak pernah terbelah antar halaman), disusun per halaman, lalu tiap halaman jadi satu gambar di PDF
    yang ukuran kertas & marginnya sama. Pratinjau = gambar yang sama persis dengan isi file. */
 var WX_PAPER={A4:[210,297],F4:[215,330]}, WX_MM=96/25.4, WX_DPI=200;
 var wx={paper:'A4',orient:'p',mode:'num',zoom:85,mv:15,mh:15,gap:5,fill:false,last:true}, wxFont=null, wxUrls=[], wxT=0, wxPages=null;
@@ -5481,65 +5481,51 @@ function openWordExport(){
   if(!wx.modeSet) wx.mode=app.mode;
   wxSync(); $('#wxOv').hidden=false; $('#wxPrev').innerHTML='<p class="wxInfo">Menyiapkan pratinjau…</p>'; wxPreview();
 }
-function wxPng(pg){
+/* Satu halaman → gambar piksel (RGB) untuk PDF: dikompres "deflate" (FlateDecode); browser lama: JPEG (DCTDecode) */
+function wxRaster(pg){
   return new Promise(function(res,rej){
     var img=new Image(), W=Math.round(pg.w/25.4*WX_DPI), H=Math.round(pg.h/25.4*WX_DPI);
     var url=URL.createObjectURL(new Blob([pg.svg],{type:'image/svg+xml'}));
     img.onload=function(){
+      URL.revokeObjectURL(url);
       var c=document.createElement('canvas'); c.width=W; c.height=H;
       var g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H); g.drawImage(img,0,0,W,H);
-      URL.revokeObjectURL(url);
-      c.toBlob(function(b){ if(!b) return rej(new Error('png')); b.arrayBuffer().then(function(a){ res(new Uint8Array(a)); }); },'image/png');
+      if(window.CompressionStream){
+        var id=g.getImageData(0,0,W,H).data, rgb=new Uint8Array(W*H*3), i, j=0;
+        for(i=0;i<id.length;i+=4){ rgb[j++]=id[i]; rgb[j++]=id[i+1]; rgb[j++]=id[i+2]; }
+        new Response(new Blob([rgb]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer()
+          .then(function(a){ res({w:W,h:H,f:'FlateDecode',data:new Uint8Array(a)}); }, rej);
+      } else {
+        c.toBlob(function(b){ if(!b) return rej(new Error('jpg')); b.arrayBuffer().then(function(a){ res({w:W,h:H,f:'DCTDecode',data:new Uint8Array(a)}); }); },'image/jpeg',0.95);
+      }
     };
     img.onerror=function(){ URL.revokeObjectURL(url); rej(new Error('img')); };
     img.src=url;
   });
 }
-/* ZIP sederhana (tanpa kompresi) untuk file .docx */
-var CRC_T=null;
-function crc32(u){ if(!CRC_T){ CRC_T=new Uint32Array(256); for(var n=0;n<256;n++){ var c=n; for(var k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; CRC_T[n]=c>>>0; } }
-  var x=0xFFFFFFFF; for(var i=0;i<u.length;i++) x=CRC_T[(x^u[i])&255]^(x>>>8); return (x^0xFFFFFFFF)>>>0; }
-function zipStore(files){
-  var enc=new TextEncoder(), parts=[], cen=[], off=0;
-  function le(n,b){ var a=[]; for(var i=0;i<b;i++){ a.push(n&255); n=Math.floor(n/256); } return a; }
-  files.forEach(function(f){
-    var name=enc.encode(f.name), data=typeof f.data==='string' ? enc.encode(f.data) : f.data, crc=crc32(data);
-    var h=[0x50,0x4b,3,4].concat(le(20,2),le(0x0800,2),le(0,2),le(0,2),le(0x21,2),le(crc,4),le(data.length,4),le(data.length,4),le(name.length,2),le(0,2));
-    parts.push(new Uint8Array(h),name,data);
-    cen.push(new Uint8Array([0x50,0x4b,1,2].concat(le(20,2),le(20,2),le(0x0800,2),le(0,2),le(0,2),le(0x21,2),le(crc,4),le(data.length,4),le(data.length,4),le(name.length,2),le(0,2),le(0,2),le(0,2),le(0,2),le(0,4),le(off,4))),name);
-    off+=h.length+name.length+data.length;
+/* PDF sederhana: tiap halaman = satu gambar di dalam margin; ukuran kertas pas (A4/F4, tegak/mendatar) */
+function wxPdf(imgs,title){
+  var d=wxDims(), PT=72/25.4, Wp=(d[0]*PT).toFixed(2), Hp=(d[1]*PT).toFixed(2);
+  var cw=(d[0]-2*wx.mh)*PT, ch=(d[1]-2*wx.mv)*PT, x=wx.mh*PT, y=wx.mv*PT;
+  var enc=new TextEncoder(), parts=[], off=0, xref=[], n=imgs.length, kids=[], k;
+  function add(v){ var b=typeof v==='string' ? enc.encode(v) : v; parts.push(b); off+=b.length; }
+  function obj(no,head,stream){ xref[no]=off; add(no+' 0 obj\n'+head); if(stream){ add('\nstream\n'); add(stream); add('\nendstream'); } add('\nendobj\n'); }
+  add('%PDF-1.4\n'); add(new Uint8Array([37,226,227,207,211,10]));
+  for(k=0;k<n;k++) kids.push((4+3*k)+' 0 R');
+  var t=String(title||'Partitur').replace(/[^\x20-\x7e]/g,'').replace(/([\\()])/g,'\\$1');
+  obj(1,'<</Type/Catalog/Pages 2 0 R>>');
+  obj(2,'<</Type/Pages/Kids ['+kids.join(' ')+']/Count '+n+'>>');
+  obj(3,'<</Title ('+t+')/Producer (FerTune)>>');
+  imgs.forEach(function(im,i){
+    var po=4+3*i, co=5+3*i, io=6+3*i, cs=enc.encode('q '+cw.toFixed(2)+' 0 0 '+ch.toFixed(2)+' '+x.toFixed(2)+' '+y.toFixed(2)+' cm /Im0 Do Q');
+    obj(po,'<</Type/Page/Parent 2 0 R/MediaBox [0 0 '+Wp+' '+Hp+']/Resources <</XObject <</Im0 '+io+' 0 R>>>>/Contents '+co+' 0 R>>');
+    obj(co,'<</Length '+cs.length+'>>',cs);
+    obj(io,'<</Type/XObject/Subtype/Image/Width '+im.w+'/Height '+im.h+'/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/'+im.f+'/Length '+im.data.length+'>>',im.data);
   });
-  var csz=cen.reduce(function(t,a){ return t+a.length; },0);
-  var end=new Uint8Array([0x50,0x4b,5,6].concat(le(0,2),le(0,2),le(files.length,2),le(files.length,2),le(csz,4),le(off,4),le(0,2)));
-  return new Blob(parts.concat(cen,[end]),{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
-}
-function wxDocx(pngs){
-  var d=wxDims(), TW=function(mm){ return Math.round(mm*56.6929); }, EMU=function(mm){ return Math.round(mm*36000); };
-  var cw=d[0]-2*wx.mh, ch=d[1]-2*wx.mv-0.6, body='', rels='';
-  pngs.forEach(function(p,i){
-    var n=i+1;
-    rels+='<Relationship Id="rIdP'+n+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/halaman'+n+'.png"/>';
-    body+='<w:p><w:pPr>'+(i?'<w:pageBreakBefore/>':'')+'<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr><w:r><w:drawing>'
-      +'<wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+EMU(cw)+'" cy="'+EMU(ch)+'"/><wp:docPr id="'+n+'" name="Halaman '+n+'"/>'
-      +'<wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
-      +'<pic:pic><pic:nvPicPr><pic:cNvPr id="'+n+'" name="halaman'+n+'.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdP'+n+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
-      +'<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+EMU(cw)+'" cy="'+EMU(ch)+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>'
-      +'</a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
-  });
-  var doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-    +'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
-    +' xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"'
-    +' xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>'+body
-    +'<w:sectPr><w:pgSz w:w="'+TW(d[0])+'" w:h="'+TW(d[1])+'"'+(wx.orient==='l'?' w:orient="landscape"':'')+'/>'
-    +'<w:pgMar w:top="'+TW(wx.mv)+'" w:right="'+TW(wx.mh)+'" w:bottom="'+TW(wx.mv)+'" w:left="'+TW(wx.mh)+'" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr></w:body></w:document>';
-  var files=[
-    {name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'},
-    {name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'},
-    {name:'word/document.xml',data:doc},
-    {name:'word/_rels/document.xml.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+rels+'</Relationships>'}
-  ];
-  pngs.forEach(function(p,i){ files.push({name:'word/media/halaman'+(i+1)+'.png',data:p}); });
-  return zipStore(files);
+  var total=3+3*n, xo=off, xs='xref\n0 '+(total+1)+'\n0000000000 65535 f \n';
+  for(k=1;k<=total;k++) xs+=('0000000000'+xref[k]).slice(-10)+' 00000 n \n';
+  add(xs+'trailer\n<</Size '+(total+1)+'/Root 1 0 R/Info 3 0 R>>\nstartxref\n'+xo+'\n%%EOF\n');
+  return new Blob(parts,{type:'application/pdf'});
 }
 function wxExport(){
   if(!isPremium()){ showPaywall('word'); return; }
@@ -5548,16 +5534,16 @@ function wxExport(){
     var pages=wxLayout(), pngs=[], i=0;
     function next(){
       if(i>=pages.length){
-        var blob=wxDocx(pngs), fname=((sc.title||'partitur').replace(/[^\w\- ]+/g,'').trim()||'partitur')+' ('+wx.paper+').docx';
+        var blob=wxPdf(pngs,sc.title), fname=((sc.title||'partitur').replace(/[^\w\- ]+/g,'').trim()||'partitur')+' ('+wx.paper+').pdf';
         var url=URL.createObjectURL(blob), a=document.createElement('a');
         a.href=url; a.download=fname; document.body.appendChild(a); a.click(); a.remove();
         setTimeout(function(){ URL.revokeObjectURL(url); },8000);
-        btn.disabled=false; btn.textContent='⬇️ Unduh Word (.docx)';
-        $('#wxInfo').textContent='File "'+fname+'" sudah diunduh ('+pages.length+' halaman). Buka di Microsoft Word / WPS / Google Docs, lalu cetak.';
+        btn.disabled=false; btn.textContent='⬇️ Unduh PDF';
+        $('#wxInfo').textContent='File "'+fname+'" sudah diunduh ('+pages.length+' halaman). Buka lalu cetak dengan ukuran kertas '+wx.paper+' (skala 100% / ukuran sebenarnya).';
         return;
       }
       btn.textContent='Membuat halaman '+(i+1)+' dari '+pages.length+'…';
-      wxPng(pages[i]).then(function(p){ pngs.push(p); i++; next(); }).catch(function(){ btn.disabled=false; btn.textContent='⬇️ Unduh Word (.docx)'; $('#wxInfo').textContent='Maaf, gagal membuat gambar halaman. Coba lagi.'; });
+      wxRaster(pages[i]).then(function(p){ pngs.push(p); i++; next(); }).catch(function(){ btn.disabled=false; btn.textContent='⬇️ Unduh PDF'; $('#wxInfo').textContent='Maaf, gagal membuat gambar halaman. Coba lagi.'; });
     }
     next();
   });
