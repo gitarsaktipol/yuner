@@ -1305,7 +1305,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Menekan beberapa nada berurutan pada not yang sama membuat <b>akor</b>.</li>
         <li><b>Maju otomatis MATI</b> (bawaan) = <b>mengganti</b>: ketuk not (atau pilih dengan ◀ ▶), lalu tekan tuts yang benar (di layar atau di piano MIDI). Nadanya diganti dan sorotan tetap di not itu, tidak menambah not baru. Tekan beberapa tuts bersamaan untuk akor. Pindah ke not lain dengan ◀ ▶.</li>
         <li><b>Maju otomatis NYALA</b> = <b>mengisi / menyisipkan</b>: setiap tuts menulis not baru dan kursor maju sendiri. Kalau ada not yang dipilih (ada <b style="color:var(--bad)">garis merah</b> di kanan sorotan), not baru disisipkan <b>di belakang (kanan)</b> not itu, sorotan pindah ke not baru, dan not-not sesudahnya ikut bergeser. Maju otomatis <b>MATI</b> = tanpa garis merah: not yang disorot yang <b>diganti</b>. Untuk menambah not (atau rehat 0) di <b>awal lagu</b>, tekan ◀ dari not pertama sampai kursor berada di depan not pertama.</li>
-        <li><b>Hapus not</b>: tekan sekali = not jadi <b>0</b> (rehat, not lain tidak bergeser). Tekan lagi pada 0 = 0 itu <b>dibuang</b> dan not di kanannya <b>bergeser ke kiri</b> mengisi tempatnya. Kalau 0 itu ada di tengah birama setelah sebuah not, muncul pilihan: <b>Hanya di birama ini</b> (not di depannya diperpanjang mengisi tempat 0, birama lain tidak bergeser) atau <b>Geser semua</b>. Bisa juga untuk banyak not sekaligus (blok dulu).</li>
+        <li><b>Hapus not</b>: tekan sekali = not jadi <b>0</b> (rehat, not lain tidak bergeser). Tekan lagi pada 0 = 0 itu <b>dibuang</b> dan not di kanannya <b>bergeser ke kiri</b> mengisi tempatnya. Kalau di birama itu ada not di kiri atau kanan 0, muncul pilihan: <b>Hanya di birama ini · Kiri</b> (not di kiri 0 diperpanjang), <b>Hanya di birama ini · Kanan</b> (not di kanan 0 maju ke kiri dan diperpanjang) — birama lain tidak bergeser — atau <b>Geser semua</b>. Bisa juga untuk banyak not sekaligus (blok dulu).</li>
         <li><b>Rehat</b>: Maju otomatis <b>MATI</b> = not yang disorot <b>diganti jadi 0</b> (seperti dihapus). Maju otomatis <b>NYALA</b> = 0 <b>disisipkan di belakang (kanan)</b> not yang disorot (not di belakangnya bergeser). Ketuk bagian kosong partitur untuk melepas sorotan (kursor kembali ke akhir lagu).</li>
         <li><b>▶ Putar</b> (di tengah, antara Sambungkan dan Rekam) membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
         <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>＋ Buat baru</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
@@ -1399,8 +1399,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <h2 id="sdelT">Hapus rehat 0</h2>
     <p>Rehat ini dibuang. Ruangnya diisi bagaimana?</p>
     <div class="instList">
-      <button type="button" id="sdelBar"><span class="ic" aria-hidden="true">✂️</span><b>Hanya di birama ini</b><small>Not di depannya diperpanjang mengisi tempat 0. Birama lain tidak bergeser.</small></button>
-      <button type="button" id="sdelAll"><span class="ic" aria-hidden="true">⬅️</span><b>Geser semua</b><small>Semua not sesudahnya maju ke kiri mengisi tempat 0</small></button>
+      <button type="button" id="sdelBar"><span class="ic" aria-hidden="true">⬅️</span><b>Hanya di birama ini · Kiri</b><small>Not di KIRI 0 diperpanjang mengisi tempatnya. Birama lain tidak bergeser.</small></button>
+      <button type="button" id="sdelRight"><span class="ic" aria-hidden="true">➡️</span><b>Hanya di birama ini · Kanan</b><small>Not di KANAN 0 maju ke kiri dan diperpanjang mengisi tempatnya. Birama lain tidak bergeser.</small></button>
+      <button type="button" id="sdelAll"><span class="ic" aria-hidden="true">⏪</span><b>Geser semua</b><small>Semua not sesudahnya maju ke kiri mengisi tempat 0</small></button>
     </div>
     <div class="row"><button class="sound" id="sdelNo" type="button">Batal</button></div>
   </div>
@@ -4623,7 +4624,14 @@ function delNote(){
     /* rehat di tengah birama dengan not di depannya: tanya dulu (not di depannya diperpanjang / semua bergeser) */
     var bbR=s.ts[0]*4/s.ts[1], stR=0, kR; for(kR=0;kR<at;kR++) stR+=N[kR].d;
     var inBarR=stR%bbR; if(bbR-inBarR<1e-6) inBarR=0;
-    if(at<N.length-1 && at>0 && inBarR>1e-6 && N[at-1].m!==null){ delAsk={it:it}; $('#sdelOv').hidden=false; return; }
+    /* kiri: not sebelumnya di birama yang sama; kanan: not sesudahnya di birama yang sama */
+    var barEndR=stR-inBarR+bbR, leftOk=at>0 && inBarR>1e-6 && N[at-1].m!==null, rightOk=at+1<N.length && N[at+1].m!==null && stR+it.d<barEndR-1e-6;
+    if(at<N.length-1 && (leftOk || rightOk)){
+      delAsk={it:it}; $('#sdelBar').disabled=!leftOk; $('#sdelRight').disabled=!rightOk;
+      $('#sdelBar small').textContent = leftOk ? 'Not di KIRI 0 diperpanjang mengisi tempatnya. Birama lain tidak bergeser.' : 'Tidak bisa: di kiri 0 tidak ada not dalam birama ini';
+      $('#sdelRight small').textContent = rightOk ? 'Not di KANAN 0 maju ke kiri dan diperpanjang mengisi tempatnya. Birama lain tidak bergeser.' : 'Tidak bisa: di kanan 0 tidak ada not dalam birama ini';
+      $('#sdelOv').hidden=false; return;
+    }
     if(at>0) N[at-1].tie=false;
     N.splice(at,1); reflowBars(N,bbR);
     if(at>=N.length) at=N.length-1;
@@ -4637,7 +4645,15 @@ function doDelRest(mode){
   if(!q || !guardEdit()) return;
   var s=edScore(), N=s.notes, at=N.indexOf(q.it), bb=s.ts[0]*4/s.ts[1];
   if(at<0) return;
-  if(mode==='bar' && at>0 && N[at-1].m!==null){
+  if(mode==='right' && N[at+1] && N[at+1].m!==null){
+    /* not di kanan maju ke tempat 0 dan diperpanjang sepanjang 0 (nilai yang tidak ada dipecah + tie) */
+    var nx=N[at+1], nd2=nx.d+N[at].d, pcs2=splitDur(nd2);
+    var rep3=pcs2.map(function(d,i){ var o=JSON.parse(JSON.stringify(nx)); o.d=d; delete o.tie; if(i>0){ delete o.dyn; delete o.hp; } if(i<pcs2.length-1) o.tie=true; return o; });
+    if(nx.tie) rep3[rep3.length-1].tie=true;
+    if(at>0) N[at-1].tie=false;
+    N.splice.apply(N,[at,2].concat(rep3));
+    sel=at; editing=true; syncInputFromNote(N[sel]);
+  } else if(mode==='bar' && at>0 && N[at-1].m!==null){
     /* not di depannya diperpanjang sepanjang rehat (kalau nilainya tidak ada, dipecah + tie) */
     var pv=N[at-1], nd=pv.d+N[at].d, pcs=splitDur(nd), keepTie=!!pv.tie && N[at+1] && N[at+1].m===pv.m;
     var rep2=pcs.map(function(d,i){ var o=JSON.parse(JSON.stringify(pv)); o.d=d; delete o.tie; if(i>0){ delete o.dyn; delete o.hp; } if(i<pcs.length-1) o.tie=true; return o; });
@@ -4953,6 +4969,7 @@ function bindScore(){
   $('#sdurOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) $('#sdurNo').click(); });
   $('#sdelBar').addEventListener('click',function(){ doDelRest('bar'); });
   $('#sdelAll').addEventListener('click',function(){ doDelRest('all'); });
+  $('#sdelRight').addEventListener('click',function(){ doDelRest('right'); });
   $('#sdelNo').addEventListener('click',function(){ delAsk=null; $('#sdelOv').hidden=true; });
   $('#sdelOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) $('#sdelNo').click(); });
   /* Simpan dan Buat baru dipisah (diminta Ferdi): partitur sebenarnya sudah tersimpan otomatis tiap perubahan;
