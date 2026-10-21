@@ -2404,10 +2404,12 @@ function numSvg(n,x,yb,i,cls,bm,key,sp){
   var lx=Math.max(x+15,(bm&&bm.ix)||0);   /* garis sisip di ujung not: setelah titik (not bertitik) / garis panjang (minim, semibreve) */
   o+='<line class="insl" x1="'+lx+'" x2="'+lx+'" y1="'+(yb-32-own)+'" y2="'+(yb+((bm&&bm.hb)||40)-2)+'"/>';
   var k, beats=Math.max(1,Math.floor(n.d));
+  /* jarak tiap ketuk ikut lebar not yang sebenarnya (baris yang direnggangkan: 0 0 0 0 / titik panjang ikut renggang, sejajar ketukan tangan lain) */
+  var cell=Math.max(CELL, ((bm&&bm.span)||0)/Math.max(1,n.d)), half=(bm&&(bm.span||bm.gR))||0;
   if(n.m===null && n.e) return o+'</g>';
   if(n.m===null){
     o+='<text x="'+x+'" y="'+(yb+8)+'" font-size="24" font-weight="700" text-anchor="middle">0</text>';
-    for(k=1;k<beats && bd>=1;k++) o+='<text x="'+(x+CELL*k)+'" y="'+(yb+8)+'" font-size="24" font-weight="700" text-anchor="middle">0</text>';
+    for(k=1;k<beats && bd>=1;k++) o+='<text x="'+(x+cell*k)+'" y="'+(yb+8)+'" font-size="24" font-weight="700" text-anchor="middle">0</text>';
     var rul = bd===0.5?1:(bd===0.25?2:0);
     for(k=0;k<rul;k++) o+=ulSvg(x,yb-lift,k,bm);
     return o+'</g>';
@@ -2420,8 +2422,8 @@ function numSvg(n,x,yb,i,cls,bm,key,sp){
     for(i2=0;i2<up;i2++) o+='<circle cx="'+x+'" cy="'+(yy-17-(top?ul*4:0)-i2*6)+'" r="2.2" fill="currentColor"/>';
     for(i2=0;i2<-up;i2++) o+='<circle cx="'+x+'" cy="'+(yy+15+i2*6)+'" r="2.2" fill="currentColor"/>';
     /* titik not: dijauhkan dari angka, diletakkan di dekat not berikutnya (standar not angka), sejajar dasar angka */
-    if(bd<2 && n.d>bd) o+='<circle cx="'+(x+Math.max(14,(bm?bm.gR:0)/2))+'" cy="'+(yy+5)+'" r="2.1" fill="currentColor"/>';
-    if(bd>=2) for(k=1;k<beats;k++) o+='<circle cx="'+(x+CELL*k)+'" cy="'+(yy+1)+'" r="2.3" fill="currentColor"/>';
+    if(bd<2 && n.d>bd) o+='<circle cx="'+(x+Math.max(14,half/2))+'" cy="'+(yy+5)+'" r="2.1" fill="currentColor"/>';
+    if(bd>=2) for(k=1;k<beats;k++) o+='<circle cx="'+(x+cell*k)+'" cy="'+(yy+1)+'" r="2.3" fill="currentColor"/>';
     if(sp===pi && stk>1) o+='<rect x="'+(x-13)+'" y="'+(yy-13)+'" width="26" height="26" rx="7" fill="none" stroke="var(--brass)" stroke-width="2.6"/>';
   });
   for(k=0;k<ul;k++) o+=ulSvg(x,yb-lift,k,bm);
@@ -2669,17 +2671,20 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
           if(num){
             var pOk = j>0 && lv[j]>0 && lv[j-1]>0 && cells[j]===cells[j-1];
             var nOk = j<m.length-1 && lv[j]>0 && lv[j+1]>0 && cells[j]===cells[j+1];
-            var pdn = j>0 ? notes[m[j-1]] : null, pgap = pdn ? pl[j-1].adv*k : 0;
+            /* jarak sebenarnya ke not sebelum/sesudah (2 tangan: kolom tangan lain bisa ada di antaranya) & lebar not sebelumnya */
+            var pdn = j>0 ? notes[m[j-1]] : null, pgap = pdn ? (grand ? (L.off-pl[j-1].off)*k : pl[j-1].adv*k) : 0;
+            var pspan = pdn ? ((grand && pl[j-1].end!=null) ? (pl[j-1].end-pl[j-1].off)*k : pl[j-1].adv*k) : 0;
+            var ngap = (grand && j<m.length-1) ? (pl[j+1].off-L.off)*k : adv;
             var dotBefore = pdn && pdn.d>baseDur(pdn.d) && baseDur(pdn.d)<2 && lv[j]>0 && !pOk;
-            bm={ dl: dotBefore ? (pgap-Math.max(14,pgap/2))+4 : 0, L1:pOk, R1:nOk, L2:pOk&&lv[j]>1&&lv[j-1]>1, R2:nOk&&lv[j]>1&&lv[j+1]>1,
-                 gL: j>0 ? pl[j-1].adv*k : 0, gR: adv };
+            bm={ dl: dotBefore ? (pgap-Math.max(14,pspan/2))+4 : 0, L1:pOk, R1:nOk, L2:pOk&&lv[j]>1&&lv[j-1]>1, R2:nOk&&lv[j]>1&&lv[j+1]>1,
+                 gL: pgap, gR: ngap };
           }
           cls = cls ? ' '+cls.split(' ').filter(Boolean).map(function(c){return 'st-'+c;}).join(' ') : '';
           var extra = (!num && accShown(n,key)) ? 10*k : 0;
           var noteCX = num ? (px+12) : (px+extra+(adv-extra)/2);
           var selP = (editor && isEd && editing && !playing && ni===sel) ? pitchSel : -1, di = p ? ni+LH_OFF : ni;
           var insX = (grand && L.end!=null) ? x+L.end*k-4 : px+adv-4;
-          if(num){ bm.lift=runLift[j]||0; bm.ix=insX; if(grand && p===0) bm.hb=24; out+=numSvg(n,px+12,y0+0,di,cls,bm,key,selP); }
+          if(num){ bm.lift=runLift[j]||0; bm.ix=insX; bm.span = (grand && L.end!=null) ? (L.end-L.off)*k : adv; if(grand && p===0) bm.hb=24; out+=numSvg(n,px+12,y0+0,di,cls,bm,key,selP); }
           else out+=noteSvg(n,noteCX,y0,base,di,cls,key,grp[j]?{up:grp[j].up,yb:grp[j].yb}:null,selP,insX);
           if(grp[j]) grp[j].xs[j]=noteCX+(grp[j].up?5.4:-5.4);
           if(n.m!==null) pos[ni]={x:noteCX,y:(num?y0:y0+4*S-(diaOf(n)-base)*S/2),si:si,up:(num?false:(diaOf(n)-base)<4),xe:W-margin};
