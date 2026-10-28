@@ -2833,7 +2833,7 @@ function arcadeMeasures(letterIdx){
 }
 function arcLevelParams(letterIdx,subLv){
   var total=ARC_LETTERS.length*9, prog=letterIdx*9+(subLv-1), p=prog/(total-1);
-  var durPool=[[1],[1,0.5],[1,1,0.5,0.5,0.25,1.5],[1,0.5,0.5,0.25,1.5]];   /* 1.5 = pola 1/4 bertitik + 1/8 (umum di lagu, mis. KJ 429) */
+  var durPool=[[1],[1,0.5,1.5],[1,1,0.5,0.5,0.25,1.5],[1,0.5,0.5,0.25,1.5]];   /* 1.5 = pola 1/4 bertitik + 1/8 ("4 .4", umum di lagu, mis. KJ 429); muncul begitu 1/8 muncul */
   var durs = durPool[p<0.2?0:(p<0.45?1:(p<0.75?2:3))];
   /* Prioritas: lebar rentang dulu (1 oktaf -> 2 oktaf -> 3 oktaf), baru nada ♯ muncul setelah 3 oktaf tercapai */
   var w = prog<27 ? 5+Math.round(prog/26*3) : (prog<81 ? 8+Math.round((prog-27)/53*13) : 21);
@@ -2863,7 +2863,7 @@ function arcRange(w){
 var RHY_16=[[0.25,0.25,0.25,0.25],[0.5,0.25,0.25],[0.25,0.25,0.5]];
 function genMeasureRhythm(allowedDurs,beatsPerBar,last){
   function cnt(v){ return allowedDurs.filter(function(d){ return Math.abs(d-v)<1e-6; }).length; }
-  var base=[{p:[1],w:cnt(1)||1},{p:[0.5,0.5],w:cnt(0.5)},{p:null,w:cnt(0.25)},{p:[1.5,0.5],w:cnt(1.5)}];
+  var base=[{p:[1],w:cnt(1)||1},{p:[0.5,0.5],w:cnt(0.5)},{p:null,w:cnt(0.25)},{p:[1.5,0.5],w:cnt(1.5)*0.7}];
   var W=base.reduce(function(x,o){ return x+o.w; },0);
   var pats=base.concat([{p:[2],w:0.3*W,at:[0,2]},{p:[3],w:0.1*W,at:[0,1]},{p:[4],w:0.08*W,at:[0]}]);
   var out=[], remaining=beatsPerBar, guard=0, endLong=0;
