@@ -410,6 +410,25 @@ header .sel select{max-width:100%;min-width:0}
 .wxPrev img{display:block;background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.28);height:calc(100% - 24px);width:auto;max-width:100%;object-fit:contain}
 .wxPrev figcaption{font-size:12px;color:var(--muted);margin-top:6px}
 .wxSet .chips .chip{flex:1}
+/* laptop/PC: semua pengaturan muat tanpa gulir — tombol & jarak diperkecil, ukuran teks tetap (diminta Ferdi, Okt 2026) */
+@media (min-width:761px){
+  .wxSet .srecSet{flex-direction:row;align-items:center;gap:8px;margin-top:5px}
+  .wxSet .srecSet .lbl{min-width:92px;max-width:92px;font-size:12px;line-height:1.2}
+  .wxSet .srecSet .lbl:empty{display:none}
+  .wxBody{grid-template-columns:360px 1fr}
+  .wxInfo{margin-top:6px;font-size:12px;line-height:1.35}
+  .wxSet .srecSet > .stepper,.wxSet .srecSet > .chips{flex:1}
+  .wxSet .chips{gap:6px}
+  .wxSet .chip{padding:5px 8px;border-radius:12px;min-height:0;line-height:1.25}
+  .wxSet .chip br{display:none}
+  .wxSet .chip small{margin-left:4px}
+  .wxSet .stepper{padding:2px 6px;gap:4px;border-radius:14px;border-width:1.5px;box-shadow:none}
+  .wxSet .stepper .ctl{width:28px;height:28px;min-width:28px;font-size:16px}
+  .wxSet .stepper output{min-width:0}
+  .wxGoBar{padding:8px 0 6px}
+  .wxGoBar .row>*{padding:10px 8px}
+  .wxBox h2{margin:0 0 10px}
+}
 @media (max-width:760px){
   .wxBox{padding:12px}
   .wxBody{grid-template-columns:1fr;grid-template-rows:auto auto;align-content:start;overflow:auto;gap:10px}
