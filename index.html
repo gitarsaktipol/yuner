@@ -393,7 +393,13 @@ header .sel select{max-width:100%;min-width:0}
 .wxBox{max-width:1040px;max-height:94vh;display:flex;flex-direction:column;text-align:left;padding:16px}
 .wxBox h2{text-align:center}
 .wxBody{display:grid;grid-template-columns:330px 1fr;gap:14px;min-height:0;flex:1;overflow:hidden}
-.wxSet{overflow:auto;padding:2px 4px 6px 2px}
+.wxSet{overflow:auto;padding:2px 4px 0 2px;scrollbar-width:auto;scrollbar-color:var(--dLilac) var(--line)}
+/* indikator gulir SELALU tampak (Mac/HP menyembunyikan scrollbar bawaan) + tombol Unduh PDF selalu terlihat di bawah (diminta Ferdi, Okt 2026) */
+.wxSet::-webkit-scrollbar,.wxBody::-webkit-scrollbar{width:10px}
+.wxSet::-webkit-scrollbar-track,.wxBody::-webkit-scrollbar-track{background:var(--line);border-radius:10px}
+.wxSet::-webkit-scrollbar-thumb,.wxBody::-webkit-scrollbar-thumb{background:var(--dLilac);border-radius:10px;border:2px solid var(--line)}
+.wxGoBar{position:sticky;bottom:0;z-index:2;background:var(--panel);padding:10px 0 8px;margin-top:6px;display:flex;gap:8px;align-items:stretch;box-shadow:0 -10px 14px -6px rgba(60,40,90,.18)}
+.wxGoBar .row{margin-top:0 !important;display:flex}.wxGoBar .row:first-child{flex:2}.wxGoBar .row:last-child{flex:1}.wxGoBar .row>*{flex:1}
 .wxSet .chip small{font-size:11px;font-weight:500;opacity:.75}
 .wxInfo{font-size:13px;color:var(--muted);text-align:center;margin:10px 0 0;line-height:1.45}
 .wxPrev{overflow:auto;background:var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:16px;align-items:center;min-height:200px}
@@ -2061,8 +2067,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxBal" aria-pressed="true">⚖ Bagi birama rata per baris</button></div></div>
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxLast" aria-pressed="true">↔ Baris terakhir penuh sampai pojok</button></div></div>
         <p class="wxInfo" id="wxInfo"></p>
-        <div class="row" style="margin-top:10px"><button class="start" id="wxGo" type="button" style="flex:1">⬇️ Unduh PDF</button></div>
+        <div class="wxGoBar">
+        <div class="row" style="margin-top:0"><button class="start" id="wxGo" type="button" style="flex:1">⬇️ Unduh PDF</button></div>
         <div class="row" style="margin-top:8px"><button class="sound" id="wxClose" type="button">Tutup</button></div>
+        </div>
       </div>
       <div class="wxPrev" id="wxPrev" aria-label="Pratinjau halaman"></div>
     </div>
