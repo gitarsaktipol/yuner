@@ -2901,16 +2901,19 @@ function genMeasureRhythm(allowedDurs,beatsPerBar,last){
 function genArcade(letterIdx,subLv){
   var pm=arcLevelParams(letterIdx,subLv);
   var r=arcRange(pm.width), lo=r[0], hi=r[1];
-  var notes=[], d=lo+Math.floor(Math.random()*(hi-lo+1)), bar;
-  for(bar=0; bar<pm.measures; bar++){
-    genMeasureRhythm(pm.durs,4,bar===pm.measures-1).forEach(function(dur){
-      var k=keyNote(d);
-      if(pm.sharpProb>0 && Math.random()<pm.sharpProb) addSharp(k);
-      notes.push({m:k.m,d:dur,a:k.a});
-      var opts=pm.steps.filter(function(s){ return d+s>=lo && d+s<=hi; });
-      if(!opts.length) opts=[0];
-      d+=opts[Math.floor(Math.random()*opts.length)];
-    });
+  var notes=[], d=lo+Math.floor(Math.random()*(hi-lo+1)), bar, durs=[], j;
+  for(bar=0; bar<pm.measures; bar++) durs=durs.concat(genMeasureRhythm(pm.durs,4,bar===pm.measures-1));
+  /* Not cepat (1/8, 1/16, dan not sesudah 1/4 bertitik) lompatannya dibatasi (diminta Ferdi, Okt 2026: soal ber-1/8 terlalu
+     sulit): ke/dari not cepat paling jauh 1 langkah (huruf A–R), 2 langkah (S–Z). Not 1/4 ke atas tetap memakai maxStep level. */
+  var prog=letterIdx*9+(subLv-1), fastCap = prog<162 ? 1 : 2;
+  for(j=0;j<durs.length;j++){
+    var dur=durs[j], k=keyNote(d);
+    if(pm.sharpProb>0 && Math.random()<pm.sharpProb) addSharp(k);
+    notes.push({m:k.m,d:dur,a:k.a});
+    var fast = dur<1 || (j+1<durs.length && durs[j+1]<1);
+    var opts=pm.steps.filter(function(s){ return d+s>=lo && d+s<=hi && (!fast || Math.abs(s)<=fastCap); });
+    if(!opts.length) opts=[0];
+    d+=opts[Math.floor(Math.random()*opts.length)];
   }
   return endOnTonic(notes,lo,hi);
 }
