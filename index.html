@@ -710,6 +710,128 @@ body.dock-inflow .app{padding-bottom:110px}
   #tab-score .key:hover{filter:brightness(1.06)}
   #tab-score .bk:hover{filter:brightness(1.35)}
 }
+/* ===== Dropdown buatan sendiri (pengganti daftar bawaan browser) ===== */
+.csMenu{
+  position:fixed;z-index:200000;overflow:auto;overscroll-behavior:contain;max-width:min(440px,calc(100vw - 16px));
+  background:var(--surf);color:var(--ink);border:2px solid var(--line);border-radius:18px;padding:6px;
+  box-shadow:0 18px 44px rgba(60,30,90,.24),0 3px 0 var(--pLilac);transform-origin:top center;
+  animation:csIn .18s var(--bounce) both;scrollbar-width:thin;scrollbar-color:var(--dLilac) transparent;
+}
+.csMenu.up{transform-origin:bottom center}
+.csMenu.out{animation:csOut .14s ease-in forwards;pointer-events:none}
+.csOpt{position:relative;padding:10px 34px 10px 12px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;animation:csItem .22s ease-out both;transition:background-color .12s ease,color .12s ease,padding .15s ease}
+.csOpt.act{background:var(--track);padding-left:16px}
+.csOpt.on{background:var(--hl);color:var(--brass);font-weight:800}
+.csOpt.on::after{content:"✓";position:absolute;right:12px;top:50%;transform:translateY(-50%);font-weight:800}
+.csOpt.on.act{background:var(--pPink)}
+.csOpt.dis{opacity:.4;cursor:default}
+.csGrp{font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 12px 4px}
+@keyframes csIn{from{opacity:0;transform:translateY(-6px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes csOut{to{opacity:0;transform:translateY(-4px) scale(.97)}}
+@keyframes csItem{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+select{cursor:pointer}
+html.csOpen select:focus{outline:none}
+/* tombol perbesar/perkecil partitur: hanya di layar studio PC */
+.szoom{display:none}
+/* ===== Halaman "Partitur Saya" versi PC ===== */
+@media (min-width:900px) and (min-height:601px){
+  body.on-lib .app{max-width:1680px;padding:14px 22px 112px}
+  body.on-lib #tab-lib{display:grid;grid-template-columns:minmax(0,1fr) auto;row-gap:0;column-gap:16px;align-items:center}
+  #tab-lib::before{content:"";grid-row:1;grid-column:1/-1;align-self:stretch;margin-bottom:18px;background:var(--navbg);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:2px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
+  #tab-lib > header{grid-row:1;grid-column:1;z-index:1;padding:12px 18px;margin-bottom:18px}
+  #tab-lib .libTop{grid-row:1;grid-column:2;z-index:1;padding:0 12px;margin-bottom:18px;gap:10px}
+  #tab-lib .libTop > *{flex:none;width:auto;padding:10px 20px;font-size:15px;border-radius:16px;margin:0}
+  #tab-lib .libTop .start{box-shadow:0 4px 0 var(--brassDeep),0 8px 18px rgba(255,111,168,.28)}
+  #tab-lib .libSearch{grid-row:2;grid-column:1;margin:0;max-width:560px;padding:12px 16px;font-size:16px;border-radius:18px}
+  #tab-lib .libInfo{grid-row:2;grid-column:2;margin:0;text-align:right}
+  #tab-lib .libList{grid-row:3;grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px;margin-top:16px;align-content:start;align-items:start}
+  #tab-lib .libCard{margin:0;padding:14px 16px;border-radius:22px;animation:sIn .45s var(--bounce) both;transition:transform .25s var(--bounce),box-shadow .25s ease,border-color .25s ease}
+  #tab-lib .libCard:nth-child(2){animation-delay:.04s} #tab-lib .libCard:nth-child(3){animation-delay:.08s}
+  #tab-lib .libCard:nth-child(4){animation-delay:.12s} #tab-lib .libCard:nth-child(5){animation-delay:.16s}
+  #tab-lib .libCard:nth-child(n+6){animation-delay:.2s}
+  #tab-lib .libMain b{display:flex;align-items:center;gap:6px;min-width:0}
+  #tab-lib .libTag{flex:none;margin-left:0}
+  #tab-lib .libThumb{max-height:170px;min-height:76px;display:flex;align-items:center;justify-content:center;background:var(--track);padding:6px 4px}
+  #tab-lib .libBtns .chip{font-size:14px;padding:9px 6px}
+}
+@media (min-width:900px) and (hover:hover){
+  #tab-lib .libCard:hover{transform:translateY(-4px);border-color:var(--pMint);box-shadow:0 16px 34px -14px rgba(120,80,160,.35)}
+  #tab-lib .chip:hover,#tab-lib .sound:hover,#tab-lib .start:hover{transform:translateY(-2px);filter:brightness(1.04) saturate(1.08)}
+}
+/* kartu "Pasang FerTune" di PC (Partitur & Partitur Saya): melayang di pojok kanan bawah, tidak mendorong halaman */
+@media (min-width:900px) and (min-height:601px){
+  body.on-score #install,body.on-lib #install{position:fixed;right:20px;bottom:20px;width:420px;z-index:60;margin:0;animation:sInR .5s var(--bounce) both;box-shadow:0 18px 44px rgba(60,30,90,.24)}
+}
+/* ===== Studio PC satu layar: halaman TIDAK digulir; partitur dipaskan & diperbesar/diperkecil (diminta Ferdi, Okt 2026) ===== */
+@media (min-width:1280px) and (min-height:640px){
+  html:has(body.on-score),html:has(body.on-lib){overflow:hidden}
+  body.on-score,body.on-lib{overflow:hidden;height:100vh}
+  body.on-score .app,body.on-lib .app{height:100vh;max-width:none;padding:12px 20px}
+  body.on-score .app > .foot,body.on-lib .app > .foot{display:none}
+  /* menu utama pindah ke tengah bilah atas */
+  body.on-score .tabs,body.on-lib .tabs{top:20px;bottom:auto;left:50%;right:auto;width:auto;min-width:0;transform:translateX(-50%);
+    padding:4px;border-radius:18px;background:var(--track);border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;z-index:6}
+  body.on-score .tabs .in,body.on-lib .tabs .in{max-width:none;gap:2px}
+  body.on-score .tabs button,body.on-lib .tabs button{flex:none;flex-direction:row;gap:0;padding:8px 12px;border-radius:14px;font-size:0;height:44px}
+  body.on-score .tabs svg,body.on-lib .tabs svg{width:22px;height:22px}
+  body.on-score .tabs button[aria-current="page"],body.on-lib .tabs button[aria-current="page"]{transform:none;box-shadow:0 3px 0 var(--dMint)}
+  body.on-score #tab-score > header,body.on-score #tab-score .snewRow,body.on-lib #tab-lib > header,body.on-lib #tab-lib .libTop{height:68px;margin-bottom:12px}
+  #tab-score::before,#tab-lib::before{margin-bottom:12px}
+  body.on-score #tab-score .snewRow,body.on-lib #tab-lib .libTop{align-items:center}
+  body.on-score #tab-score .snewRow > *,body.on-lib #tab-lib .libTop > *{height:auto}
+  body.on-score #tab-score > header .sel select{max-width:240px;min-width:180px}
+  body.on-score #tab-score{height:calc(100vh - 24px);grid-template-columns:300px minmax(0,1fr) 300px;grid-template-rows:auto auto auto minmax(0,1fr);column-gap:16px}
+  body.on-score #tab-score .sside,body.on-score #tab-score .spanel{grid-row:2/-1;align-self:stretch;position:static;max-height:none;min-height:0;overflow:auto;padding:12px 12px 14px}
+  body.on-score #tab-score #sfree,body.on-score #tab-score #sinfo{margin-bottom:12px}
+  body.on-score #tab-score #sinfo{padding:10px 16px}
+  body.on-score #tab-score #sinfoBody{max-height:34vh;overflow:auto}
+  body.on-score #tab-score .smain{grid-row:4;align-self:stretch;min-height:0;gap:10px}
+  body.on-score #tab-score .board{flex:1 1 0;min-height:0;display:flex;flex-direction:column;padding:14px 16px 12px}
+  body.on-score #tab-score .scorehost{flex:1 1 0;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--dLilac) transparent;border-radius:14px}
+  body.on-score #tab-score .scorehost .sv{margin:0 auto}
+  body.on-score #tab-score .board .held{min-height:0;margin-top:4px}
+  body.on-score #tab-score .board .held:empty{display:none}
+  body.on-score #tab-score .board .empty{margin:0;padding:4px 0 2px}
+  /* perbesar/perkecil */
+  body.on-score .szoom{display:flex;position:absolute;right:14px;top:12px;z-index:4;gap:2px;padding:3px;border-radius:14px;background:var(--navbg);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:2px solid var(--line);box-shadow:0 6px 16px -8px rgba(80,50,120,.35);opacity:.55;transition:opacity .2s ease}
+  body.on-score .board:hover .szoom,body.on-score .szoom:focus-within{opacity:1}
+  body.on-score .szoom button{border:0;background:transparent;color:var(--ink);font-weight:800;font-size:17px;min-width:34px;height:30px;border-radius:10px;cursor:pointer;padding:0 8px}
+  body.on-score .szoom #szFit{font-size:12.5px;min-width:52px;font-variant-numeric:tabular-nums}
+  body.on-score .szoom button:hover{background:var(--track)}
+  /* tuts menyesuaikan tinggi layar */
+  body.on-score .kb{height:clamp(104px,15vh,160px)}
+  body.on-score #tab-score #snav .chip{padding:6px 10px;font-size:13.5px}
+  /* panel alat: lebih rapat supaya muat */
+  body.on-score #tab-score .stl{margin:10px 2px 5px}
+  body.on-score #tab-score .stools .stl{margin-top:10px}
+  body.on-score #tab-score .sside > .stl:first-child,body.on-score #tab-score .spanel > .stl:first-child{margin-top:0}
+  body.on-score #tab-score .chip{padding:7px 5px}
+  body.on-score #tab-score #sdyn .dynb{padding:4px 0;font-size:16px}
+  body.on-score #tab-score #sdyn .dynb[data-hp]{font-size:13px}
+  body.on-score #tab-score #ssec .chip{padding:6px 2px}
+  body.on-score #tab-score .stools .row{margin-top:8px !important}
+  /* panel kanan: rapat */
+  body.on-score #tab-score #splay{padding:11px 10px;font-size:18px}
+  body.on-score #tab-score .srec .cstat{max-height:calc(2.9em + 16px);overflow:hidden;cursor:help;transition:max-height .3s ease;position:relative}
+  body.on-score #tab-score .srec .cstat:hover{max-height:300px}
+  body.on-score #tab-score .srecSet{margin-top:7px;gap:4px}
+  body.on-score #tab-score .srec .stepper{padding:4px 6px}
+  body.on-score #tab-score .srec .stepper .ctl{width:34px;height:34px;font-size:19px}
+  body.on-score #tab-score .spanel > .row{grid-template-columns:repeat(2,1fr);gap:7px}
+  body.on-score #tab-score .spanel > .row > *{padding:8px 5px;font-size:12.5px}
+  body.on-score #tab-score .spanel #sprac{padding:10px 6px;font-size:14px}
+  /* Partitur Saya: daftar menggulir di dalam, halaman diam */
+  body.on-lib #tab-lib{height:calc(100vh - 24px);grid-template-rows:auto auto minmax(0,1fr);align-items:stretch}
+  body.on-lib #tab-lib .libSearch,body.on-lib #tab-lib .libInfo{align-self:center}
+  body.on-lib #tab-lib .libList{overflow:auto;padding:4px 6px 20px;margin:12px -6px 0;scrollbar-width:thin;scrollbar-color:var(--dLilac) transparent}
+}
+/* layar sangat lebar: label menu utama ikut tampil */
+@media (min-width:1640px) and (min-height:640px){
+  body.on-score .tabs button,body.on-lib .tabs button{font-size:13.5px;gap:7px;padding:8px 14px}
+}
 @keyframes sIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes sInL{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:none}}
 @keyframes sInR{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:none}}
@@ -1481,6 +1603,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
   <div class="smain">
   <section class="board">
+    <div class="szoom" id="szoom" role="group" aria-label="Ukuran partitur"><button type="button" id="szOut" title="Perkecil (Ctrl + gulir mouse)" aria-label="Perkecil">−</button><button type="button" id="szFit" title="Pas satu layar">Pas</button><button type="button" id="szIn" title="Perbesar (Ctrl + gulir mouse)" aria-label="Perbesar">＋</button></div>
     <div class="scorehost" id="sscore"></div>
     <div class="pstatus bad" id="salert" role="alert" hidden style="font-size:15px;min-height:0;margin:8px 8px 2px"></div>
     <div class="empty" id="sempty">Belum ada not. Pilih nilai not, lalu ketuk tuts piano di bawah.</div>
@@ -4847,7 +4970,11 @@ function syncScoreFields(){
 /* Partitur di editor: di layar lebar not diperbesar (sampai 1,9x); kalau lagunya makin panjang dan partitur lebih
    tinggi dari ±70% layar, otomatis diperkecil bertahap (lebih banyak birama per baris) sampai ukuran normal
    (HP: sampai 0,85x) supaya tetap rapi, tidak sebesar satu halaman. */
+/* PC studio (layar lebar & cukup tinggi): halaman tidak digulir, partitur dipaskan ke tinggi papan; ukuran bisa diperbesar/diperkecil (szoom, 0 = Pas) */
+var STUDIO_Q='(min-width:1280px) and (min-height:640px)', szoom=parseFloat(store.get('yg.szoom','0'))||0;
+function studioOn(){ return app.tab==='score' && !!(window.matchMedia && matchMedia(STUDIO_Q).matches); }
 function drawEditorScore(host,s,fn,cur,ed){
+  if(studioOn() && host.id==='sscore') return drawStudioScore(host,s,fn,cur,ed);
   var Wpx=Math.max(240,Math.floor(host.clientWidth||320));
   var sc = Wpx>600 ? Math.min(1.9,Wpx/520) : 1, min = Wpx>600 ? 1 : 0.85;
   var target=Math.max(360,(window.innerHeight||800)*0.7), svg, h;
@@ -4859,6 +4986,28 @@ function drawEditorScore(host,s,fn,cur,ed){
     sc=Math.max(min, sc-0.15);
   }
 }
+function drawStudioScore(host,s,fn,cur,ed){
+  var Wpx=Math.max(240,Math.floor(host.clientWidth||320)), target=Math.max(120,host.clientHeight-8), sc, svg, h, guard;
+  var draw=function(k){ drawScore.force=k; try{ drawScore(host,s,app.mode,fn,cur,ed); } finally { drawScore.force=0; } svg=host.firstChild; h=svg ? parseFloat(svg.getAttribute('height'))||0 : 0; };
+  if(szoom>0){ sc=szoom; draw(sc); }
+  else {
+    sc=Math.min(1.9,Wpx/520);
+    for(guard=0; guard<16; guard++){ draw(sc); if(h<=target || sc<=0.55) break; sc=Math.max(0.55, sc-0.1); }
+  }
+  drawStudioScore.sc=sc; drawStudioScore.h=host.clientHeight;
+  var lab=$('#szFit'); if(lab) lab.textContent = szoom>0 ? Math.round(sc*100)+'%' : 'Pas';
+  /* kursor / not terpilih tetap terlihat di dalam papan (bukan menggulir halaman) */
+  var c=host.querySelector('.caret, g.blink, g.cur');
+  if(c && c.getBoundingClientRect && host.scrollHeight>host.clientHeight+2){
+    var b=c.getBoundingClientRect(), r=host.getBoundingClientRect();
+    if(b.top<r.top+10 || b.bottom>r.bottom-10) host.scrollTop+= (b.top+b.bottom)/2-(r.top+r.bottom)/2;
+  }
+}
+function setZoom(v){
+  szoom = v>0 ? Math.max(0.5,Math.min(3,Math.round(v*100)/100)) : 0;
+  store.set('yg.szoom',String(szoom)); renderScoreView();
+}
+function zoomStep(dir){ setZoom((szoom>0 ? szoom : (drawStudioScore.sc||1.2))+dir*0.15); }
 function renderScoreView(){
   var s=curScore(), EN=edScore().notes, eP=(s.grand && hand==='lh') ? 1 : 0;
   undoBase(s); syncUndoUI();
@@ -5843,6 +5992,21 @@ function bindScore(){
   $('#sdelnote').addEventListener('click',delNote);
   $('#soctdn').addEventListener('click',function(){ inp.oct=clamp(inp.oct-1,1,7-KB_OCT); buildKeyboard(); });
   $('#soctup').addEventListener('click',function(){ inp.oct=clamp(inp.oct+1,1,7-KB_OCT); buildKeyboard(); });
+  $('#szIn').addEventListener('click',function(){ zoomStep(1); });
+  $('#szOut').addEventListener('click',function(){ zoomStep(-1); });
+  $('#szFit').addEventListener('click',function(){ setZoom(0); });
+  $('#sscore').addEventListener('wheel',function(e){
+    if(!(e.ctrlKey||e.metaKey) || !studioOn()) return;
+    e.preventDefault(); zoomStep(e.deltaY<0 ? 1 : -1);
+  },{passive:false});
+  if(window.ResizeObserver){
+    var szT=0;
+    new ResizeObserver(function(){
+      if(!studioOn() || playing || rec.on) return;
+      clearTimeout(szT);
+      szT=setTimeout(function(){ var h=$('#sscore').clientHeight; if(Math.abs(h-(drawStudioScore.h||0))>6) renderScoreView(); },80);
+    }).observe($('#sscore'));
+  }
   $('#kb').addEventListener('click',function(e){
     var b=e.target.closest('[data-m]'); if(!b) return; addNote(parseInt(b.getAttribute('data-m'),10));
   });
@@ -6009,7 +6173,7 @@ function recPreview(){
     drawEditorScore(host,pv,function(i,p){ return ((p||0)===(lh?1:0) && held && i===lastP) ? 'cur' : ''; }, -1, true);
     /* kursor tetap terlihat di layar */
     var c=host.querySelector('.caret');
-    if(c && c.getBoundingClientRect){ var b=c.getBoundingClientRect(); if(b.top<60 || b.bottom>innerHeight-140) c.scrollIntoView({block:'center',behavior:'smooth'}); }
+    if(c && c.getBoundingClientRect && !studioOn()){ var b=c.getBoundingClientRect(); if(b.top<60 || b.bottom>innerHeight-140) c.scrollIntoView({block:'center',behavior:'smooth'}); }
   }catch(e){}
 }
 function recStop(cancel){
@@ -6944,7 +7108,7 @@ function showTab(name){
   if(name!=='score'){ stopPlay(); recStop(); }
   if(name!=='tuner') metStop();
   if(name==='set') refreshPerm();
-  app.tab=name; document.body.classList.toggle('on-latih',name==='latih'); document.body.classList.toggle('on-score',name==='score');
+  app.tab=name; document.body.classList.toggle('on-latih',name==='latih'); document.body.classList.toggle('on-score',name==='score'); document.body.classList.toggle('on-lib',name==='lib');
   var dk=$('#pdock'); if(dk) dk.hidden = !(name==='latih' && !pr.playing);
   $$('.tab').forEach(function(t){ t.hidden = (t.id!=='tab-'+name); });
   var activeTab=$('#tab-'+name);
@@ -7039,6 +7203,153 @@ initAI();
   ['gesturestart','gesturechange','gestureend'].forEach(function(n){
     document.addEventListener(n,function(e){ e.preventDefault(); });
   });
+})();
+</script>
+<script>
+/* Pilihan (dropdown) buatan sendiri, pengganti daftar bawaan browser (diminta Ferdi, Okt 2026).
+   <select> asli tetap dipakai sebagai sumber nilai & tampilan tombolnya; hanya daftar pilihannya yang diganti.
+   Memilih = select.value diubah + event input/change seperti biasa, jadi kode lain tidak perlu tahu.
+   Juga untuk <input list=…> (saran teks, mis. tanda tempo). */
+(function(){
+  var menu=null, owner=null, items=[], act=-1, isList=false, tStart=null;
+  function native(el){
+    /* layar berlatih yang diputar 90° lewat CSS (layar sentuh tegak): posisi daftar sulit dihitung, pakai bawaan */
+    return el.closest && el.closest('.play,.arcGame') && window.matchMedia && matchMedia('(orientation:portrait) and (pointer:coarse)').matches;
+  }
+  function close(){
+    if(!menu) return;
+    var m=menu; menu=null; owner=null; items=[]; act=-1;
+    m.classList.add('out'); setTimeout(function(){ m.remove(); },140);
+    document.documentElement.classList.remove('csOpen');
+  }
+  function setAct(i,scroll){
+    if(!items.length) return;
+    if(act>=0 && items[act]) items[act].el.classList.remove('act');
+    act=Math.max(0,Math.min(items.length-1,i));
+    items[act].el.classList.add('act');
+    if(scroll) items[act].el.scrollIntoView({block:'nearest'});
+  }
+  function pick(i){
+    var it=items[i], el=owner; if(!it || !el) return;
+    if(isList){ el.value=it.v; }
+    else { if(el.selectedIndex===it.idx){ close(); el.focus(); return; } el.selectedIndex=it.idx; }
+    close();
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+    el.dispatchEvent(new Event('change',{bubbles:true}));
+    el.focus();
+  }
+  function place(el){
+    var r=el.getBoundingClientRect(), vw=innerWidth, vh=innerHeight, gap=6;
+    var below=vh-r.bottom-12, above=r.top-12, up = below<220 && above>below;
+    var maxH=Math.max(120,Math.min(420,(up?above:below)-gap));
+    menu.style.maxHeight=maxH+'px';
+    menu.style.minWidth=Math.max(r.width,160)+'px';
+    var w=menu.offsetWidth, left=Math.min(Math.max(8,r.left),vw-w-8);
+    menu.style.left=left+'px';
+    if(up){ menu.style.top='auto'; menu.style.bottom=(vh-r.top+gap)+'px'; menu.classList.add('up'); }
+    else { menu.style.top=(r.bottom+gap)+'px'; menu.style.bottom='auto'; }
+  }
+  function build(el,list){
+    close();
+    owner=el; isList=!!list; items=[];
+    menu=document.createElement('div'); menu.className='csMenu'; menu.setAttribute('role','listbox');
+    var cur=-1;
+    if(list){
+      var q=(el.value||'').trim().toLowerCase(), opts=[].slice.call(list.options), n=0;
+      opts.forEach(function(o){
+        var v=o.value; if(q && v.toLowerCase().indexOf(q)<0) return;
+        if(q && v.toLowerCase()===q) return;
+        var d=document.createElement('div'); d.className='csOpt'; d.setAttribute('role','option'); d.textContent=v;
+        d.style.animationDelay=Math.min(n++,10)*14+'ms';
+        items.push({el:d,v:v}); menu.appendChild(d);
+      });
+      if(!items.length){ menu=null; owner=null; return; }
+    } else {
+      var grp=null, n2=0;
+      [].slice.call(el.options).forEach(function(o,idx){
+        if(o.hidden) return;
+        var g=o.parentNode && o.parentNode.tagName==='OPTGROUP' ? o.parentNode : null;
+        if(g && g!==grp){ grp=g; var h=document.createElement('div'); h.className='csGrp'; h.textContent=g.label; menu.appendChild(h); }
+        var d=document.createElement('div'); d.className='csOpt'; d.setAttribute('role','option'); d.textContent=o.textContent;
+        d.style.animationDelay=Math.min(n2++,10)*14+'ms';
+        if(o.disabled || (g && g.disabled)) d.classList.add('dis');
+        if(idx===el.selectedIndex){ d.classList.add('on'); d.setAttribute('aria-selected','true'); cur=items.length; }
+        items.push({el:d,idx:idx,dis:d.classList.contains('dis')}); menu.appendChild(d);
+      });
+    }
+    items.forEach(function(it,i){
+      it.el.addEventListener('mousemove',function(){ if(act!==i) setAct(i); });
+      it.el.addEventListener('click',function(){ if(!it.dis) pick(i); });
+    });
+    menu.addEventListener('mousedown',function(e){ e.preventDefault(); });   /* fokus tetap di select/input */
+    document.body.appendChild(menu);
+    document.documentElement.classList.add('csOpen');
+    place(el);
+    if(cur>=0) setAct(cur,true); else if(!list) setAct(0,false);
+  }
+  function openSel(el){ if(el.disabled || !el.options.length) return; if(owner===el){ close(); return; } build(el,null); }
+  function openList(el){ var l=el._csList; if(l) build(el,l); }
+  /* mouse (PC): daftar bawaan muncul saat mousedown */
+  document.addEventListener('mousedown',function(e){
+    var el=e.target && e.target.closest && e.target.closest('select');
+    if(menu && !(e.target.closest && e.target.closest('.csMenu')) && el!==owner) close();
+    if(!el || native(el) || el.multiple || el.size>1) return;
+    e.preventDefault(); el.focus(); openSel(el);
+  },true);
+  /* layar sentuh: ketukan pada select dibuka di touchend (daftar bawaan dicegah) */
+  document.addEventListener('touchstart',function(e){
+    var el=e.target && e.target.closest && e.target.closest('select');
+    if(menu && !(e.target.closest && e.target.closest('.csMenu')) && el!==owner) close();
+    tStart = el && !native(el) ? {el:el,x:e.touches[0].clientX,y:e.touches[0].clientY} : null;
+  },{passive:true,capture:true});
+  document.addEventListener('touchend',function(e){
+    var el=e.target && e.target.closest && e.target.closest('select'); if(!el || !tStart || tStart.el!==el) return;
+    var t=e.changedTouches[0]; if(Math.abs(t.clientX-tStart.x)>10 || Math.abs(t.clientY-tStart.y)>10) return;
+    e.preventDefault(); openSel(el);
+  },{passive:false,capture:true});
+  document.addEventListener('click',function(e){
+    var el=e.target && e.target.closest && e.target.closest('select');
+    if(el && !native(el)) e.preventDefault();
+  },true);
+  document.addEventListener('keydown',function(e){
+    var t=e.target;
+    if(menu){
+      var k=e.key;
+      if(k==='Escape'){ e.preventDefault(); e.stopPropagation(); close(); return; }
+      if(k==='ArrowDown'||k==='ArrowUp'){
+        e.preventDefault(); e.stopPropagation();
+        var d=k==='ArrowDown'?1:-1, i=act<0?(d>0?-1:items.length):act;
+        do{ i+=d; }while(items[i] && items[i].dis);
+        if(items[i]) setAct(i,true); return;
+      }
+      if(k==='Enter'||(k===' '&&!isList)){ if(act>=0){ e.preventDefault(); e.stopPropagation(); pick(act); } return; }
+      if(k==='Tab'){ close(); return; }
+      if(!isList && k.length===1){
+        var c=k.toLowerCase(), j, n=items.length;
+        for(j=1;j<=n;j++){ var it=items[(act+j)%n]; if(!it.dis && it.el.textContent.trim().toLowerCase().indexOf(c)===0){ setAct((act+j)%n,true); break; } }
+        e.preventDefault(); return;
+      }
+      return;
+    }
+    if(t && t.tagName==='SELECT' && !native(t) && (e.key==='Enter'||e.key===' '||e.key==='F4'||(e.altKey&&(e.key==='ArrowDown'||e.key==='ArrowUp')))){
+      e.preventDefault(); e.stopPropagation(); openSel(t);
+    }
+    if(t && t._csList && e.key==='ArrowDown'){ e.preventDefault(); openList(t); }
+  },true);
+  /* <input list=…>: saran bawaan diganti daftar sendiri */
+  function hookLists(){
+    [].slice.call(document.querySelectorAll('input[list]')).forEach(function(inp){
+      var l=document.getElementById(inp.getAttribute('list')); if(!l) return;
+      inp._csList=l; inp.removeAttribute('list');
+      inp.addEventListener('focus',function(){ openList(inp); });
+      inp.addEventListener('input',function(){ if(document.activeElement===inp) openList(inp); });
+      inp.addEventListener('blur',function(){ setTimeout(function(){ if(owner===inp) close(); },0); });
+    });
+  }
+  hookLists();
+  window.addEventListener('resize',close);
+  document.addEventListener('scroll',function(e){ if(menu && !(e.target===menu || (menu.contains && menu.contains(e.target)))) close(); },true);
+  window.addEventListener('blur',close);
 })();
 </script>
 <script>
