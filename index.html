@@ -2908,6 +2908,13 @@ function genMeasureRhythm(allowedDurs,beatsPerBar,last,maxQ){
 function genArcade(letterIdx,subLv){
   var pm=arcLevelParams(letterIdx,subLv);
   var r=arcRange(pm.width), lo=r[0], hi=r[1];
+  /* Huruf F (tahap pertama not 1/8): HANYA not 1 2 3 4 5 6 7 tanpa titik oktaf (diminta Ferdi, Okt 2026: masih ketemu 1 tinggi).
+     Rentang = nada dasar tangga nada di oktaf 4 sampai not ke-7-nya. Kunci F piano tetap memakai rentang biasanya. */
+  if(letterIdx===5 && !(pr.clef==='bass' && pr.inst!=='guitar')){
+    lo=28+tonicLetter(pr.key);
+    var j0=jianpu(keyNote(lo),pr.key); if(j0.oct<4) lo+=7; else if(j0.oct>4) lo-=7;   /* mis. C♭: "1" tanpa titik = C♭5 */
+    hi=lo+6;
+  }
   var notes=[], d=lo+Math.floor(Math.random()*(hi-lo+1)), bar, durs=[], j;
   for(bar=0; bar<pm.measures; bar++) durs=durs.concat(genMeasureRhythm(pm.durs,4,bar===pm.measures-1,pm.maxQ));
   /* Not cepat (1/8, 1/16, dan not sesudah 1/4 bertitik) lompatannya dibatasi (diminta Ferdi, Okt 2026: soal ber-1/8 terlalu
