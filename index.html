@@ -1999,7 +1999,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>Pintasan keyboard (laptop/PC)</b>: tekan <b>⌨️ Pintasan keyboard</b> di bagian Edit, lalu pilih gaya: <b>Gaya piano</b> (A S D F G H J K L = tuts putih, W E T Y U O P = tuts hitam), <b>Nama nada</b> (huruf C D E F G A B) atau <b>Not angka</b> (angka 1–7 = do re mi fa sol la si). Shift + tombol = ♯, Alt + tombol = ♭, Z / X = oktaf turun / naik, R = rehat, titik = bertitik, angka 1/2/4/8/6 = nilai not (gaya piano &amp; nama nada). Tekan beberapa tombol bersamaan = akor. Panah ↑ / ↓ = nilai not lebih panjang / lebih pendek (Shift + ↑ / ↓ = pilih nada di dalam akor). Esc = tutup / lepas sorotan / berhenti memutar. Huruf/angka kecil di tuts layar menunjukkan tombolnya.</li>
         <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan</b> (di kartu di bawah tuts piano, di samping <b>▶ Putar</b> dan <b>⏺ Rekam</b>). Setelah tersambung, tombol <b>MIDI OFF / MIDI ON</b> menentukan apakah tuts menulis not: <b>OFF</b> = piano hanya berbunyi, bebas berlatih dulu tanpa mengubah partitur; <b>ON</b> = setiap tuts langsung menulis not seperti tuts di layar (tekan bersamaan = akor). Tombol <b>Rekam</b> tetap merekam walau MIDI OFF.</li>
         <li><b>Gambar partitur sebagai acuan</b>: tekan <b>🖼️ Masukkan gambar</b>: seret &amp; lepas gambar ke kotaknya, tekan <b>Ctrl+V</b> untuk menempel screenshot, <b>📋 Tempel gambar</b>, atau <b>📁 Pilih dari file</b>. Di laptop, Ctrl+V dan seret gambar ke halaman Partitur juga langsung bisa.</li>
-        <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. Selama merekam, not yang kamu mainkan langsung tergambar di partitur dan kursor ikut berjalan mengikuti ketukan. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, rekaman masuk ke tangan yang sedang dipilih saja (<i>Tulis &amp; rekam ke</i>: Kanan / Kiri), mulai di birama baru setelah not terakhir tangan itu; tangan yang lain tidak berbunyi. Jadi rekam satu per satu: tangan kanan dulu, lalu pilih Kiri dan rekam tangan kiri dari awal lagu. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
+        <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. Selama merekam, not yang kamu mainkan langsung tergambar di partitur dan kursor ikut berjalan mengikuti ketukan. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, rekaman masuk ke tangan yang sedang dipilih saja (<i>Tulis &amp; rekam ke</i>: Kanan / Kiri), mulai di birama baru setelah not terakhir tangan itu, dan tangan yang sudah ada otomatis ikut berbunyi supaya bisa diikuti. Jadi rekam satu per satu: tangan kanan dulu, lalu pilih Kiri dan rekam tangan kiri dari awal lagu sambil mendengar tangan kanan. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
         <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
         <li><b>📂 Partitur Saya</b> (tombol di atas, samping "Bikin Partitur Baru"): halaman berisi semua partitur yang sudah kamu buat, yang terakhir diubah di paling atas, lengkap dengan pratinjau kecil. Tiap partitur punya tombol <b>✏️ Buka</b>, <b>▶ Latih</b>, dan <b>🗑 Hapus</b> (ada konfirmasi, dan bisa <b>↶ Batalkan</b> beberapa detik setelah dihapus). Ada juga kotak cari judul.</li>
         <li><b>💾 Simpan</b> menyimpan partitur (sebenarnya juga tersimpan otomatis tiap ada perubahan). Tanpa masuk akun, partitur <b>hanya ada di perangkat itu</b> — partitur dari laptop tidak muncul di HP. Supaya sama di semua perangkat, masuk akun Gitar Sakti di <b>Pengaturan › Akun</b> di setiap perangkat (laptop dan HP) dengan akun yang sama. <b>＋ Buat baru</b> membuat partitur kosong baru. Di bawahnya hanya ada 3 tombol berkas: <b>🖼️ Masukkan gambar</b>, <b>🎵 Masukkan audio</b> (lagu atau file MIDI) dan <b>📄 Ekspor PDF</b> (tombol <b>⬇️ Unduh</b> di dalamnya: PDF, JPG, PNG transparan, atau MIDI). Menghapus partitur lewat <b>📂 Partitur Saya</b>.</li>
@@ -6564,8 +6564,21 @@ function recStart(){
   /* rekaman masuk ke tangan yang sedang dipilih saja (piano 2 tangan), mulai di birama baru setelah not terakhir tangan itu */
   var EN=edScore().notes, len=EN.reduce(function(a,n){ return a+n.d; },0);
   rec.hand=hand; rec.at=Math.ceil(len/bb-1e-9)*bb;
-  /* rekam satu tangan saja: tangan lain TIDAK dibunyikan (diminta Ferdi, Okt 2026 — tangan sering berdekatan/menyilang) */
+  /* tangan yang sudah direkam/ditulis SELALU ikut dibunyikan mulai titik yang sama, supaya tangan kedua bisa mengikutinya
+     (tanpa saklar; diminta Ferdi, Okt 2026) */
   rec.gain=null;
+  if(s.grand){
+    var other = hand==='lh' ? s.notes : (s.lh||[]), acc=0, vol=1;
+    rec.gain=c.createGain(); rec.gain.gain.value=0.9; rec.gain.connect(c.destination);
+    other.forEach(function(n,i){
+      if(n.dyn) vol=DYN_VOL[n.dyn]||vol;
+      if(acc>=rec.at-1e-6 && n.m!==null && !tieFrom(other,i)){
+        var when=rec.t0+(acc-rec.at)*rec.spb;
+        pitchList(n).forEach(function(pp){ pluck(pp.m,when,tieLen(other,i)*rec.spb,rec.gain,vol); });
+      }
+      acc+=n.d;
+    });
+  }
   sel=-1; editing=false; renderScoreView();
   recSched(); rec.timer=setInterval(recSched,25);
   recUI();
