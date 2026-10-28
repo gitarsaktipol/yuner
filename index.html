@@ -639,20 +639,27 @@ body.dock-inflow .app{padding-bottom:110px}
 .aiTag{font-weight:800;font-size:clamp(13px,3.8vmin,16px);background:var(--pLemon);box-shadow:0 3px 0 var(--dLemon);border-radius:999px;padding:5px 14px}
 .aintro .aiSkip{width:auto;flex:none;padding:7px 14px;font-size:14px}
 .aiBody{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(4px,1.6vmin,10px);text-align:center}
+.aiTitle:empty{display:none}
 .aiTitle{margin:0;font-size:clamp(20px,6.4vmin,32px);text-shadow:0 3px 0 var(--surf);animation:popIn .45s var(--bounce)}
-.aiText{font-size:clamp(15px,4.8vmin,21px);line-height:1.5;max-width:680px;animation:popIn .5s var(--bounce)}
+.aiText{font-size:clamp(16px,5.2vmin,24px);line-height:1.5;max-width:680px;animation:popIn .5s var(--bounce)}
 .aiText:empty{display:none}
 .aiText b{color:var(--brass)}
 .aiScore{flex:1;min-height:0;width:100%;max-width:980px;display:flex;flex-direction:column;background:var(--surf);border-radius:20px;padding:4px 12px 8px;box-shadow:0 4px 0 var(--line);animation:popIn .45s var(--bounce)}
 .aiScore[hidden]{display:none}
 .aiLab{font-size:12px;color:var(--muted);text-align:left;font-weight:800;line-height:1.2}
 .aiHost{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.aiHost svg{overflow:visible}
 .aiDots{display:flex;gap:10px;justify-content:center;padding-top:2px}
 .aiDots i{width:14px;height:14px;border-radius:50%;background:var(--track);box-shadow:0 2px 0 var(--line);transition:transform .12s,background .12s}
 .aiDots i.on{background:var(--brass);transform:scale(1.35)}
 .aiBar{display:flex;justify-content:center;gap:10px}
 .aiBar>button{width:auto;flex:none;padding:10px 26px;font-size:clamp(15px,4.4vmin,18px)}
 .aiBar>button[hidden]{display:none}
+.aiRing{fill:none;stroke:var(--brass);stroke-width:3.2;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:aiRing .6s ease-out forwards,aiRingP 1.4s ease-in-out .6s infinite}
+@keyframes aiRing{ to{stroke-dashoffset:0} }
+@keyframes aiRingP{ 0%,100%{stroke-width:3.2} 50%{stroke-width:5} }
+.aiText:not(:empty)+.aiScore{margin-top:2px}
+@media (prefers-reduced-motion:reduce){ .aiRing{animation:none;stroke-dashoffset:0} }
 .arcGame .agIntroBtn{width:auto;flex:none;align-self:center;padding:6px 16px;font-size:clamp(13px,3.8vmin,15px);margin-top:6px}
 /* ---------- editor partitur ---------- */
 .fields{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
@@ -1588,7 +1595,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <div class="aiDots" id="aiDots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     </div>
   </div>
-  <div class="aiBar"><button class="sound" id="aiAgain" type="button" hidden>↺ Putar lagi</button><button class="start" id="aiGo" type="button">Lanjut ▶</button></div>
+  <div class="aiBar"><button class="sound" id="aiAgain" type="button" hidden>↺ Ulangi</button><button class="start" id="aiGo" type="button">Lanjut ▶</button></div>
 </div>
 <div class="play" id="pplay" hidden role="dialog" aria-label="Berlatih baca not">
   <div class="playbar">
@@ -4227,15 +4234,24 @@ function advanceArcadeLevel(){
    pemain, `intro` di data pemain) tampil teks, lalu contoh not balok (atas) + not angka (bawah) yang diputar otomatis
    dengan metronom & penanda ketukan, baru permainan mulai (Tempo: "Siap? 4 3 2 1"). Bisa ditonton ulang lewat 📖 Materi. ===== */
 function aiN(m,d){ return {m:m,d:d,a:''}; }
+/* Tiap materi: parts = langkah penjelasan (teks pendek + gambar not dalam birama, not yang dijelaskan DILINGKARI beranimasi
+   & dibunyikan; ring = daftar kelompok indeks not yang dilingkari), lalu demos = contoh diputar dengan metronom. */
 var ARC_INTRO={
-  0:{title:'Kenalan dengan not 🎵',text:'Di Stage A kamu memainkan not <b>1 2 3 4 5</b> (do re mi fa sol).<br>Ada 2 jenis not: <b>not 1/4</b> (crotchet) = <b>1 ketuk</b>, dan <b>not penuh</b> (semibreve) = <b>4 ketuk</b>.<br>Atas: not balok · Bawah: not angka.',
+  0:{title:'Kenalan dengan jenis not 🎵',
+     parts:[{text:'<b>Not 1/4</b> (crotchet) = <b>1 ketuk</b>',notes:[aiN(60,1),aiN(62,1),aiN(64,1),aiN(65,1),aiN(67,4)],ring:[[0],[1],[2],[3]]},
+            {text:'<b>Not penuh</b> (semibreve) = <b>4 ketuk</b>',notes:[aiN(60,1),aiN(62,1),aiN(64,1),aiN(65,1),aiN(67,4)],ring:[[4]]}],
      demos:[{cap:'Not penuh (semibreve) = 4 ketuk — tahan sampai hitungan ke-4',notes:[aiN(60,4),aiN(64,4)]},
             {cap:'Not 1/4 (crotchet) = 1 ketuk',notes:[aiN(60,1),aiN(62,1),aiN(64,1),aiN(65,1)]}]},
-  1:{title:'Not baru: not 1/2 (minim) 🎵',text:'<b>Not 1/2</b> (minim) = <b>2 ketuk</b>.<br>Di not angka ditulis angka + satu titik, mis. <b>5 ·</b>',
+  1:{title:'Not baru: not 1/2 (minim) 🎵',
+     parts:[{text:'<b>Not 1/2</b> (minim) = <b>2 ketuk</b> · di not angka: angka + 1 titik',notes:[aiN(60,1),aiN(62,1),aiN(64,2),aiN(65,2),aiN(67,2)],ring:[[2],[3],[4]]}],
      demos:[{cap:'Not 1/2 (minim) = 2 ketuk',notes:[aiN(60,2),aiN(64,2),aiN(67,2),aiN(64,2)]}]},
-  5:{title:'Not baru: not 1/8 (quaver) 🎵',text:'<b>Not 1/8</b> (quaver) = <b>½ ketuk</b>. Dua not 1/8 <b>digandeng</b> = 1 ketuk.<br>Di not angka: ada <b>garis di atas</b> angkanya. Kita kembali ke not 1 2 3 4 5 dulu.',
+  5:{title:'Not baru: not 1/8 (quaver) 🎵',
+     parts:[{text:'Dua <b>not 1/8</b> (quaver) <b>bergandeng</b> = <b>1 ketuk</b> (masing-masing ½ ketuk) · di not angka: garis di atas angkanya',
+             notes:[aiN(60,1),aiN(62,0.5),aiN(64,0.5),aiN(65,1),aiN(67,1),aiN(67,0.5),aiN(65,0.5),aiN(64,0.5),aiN(62,0.5),aiN(60,2)],ring:[[1,2],[5,6],[7,8]]}],
      demos:[{cap:'Dua not 1/8 bergandeng = 1 ketuk',notes:[aiN(60,1),aiN(62,1),aiN(64,0.5),aiN(65,0.5),aiN(67,1),aiN(67,0.5),aiN(65,0.5),aiN(64,0.5),aiN(62,0.5),aiN(60,2)]}]},
-  7:{title:'Not baru: 1/4 bertitik + 1/8 🎵',text:'<b>Not 1/4 bertitik</b> = <b>1½ ketuk</b>, lalu <b>satu not 1/8</b> (½ ketuk) melengkapi 2 ketuk.<br>Di not angka: <b>1 .</b> lalu <b>1</b> dengan garis di atas titik & angkanya. Sekarang not 1 sampai 1 tinggi.',
+  7:{title:'Not baru: 1/4 bertitik + 1/8 🎵',
+     parts:[{text:'<b>Not 1/4 bertitik</b> = <b>1½ ketuk</b>',notes:[aiN(60,1.5),aiN(60,0.5),aiN(60,2),aiN(62,1.5),aiN(62,0.5),aiN(62,2)],ring:[[0],[3]]},
+            {text:'… diikuti <b>satu not 1/8</b> = <b>½ ketuk</b> (bersama jadi 2 ketuk)',notes:[aiN(60,1.5),aiN(60,0.5),aiN(60,2),aiN(62,1.5),aiN(62,0.5),aiN(62,2)],ring:[[1],[4]]}],
      demos:[{cap:'1/4 bertitik + 1/8, lalu not 1/2',notes:[aiN(60,1.5),aiN(60,0.5),aiN(60,2),aiN(62,1.5),aiN(62,0.5),aiN(62,2)]}]}
 };
 /* huruf materi terakhir yang sudah sampai (untuk tombol 📖 Materi) */
@@ -4249,8 +4265,7 @@ function aiOpen(){ return !$('#aintro').hidden; }
 function aiShow(L,done,game){
   var I=ARC_INTRO[L]; if(!I){ if(done) done(); return; }
   aiClear(); ai.letter=L; ai.done=done||null; ai.game=!!game; ai.i=-1;
-  ai.steps=[{text:I.text,title:I.title}].concat(I.demos.map(function(d){ return {demo:d,title:I.title}; }));
-  $('#aiTag').textContent='📖 Materi baru · Stage '+ARC_LETTERS[L];
+  ai.steps=I.parts.map(function(p){ return {part:p,title:I.title}; }).concat(I.demos.map(function(d){ return {demo:d,title:I.title}; }));
   $('#aintro').hidden=false;
   aiNext();
 }
@@ -4258,21 +4273,60 @@ function aiNext(){
   aiClear(); ai.i++;
   if(ai.i>=ai.steps.length){ aiEnd(); return; }
   var st=ai.steps[ai.i], last=ai.i===ai.steps.length-1;
-  $('#aiTitle').textContent = st.demo ? st.demo.cap : st.title;
-  $('#aiText').innerHTML = st.demo ? '' : st.text;
-  $('#aiScore').hidden = !st.demo;
-  $('#aiAgain').hidden = !st.demo;
+  $('#aiTag').textContent = '📖 Stage '+ARC_LETTERS[ai.letter]+' · '+st.title;
+  $('#aiTitle').textContent = st.demo ? st.demo.cap : '';
+  $('#aiText').innerHTML = st.demo ? '' : st.part.text;
+  $('#aiScore').hidden = false;
+  $('#aiDots').style.display = st.demo ? '' : 'none';
+  $('#aiAgain').hidden = false;
   $('#aiGo').textContent = last ? (ai.game ? '▶ Mulai Stage '+ARC_LETTERS[ai.letter]+pr.arcSub : '✓ Selesai') : 'Lanjut ▶';
   if(st.demo) aiDemo(st.demo, last);
-  else ai.T.push(setTimeout(aiNext, 7000));   /* teks dulu (±7 dtk), lalu contoh dimainkan */
+  else aiPart(st.part);
+}
+/* Langkah penjelasan: gambar not dalam birama, lalu not yang dijelaskan dilingkari satu per satu (garis melingkar beranimasi)
+   sambil dibunyikan; ±4,5 dtk sesudahnya lanjut sendiri. */
+function aiPart(pt){
+  var sc=aiScoreOf(pt.notes), hs=$('#aiStaff'), hn=$('#aiNum'), none=function(){ return ''; };
+  drawFit(hs,sc,none,'staff'); drawFit(hn,sc,none,'num');
+  var c=ac(), g=c.createGain(); g.connect(c.destination); ai.gain=g;
+  pt.ring.forEach(function(grp,k){
+    ai.T.push(setTimeout(function(){
+      [hs,hn].forEach(function(h){ aiRing(h,grp); });
+      grp.forEach(function(i){ pluck(sc.notes[i].m-instShift(), c.currentTime+0.02, Math.min(1.2,sc.notes[i].d*0.6), g); });
+    }, 700+k*900));
+  });
+  ai.T.push(setTimeout(aiNext, 700+pt.ring.length*900+4500));
+}
+/* lingkaran (elips) di sekeliling satu kelompok not, digambar dengan animasi goresan */
+function aiRing(host,grp){
+  var sv=host.querySelector('svg'), num=host.id==='aiNum'; if(!sv) return;
+  var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  grp.forEach(function(i){
+    var gg=sv.querySelector('g[data-i="'+i+'"]'); if(!gg) return;
+    /* hanya gambar notnya: kotak sorotan (rect) dibuang; di not angka garis (balok/garis titik) juga, supaya lingkaran pas di angka */
+    Array.prototype.forEach.call(gg.querySelectorAll('*'),function(el){
+      var t=el.nodeName.toLowerCase(); if(t==='rect' || t==='g' || (num && t==='line')) return;
+      var b; try{ b=el.getBBox(); }catch(e){ return; } if(!b.width && !b.height) return;
+      x0=Math.min(x0,b.x); y0=Math.min(y0,b.y); x1=Math.max(x1,b.x+b.width); y1=Math.max(y1,b.y+b.height);
+    });
+  });
+  if(x1<x0) return;
+  var e=document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+  e.setAttribute('cx',(x0+x1)/2); e.setAttribute('cy',(y0+y1)/2);
+  e.setAttribute('rx',(x1-x0)/2+10); e.setAttribute('ry',(y1-y0)/2+8);
+  e.setAttribute('pathLength','1'); e.setAttribute('class','aiRing');
+  sv.appendChild(e);
+}
+function aiScoreOf(notes){
+  var bass=pr.clef==='bass' && pr.inst!=='guitar', sh=bass?12:0;
+  return {title:'',ts:[4,4],clef:bass?'bass':'treble',key:0,notes:notes.map(function(n){ return {m:n.m-sh,d:n.d,a:''}; })};
 }
 function aiEnd(){
   aiClear(); $('#aintro').hidden=true;
   var f=ai.done; ai.done=null; if(f) f();
 }
 function aiDemo(dm, last){
-  var bass=pr.clef==='bass' && pr.inst!=='guitar', sh=bass?12:0;
-  var sc={title:'',ts:[4,4],clef:bass?'bass':'treble',key:0,notes:dm.notes.map(function(n){ return {m:n.m-sh,d:n.d,a:''}; })};
+  var sc=aiScoreOf(dm.notes);
   var hs=$('#aiStaff'), hn=$('#aiNum'), none=function(){ return ''; };
   drawFit(hs,sc,none,'staff'); drawFit(hn,sc,none,'num');
   var dots=$$('#aiDots i');
@@ -4298,7 +4352,7 @@ function aiDemo(dm, last){
   /* contoh terakhir: permainan mulai sendiri setelah jeda sebentar (atau tekan tombol) */
   ai.T.push(setTimeout(aiNext, endMs+(last?1800:1200)));
 }
-function aiReplay(){ if(ai.i>=0 && ai.steps[ai.i] && ai.steps[ai.i].demo){ ai.i--; aiNext(); } }
+function aiReplay(){ if(ai.i>=0 && ai.steps[ai.i]){ ai.i--; aiNext(); } }
 /* Dipanggil saat soal Arcade baru siap: huruf dengan materi baru yang belum pernah dilihat pemain ini -> perkenalan dulu */
 function arcMaybeIntro(){
   if(pr.src!=='arcade' || !pr.playing || aiOpen() || !ARC_INTRO[pr.arcLetter]) return false;
