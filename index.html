@@ -795,6 +795,9 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 .agLoad{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,4vh,22px);
   background:radial-gradient(circle at 50% 40%,var(--pLilac),var(--pSky) 70%);transition:opacity .35s}
 .agLoad[hidden]{display:none}
+/* layar hitam sesaat saat masuk Arcade: menunggu HP selesai berputar ke mendatar, baru loading (diminta Ferdi) */
+.agBlack{position:absolute;inset:0;z-index:30;background:#000}
+.agBlack[hidden]{display:none}
 .agLoad.out{opacity:0}
 .agLogo{display:flex;flex-direction:column;align-items:center;line-height:1}
 .agLogo b{font-size:clamp(34px,15vh,72px);color:var(--brass);text-shadow:0 5px 0 var(--brassDeep);animation:agPop .7s var(--bounce)}
@@ -1104,6 +1107,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <!-- ================= ARCADE ================= -->
 <section class="tab arcGame" id="tab-arcade" hidden>
   <!-- Layar game Arcade (diminta Ferdi, Okt 2026): layar penuh mendatar, loading, halaman pilihan tanpa gulir, efek tombol -->
+  <div class="agBlack" id="agBlack" hidden aria-hidden="true"></div>
   <div class="agLoad" id="agLoad" hidden aria-live="polite">
     <div class="agLogo"><span class="agNotes" aria-hidden="true"><i>♪</i><i>♫</i><i>♩</i><i>♬</i></span><b>FerTune</b><em>ARCADE</em></div>
     <div class="agBar"><i id="agBarFill"></i></div>
@@ -6363,11 +6367,22 @@ function arcSfx(kind){
     });
   }catch(e){}
 }
+var agRotT=0;
 function arcEnter(){
-  document.body.classList.add('on-arcade'); goLandscape(); arcLoading();
+  document.body.classList.add('on-arcade');
+  var B=$('#agBlack'), L=$('#agLoad'); if(L) L.hidden=true; if(B) B.hidden=false;
+  goLandscape();
+  /* tunggu layar mendatar (lebar > tinggi) atau paling lama 1,2 dtk (HP yang menolak berputar memakai rotasi CSS) */
+  var t0=performance.now(), done=false;
+  function go(){ if(done) return; done=true; clearTimeout(agRotT); window.removeEventListener('resize',chk);
+    agRotT=setTimeout(function(){ if(B) B.hidden=true; if(document.body.classList.contains('on-arcade')) arcLoading(); },180); }
+  function chk(){ if(innerWidth>innerHeight) go(); }
+  window.addEventListener('resize',chk);
+  if(innerWidth>innerHeight) agRotT=setTimeout(go,120);
+  else agRotT=setTimeout(go,1200);
 }
 function arcLeave(){
-  document.body.classList.remove('on-arcade'); clearTimeout(agLoadT); var L=$('#agLoad'); if(L) L.hidden=true;
+  document.body.classList.remove('on-arcade'); clearTimeout(agLoadT); clearTimeout(agRotT); var L=$('#agLoad'); if(L) L.hidden=true; var B=$('#agBlack'); if(B) B.hidden=true;
   if(!pr.playing){ try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){} }
 }
 function arcGo(n){ arc.step=n; renderArcade(); }
