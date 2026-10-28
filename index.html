@@ -584,16 +584,135 @@ body.dock-inflow .app{padding-bottom:110px}
 .fields2{grid-template-columns:1fr}
 .fields2 .txt{padding:9px 12px;font-size:15px}
 @media (min-width:700px){ .fields2{grid-template-columns:repeat(3,1fr)} }
-/* PC/laptop: menu Partitur dibuat lebar supaya partitur, tombol & tuts lebih besar */
+/* Pembungkus panel Partitur: di HP "tembus" (urutan & tampilan sama seperti dulu), di PC jadi 3 panel */
+.sside,.smain,.spanel{display:contents}
+.stl{display:none}
+/* ===== PC/laptop: menu Partitur = studio 3 panel (alat kiri · partitur tengah · putar & berkas kanan) ===== */
 @media (min-width:900px) and (min-height:601px){
-  body.on-score .app{max-width:1180px}
-  body.on-score .chip{font-size:16px;padding:11px 8px}
-  body.on-score .dynb{font-size:19px}
-  body.on-score .kb{height:170px}
-  body.on-score .kb .key{font-size:18px}
-  body.on-score #tab-score .sound,body.on-score #tab-score .start{font-size:18px}
-  body.on-score #tab-score .board{padding:16px 18px 18px}
+  body.on-score .app{max-width:1680px;padding:14px 22px 112px}
+  body.on-score #tab-score{
+    display:grid;grid-template-columns:286px minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr;
+    column-gap:20px;row-gap:0;align-items:start;
+  }
+  /* bilah atas kaca: judul + pilih partitur di kiri, Partitur Saya / Bikin Baru di kanan */
+  #tab-score::before{
+    content:"";grid-row:1;grid-column:1/-1;align-self:stretch;margin-bottom:18px;
+    background:var(--navbg);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    border:2px solid var(--line);border-radius:24px;box-shadow:var(--shadow);
+  }
+  #tab-score > header{grid-row:1;grid-column:1/-1;justify-self:start;z-index:1;padding:10px 8px 10px 18px;margin-bottom:18px;gap:18px}
+  #tab-score > header .sel{flex:none}
+  #tab-score > header .sel select{max-width:340px;min-width:220px;cursor:pointer}
+  #tab-score .snewRow{grid-row:1;grid-column:1/-1;justify-self:end;align-self:center;z-index:1;padding:0 12px;margin-bottom:18px;gap:10px}
+  #tab-score .snewRow > *{flex:none;width:auto;padding:10px 20px;font-size:15px;border-radius:16px}
+  #tab-score .snewRow .snewbig{box-shadow:0 4px 0 var(--brassDeep),0 8px 18px rgba(255,111,168,.28)}
+  #tab-score #sfree{grid-row:2;grid-column:2;margin-bottom:14px}
+  #tab-score #sinfo{grid-row:3;grid-column:2;margin-bottom:14px;padding:12px 16px}
+  #tab-score .smain{grid-row:4;grid-column:2;display:flex;flex-direction:column;gap:14px;animation:sIn .55s .08s var(--bounce) both}
+  #tab-score .spanel{grid-row:5;grid-column:2;margin-top:16px}
+  /* panel samping: menempel saat halaman digulir, gulungan sendiri bila lebih tinggi dari layar */
+  #tab-score .sside,#tab-score .spanel{
+    display:flex;flex-direction:column;gap:10px;background:var(--panel);border:2px solid var(--line);border-radius:26px;
+    padding:14px 14px 16px;box-shadow:var(--shadow);
+  }
+  #tab-score .sside{
+    grid-row:2/span 4;grid-column:1;position:sticky;top:14px;max-height:calc(100vh - 118px);overflow:auto;overscroll-behavior:contain;
+    animation:sInL .55s var(--bounce) both;
+  }
+  #tab-score .sside,#tab-score .spanel{scrollbar-width:thin;scrollbar-color:var(--dLilac) transparent}
+  #tab-score .sside::-webkit-scrollbar,#tab-score .spanel::-webkit-scrollbar{width:8px}
+  #tab-score .sside::-webkit-scrollbar-thumb,#tab-score .spanel::-webkit-scrollbar-thumb{background:var(--pLilac);border-radius:8px}
+  /* judul kelompok tombol */
+  #tab-score .stl{
+    display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);margin:14px 2px 7px;
+  }
+  #tab-score .stl::before{content:"";width:8px;height:8px;border-radius:3px;background:var(--brass);box-shadow:0 0 0 3px var(--hl)}
+  #tab-score .stl::after{content:"";flex:1;height:2px;border-radius:2px;background:var(--line)}
+  #tab-score .sside > .stl:first-child,#tab-score .spanel > .stl:first-child{margin-top:2px}
+  #tab-score .stools .stl{margin-top:16px}
+  #tab-score .stools > .stl:first-of-type{margin-top:12px}
+  /* kartu alat menyatu dengan panel */
+  #tab-score .stools{background:none;border:0;box-shadow:none;padding:0;border-radius:0}
+  #tab-score .stools .chips{margin-top:0 !important;gap:6px}
+  #tab-score .stools .chips + .chips{margin-top:6px !important}
+  #tab-score .seg{padding:4px}
+  #tab-score .seg button{padding:8px;font-size:14px}
+  body.on-score #tab-score .chip{font-size:13.5px;padding:8px 6px;border-radius:13px}
+  #tab-score .stools .chip,#tab-score .srec .chip{min-width:0}
+  #tab-score #sdyn .chip,#tab-score #ssec .chip,#tab-score #sclip .chip{width:100%}
+  #tab-score #sview{margin-bottom:6px !important;font-size:12.5px}
+  #tab-score #sdur.icons .chip{padding:5px 4px}
+  #tab-score #sdyn{display:grid;grid-template-columns:repeat(6,1fr)}
+  #tab-score #sdyn .dynb{min-width:0;font-size:17px;padding:6px 0}
+  #tab-score #sdyn .dynb[data-hp]{grid-column:span 3;font-size:14px}
+  #tab-score #ssec{display:grid;grid-template-columns:repeat(4,1fr)}
+  #tab-score #ssec .chip{min-width:0;font-size:12px;padding:7px 2px}
+  #tab-score #ssec #sseccustom{grid-column:span 4}
+  #tab-score #sclip{display:grid;grid-template-columns:1fr 1fr}
+  #tab-score #sclip .chip{min-width:0}
+  #tab-score .stools .row{margin-top:12px !important;gap:8px}
+  #tab-score .stools .row .sound{padding:9px 6px;font-size:13.5px;border-radius:14px;box-shadow:0 4px 0 var(--cd)}
+  /* partitur = kertas di tengah */
+  #tab-score .board{padding:18px 22px 20px;border-radius:26px;min-height:300px;position:relative;
+    box-shadow:0 1px 0 var(--line),0 18px 40px -18px rgba(120,80,160,.28);transition:box-shadow .3s ease,border-color .3s ease}
+  #tab-score .board::before{content:"";position:absolute;left:24px;right:24px;top:-2px;height:4px;border-radius:0 0 6px 6px;
+    background:linear-gradient(90deg,var(--dMint),var(--dSky),var(--brass));opacity:.85}
+  #tab-score .board:hover{border-color:var(--pMint)}
+  /* tombol kursor: bilah ringkas di bawah partitur */
+  #tab-score #snav{display:flex;justify-content:center;gap:8px}
+  #tab-score #snav .chip{flex:0 1 140px !important;font-size:14px;padding:8px 10px}
+  /* tuts piano + oktaf di sampingnya */
+  #tab-score .skb{display:grid;grid-template-columns:1fr auto;align-items:stretch;gap:14px;padding:12px 14px;border-radius:24px}
+  body.on-score .kb{height:150px}
+  body.on-score .kb .key{font-size:15px}
+  #tab-score .skbOct{margin:0}
+  #tab-score .skbOct .stepper{flex-direction:column-reverse;justify-content:center !important;gap:8px;padding:8px;border-radius:20px;height:100%}
+  #tab-score .skbOct output{min-width:0;font-size:12.5px;font-weight:800;text-align:center;white-space:nowrap;line-height:1.2}
+  #tab-score .skbOct .ctl{width:40px;height:40px}
+  /* panel kanan: putar & rekam, latihan & berkas */
+  #tab-score .srec{background:none;border:0;box-shadow:none;padding:0;border-radius:0}
+  #tab-score .srec > .row:first-child{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #tab-score #splay{grid-column:1/-1;grid-row:1;font-size:19px;padding:14px 10px;border-radius:18px}
+  #tab-score #smidiCon,#tab-score #srec{font-size:14px;padding:10px 6px;border-radius:16px}
+  #tab-score .srecSet{flex-direction:column;align-items:stretch;gap:5px;margin-top:10px}
+  #tab-score .srecSet .lbl{min-width:0;font-size:12px;font-weight:700}
+  #tab-score .srecSet .lbl:empty{display:none}
+  #tab-score .srec .cstat{font-size:12px;text-align:left;background:var(--track);border-radius:14px;padding:8px 10px;margin:10px 0 2px}
+  #tab-score .spanel > .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #tab-score .spanel > .row > *{min-width:0;font-size:13.5px;padding:10px 6px;border-radius:14px;box-shadow:0 4px 0 var(--cd);display:flex;align-items:center;justify-content:center;line-height:1.25}
+  #tab-score .spanel > .row > :only-child{grid-column:1/-1}
+  #tab-score .spanel > .row > :nth-child(3){grid-column:1/-1}
+  #tab-score .spanel #sprac{font-size:15px;padding:12px 6px}
+  #tab-score .spanel .hint{font-size:12px}
+  #tab-score #ssaveInfo{margin:0 2px !important}
+  #tab-score .spanel .imgpanel{margin-top:6px}
 }
+/* menu bawah di PC (menu Partitur): kapsul di tengah, tidak menutupi panel kiri & kanan */
+@media (min-width:900px) and (min-height:601px){
+  body.on-score .tabs{left:50%;right:auto;width:min(560px,calc(100% - 640px));min-width:420px;transform:translateX(-50%)}
+  body.on-score #tab-score .sside{max-height:calc(100vh - 28px)}
+}
+/* layar lebar: panel kanan berdiri sendiri di sisi kanan */
+@media (min-width:1280px) and (min-height:601px){
+  body.on-score #tab-score{grid-template-columns:286px minmax(0,1fr) 300px;grid-template-rows:auto auto auto 1fr}
+  #tab-score #sfree,#tab-score #sinfo,#tab-score .smain{grid-column:2}
+  #tab-score .spanel{grid-row:2/span 3;grid-column:3;margin-top:0;position:sticky;top:14px;max-height:calc(100vh - 28px);overflow:auto;overscroll-behavior:contain;
+    animation:sInR .55s .12s var(--bounce) both}
+  #tab-score .sside{grid-row:2/span 3}
+}
+/* gerakan halus khusus mouse */
+@media (min-width:900px) and (hover:hover){
+  #tab-score .chip:hover:not(:disabled),#tab-score .sound:hover:not(:disabled),#tab-score .start:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.04) saturate(1.08)}
+  #tab-score .chip:active:not(:disabled),#tab-score .sound:active:not(:disabled),#tab-score .start:active:not(:disabled){transform:translateY(2px) scale(.96);filter:none}
+  #tab-score .ctl:hover{transform:scale(1.08)}
+  #tab-score .seg button:hover:not([aria-pressed="true"]){color:var(--ink);background:var(--panel)}
+  #tab-score .key:hover{filter:brightness(1.06)}
+  #tab-score .bk:hover{filter:brightness(1.35)}
+}
+@keyframes sIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes sInL{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:none}}
+@keyframes sInR{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:none}}
 .chip[aria-pressed="true"]{background:var(--brass);color:var(--brassText);box-shadow:0 3px 0 var(--brassDeep);animation:pop .4s var(--bounce)}
 .scorehost svg{user-select:none;-webkit-user-select:none}
 .kb{position:relative;height:120px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
@@ -1297,6 +1416,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     </div>
   </div>
 
+  <div class="sside">
+  <div class="stl">Tampilan</div>
   <div class="seg" role="group" aria-label="Jenis notasi">
     <button type="button" data-mode="staff" aria-pressed="true">Not balok</button>
     <button type="button" data-mode="num" aria-pressed="false">Not angka</button>
@@ -1307,6 +1428,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button class="chip" type="button" data-hand="rh" aria-pressed="true" style="flex:1">Tangan kanan (atas)</button>
       <button class="chip" type="button" data-hand="lh" aria-pressed="false" style="flex:1">Tangan kiri (bawah)</button>
     </div>
+    <div class="stl">Nilai not</div>
     <button class="chip" type="button" id="sview" style="width:100%;margin-bottom:8px" aria-label="Lihat berdasarkan"></button>
     <div class="chips" id="sdur" role="group" aria-label="Nilai not">
       <button class="chip" type="button" data-d="4" aria-pressed="false">Penuh</button>
@@ -1315,11 +1437,13 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button class="chip" type="button" data-d="0.5" aria-pressed="false">⅛</button>
       <button class="chip" type="button" data-d="0.25" aria-pressed="false">1/16</button>
     </div>
+    <div class="stl">Tanda not</div>
     <div class="chips" style="margin-top:8px">
       <button class="chip" type="button" id="sdot" aria-pressed="false">Titik (×1,5)</button>
       <button class="chip" type="button" id="sflat" aria-pressed="false">Hitam: ♯</button>
       <button class="chip" type="button" id="srest">Rehat</button>
     </div>
+    <div class="stl">Dinamika</div>
     <div class="chips sdyn" id="sdyn" role="group" aria-label="Dinamika not terpilih" style="margin-top:8px">
       <button class="chip dynb" type="button" data-dyn="pp">pp</button>
       <button class="chip dynb" type="button" data-dyn="p">p</button>
@@ -1330,6 +1454,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button class="chip dynb" type="button" data-hp="&lt;" aria-label="Crescendo (makin keras)">cresc. &lt;</button>
       <button class="chip dynb" type="button" data-hp="&gt;" aria-label="Diminuendo (makin pelan)">dim. &gt;</button>
     </div>
+    <div class="stl">Struktur lagu</div>
     <div class="chips" id="sbarl" role="group" aria-label="Garis birama di akhir birama terpilih" style="margin-top:8px">
       <button class="chip" type="button" data-bl="dbl" style="flex:1" title="Garis birama ganda: pergantian bagian lagu">‖ Garis ganda</button>
       <button class="chip" type="button" data-bl="end" style="flex:1" title="Garis akhir: ending / lagu selesai">┃▌ Garis akhir</button>
@@ -1344,6 +1469,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button class="chip" type="button" data-sec="Outro">Outro</button>
       <button class="chip" type="button" data-sec="*" id="sseccustom">✏️ Lainnya…</button>
     </div>
+    <div class="stl">Edit</div>
     <div class="chips" style="margin-top:6px"><button class="chip" type="button" id="sauto" style="flex:1" aria-pressed="false">Maju otomatis: mati</button></div>
     <div class="chips" style="margin-top:6px"><button class="chip" type="button" id="sundo" style="flex:1" title="Ctrl+Z" disabled>↶ Urungkan</button><button class="chip" type="button" id="sredo" style="flex:1" title="Ctrl+Y" disabled>↷ Ulangi</button></div>
     <div class="chips" id="sclip" style="margin-top:6px"><button class="chip" type="button" id="smulti" style="flex:1.3" aria-pressed="false" title="Shift+klik">⬚ Pilih banyak</button><button class="chip" type="button" id="scopy" style="flex:1" title="Ctrl+C">📋 Salin</button><button class="chip" type="button" id="scut" style="flex:1" title="Ctrl+X">✂️ Potong</button><button class="chip" type="button" id="spaste" style="flex:1" title="Ctrl+V">📥 Tempel</button></div>
@@ -1352,6 +1478,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button class="sound" id="sdelnote" type="button" style="flex:.8">Hapus not</button>
     </div>
   </div>
+  </div>
+  <div class="smain">
   <section class="board">
     <div class="scorehost" id="sscore"></div>
     <div class="pstatus bad" id="salert" role="alert" hidden style="font-size:15px;min-height:0;margin:8px 8px 2px"></div>
@@ -1374,7 +1502,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       </div>
     </div>
   </div>
+  </div>
 
+  <div class="spanel">
+  <div class="stl">Putar &amp; rekam</div>
   <div class="card srec" id="srecCard">
     <div class="row">
       <button class="sound" id="smidiCon" type="button">🎹 Sambungkan</button>
@@ -1407,6 +1538,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <div class="row" style="margin-top:8px"><button class="sound" id="srecUndo" type="button" hidden>↶ Batalkan rekaman terakhir</button></div>
   </div>
 
+  <div class="stl">Latihan &amp; berkas</div>
   <div class="row">
     <button class="sound" id="sprac" type="button">Latih lagu ini</button>
   </div>
@@ -1445,6 +1577,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     </div>
     <p class="hint" id="saimsg" style="margin-top:10px"></p>
   </section>
+  </div>
 </section>
 
 <section class="tab" id="tab-set" hidden>
