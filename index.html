@@ -289,6 +289,17 @@ header .sel select{max-width:100%;min-width:0}
 .pwBox h2{margin:2px 0 6px;font-size:20px}
 .pwBox p{margin:0 0 14px;font-size:14px;line-height:1.55;color:var(--muted)}
 .pwBox .row{gap:8px}
+/* izin MIDI/mikrofon (Pengaturan + dialog panduan) */
+.permRow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:2px dashed var(--line)}
+.permIco{font-size:24px}
+.permTxt{flex:1;display:flex;flex-direction:column;text-align:left;font-size:15px}
+.permTxt small{font-size:13px;color:var(--muted)}
+.permTxt small.ok{color:var(--ok)}
+.permTxt small.bad{color:var(--bad)}
+.permRow .permBtn{flex:0 0 auto;width:auto;padding:9px 14px;font-size:14px}
+.permBox{max-width:400px;max-height:calc(100vh - 36px);overflow:auto}
+.permSteps{text-align:left;margin:0 0 14px;padding-left:22px;font-size:14px;line-height:1.55}
+.permSteps li{margin:4px 0}
 /* piano 2 tangan: paranada tangan yang sedang ditulis diberi latar lembut; latar lain tetap bisa diketuk */
 .sv .handbg{fill:transparent;cursor:pointer}
 .sv .handbg.act{fill:var(--pSky);opacity:.45}
@@ -1473,6 +1484,13 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
 
 
+  <div class="card permCard" id="permCard">
+    <h2 class="sh">🔐 Izin alat musik</h2>
+    <p class="ahint">FerTune perlu izin Chrome untuk mendengar mikrofon dan membaca keyboard MIDI. Izin hanya ditanyakan sekali; kalau pernah terpilih <b>Blokir</b>, buka lagi di sini.</p>
+    <div class="permRow" data-perm="midi"><span class="permIco" aria-hidden="true">🎹</span><span class="permTxt"><b>Keyboard MIDI</b><small class="permSt">Memeriksa…</small></span><button class="sound permBtn" type="button">Izinkan</button></div>
+    <div class="permRow" data-perm="mic"><span class="permIco" aria-hidden="true">🎤</span><span class="permTxt"><b>Mikrofon</b><small class="permSt">Memeriksa…</small></span><button class="sound permBtn" type="button">Izinkan</button></div>
+  </div>
+
   <div class="card">
     <h2 class="sh">Tampilan</h2>
     <div class="themes" id="themes">
@@ -1560,6 +1578,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       </ol>
       <p><b>Di laptop atau PC:</b> colok kabel USB keyboard <b>langsung</b> ke laptop (tanpa OTG), buka FerTune di <b>Chrome atau Edge</b>, lalu ikuti langkah 3 dan 4.</p>
       <p><b>Not panjang harus ditahan:</b> saat berlatih lewat MIDI, not minim, minim bertitik, dan not penuh (semibreve) baru dihitung benar kalau tutsnya <b>tetap ditekan</b> sampai garis/hitungan sampai di <b>titik terakhir</b> not itu (mis. "5 ·" sampai ketuk ke-2, "5 · · ·" sampai ketuk ke-4); sesudah itu boleh dilepas. Menyentuh sebentar lalu dilepas = salah ("Dilepas terlalu cepat"). Pedal tidak dihitung; tutsnya sendiri yang harus ditahan.</p>
+      <p><b>Muncul "Akses MIDI ditolak"?</b> Berarti Chrome memblokir izin MIDI (biasanya pernah terpilih <b>Blokir</b>). Buka <b>Pengaturan → 🔐 Izin alat musik</b>: di sana terlihat status izin MIDI &amp; mikrofon, dan tombol <b>Cara membuka</b> menampilkan langkah membukanya di setelan Chrome sesuai perangkatmu.</p>
       <div class="tip"><b>Kalau tidak terdeteksi:</b> cabut lalu colok lagi; coba kabel lain (ada kabel yang hanya untuk mengisi daya); pastikan keyboard menyala dan mode USB-MIDI aktif; tutup aplikasi musik lain yang sedang memakai MIDI; di HP tertentu OTG perlu diaktifkan di pengaturan sistem.</div>
       <div class="tip">Keyboard yang hanya punya colokan MIDI bulat (DIN 5 pin) butuh kabel atau antarmuka MIDI-ke-USB. iPhone dan Safari belum mendukung MIDI di browser.</div>
     </div></details>
@@ -1662,6 +1681,19 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button type="button" id="sdelAll"><span class="ic" aria-hidden="true">⏪</span><b>Geser semua</b><small>Semua not sesudahnya maju ke kiri mengisi tempat 0</small></button>
     </div>
     <div class="row"><button class="sound" id="sdelNo" type="button">Batal</button></div>
+  </div>
+</div>
+
+<div class="pwOv" id="permOv" hidden role="dialog" aria-modal="true" aria-labelledby="permT">
+  <div class="pwBox permBox">
+    <div style="font-size:38px" aria-hidden="true" id="permIc">🎹</div>
+    <h2 id="permT">Izinkan keyboard MIDI</h2>
+    <p id="permLead"></p>
+    <ol class="permSteps" id="permSteps"></ol>
+    <div class="row">
+      <button class="sound" id="permNo" type="button">Tutup</button>
+      <button class="start" id="permGo" type="button" style="flex:1.4;padding:11px 8px;font-size:15px">Lanjut</button>
+    </div>
   </div>
 </div>
 
@@ -1825,6 +1857,7 @@ var mic = { active:false, ctx:null, stream:null, analyser:null, buf:null, raf:0,
             deviceId: store.get('yg.audIn',''), direct: store.get('yg.direct','0')==='1', interval:25 };
 function setMicErr(t){ $('#msg').textContent=t||''; $('#pmsg').textContent=t||''; }
 function syncMic(){
+  renderPerm();
   ['#start','#pstart'].forEach(function(s){
     var b=$(s); b.textContent = mic.active ? 'Matikan mikrofon' : 'Aktifkan mikrofon';
     b.classList.toggle('on',mic.active);
@@ -1860,8 +1893,9 @@ function micCleanup(){
   if(mic.wl){ try{mic.wl.release();}catch(e){} mic.wl=null; }
   mic.active=false;
 }
-async function micStart(){
+async function micStart(go){
   setMicErr('');
+  if(go!=='go' && await permQuery('mic')==='prompt'){ try{ ac(); }catch(e){} if(!(await permPre('mic'))) return; }
   /* Nyalakan suara saat tombol ditekan: browser HP hanya mengizinkan bunyi yang dimulai dari sentuhan,
      jadi "ting" tuner nanti (yang muncul otomatis) bisa terdengar. */
   try{ ac(); }catch(e){}
@@ -1894,13 +1928,101 @@ async function micStart(){
   }catch(e){
     micCleanup();
     var n=e&&e.name;
-    if(n==='NotAllowedError'||n==='SecurityError') setMicErr('Akses mikrofon ditolak. Izinkan mikrofon untuk situs ini di pengaturan browser, lalu tekan Aktifkan mikrofon lagi.');
+    if(n==='NotAllowedError'||n==='SecurityError'){ setMicErr('Akses mikrofon ditolak. Buka Pengaturan → Izin alat musik untuk cara mengizinkannya.'); permGuide('mic'); }
     else if(n==='NotFoundError') setMicErr('Mikrofon tidak ditemukan di perangkat ini.');
     else setMicErr('Mikrofon tidak bisa dipakai di sini. Coba buka halaman ini langsung di browser.');
   }
   syncMic();
 }
 function micStop(){ micCleanup(); syncMic(); }
+/* ===== Izin MIDI & mikrofon di dalam FerTune (diminta Ferdi, Okt 2026: user bingung harus membuka setelan Chrome).
+   Halaman web TIDAK boleh membuka blokir izinnya sendiri (aturan keamanan browser), jadi FerTune: (1) menjelaskan dulu
+   sebelum Chrome bertanya (permPre), (2) menampilkan status izin di Pengaturan (renderPerm), (3) memberi langkah membuka
+   blokir sesuai perangkat bila sudah terblokir (permGuide). ===== */
+var perm={midi:'?',mic:'?'};
+function permQuery(kind){
+  if(kind==='midi' && !midiSupported()) return Promise.resolve('unsupported');
+  if(kind==='mic' && !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) return Promise.resolve('unsupported');
+  if(!navigator.permissions || !navigator.permissions.query) return Promise.resolve('?');
+  return navigator.permissions.query({name:kind==='midi'?'midi':'microphone'}).then(function(r){
+    if(!r.ftHook){ r.ftHook=1; r.onchange=function(){ perm[kind]=r.state; renderPerm(); }; }
+    perm[kind]=r.state; return r.state;
+  }).catch(function(){ return '?'; });
+}
+function refreshPerm(){ ['midi','mic'].forEach(function(k){ permQuery(k).then(function(st){ perm[k]=st; renderPerm(); }); }); }
+function renderPerm(){
+  $$('#permCard .permRow').forEach(function(row){
+    var k=row.getAttribute('data-perm'), st=perm[k], el=row.querySelector('.permSt'), b=row.querySelector('.permBtn');
+    var on = k==='midi' ? midiConnected() : mic.active;
+    var t={granted:'✅ Diizinkan'+(k==='midi' ? (on?' · alat tersambung':' · belum ada alat tersambung') : (on?' · sedang dipakai':'')),
+           denied:'⛔ Diblokir oleh Chrome', prompt:'❔ Belum diizinkan',
+           unsupported:'✖ Browser ini belum mendukung'+(k==='midi'?' (pakai Chrome / Edge; iPhone belum bisa)':''),
+           '?':'Ketuk tombol untuk memeriksa'}[st]||'';
+    el.textContent=t; el.className='permSt'+(st==='granted'?' ok':(st==='denied'||st==='unsupported')?' bad':'');
+    b.textContent = st==='denied' ? 'Cara membuka' : (st==='granted' ? (k==='midi'?'Cari alat':'Tes') : 'Izinkan');
+    b.hidden = st==='unsupported';
+  });
+}
+function permEnv(){
+  var sa = window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches) || /android-app:/.test(document.referrer);
+  return { app:!!sa, android:/Android/i.test(navigator.userAgent), host:location.host };
+}
+var permCb=null;
+function permShow(o){
+  $('#permIc').textContent=o.ic; $('#permT').textContent=o.t; $('#permLead').innerHTML=o.lead;
+  $('#permSteps').innerHTML=(o.steps||[]).map(function(x){ return '<li>'+x+'</li>'; }).join(''); $('#permSteps').hidden=!(o.steps&&o.steps.length);
+  $('#permGo').textContent=o.go; $('#permNo').textContent=o.no||'Tutup';
+  $('#permOv').hidden=false;
+}
+/* sebelum pertanyaan Chrome muncul: hasil true = lanjut meminta izin */
+function permPre(kind){
+  return new Promise(function(res){
+    var midiK=kind==='midi';
+    permShow({ ic:midiK?'🎹':'🎤', t:midiK?'Izinkan keyboard MIDI':'Izinkan mikrofon',
+      lead:(midiK?'Supaya FerTune bisa membaca tuts keyboard MIDI-mu':'Supaya FerTune bisa mendengar alat musikmu')+', Chrome akan menanyakan izin. Pada pertanyaan berikutnya pilih <b>Izinkan</b>'+(midiK?'':' (atau <b>Saat aplikasi digunakan</b>)')+'.<br><small>Jangan pilih <b>Blokir</b> / <b>Jangan izinkan</b>, nanti harus dibuka lewat setelan Chrome.</small>',
+      steps:[], go:'Lanjut', no:'Nanti saja' });
+    permCb=res;
+  });
+}
+/* sudah terblokir: langkah membuka blokir sesuai perangkat */
+function permGuide(kind){
+  var midiK=kind==='midi', e=permEnv(), nm=midiK?'Perangkat MIDI':'Mikrofon', steps;
+  if(e.android && e.app) steps=[
+    'Tutup FerTune, lalu buka aplikasi <b>Chrome</b> (ikon Chrome biasa).',
+    'Ketuk <b>⋮</b> (kanan atas) → <b>Setelan</b> → <b>Setelan situs</b>.',
+    'Pilih <b>'+nm+'</b>'+(midiK?' (kadang bernama "Kontrol perangkat MIDI")':'')+'.',
+    'Di bagian <b>Diblokir</b>, ketuk <b>'+e.host+'</b> lalu pilih <b>Izinkan</b>.',
+    'Buka FerTune lagi, lalu tekan <b>Coba lagi</b>.'];
+  else if(e.android) steps=[
+    'Ketuk ikon <b>setelan / gembok</b> di kiri kolom alamat.',
+    'Pilih <b>Izin</b> (atau <b>Setelan situs</b>) → <b>'+nm+'</b> → <b>Izinkan</b>.',
+    'Muat ulang halaman, lalu tekan <b>Coba lagi</b>.'];
+  else steps=[
+    'Klik ikon <b>gembok / setelan</b> di kiri kolom alamat.',
+    'Ubah <b>'+nm+'</b> menjadi <b>Izinkan</b> (atau buka <b>Setelan situs</b> → '+nm+' → Izinkan).',
+    'Muat ulang halaman, lalu tekan <b>Coba lagi</b>.'];
+  permShow({ ic:'⛔', t:(midiK?'Izin keyboard MIDI':'Izin mikrofon')+' terblokir',
+    lead:'Chrome sedang memblokir '+(midiK?'keyboard MIDI':'mikrofon')+' untuk FerTune (biasanya karena pernah terpilih <b>Blokir</b>). Demi keamanan, hanya kamu yang bisa membukanya di setelan Chrome:',
+    steps:steps, go:'Coba lagi', no:'Tutup' });
+  permCb=function(ok){ if(!ok) return; if(midiK) midiConnect(true); else micStart('go'); };
+}
+function permClose(ok){ $('#permOv').hidden=true; var f=permCb; permCb=null; if(f) f(ok); refreshPerm(); }
+function bindPerm(){
+  $('#permGo').addEventListener('click',function(){ permClose(true); });
+  $('#permNo').addEventListener('click',function(){ permClose(false); });
+  $('#permOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) permClose(false); });
+  $$('#permCard .permRow').forEach(function(row){
+    row.querySelector('.permBtn').addEventListener('click',function(){
+      var k=row.getAttribute('data-perm');
+      if(perm[k]==='denied'){ permGuide(k); return; }
+      if(k==='midi') midiConnect(true);
+      else if(mic.active) midiToast('ok','Mikrofon aktif','Mikrofon sudah diizinkan dan sedang dipakai');
+      else micStart().then(function(){ if(mic.active){ midiToast('ok','Mikrofon siap 🎤','Izin mikrofon sudah diberikan'); micStop(); } refreshPerm(); });
+    });
+  });
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) refreshPerm(); });   /* kembali dari setelan Chrome */
+  refreshPerm();
+}
 function micRestart(){ if(mic.active){ micCleanup(); micStart(); } else syncAudStat(); }
 /* Daftar input suara (mikrofon bawaan, headset/adaptor jack, soundcard USB). Nama perangkat baru
    terlihat setelah izin mikrofon diberikan. */
@@ -2026,14 +2148,17 @@ function confetti(){
 var midi = { access:null, inputs:[], held:{}, sustain:false, voices:{}, lastT:0,
              synth: store.get('yg.midiSynth','1')!=='0', lastOn:{} };
 function midiSupported(){ return !!navigator.requestMIDIAccess; }
-async function midiConnect(){
+async function midiConnect(user){
   var st=$('#midiStat');
+  user = user===true || (user && user.type==='click');   /* ditekan pemain (bukan sambung otomatis saat aplikasi dibuka) */
   if(!midiSupported()){
     st.className='cstat';
     st.textContent='Browser ini belum mendukung MIDI. Pakai Google Chrome atau Microsoft Edge (Android, Windows, Mac, Linux). Safari/iPhone belum bisa.';
     midiToast('bad','Browser ini belum mendukung MIDI','Pakai Google Chrome atau Microsoft Edge');
     smidiSync(); return;
   }
+  /* sebelum Chrome bertanya: jelaskan dulu & minta pilih "Izinkan" (dulu siswa tak sengaja memilih Blokir) */
+  if(user && await permQuery('midi')==='prompt' && !(await permPre('midi'))) { smidiSync(); return; }
   try{
     midi.access=await navigator.requestMIDIAccess({sysex:false});
     midi.access.onstatechange=midiBindInputs;
@@ -2043,7 +2168,8 @@ async function midiConnect(){
   }catch(e){
     st.className='cstat';
     st.textContent='Akses MIDI ditolak. Izinkan "perangkat MIDI" untuk situs ini di pengaturan browser, lalu coba lagi.';
-    midiToast('bad','Akses MIDI ditolak / terblokir','Gembok di kolom alamat → Setelan situs → Perangkat MIDI → Izinkan');
+    midiToast('bad','Akses MIDI ditolak / terblokir','Buka Pengaturan → Izin alat musik untuk cara membukanya');
+    if(user) permGuide('midi');
     smidiSync();
   }
 }
@@ -2079,6 +2205,7 @@ function midiToast(kind,title,detail){
   clearTimeout(mtT); mtT=setTimeout(function(){ t.hidden=true; }, kind==='ok'?3200:5200);
 }
 function syncMidiUI(){
+  renderPerm();
   var st=$('#midiStat'), b=$('#midiBtn');
   if(midi.access){
     if(midiConnected()){
@@ -2212,7 +2339,7 @@ function midiTunerShow(n){
   setText(el.verdict,'Nada dari MIDI');
 }
 function bindMidi(){
-  $('#midiBtn').addEventListener('click',midiConnect);
+  $('#midiBtn').addEventListener('click',function(){ midiConnect(true); });
   $('#midiSynth').checked=midi.synth;
   $('#midiSynth').addEventListener('change',function(e){ midi.synth=e.target.checked; store.set('yg.midiSynth',midi.synth?'1':'0'); if(!midi.synth) midiReleaseAll(); });
   $('#audDirect').checked=mic.direct;
@@ -4137,7 +4264,7 @@ function bindPracticeOpts(){
   $('#pmidiGo').addEventListener('click',async function(){
     var m=$('#pmsg'); m.textContent='';
     $('#pconnSheet').hidden=false;
-    await midiConnect();
+    await midiConnect(true);
     if(midiConnected()) $('#pconnSheet').hidden=true;
     if(!midiSupported()) m.textContent='Browser ini belum mendukung MIDI. Pakai Google Chrome atau Microsoft Edge.';
     else if(!midiConnected()) m.textContent='Belum ada alat musik terdeteksi. Colok keyboard MIDI lewat kabel USB (di HP pakai kabel OTG), lalu tekan lagi.';
@@ -5670,7 +5797,7 @@ function recNoteOff(n){ var o=rec.open[n]; if(!o) return; delete rec.open[n]; o.
 function recStart(){
   if(!isPremium()){ showPaywall('rekam'); return; }
   if(!midiConnected()){
-    midiConnect();
+    midiConnect(true);
     $('#srecMsg').className='hint'; $('#srecMsg').textContent='Sambungkan piano MIDI dulu: colok keyboard MIDI (di HP pakai kabel OTG), tunggu tulisan "Terhubung", lalu tekan Rekam lagi.';
     return;
   }
@@ -5828,7 +5955,7 @@ function recUI(){
   $$('#sgrid .chip').forEach(function(x){ x.setAttribute('aria-pressed',parseFloat(x.getAttribute('data-q'))===recQ?'true':'false'); });
 }
 function bindRec(){
-  $('#smidiCon').addEventListener('click',function(){ midiConnect(); });
+  $('#smidiCon').addEventListener('click',function(){ midiConnect(true); });
   $('#smidiW').addEventListener('click',function(){ midiWrite=!midiWrite; store.set('yg.midiWrite',midiWrite?'1':'0'); syncMidiWrite(); });
   syncMidiWrite();
   $('#srec').addEventListener('click',function(){ if(rec.on) recStop(); else recStart(); });
@@ -6665,6 +6792,7 @@ function applyTheme(t){
   $$('#themes [data-theme]').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-theme')===t?'true':'false'); });
 }
 function bindSettings(){
+  bindPerm();
   applyTheme(store.get('yg.theme','warna'));
   $$('#themes [data-theme]').forEach(function(b){ b.addEventListener('click',function(){
     var t=b.getAttribute('data-theme'); store.set('yg.theme',t); applyTheme(t);
@@ -6677,6 +6805,7 @@ function showTab(name){
   if(name==='score' && mic.active) micStop();
   if(name!=='score'){ stopPlay(); recStop(); }
   if(name!=='tuner') metStop();
+  if(name==='set') refreshPerm();
   app.tab=name; document.body.classList.toggle('on-latih',name==='latih'); document.body.classList.toggle('on-score',name==='score');
   var dk=$('#pdock'); if(dk) dk.hidden = !(name==='latih' && !pr.playing);
   $$('.tab').forEach(function(t){ t.hidden = (t.id!=='tab-'+name); });
