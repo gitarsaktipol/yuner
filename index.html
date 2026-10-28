@@ -750,49 +750,49 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
   padding:calc(6px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) calc(14px + env(safe-area-inset-left,0px));
   background:radial-gradient(120% 90% at 15% 0%,var(--pLilac),transparent 60%),radial-gradient(110% 90% at 100% 100%,var(--pSky),transparent 60%),linear-gradient(160deg,var(--pPink),var(--bg) 70%)}
 .arcGame[hidden]{display:none}
-.arcGame::before{content:"♪  ♫  ♩  ♬  ♪  ♫  ♩";position:absolute;left:-10%;right:-10%;top:12%;font-size:clamp(28px,9vh,60px);letter-spacing:.7em;color:var(--brass);opacity:.12;white-space:nowrap;pointer-events:none;animation:agFloat 14s linear infinite}
+.arcGame::before{content:"♪  ♫  ♩  ♬  ♪  ♫  ♩";position:absolute;left:-10%;right:-10%;top:12%;font-size:clamp(28px,9vmin,60px);letter-spacing:.7em;color:var(--brass);opacity:.12;white-space:nowrap;pointer-events:none;animation:agFloat 14s linear infinite}
 @keyframes agFloat{ from{transform:translateX(0)} to{transform:translateX(-30%)} }
 @media (orientation:portrait) and (pointer:coarse){
   .arcGame{inset:auto;top:0;left:0;width:100vh;height:100vw;transform-origin:top left;transform:rotate(90deg) translateY(-100%)}
 }
 .agTop{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;position:relative;z-index:2}
 .agIco{border:0;border-radius:16px;width:46px;height:42px;font-size:22px;background:var(--surf);box-shadow:0 4px 0 var(--line);cursor:pointer}
-.agStar{font-weight:800;font-size:clamp(14px,4.2vh,18px);background:var(--pLemon);box-shadow:0 4px 0 var(--dLemon);border-radius:999px;padding:6px 14px;color:var(--ink)}
+.agStar{font-weight:800;font-size:clamp(14px,4.2vmin,18px);background:var(--pLemon);box-shadow:0 4px 0 var(--dLemon);border-radius:999px;padding:6px 14px;color:var(--ink)}
 .arcGame .adots i{width:clamp(26px,6vw,46px);height:10px}
-.agPage{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:clamp(6px,2.4vh,14px);position:relative;z-index:1;max-width:980px;width:100%;margin:0 auto}
+.agPage{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:clamp(6px,2.4vmin,14px);position:relative;z-index:1;max-width:980px;width:100%;margin:0 auto}
 .agPage[hidden]{display:none}
-.arcGame .atitle{font-size:clamp(20px,6.5vh,32px);margin:0;text-shadow:0 3px 0 var(--surf)}
+.arcGame .atitle{font-size:clamp(20px,6.5vmin,32px);margin:0;text-shadow:0 3px 0 var(--surf)}
 .agRow{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
-.agRow>button{flex:0 1 auto;padding:clamp(8px,2.6vh,13px) clamp(14px,3vw,24px);font-size:clamp(14px,4.4vh,18px);width:auto}
+.agRow>button{flex:0 1 auto;padding:clamp(8px,2.6vmin,13px) clamp(14px,3vw,24px);font-size:clamp(14px,4.4vmin,18px);width:auto}
 .agRow .txt{flex:1 1 220px;max-width:340px;margin:0}
 .agGo{min-width:150px}
 .arcGame .chars.agChars{justify-content:center;flex-wrap:nowrap;margin:0}
-.arcGame .chars.agChars button{flex:0 1 150px;max-width:170px;padding:clamp(6px,2vh,12px) 6px;font-size:clamp(13px,4vh,17px);border-radius:22px}
-.arcGame .chars.agChars button svg{max-width:none;width:auto;height:clamp(60px,26vh,130px)}
+.arcGame .chars.agChars button{flex:0 1 150px;max-width:170px;padding:clamp(6px,2vmin,12px) 6px;font-size:clamp(13px,4vmin,17px);border-radius:22px}
+.arcGame .chars.agChars button svg{max-width:none;width:auto;height:clamp(60px,26vmin,130px)}
 .arcGame .chars.agChars button[aria-pressed="true"]{transform:translateY(-6px) scale(1.04);transition:transform .25s var(--bounce)}
 .arcGame .bigopts{gap:clamp(12px,3vw,28px);max-width:720px;width:100%;margin:0 auto}
-.arcGame .bigopts button{padding:clamp(14px,6vh,34px) 8px;font-size:clamp(18px,6vh,28px);border-radius:30px}
-.arcGame .bigopts .bi{font-size:clamp(40px,17vh,90px)}
+.arcGame .bigopts button{padding:clamp(14px,6vmin,34px) 8px;font-size:clamp(18px,6vmin,28px);border-radius:30px}
+.arcGame .bigopts .bi{font-size:clamp(40px,17vmin,90px)}
 .arcGame .hint{margin:0;text-align:center}
 .agReady{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:clamp(10px,3vw,26px);align-items:center;height:100%;min-height:0}
 .agHero{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:0}
-.agHeroSvg svg{height:clamp(90px,40vh,210px);width:auto;animation:agBob 2.2s ease-in-out infinite}
+.agHeroSvg svg{height:clamp(90px,40vmin,210px);width:auto;animation:agBob 2.2s ease-in-out infinite}
 @keyframes agBob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-.arcGame .asum{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 16px;margin:0;text-align:center;font-size:clamp(13px,4vh,16px)}
-.arcGame .asum b{font-size:clamp(17px,5.5vh,24px)}
-.agOpts{display:flex;flex-direction:column;gap:clamp(6px,2.2vh,12px);min-height:0}
-.arcGame .tempoCard{margin:0;padding:8px 14px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:clamp(13px,4vh,15px)}
+.arcGame .asum{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 16px;margin:0;text-align:center;font-size:clamp(13px,4vmin,16px)}
+.arcGame .asum b{font-size:clamp(17px,5.5vmin,24px)}
+.agOpts{display:flex;flex-direction:column;gap:clamp(6px,2.2vmin,12px);min-height:0}
+.arcGame .tempoCard{margin:0;padding:8px 14px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:clamp(13px,4vmin,15px)}
 .arcGame .tempoCard label{margin:0}
-.agPlay{font-size:clamp(24px,9vh,40px)!important;padding:clamp(10px,3.5vh,18px)!important;border-radius:28px;animation:agGlow 1.6s ease-in-out infinite}
+.agPlay{font-size:clamp(24px,9vmin,40px)!important;padding:clamp(10px,3.5vmin,18px)!important;border-radius:28px;animation:agGlow 1.6s ease-in-out infinite}
 @keyframes agGlow{ 0%,100%{box-shadow:0 6px 0 var(--brassDeep),0 0 0 0 var(--brass)} 50%{box-shadow:0 6px 0 var(--brassDeep),0 0 0 10px transparent} }
-.agLv label{display:flex;flex-direction:column;font-weight:700;gap:4px;font-size:clamp(14px,4.4vh,18px)}
-.agLv select{font-size:clamp(16px,5vh,22px);padding:8px 14px;border-radius:14px}
+.agLv label{display:flex;flex-direction:column;font-weight:700;gap:4px;font-size:clamp(14px,4.4vmin,18px)}
+.agLv select{font-size:clamp(16px,5vmin,22px);padding:8px 14px;border-radius:14px}
 .arcGame .lockCard{max-width:520px}
 /* animasi tekan tombol */
 .agPress{animation:agPress .32s var(--bounce)}
 @keyframes agPress{ 0%{transform:scale(1)} 35%{transform:scale(.88) translateY(3px)} 100%{transform:scale(1)} }
 /* layar loading */
-.agLoad{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,4vh,22px);
+.agLoad{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,4vmin,22px);
   background:radial-gradient(circle at 50% 40%,var(--pLilac),var(--pSky) 70%);transition:opacity .35s}
 .agLoad[hidden]{display:none}
 /* layar hitam sesaat saat masuk Arcade: menunggu HP selesai berputar ke mendatar, baru loading (diminta Ferdi) */
@@ -800,9 +800,9 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 .agBlack[hidden]{display:none}
 .agLoad.out{opacity:0}
 .agLogo{display:flex;flex-direction:column;align-items:center;line-height:1}
-.agLogo b{font-size:clamp(34px,15vh,72px);color:var(--brass);text-shadow:0 5px 0 var(--brassDeep);animation:agPop .7s var(--bounce)}
-.agLogo em{font-style:normal;font-weight:800;letter-spacing:.35em;font-size:clamp(14px,5.5vh,24px);color:var(--ink);margin-top:6px}
-.agNotes{display:flex;gap:14px;font-size:clamp(22px,8vh,40px);color:var(--ink);margin-bottom:8px}
+.agLogo b{font-size:clamp(34px,15vmin,72px);color:var(--brass);text-shadow:0 5px 0 var(--brassDeep);animation:agPop .7s var(--bounce)}
+.agLogo em{font-style:normal;font-weight:800;letter-spacing:.35em;font-size:clamp(14px,5.5vmin,24px);color:var(--ink);margin-top:6px}
+.agNotes{display:flex;gap:14px;font-size:clamp(22px,8vmin,40px);color:var(--ink);margin-bottom:8px}
 .agNotes i{font-style:normal;animation:agHop 0.9s ease-in-out infinite}
 .agNotes i:nth-child(2){animation-delay:.15s;color:var(--brass)} .agNotes i:nth-child(3){animation-delay:.3s} .agNotes i:nth-child(4){animation-delay:.45s;color:var(--brass)}
 @keyframes agHop{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
@@ -810,7 +810,7 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 .agBar{width:min(60%,420px);height:14px;border-radius:999px;background:var(--surf);box-shadow:inset 0 2px 4px rgba(0,0,0,.12);overflow:hidden}
 .agBar i{display:block;height:100%;width:100%;transform-origin:left;background:linear-gradient(90deg,var(--brass),var(--peach));animation:agFill 1.5s ease-out forwards}
 @keyframes agFill{ from{transform:scaleX(0)} to{transform:scaleX(1)} }
-.agTip{font-weight:700;color:var(--ink);font-size:clamp(13px,4.2vh,17px)}
+.agTip{font-weight:700;color:var(--ink);font-size:clamp(13px,4.2vmin,17px)}
 @media (prefers-reduced-motion: reduce){ .arcGame::before,.agNotes i,.agHeroSvg svg,.agPlay,.agPress{animation:none} }
 /* Pemberitahuan sambungan MIDI (diminta Ferdi, Okt 2026) */
 .midiToast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));z-index:3000;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:min(92vw,520px);
@@ -1159,7 +1159,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button type="button" data-ainst="guitar"><span class="bi">🎸</span>Gitar</button>
     </div>
     <p class="hint" id="arcInstHint"></p>
-    <div class="agRow"><button class="sound agBack" id="arcBack2" type="button">◀ Kembali</button></div>
+    <div class="agRow"><button class="sound agBack" id="arcBack2" type="button">◀ Kembali</button><button class="start agGo" id="arcNext2" type="button">Lanjut ▶</button></div>
   </div>
 
   <div class="astep agPage" id="arcS3" hidden>
@@ -1168,7 +1168,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button type="button" data-amode="staff"><span class="bi">𝄞</span>Not balok</button>
       <button type="button" data-amode="num"><span class="bi">1 2 3</span>Not angka</button>
     </div>
-    <div class="agRow"><button class="sound agBack" id="arcBack3" type="button">◀ Kembali</button></div>
+    <div class="agRow"><button class="sound agBack" id="arcBack3" type="button">◀ Kembali</button><button class="start agGo" id="arcNext3" type="button">Lanjut ▶</button></div>
   </div>
 
   <div class="astep agPage" id="arcS4" hidden>
@@ -6403,9 +6403,12 @@ function bindArcade(){
   $('#agRenOk').addEventListener('click',function(){ arc.sub=null; renderArcade(); });
   $('#agHome').addEventListener('click',function(){ goTab('tuner'); });
   $$('[data-ainst]').forEach(function(b){ b.addEventListener('click',function(){
-    pr.inst=b.getAttribute('data-ainst')==='guitar'?'guitar':'piano'; store.set('yg.inst',pr.inst); syncPracticeOpts(); arcGo(3);
+    /* hanya memilih; pindah halaman lewat tombol Lanjut (diminta Ferdi, Okt 2026) */
+    pr.inst=b.getAttribute('data-ainst')==='guitar'?'guitar':'piano'; store.set('yg.inst',pr.inst); syncPracticeOpts(); renderArcade();
   }); });
-  $$('[data-amode]').forEach(function(b){ b.addEventListener('click',function(){ setMode(b.getAttribute('data-amode')); arcGo(4); }); });
+  $$('[data-amode]').forEach(function(b){ b.addEventListener('click',function(){ setMode(b.getAttribute('data-amode')); renderArcade(); }); });
+  $('#arcNext2').addEventListener('click',function(){ arcGo(3); });
+  $('#arcNext3').addEventListener('click',function(){ arcGo(4); });
   $('#arcPlay').addEventListener('click',startArcade);
   /* animasi tekan + bunyi untuk semua tombol di layar game */
   $('#tab-arcade').addEventListener('pointerdown',function(e){
