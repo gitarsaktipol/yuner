@@ -268,6 +268,27 @@ header .sel select{max-width:100%;min-width:0}
 .met .metDots i.acc.on{background:var(--ok);border-color:var(--ok)}
 .met input[type=range]{width:100%;accent-color:var(--brass);height:34px}
 .met .row .sound{padding:10px 6px;font-size:15px}
+/* metronom naik otomatis (latihan kecepatan; diminta Ferdi, Okt 2026). Mulai + Ketuk tempo sebaris, dan angka BPM
+   diperkecil saat Naik otomatis terbuka, supaya tetap muat satu layar HP kecil (360x640) */
+.met .metGoRow{gap:10px}
+.met .metGoRow #metGo{flex:1.5}
+.met .metGoRow #metTap{flex:1;padding:12px 6px;font-size:15px}
+.met.autoOn .metCard{padding:10px 14px}
+.met.autoOn .metBig{font-size:clamp(44px,8.5vh,80px)}
+.met.autoOn .metDots{margin-top:6px}
+@media (max-height:700px){ .met{gap:10px} .met .metCard{padding:12px 14px} .met.autoOn .metBig small{display:none} .met.autoOn .metName{margin-top:2px} }
+.met .metAuto{padding:8px 14px;margin:0;display:flex;flex-direction:column;gap:6px}
+.met .metAuto .chk{margin:0;font-weight:800}
+.met .maRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.met .maRow[hidden],.met .maStat[hidden]{display:none}
+.met .maRow label{display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:700;color:var(--muted);margin:0}
+.met .maRow select{width:100%;padding:7px 4px;font-size:14px}
+.met .maStat{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;color:var(--ink)}
+.met .maStat i{display:block;height:6px;border-radius:6px;background:var(--track);overflow:hidden}
+.met .maStat b{display:block;height:100%;width:0;background:var(--brass);border-radius:6px}
+.met .maStat.done b{background:var(--ok)}
+.met .metBig.bump output{display:inline-block;animation:maBump .45s var(--bounce)}
+@keyframes maBump{ 0%{transform:scale(1)} 40%{transform:scale(1.18);color:var(--brass)} 100%{transform:scale(1)} }
 /* ---------- langganan, mode coba & kunci Premium ---------- */
 #planCard .planChip{display:inline-block;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--track);color:var(--muted);margin-left:6px;vertical-align:middle}
 #planCard .planChip.pro{background:var(--ok);color:var(--okText)}
@@ -1321,8 +1342,19 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button type="button" data-b="4" aria-pressed="true">4/4</button>
       <button type="button" data-b="6" aria-pressed="false">6/8</button>
     </div>
-    <button class="start" id="metGo" type="button">▶ Mulai</button>
-    <button class="sound" id="metTap" type="button">Ketuk tempo</button>
+    <div class="card metAuto" id="metAuto">
+      <label class="chk"><input type="checkbox" id="maOn"> 🚀 Naik otomatis</label>
+      <div class="maRow" id="maRow" hidden>
+        <label>Tambah<select id="maStep" aria-label="Tambah berapa bpm"></select></label>
+        <label>Setiap<select id="maEvery" aria-label="Setiap berapa lama"></select></label>
+        <label>Sampai<select id="maTo" aria-label="Sampai tempo"></select></label>
+      </div>
+      <div class="maStat" id="maStat" hidden><span id="maTxt"></span><i><b id="maBar"></b></i></div>
+    </div>
+    <div class="row metGoRow">
+      <button class="start" id="metGo" type="button">▶ Mulai</button>
+      <button class="sound" id="metTap" type="button">Ketuk tempo</button>
+    </div>
   </section>
 </section>
 
@@ -7104,10 +7136,36 @@ function metClick(t,acc,dest){
   o.connect(g); g.connect(dest||c.destination); o.start(t); o.stop(t+0.07);
 }
 function metDot(b){ $$('#metDots i').forEach(function(d,i){ d.classList.toggle('on',i===b); }); }
+/* Naik otomatis: tiap `every` detik tempo bertambah `step` bpm (atau turun bila target lebih pelan) sampai `to`.
+   Perubahan dipasang di ketuk 1 birama berikutnya supaya terasa musikal. Saat Berhenti tempo kembali ke tempo awal. */
+var MA_EVERY=[10,20,30,60,120], maT=0;
+function maLoad(){ var o={}; try{ o=JSON.parse(store.get('yg.metAuto','{}'))||{}; }catch(e){}
+  met.auto={on:!!o.on, step:[1,2,3,4,5,10].indexOf(o.step)>=0?o.step:5, every:MA_EVERY.indexOf(o.every)>=0?o.every:30, to:clamp(parseInt(o.to,10)||met.bpm+40,30,240)}; }
+function maSave(){ store.set('yg.metAuto',JSON.stringify(met.auto)); }
+function maFmt(s){ s=Math.max(0,Math.ceil(s)); return s>=60 ? Math.floor(s/60)+':'+('0'+(s%60)).slice(-2) : s+' dtk'; }
+function maRender(){
+  var a=met.auto, on=a.on;
+  $('#maOn').checked=on; $('#maRow').hidden=!on; $('#maStat').hidden=!on; $('#metPane').classList.toggle('autoOn',on);
+  if(!on) return;
+  var st=$('#maStat'), dir=a.to>=(met.on?met.autoFrom:met.bpm)?1:-1, done=met.on && met.bpm===a.to, txt;
+  if(!met.on) txt=(met.autoLast? 'Terakhir sampai '+met.autoLast+' bpm. ' : '')+'Mulai '+met.bpm+' → '+a.to+' bpm, '+(dir>0?'+':'−')+a.step+' tiap '+maFmt(a.every);
+  else if(done) txt='🎯 Target '+a.to+' bpm tercapai!';
+  else txt=(dir>0?'Naik +':'Turun −')+a.step+' bpm dalam '+maFmt(met.autoNext-ac().currentTime)+' · target '+a.to;
+  $('#maTxt').textContent=txt; st.classList.toggle('done',done);
+  var from=met.on?met.autoFrom:met.bpm, span=Math.abs(a.to-from)||1;
+  $('#maBar').style.width=(met.on? Math.min(100,100*Math.abs(met.bpm-from)/span) : 0)+'%';
+}
 function metSched(){
   var c=ac();
   while(met.next<c.currentTime+0.12){
-    var b=met.beat; metClick(met.next,metAccent(b));
+    var b=met.beat;
+    if(met.auto.on && b===0 && met.bpm!==met.auto.to && met.next>=met.autoNext){
+      var dir=met.auto.to>met.bpm?1:-1;
+      met.bpm = dir>0 ? Math.min(met.auto.to,met.bpm+met.auto.step) : Math.max(met.auto.to,met.bpm-met.auto.step);
+      met.autoNext=met.next+met.auto.every;
+      setTimeout(function(){ if(!met.on) return; metRender(); var e=$('#metPane .metBig'); e.classList.remove('bump'); void e.offsetWidth; e.classList.add('bump'); }, Math.max(0,(met.next-c.currentTime)*1000));
+    }
+    metClick(met.next,metAccent(b));
     met.vis.push(setTimeout((function(bb){ return function(){ if(met.on) metDot(bb); }; })(b),Math.max(0,(met.next-c.currentTime)*1000)));
     if(met.vis.length>24) met.vis.shift();
     met.next+=60/met.bpm; met.beat=(b+1)%met.beats;
@@ -7119,18 +7177,23 @@ function metRender(){
   var d=''; for(var i=0;i<met.beats;i++) d+='<i class="'+(metAccent(i)?'acc':'')+'"></i>';
   if($('#metDots').getAttribute('data-n')!==String(met.beats)){ $('#metDots').innerHTML=d; $('#metDots').setAttribute('data-n',String(met.beats)); }
   $$('#metSig button').forEach(function(b){ b.setAttribute('aria-pressed',parseInt(b.getAttribute('data-b'),10)===met.beats?'true':'false'); });
+  if(met.auto && $('#maOn')) maRender();
 }
 function metStart(){
   if(mic.active) micStop();
   var c=ac(); met.on=true; met.beat=0; met.next=c.currentTime+0.08;
+  met.autoFrom=met.bpm; met.autoNext=met.next+met.auto.every; met.autoLast=0;
   metSched(); met.timer=setInterval(metSched,25); metRender();
+  clearInterval(maT); if(met.auto.on) maT=setInterval(maRender,250);
 }
 function metStop(){
   if(!met.on && !met.timer) return;
-  met.on=false; clearInterval(met.timer); met.timer=0; met.vis.forEach(clearTimeout); met.vis=[]; metDot(-1);
+  met.on=false; clearInterval(met.timer); met.timer=0; met.vis.forEach(clearTimeout); met.vis=[]; metDot(-1); clearInterval(maT);
+  /* naik otomatis: kembali ke tempo awal, catat tempo terakhir yang dicapai */
+  if(met.auto.on && met.autoFrom && met.bpm!==met.autoFrom){ met.autoLast=met.bpm; met.bpm=met.autoFrom; store.set('yg.metBpm',String(met.bpm)); }
   if($('#metGo')) metRender();
 }
-function metSetBpm(v){ met.bpm=clamp(Math.round(v),30,240); store.set('yg.metBpm',String(met.bpm)); metRender(); }
+function metSetBpm(v){ met.bpm=clamp(Math.round(v),30,240); store.set('yg.metBpm',String(met.bpm)); if(met.on) met.autoFrom=met.bpm; met.autoLast=0; metRender(); }
 function setTunerMode(mode){
   var metro=(mode==='metro');
   if(metro){ if(mic.active) micStop(); } else metStop();
@@ -7148,6 +7211,16 @@ function bindMetro(){
     met.beats=parseInt(b.getAttribute('data-b'),10); store.set('yg.metBeats',String(met.beats)); met.beat=0; $('#metDots').setAttribute('data-n',''); metRender();
   }); });
   $('#metGo').addEventListener('click',function(){ if(met.on) metStop(); else metStart(); });
+  maLoad();
+  $('#maStep').innerHTML=[1,2,3,4,5,10].map(function(v){ return '<option value="'+v+'">+'+v+' bpm</option>'; }).join('');
+  $('#maEvery').innerHTML=MA_EVERY.map(function(v){ return '<option value="'+v+'">'+(v<60?v+' detik':(v/60)+' menit')+'</option>'; }).join('');
+  var to=''; for(var v=30;v<=240;v+=5) to+='<option value="'+v+'">'+v+' bpm</option>'; $('#maTo').innerHTML=to;
+  function maSync(){ $('#maStep').value=String(met.auto.step); $('#maEvery').value=String(met.auto.every); met.auto.to=Math.round(met.auto.to/5)*5; $('#maTo').value=String(met.auto.to); maRender(); }
+  $('#maOn').addEventListener('change',function(e){ met.auto.on=e.target.checked; maSave(); clearInterval(maT); if(met.on && met.auto.on){ met.autoFrom=met.bpm; met.autoNext=ac().currentTime+met.auto.every; maT=setInterval(maRender,250); } maSync(); });
+  $('#maStep').addEventListener('change',function(e){ met.auto.step=parseInt(e.target.value,10)||5; maSave(); maRender(); });
+  $('#maEvery').addEventListener('change',function(e){ met.auto.every=parseInt(e.target.value,10)||30; if(met.on) met.autoNext=Math.min(met.autoNext,ac().currentTime+met.auto.every); maSave(); maRender(); });
+  $('#maTo').addEventListener('change',function(e){ met.auto.to=parseInt(e.target.value,10)||met.bpm; maSave(); maRender(); });
+  maSync();
   $('#metTap').addEventListener('click',function(){
     var t=performance.now(); if(met.taps.length && t-met.taps[met.taps.length-1]>2000) met.taps=[];
     met.taps.push(t); if(met.taps.length>6) met.taps.shift();
