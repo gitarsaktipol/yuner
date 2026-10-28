@@ -28,6 +28,7 @@
   src:url(fonts/bricolage-grotesque-latin.woff2) format('woff2');
 }
 :root{
+  --lvS:80%;--lvL:86%;--lvD:64%;
   --bg:#FFF7FB; --panel:#FFFFFF; --ink:#3B3355; --muted:#9C94B8; --line:#F3E8F6;
   --track:#F7EFFB; --brass:#FF6FA8; --brassDeep:#E85591; --brassText:#FFFFFF;
   --ok:#2FC98C; --okText:#FFFFFF; --okSoft:rgba(47,201,140,.20);
@@ -51,7 +52,7 @@
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
-:root[data-theme="dark"]{
+:root[data-theme="dark"]{--lvS:45%;--lvL:32%;--lvD:20%;
   --bg:#15162A; --panel:#1F2138; --ink:#F1F2FF; --muted:#9EA2C4; --line:#31335A;
   --track:#282A4C; --brass:#FF7FA1; --brassDeep:#C24B72; --brassText:#1A0B10;
   --ok:#3FE0A0; --okText:#08201A; --okSoft:rgba(63,224,160,.22);
@@ -787,8 +788,22 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 .arcGame .tempoCard label{margin:0}
 .agPlay{font-size:clamp(24px,9vmin,40px)!important;padding:clamp(10px,3.5vmin,18px)!important;border-radius:28px;animation:agGlow 1.6s ease-in-out infinite}
 @keyframes agGlow{ 0%,100%{box-shadow:0 6px 0 var(--brassDeep),0 0 0 0 var(--brass)} 50%{box-shadow:0 6px 0 var(--brassDeep),0 0 0 10px transparent} }
-.agLv label{display:flex;flex-direction:column;font-weight:700;gap:4px;font-size:clamp(14px,4.4vmin,18px)}
-.agLv select{font-size:clamp(16px,5vmin,22px);padding:8px 14px;border-radius:14px}
+/* pemilih level buatan sendiri (bukan <select> bawaan browser; diminta Ferdi, Okt 2026): warna tiap huruf = warna gunungnya */
+.agLvBox{background:var(--surf);border-radius:24px;box-shadow:0 5px 0 var(--line);padding:clamp(6px,2vmin,12px) clamp(8px,2vw,16px);display:flex;flex-direction:column;gap:clamp(3px,1.2vmin,7px);width:100%;max-width:900px;margin:0 auto}
+.agLvLab{margin-bottom:3px;font-weight:800;font-size:clamp(11px,3.2vmin,14px);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.agLetters{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:clamp(4px,1.3vmin,8px)}
+.agSubs{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:clamp(5px,1.6vmin,10px)}
+.agLetters button,.agSubs button{border:0;cursor:pointer;color:var(--ink);font-weight:800;font-family:inherit;border-radius:clamp(10px,3vmin,16px);
+  background:hsl(var(--h) var(--lvS) var(--lvL));box-shadow:0 4px 0 hsl(var(--h) 50% var(--lvD));position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:transform .2s var(--bounce),background .15s;padding:0;line-height:1}
+.agLetters button{height:clamp(28px,9vmin,48px);font-size:clamp(15px,5.4vmin,24px)}
+.agLetters button i{position:absolute;left:18%;right:18%;bottom:clamp(3px,1vmin,5px);height:3px;border-radius:3px;background:hsl(var(--h) 45% var(--lvD))}
+.agLetters button i b{display:block;height:100%;border-radius:3px;background:var(--ink);opacity:.55}
+.agLetters button .cr{position:absolute;top:-.55em;right:-.3em;font-size:.6em}
+.agSubs button{height:clamp(38px,11.5vmin,62px);font-size:clamp(17px,6vmin,28px);gap:2px}
+.agSubs button small{font-size:clamp(9px,2.8vmin,12px);font-weight:700;opacity:.75}
+.agLetters button[aria-checked="true"],.agSubs button[aria-checked="true"]{background:var(--brass);color:var(--brassText);box-shadow:0 4px 0 var(--brassDeep),0 0 0 3px var(--surf),0 0 0 6px var(--brass);transform:translateY(-3px) scale(1.06);z-index:1}
+.agLetters button[aria-checked="true"] i{background:rgba(255,255,255,.4)}
 .arcGame .lockCard{max-width:520px}
 /* animasi tekan tombol */
 .agPress{animation:agPress .32s var(--bounce)}
@@ -1187,10 +1202,12 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     </div>
   </div>
   <div class="astep agPage agSub" id="arcS5" hidden>
-    <h2 class="atitle">Ganti level</h2>
-    <div class="agRow agLv">
-      <label>Level <select id="parcLetter"></select></label>
-      <label>Sub-level <select id="parcSub"></select></label>
+    <h2 class="atitle">🎯 Pilih level</h2>
+    <div class="agLvBox">
+      <div class="agLvLab">Huruf</div>
+      <div class="agLetters" id="parcLetter" role="radiogroup" aria-label="Level huruf"></div>
+      <div class="agLvLab">Stage</div>
+      <div class="agSubs" id="parcSub" role="radiogroup" aria-label="Stage"></div>
     </div>
     <p class="hint" id="parcInfo"></p>
     <div class="agRow"><button class="start agGo" id="agLvOk" type="button">OK ✓</button></div>
@@ -3937,7 +3954,7 @@ function syncPracticeOpts(){
   $$('#pclefSeg button').forEach(function(b){ b.disabled=fromScore||isArc||isCust; });
   $('#pCustomOpts').hidden = !isCust;
   {
-    $('#parcLetter').value=String(pr.arcLetter); $('#parcSub').value=String(pr.arcSub);
+    renderLvPick();
     var pm=arcLevelParams(pr.arcLetter,pr.arcSub);
     var leapTxt = pm.maxStep<=1?'langkah kecil':(pm.maxStep<=3?'lompatan sedang':'lompatan luas');
     var rhTxt = pm.durs.length<=1?'not seperempat saja':(pm.durs.length===2?'seperempat & seperdelapan':'berbagai nilai not');
@@ -3978,8 +3995,6 @@ function setInst(v){
 }
 var NOTE_NAMES_UI=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
 function buildArcadeSelects(){
-  var lSel=$('#parcLetter'); lSel.innerHTML=ARC_LETTERS.map(function(L,i){ return '<option value="'+i+'">'+L+'</option>'; }).join('');
-  var sSel=$('#parcSub'); sSel.innerHTML=[1,2,3,4,5,6,7,8,9].map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
   var mSel=$('#custMeasures'); mSel.innerHTML=[1,2,3,4,5,6,7,8,9,10].map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
 }
 function buildCustGrid(){
@@ -4012,8 +4027,8 @@ function bindPracticeOpts(){
     if(pr.src==='custom' && pr.score){ pr.score.key=pr.key; pr.score.notes.forEach(function(n){ if(n.m!==null) n.a=spellIn(n.m,pr.key); }); newRound(true); }
     else newRound();
   });
-  $('#parcLetter').addEventListener('change',function(e){ pr.arcLetter=parseInt(e.target.value,10); arcSave(); syncPracticeOpts(); renderArcade(); });
-  $('#parcSub').addEventListener('change',function(e){ pr.arcSub=parseInt(e.target.value,10); arcSave(); syncPracticeOpts(); renderArcade(); });
+  $('#parcLetter').addEventListener('click',function(e){ var b=e.target.closest('button[data-l]'); if(!b) return; pr.arcLetter=parseInt(b.getAttribute('data-l'),10); arcSave(); syncPracticeOpts(); renderArcade(); });
+  $('#parcSub').addEventListener('click',function(e){ var b=e.target.closest('button[data-s]'); if(!b) return; pr.arcSub=parseInt(b.getAttribute('data-s'),10); arcSave(); syncPracticeOpts(); renderArcade(); });
   $('#custMeasures').addEventListener('change',function(e){ pr.custMeasures=parseInt(e.target.value,10); store.set('yg.custMeasures',String(pr.custMeasures)); newRound(); });
   $('#custAll').addEventListener('click',function(){ pr.custNotes=[]; for(var m=CUST_LO;m<=CUST_HI;m++) pr.custNotes.push(m); store.set('yg.custNotes',JSON.stringify(pr.custNotes)); syncPracticeOpts(); newRound(); });
   $('#custNone').addEventListener('click',function(){
@@ -6341,6 +6356,22 @@ function renderArcade(){
   $('#arcSum').innerHTML='<b>'+charName().replace(/[<&]/g,'')+'</b><span>Level '+ARC_LETTERS[a.letter]+a.sub+'</span><span>'+(pr.inst==='guitar'?'🎸 Gitar':'🎹 Piano')+' · '+(app.mode==='num'?'Not angka':'Not balok')+'</span>';
   $('#agHero').innerHTML='<svg viewBox="-24 -80 48 86" aria-hidden="true">'+charBody(c)+'</svg>';
   $('#agStar').textContent='⭐ '+fmtScore(arcTotal());
+}
+/* pemilih level Arcade (kotak huruf A–Z + stage 1–9) — pengganti <select> bawaan browser */
+function renderLvPick(){
+  var lw=$('#parcLetter'), sw=$('#parcSub'); if(!lw||!sw) return;
+  var pl=activePlayer(), res=pl.res||{}, bon=pl.bonus||{}, L=pr.arcLetter;
+  function hue(l){ return (l*47+130)%360; }
+  lw.innerHTML=ARC_LETTERS.map(function(ch,l){
+    var n=0; for(var k=l*9;k<l*9+9;k++) if(res[k]!=null) n++;
+    return '<button type="button" role="radio" data-l="'+l+'" style="--h:'+hue(l)+'" aria-checked="'+(l===L)+'" aria-label="Level '+ch+(n?', '+n+' dari 9 stage dimainkan':'')+'">'+ch+
+      (n?'<i><b style="width:'+Math.round(n/9*100)+'%"></b></i>':'')+(bon[l]?'<span class="cr">👑</span>':'')+'</button>';
+  }).join('');
+  var sb=''; for(var s=1;s<=9;s++){
+    var r=res[L*9+s-1], t=r==null?'–':(r>=100?'⭐ 100':r+'%');
+    sb+='<button type="button" role="radio" data-s="'+s+'" style="--h:'+hue(L)+'" aria-checked="'+(s===pr.arcSub)+'" aria-label="Stage '+ARC_LETTERS[L]+s+(r!=null?', nilai '+r:'')+'">'+ARC_LETTERS[L]+s+'<small>'+t+'</small></button>';
+  }
+  sw.innerHTML=sb;
 }
 /* ===== Layar game Arcade: loading, mendatar, efek tombol & suara ===== */
 var agLoadT=0;
