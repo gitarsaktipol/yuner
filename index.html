@@ -586,6 +586,12 @@ body.playing{overflow:hidden}
 /* lagu panjang yang tidak muat: margin auto (bukan align-items:center) supaya bagian atas partitur tidak terpotong & bisa digulir */
 .play .scorehost>svg{margin:auto 0;flex:none}
 .play .pstatus{font-size:clamp(20px,6vh,32px);min-height:0;margin:2px 8px}
+/* Layar berlatih: baris tuts MIDI & pesan SELALU satu baris setinggi tetap. Dulu nama akor (piano 2 tangan) pindah ke baris
+   sendiri dan pesan panjang terbungkus 2 baris -> tinggi partitur berubah -> seluruh partitur digambar ulang (drawFit)
+   di tengah permainan -> tersendat/macet (keluhan Ferdi, Okt 2026). */
+.play .held{flex-wrap:nowrap;overflow:hidden;height:30px;min-height:30px;margin:4px 8px 0}
+.play .held .chord{flex-basis:auto;font-size:16px;margin-right:4px}
+.play .pstatus{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
 .prebtns{display:flex;gap:12px;justify-content:center;margin:6px 0 2px}
 .prebtns .start{flex:1;max-width:340px;padding:11px 12px;font-size:17px}
 .prebtns .alt{background:var(--pSky);color:var(--ink);text-shadow:none;box-shadow:0 6px 0 var(--dSky)}
@@ -2403,7 +2409,8 @@ function micLoop(){
     var rms=Math.sqrt(s/w.length);
     mic.lastRms=rms;
     yin.x=null;
-    var f = rms<0.008 ? null : yin(w,mic.ctx.sampleRate);
+    /* sedang main lewat MIDI di Latihan/Arcade: suara mikrofon diabaikan, jadi YIN tidak perlu dihitung (lebih ringan) */
+    var f = (rms<0.008 || (app.tab!=='tuner' && midi.lastT && now-midi.lastT<2500)) ? null : yin(w,mic.ctx.sampleRate);
     for(i=0;i<mic.onData.length;i++) mic.onData[i](f,rms,now);
   }
   for(var k=0;k<mic.onTick.length;k++) mic.onTick[k]();
