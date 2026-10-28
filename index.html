@@ -394,11 +394,18 @@ header .sel select{max-width:100%;min-width:0}
 .wxBox h2{text-align:center}
 .wxBody{display:grid;grid-template-columns:330px 1fr;gap:14px;min-height:0;flex:1;overflow:hidden}
 .wxSet{overflow:auto;padding:2px 4px 0 2px;scrollbar-width:auto;scrollbar-color:var(--dLilac) var(--line)}
-/* indikator gulir SELALU tampak (Mac/HP menyembunyikan scrollbar bawaan) + tombol Unduh PDF selalu terlihat di bawah (diminta Ferdi, Okt 2026) */
+/* indikator gulir SELALU tampak (Mac/HP menyembunyikan scrollbar bawaan) + tombol Unduh selalu terlihat di bawah (diminta Ferdi, Okt 2026) */
 .wxSet::-webkit-scrollbar,.wxBody::-webkit-scrollbar{width:10px}
 .wxSet::-webkit-scrollbar-track,.wxBody::-webkit-scrollbar-track{background:var(--line);border-radius:10px}
 .wxSet::-webkit-scrollbar-thumb,.wxBody::-webkit-scrollbar-thumb{background:var(--dLilac);border-radius:10px;border:2px solid var(--line)}
 .wxGoBar{position:sticky;bottom:0;z-index:2;background:var(--panel);padding:10px 0 8px;margin-top:6px;display:flex;gap:8px;align-items:stretch;box-shadow:0 -10px 14px -6px rgba(60,40,90,.18)}
+.wxFmt{position:absolute;left:0;right:0;bottom:calc(100% + 6px);z-index:6;background:var(--panel);border:2px solid var(--pLilac);border-radius:18px;box-shadow:0 14px 34px rgba(60,40,90,.28);padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;animation:csIn .18s var(--bounce) both}
+.wxFmt[hidden]{display:none}
+.wxFmtT{grid-column:1/-1;font-size:12px;font-weight:800;color:var(--muted);text-align:center}
+.wxFmt button{border:0;border-radius:14px;background:var(--pLilac);color:var(--ink);font:inherit;font-weight:800;font-size:15px;padding:9px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 3px 0 var(--dLilac)}
+.wxFmt button small{font-size:11px;font-weight:500;opacity:.75}
+.wxFmt button:hover{background:var(--pPink)}
+.wxFmt button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--dLilac)}
 .wxGoBar .row{margin-top:0 !important;display:flex}.wxGoBar .row:first-child{flex:2}.wxGoBar .row:last-child{flex:1}.wxGoBar .row>*{flex:1}
 .wxSet .chip small{font-size:11px;font-weight:500;opacity:.75}
 .wxInfo{font-size:13px;color:var(--muted);text-align:center;margin:10px 0 0;line-height:1.45}
@@ -1999,8 +2006,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. Selama merekam, not yang kamu mainkan langsung tergambar di partitur dan kursor ikut berjalan mengikuti ketukan. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, rekaman masuk ke tangan yang sedang dipilih saja (<i>Tulis &amp; rekam ke</i>: Kanan / Kiri), mulai di birama baru setelah not terakhir tangan itu, dan tangan yang lain ikut berbunyi supaya bisa diikuti (bisa dimatikan). Jadi tangan kanan bisa direkam dulu, lalu tangan kiri dari awal lagu. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
         <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
         <li><b>📂 Partitur Saya</b> (tombol di atas, samping "Bikin Partitur Baru"): halaman berisi semua partitur yang sudah kamu buat, yang terakhir diubah di paling atas, lengkap dengan pratinjau kecil. Tiap partitur punya tombol <b>✏️ Buka</b>, <b>▶ Latih</b>, dan <b>🗑 Hapus</b> (ada konfirmasi, dan bisa <b>↶ Batalkan</b> beberapa detik setelah dihapus). Ada juga kotak cari judul.</li>
-        <li><b>💾 Simpan</b> menyimpan partitur (sebenarnya juga tersimpan otomatis tiap ada perubahan). Tanpa masuk akun, partitur <b>hanya ada di perangkat itu</b> — partitur dari laptop tidak muncul di HP. Supaya sama di semua perangkat, masuk akun Gitar Sakti di <b>Pengaturan › Akun</b> di setiap perangkat (laptop dan HP) dengan akun yang sama. <b>＋ Buat baru</b> membuat partitur kosong baru. Di bawahnya hanya ada 3 tombol berkas: <b>🖼️ Masukkan gambar</b>, <b>🎵 Masukkan audio</b> (lagu atau file MIDI) dan <b>📄 Ekspor PDF</b> (di dalamnya juga ada <b>Unduh juga sebagai MIDI</b>). Menghapus partitur lewat <b>📂 Partitur Saya</b>.</li>
-        <li><b>📄 Ekspor PDF</b>: membuat file PDF siap cetak. Pilih kertas <b>A4</b> atau <b>F4</b>, tegak/mendatar, not balok/not angka, lalu atur <b>ukuran not</b>, <b>ukuran judul</b>, <b>margin</b>, dan <b>jarak antar baris</b> sambil melihat pratinjau halamannya. Baris partitur tidak pernah terpotong di antara dua halaman. Tekan <b>Unduh PDF</b>, lalu buka dan cetak dengan ukuran kertas yang sama (skala 100%).</li>
+        <li><b>💾 Simpan</b> menyimpan partitur (sebenarnya juga tersimpan otomatis tiap ada perubahan). Tanpa masuk akun, partitur <b>hanya ada di perangkat itu</b> — partitur dari laptop tidak muncul di HP. Supaya sama di semua perangkat, masuk akun Gitar Sakti di <b>Pengaturan › Akun</b> di setiap perangkat (laptop dan HP) dengan akun yang sama. <b>＋ Buat baru</b> membuat partitur kosong baru. Di bawahnya hanya ada 3 tombol berkas: <b>🖼️ Masukkan gambar</b>, <b>🎵 Masukkan audio</b> (lagu atau file MIDI) dan <b>📄 Ekspor PDF</b> (tombol <b>⬇️ Unduh</b> di dalamnya: PDF, JPG, PNG transparan, atau MIDI). Menghapus partitur lewat <b>📂 Partitur Saya</b>.</li>
+        <li><b>📄 Ekspor PDF</b>: membuat file PDF siap cetak. Pilih kertas <b>A4</b> atau <b>F4</b>, tegak/mendatar, not balok/not angka, lalu atur <b>ukuran not</b>, <b>ukuran judul</b>, <b>margin</b>, dan <b>jarak antar baris</b> sambil melihat pratinjau halamannya. Baris partitur tidak pernah terpotong di antara dua halaman. Tekan <b>⬇️ Unduh</b> lalu pilih <b>PDF</b> (siap cetak — cetak dengan ukuran kertas yang sama, skala 100%), <b>JPG</b>, <b>PNG</b> (latar transparan) atau <b>MIDI</b>. JPG/PNG dibuat satu gambar per halaman.</li>
         <li><b>🎵 Masukkan audio</b>: seret &amp; lepas atau pilih rekaman (mp3, wav, m4a), atau file MIDI (.mid) yang langsung jadi partitur. FerTune mendengarkannya langsung di HP, mengubahnya jadi not, lalu jadi partitur (maks. 2 menit pertama). Hasil terbaik dari rekaman satu alat musik atau nyanyian saja; lagu lengkap dengan band hasilnya kurang rapi. Setelah selesai ada tautan <b>Unduh MIDI lengkap</b> berisi semua nada yang terdengar.</li>
       </ol>
       <div class="tip">Dengan keyboard MIDI tersambung, tuts yang kamu tekan langsung menjadi not di partitur.</div>
@@ -2075,7 +2082,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 <div class="pwOv" id="wxOv" hidden role="dialog" aria-modal="true" aria-labelledby="wxT">
   <div class="pwBox wxBox">
-    <h2 id="wxT">📄 Ekspor ke PDF</h2>
+    <h2 id="wxT">📄 Ekspor partitur</h2>
     <div class="wxBody">
       <div class="wxSet">
         <div class="srecSet"><span class="lbl">Kertas</span><div class="chips" id="wxPaper"><button class="chip" type="button" data-v="A4">A4<br><small>21 × 29,7 cm</small></button><button class="chip" type="button" data-v="F4">F4<br><small>21,5 × 33 cm</small></button></div></div>
@@ -2091,10 +2098,16 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxFill" aria-pressed="false">↕ Ratakan baris sampai bawah halaman</button></div></div>
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxBal" aria-pressed="true">⚖ Bagi birama rata per baris</button></div></div>
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxLast" aria-pressed="true">↔ Baris terakhir penuh sampai pojok</button></div></div>
-        <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="smidiOut">🎹 Unduh juga sebagai MIDI</button></div></div>
         <p class="wxInfo" id="wxInfo"></p>
         <div class="wxGoBar">
-        <div class="row" style="margin-top:0"><button class="start" id="wxGo" type="button" style="flex:1">⬇️ Unduh PDF</button></div>
+        <div class="row" style="margin-top:0"><button class="start" id="wxGo" type="button" style="flex:1" aria-haspopup="menu" aria-expanded="false">⬇️ Unduh</button></div>
+        <div class="wxFmt" id="wxFmt" role="menu" hidden>
+          <div class="wxFmtT">Unduh sebagai…</div>
+          <button type="button" role="menuitem" data-f="pdf">📄 PDF<small>siap cetak</small></button>
+          <button type="button" role="menuitem" data-f="jpg">🖼️ JPG<small>gambar per halaman</small></button>
+          <button type="button" role="menuitem" data-f="png">✨ PNG<small>latar transparan</small></button>
+          <button type="button" role="menuitem" data-f="midi">🎹 MIDI<small>untuk aplikasi musik</small></button>
+        </div>
         <div class="row" style="margin-top:8px"><button class="sound" id="wxClose" type="button">Tutup</button></div>
         </div>
       </div>
@@ -6510,7 +6523,6 @@ function bindScore(){
     hd.addEventListener('pointercancel',function(){ dr=null; });
   })();
   $('#sai').addEventListener('click',function(){ if(!isPremium()){ showPaywall('gambar'); return; } readWithAI(); });
-  $('#smidiOut').addEventListener('click',function(){ if(!isPremium()){ showPaywall('ekspor'); return; } exportMidi(); });
   bindWordExport();
   $('#smidiIn').addEventListener('click',function(e){ if(!isPremium()){ e.preventDefault(); showPaywall('impor'); } });
   $('#smidiIn').addEventListener('change',function(e){ if(!isPremium()) return; importMidi(e); });
@@ -6909,8 +6921,52 @@ function wxPdf(imgs,title){
   add(xs+'trailer\n<</Size '+(total+1)+'/Root 1 0 R/Info 3 0 R>>\nstartxref\n'+xo+'\n%%EOF\n');
   return new Blob(parts,{type:'application/pdf'});
 }
-function wxExport(){
+/* Gambar satu halaman kertas utuh (termasuk margin) untuk JPG / PNG transparan */
+function wxImage(pg,fmt){
+  return new Promise(function(res,rej){
+    var d=wxDims(), W=Math.round(d[0]/25.4*WX_DPI), H=Math.round(d[1]/25.4*WX_DPI), k=WX_DPI/25.4;
+    var svg = fmt==='png' ? pg.svg.replace('<rect width="100%" height="100%" fill="#fff"/>','') : pg.svg;
+    var img=new Image(), url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));
+    img.onload=function(){
+      URL.revokeObjectURL(url);
+      var c=document.createElement('canvas'); c.width=W; c.height=H;
+      var g=c.getContext('2d');
+      if(fmt!=='png'){ g.fillStyle='#fff'; g.fillRect(0,0,W,H); }
+      g.drawImage(img,Math.round(wx.mh*k),Math.round(wx.mv*k),Math.round(pg.w*k),Math.round(pg.h*k));
+      c.toBlob(function(b){ b ? res(b) : rej(new Error(fmt)); }, fmt==='png' ? 'image/png' : 'image/jpeg', 0.95);
+    };
+    img.onerror=function(){ URL.revokeObjectURL(url); rej(new Error('img')); };
+    img.src=url;
+  });
+}
+function wxSave(blob,fname){
+  var url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=fname; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); },8000);
+}
+/* ⬇️ Unduh → pilih format: PDF, JPG, PNG (transparan) atau MIDI (diminta Ferdi, Okt 2026) */
+function wxExport(fmt){
+  if(fmt==='midi'){ if(!isPremium()){ showPaywall('ekspor'); return; } exportMidi(); $('#wxInfo').textContent='File MIDI sudah diunduh.'; return; }
   if(!isPremium()){ showPaywall('word'); return; }
+  if(fmt==='jpg' || fmt==='png'){
+    var bt=$('#wxGo'), sc2=curScore(); bt.disabled=true; bt.textContent='Membuat gambar…';
+    var base=((sc2.title||'partitur').replace(/[^\w\- ]+/g,'').trim()||'partitur')+' ('+wx.paper+')';
+    wxLoadFont().then(function(){
+      var pages=wxLayout(), i=0, ext=fmt==='png'?'png':'jpg';
+      (function next(){
+        if(i>=pages.length){
+          bt.disabled=false; bt.textContent='⬇️ Unduh';
+          $('#wxInfo').textContent=pages.length>1 ? pages.length+' gambar '+ext.toUpperCase()+' sudah diunduh (satu per halaman). Kalau browser bertanya, izinkan mengunduh beberapa file.' : 'Gambar "'+base+'.'+ext+'" sudah diunduh.'+(fmt==='png'?' Latarnya transparan.':'');
+          return;
+        }
+        bt.textContent='Membuat halaman '+(i+1)+' dari '+pages.length+'…';
+        wxImage(pages[i],fmt).then(function(b){
+          wxSave(b, base+(pages.length>1?' - hal '+(i+1):'')+'.'+ext); i++; setTimeout(next,350);
+        }).catch(function(){ bt.disabled=false; bt.textContent='⬇️ Unduh'; $('#wxInfo').textContent='Maaf, gagal membuat gambar. Coba lagi.'; });
+      })();
+    });
+    return;
+  }
   var btn=$('#wxGo'), sc=curScore(); btn.disabled=true; btn.textContent='Membuat file…';
   wxLoadFont().then(function(){
     var pages=wxLayout(), pngs=[], i=0;
@@ -6920,12 +6976,12 @@ function wxExport(){
         var url=URL.createObjectURL(blob), a=document.createElement('a');
         a.href=url; a.download=fname; document.body.appendChild(a); a.click(); a.remove();
         setTimeout(function(){ URL.revokeObjectURL(url); },8000);
-        btn.disabled=false; btn.textContent='⬇️ Unduh PDF';
+        btn.disabled=false; btn.textContent='⬇️ Unduh';
         $('#wxInfo').textContent='File "'+fname+'" sudah diunduh ('+pages.length+' halaman). Buka lalu cetak dengan ukuran kertas '+wx.paper+' (skala 100% / ukuran sebenarnya).';
         return;
       }
       btn.textContent='Membuat halaman '+(i+1)+' dari '+pages.length+'…';
-      wxRaster(pages[i]).then(function(p){ pngs.push(p); i++; next(); }).catch(function(){ btn.disabled=false; btn.textContent='⬇️ Unduh PDF'; $('#wxInfo').textContent='Maaf, gagal membuat gambar halaman. Coba lagi.'; });
+      wxRaster(pages[i]).then(function(p){ pngs.push(p); i++; next(); }).catch(function(){ btn.disabled=false; btn.textContent='⬇️ Unduh'; $('#wxInfo').textContent='Maaf, gagal membuat gambar halaman. Coba lagi.'; });
     }
     next();
   });
@@ -6944,7 +7000,12 @@ function bindWordExport(){
   $('#wxFill').addEventListener('click',function(){ wx.fill=!wx.fill; wxSync(); wxPreview(); });
   $('#wxLast').addEventListener('click',function(){ wx.last=!wx.last; wxSync(); wxPreview(); });
   $('#wxBal').addEventListener('click',function(){ wx.bal=(wx.bal===false); wxSync(); wxPreview(); });
-  $('#wxGo').addEventListener('click',wxExport);
+  /* tombol Unduh membuka pilihan format */
+  function fmtShow(on){ $('#wxFmt').hidden=!on; $('#wxGo').setAttribute('aria-expanded',on?'true':'false'); }
+  $('#wxGo').addEventListener('click',function(e){ e.stopPropagation(); fmtShow($('#wxFmt').hidden); });
+  $$('#wxFmt [data-f]').forEach(function(b){ b.addEventListener('click',function(e){ e.stopPropagation(); fmtShow(false); wxExport(b.getAttribute('data-f')); }); });
+  $('#wxOv').addEventListener('click',function(e){ if(!e.target.closest('#wxFmt')) fmtShow(false); },true);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape' && !$('#wxFmt').hidden){ e.stopPropagation(); e.preventDefault(); fmtShow(false); } },true);
 }
 /* Membaca file MIDI standar (format 0/1). Hasilnya daftar not {s,e,m} dalam ketukan, plus tempo & birama. */
 function parseMidi(buf){
@@ -7507,7 +7568,7 @@ function applyEntitlements(){
   $('#ssave').textContent = prem ? '💾 Simpan' : '💾 Simpan ⭐';
   $('#sdel').hidden = !prem && !trial;
   $('#sdel').textContent = (!prem && trial) ? 'Buang coba menulis' : 'Hapus partitur';
-  ['#smidiOut','#sprac'].forEach(function(q){ var b=$(q); if(!b._t){ b._t=b.textContent; } b.textContent=b._t+(prem?'':' ⭐'); });
+  ['#sprac'].forEach(function(q){ var b=$(q); if(!b._t){ b._t=b.textContent; } b.textContent=b._t+(prem?'':' ⭐'); });
   [['#smidiIn','🎹 Pilih file MIDI'],['#saudIn','🎵 Pilih lagu (audio)'],['#simg','📁 Pilih dari file']].forEach(function(x){
     var lab=$(x[0]).parentNode; lab.firstChild.nodeValue=x[1]+(prem?'':' ⭐')+' ';
   });
