@@ -2984,7 +2984,7 @@ function newRound(keep){
       t+=n.d; });
   });
   { var sl=$('#pstageLbl'); if(sl){ if(pr.src==='arcade'){ sl.textContent='Stage '+ARC_LETTERS[pr.arcLetter]+pr.arcSub; sl.hidden=false; } else sl.hidden=true; } }
-  pr.lastPct=null; pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
+  clearTimeout(endT); pr.ending=false; pr.lastPct=null; pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
   pr.lastAdvanceT=0; pr.fast=false;
   pr.drawn=null; pr.lo=undefined;   /* soal baru / ejaan not bisa berubah: gambar ulang partitur & hitung ulang rentang */
   pd.armed=false; pd.cand=null; pd.count=0; pd.last=null; pd.legCand=null; pd.legCount=0; pd.peak=0; pd.dip=0;
@@ -3124,10 +3124,14 @@ function tempoAttach(){
     if(q.x<prevX-10 || row<0){ row++; rows[row]={y1:1e9,y2:-1e9,xs:[]}; }
     prevX=q.x; q.row=row; var r=rows[row]; r.y1=Math.min(r.y1,q.y-q.h/2-10); r.y2=Math.max(r.y2,q.y+q.h/2+10); r.xs.push(q.x);
   });
+  /* garis birama (termasuk garis akhir ganda) tiap baris: garis tempo berjalan sampai garis birama terakhir baris itu,
+     jadi not terakhir lagu "habis" tepat di garis akhir ganda (diminta Ferdi, Okt 2026) */
+  var bars=[]; svg.querySelectorAll('line.bar').forEach(function(l){ var b=l.getBBox(); bars.push({x:b.x+b.width/2,y1:b.y,y2:b.y+b.height}); });
   rows.forEach(function(r){
+    var lastX=r.xs[r.xs.length-1], gap=r.xs.length>1 ? (r.xs[r.xs.length-1]-r.xs[0])/(r.xs.length-1) : 40, bx=-1;
+    bars.forEach(function(b){ if(b.y2>=r.y1-20 && b.y1<=r.y2+20 && b.x>lastX && b.x>bx) bx=b.x; });
     var cy=(r.y1+r.y2)/2; if(r.y2-r.y1<80){ r.y1=cy-40; r.y2=cy+40; }
-    var gap=r.xs.length>1 ? (r.xs[r.xs.length-1]-r.xs[0])/(r.xs.length-1) : 40;
-    r.end=r.xs[r.xs.length-1]+gap*0.8;
+    r.end = bx>0 ? bx : lastX+gap*0.8;
   });
   list.forEach(function(q){ q.rowEnd=rows[q.row].end; });
   var old=svg.querySelector('.tpline'); if(old) old.remove();
@@ -3162,9 +3166,10 @@ function tempoLoop(now){
     var ni=pr.idx[pr.pos];
     if(t>tp.beat[ni]+tp.win[ni]){
       pr.tries++; pr.wrong++; prIds(ni).forEach(function(q){ pr.marks[q]='bad'; }); pr.got={}; pr.pos++; pr.missStreak=0; pr.lastMsg={t:'Terlewat! Bunyikan saat garis lewat.',c:'bad'}; changed=true;
-      if(pr.pos>=pr.idx.length){ finishRound(); break; }
+      if(pr.pos>=pr.idx.length){ endRound(); break; }
     } else break;
   }
+  if(pr.ending && !pr.done && t>=tp.end) finishRound();   /* not terakhir sudah dimainkan: selesai setelah nilai nadanya habis */
   if(pr.done){ renderPractice(); tempoStop(); return; }
   if(changed) renderPractice(); else tempoMove(t);
   tp.raf=requestAnimationFrame(tempoLoop);
@@ -3214,7 +3219,7 @@ function renderPkeys(){
   if(fl){ clearTimeout(pkT); pkT=setTimeout(renderPkeys,430); }
 }
 function practiceHit(m,exact){
-  if(pr.done || pr.paused || !pr.idx.length) return;
+  if(pr.done || pr.paused || pr.ending || !pr.idx.length || pr.pos>=pr.idx.length) return;
   m += instShift();
   if(!pr.t0) pr.t0=performance.now();
   var ni=pr.idx[pr.pos], ps=prPitches(ni), multi=prIds(ni).length>1;
@@ -3237,7 +3242,7 @@ function practiceHit(m,exact){
     pr.tries++; pr.missStreak=0;
     prIds(ni).forEach(function(q){ pr.marks[q]='ok'; }); pr.pos++;
     pr.lastMsg={t:'Benar!',c:'ok'};
-    if(pr.pos>=pr.idx.length) finishRound();
+    if(pr.pos>=pr.idx.length) endRound();
   } else {
     /* Toleransi: deteksi meleset 1x (sisa dengungan not sebelumnya, dsb) diabaikan diam-diam.
        Baru pada percobaan ke-2 berturut-turut dianggap salah sungguhan, ditandai, dan lanjut
@@ -3251,7 +3256,7 @@ function practiceHit(m,exact){
     pr.lastMsg={t:'Belum tepat, yang terdengar: '+labelOf(m,a,sk),c:'bad'};
     pr.missStreak=0;
     /* Tetap di not yang sama; harus benar-benar dimainkan dengan benar sebelum lanjut (mode tempo: waktu terus berjalan, lanjut ke not berikutnya). */
-    if(pr.tempoOn){ pr.got={}; pr.pos++; if(pr.pos>=pr.idx.length) finishRound(); }
+    if(pr.tempoOn){ pr.got={}; pr.pos++; if(pr.pos>=pr.idx.length) endRound(); }
   }
   renderPractice();
 }
@@ -3573,7 +3578,22 @@ function showHill(played,pct,cb,opt){
   }
   hillT.push(setTimeout(step,500));
 }
+/* Not terakhir sudah dimainkan: tunggu sampai NILAI NADANYA habis baru selesai (diminta Ferdi, Okt 2026: not akhir 4 ketuk
+   dulu langsung selesai begitu disentuh). Tempo: garis berjalan sampai ujung lagu (tempoLoop). Tanpa Tempo: tunggu
+   panjang not terakhir menurut tempo latihan (pr.bpm). Selama menunggu, penilaian berhenti (pr.ending). */
+var endT=0;
+function endRound(){
+  if(pr.ending || pr.done) return;
+  pr.ending=true; renderPractice();
+  if(pr.tempoOn && tp.run) return;
+  var ids=prIds(pr.idx[pr.idx.length-1]), d=0;
+  ids.forEach(function(q){ var N=q>=LH_OFF?pr.score.lh:pr.score.notes, i=q>=LH_OFF?q-LH_OFF:q, len=0;
+    do{ len+=N[i].d; i++; }while(N[i-1].tie && N[i]);   /* not bersambung tie ikut dihitung */
+    if(len>d) d=len; });
+  clearTimeout(endT); endT=setTimeout(whenPlaying(function(){ if(!pr.done){ finishRound(); renderPractice(); } }), Math.min(6000,d*60000/(pr.bpm||70)));
+}
 function finishRound(){
+  clearTimeout(endT); pr.ending=false;
   pr.done=true; tempoStop();
   var secs=Math.max(1,Math.round((performance.now()-pr.t0)/1000));
   /* Mode tempo: tiap not hanya 1 kesempatan (salah/terlewat langsung dilewati), jadi percobaan selalu = jumlah not.
@@ -3676,7 +3696,7 @@ function closePractice(fromPop){
   hideGrade(); hideHill(); tempoStop(); var tpp=$('#ptop'); if(tpp) tpp.hidden=true;
   if(!pr.playing) return;
   clearTimeout(autoT);
-  pr.playing=false; pr.paused=false; pr.deferred=null; document.body.classList.remove('playing'); $('#pconnSheet').hidden=true; $('#pdock').hidden=(app.tab!=='latih');
+  pr.playing=false; pr.paused=false; pr.deferred=null; pr.ending=false; clearTimeout(endT); document.body.classList.remove('playing'); $('#pconnSheet').hidden=true; $('#pdock').hidden=(app.tab!=='latih');
   $('#pplay').hidden=true; $('#psum').hidden=true; $('#pquit').hidden=true;
   try{ if(mic.active) micStop(); }catch(e){ console.warn(e); }
   $('#pboardHome').appendChild($('#pboard'));
