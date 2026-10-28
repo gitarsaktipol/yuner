@@ -1939,7 +1939,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>Rehat</b>: Maju otomatis <b>MATI</b> = not yang disorot <b>diganti jadi 0</b> (seperti dihapus). Maju otomatis <b>NYALA</b> = 0 <b>disisipkan di belakang (kanan)</b> not yang disorot (not di belakangnya bergeser). Ketuk bagian kosong partitur untuk melepas sorotan (kursor kembali ke akhir lagu).</li>
         <li><b>▶ Putar</b> (di tengah, antara Sambungkan dan Rekam) membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
         <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>＋ Buat baru</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
-        <li><b>Pintasan keyboard (laptop/PC)</b>: tekan <b>⌨️ Pintasan keyboard</b> di bagian Edit, lalu pilih gaya: <b>Gaya piano</b> (A S D F G H J K L = tuts putih, W E T Y U O P = tuts hitam), <b>Nama nada</b> (huruf C D E F G A B) atau <b>Not angka</b> (angka 1–7 = do re mi fa sol la si). Shift + tombol = ♯, Alt + tombol = ♭, Z / X = oktaf turun / naik, R = rehat, titik = bertitik, angka 1/2/4/8/6 = nilai not (gaya piano &amp; nama nada). Tekan beberapa tombol bersamaan = akor. Esc = tutup / lepas sorotan / berhenti memutar. Huruf/angka kecil di tuts layar menunjukkan tombolnya.</li>
+        <li><b>Pintasan keyboard (laptop/PC)</b>: tekan <b>⌨️ Pintasan keyboard</b> di bagian Edit, lalu pilih gaya: <b>Gaya piano</b> (A S D F G H J K L = tuts putih, W E T Y U O P = tuts hitam), <b>Nama nada</b> (huruf C D E F G A B) atau <b>Not angka</b> (angka 1–7 = do re mi fa sol la si). Shift + tombol = ♯, Alt + tombol = ♭, Z / X = oktaf turun / naik, R = rehat, titik = bertitik, angka 1/2/4/8/6 = nilai not (gaya piano &amp; nama nada). Tekan beberapa tombol bersamaan = akor. Panah ↑ / ↓ = nilai not lebih panjang / lebih pendek (Shift + ↑ / ↓ = pilih nada di dalam akor). Esc = tutup / lepas sorotan / berhenti memutar. Huruf/angka kecil di tuts layar menunjukkan tombolnya.</li>
         <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan</b> (di kartu di bawah tuts piano, di samping <b>▶ Putar</b> dan <b>⏺ Rekam</b>). Setelah tersambung, tombol <b>MIDI OFF / MIDI ON</b> menentukan apakah tuts menulis not: <b>OFF</b> = piano hanya berbunyi, bebas berlatih dulu tanpa mengubah partitur; <b>ON</b> = setiap tuts langsung menulis not seperti tuts di layar (tekan bersamaan = akor). Tombol <b>Rekam</b> tetap merekam walau MIDI OFF.</li>
         <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. Selama merekam, not yang kamu mainkan langsung tergambar di partitur dan kursor ikut berjalan mengikuti ketukan. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, rekaman masuk ke tangan yang sedang dipilih saja (<i>Tulis &amp; rekam ke</i>: Kanan / Kiri), mulai di birama baru setelah not terakhir tangan itu, dan tangan yang lain ikut berbunyi supaya bisa diikuti (bisa dimatikan). Jadi tangan kanan bisa direkam dulu, lalu tangan kiri dari awal lagu. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
         <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
@@ -5230,6 +5230,12 @@ function kbdKey(e){
   kbdFlash(m);
   return true;
 }
+var DUR_STEPS=[0.25,0.5,1,2,4];
+function durStep(dir){
+  var i=DUR_STEPS.indexOf(inp.dur); if(i<0) i=2;
+  var j=clamp(i+dir,0,DUR_STEPS.length-1); if(j===i && !inp.dot) return;
+  var b=document.querySelector('#sdur [data-d="'+DUR_STEPS[j]+'"]'); if(b) b.click();
+}
 function kbdSync(){
   var nm={off:'Mati',piano:'Gaya piano',name:'Nama nada',num:'Not angka'}[kbMode];
   var b=$('#skbd'); if(b){ b.textContent='⌨️ Pintasan keyboard: '+nm; b.setAttribute('aria-pressed',kbMode!=='off'?'true':'false'); }
@@ -5238,7 +5244,7 @@ function kbdSync(){
   if(kbMode==='piano') h='<b>Tuts putih:</b> '+['A','S','D','F','G','H','J','K','L',';'].map(K).join(' ')+' = C D E F G A B C D E<br><b>Tuts hitam:</b> '+['W','E'].map(K).join(' ')+' = C♯ D♯, '+['T','Y','U'].map(K).join(' ')+' = F♯ G♯ A♯, '+['O','P'].map(K).join(' ')+' = C♯ D♯ atas';
   else if(kbMode==='name') h='<b>Nada:</b> '+['C','D','E','F','G','A','B'].map(K).join(' ')+'<br>'+K('Shift')+' + huruf = ♯ (mis. Shift+F = F♯) · '+K('Alt')+' + huruf = ♭';
   else if(kbMode==='num') h='<b>Not angka:</b> '+['1','2','3','4','5','6','7'].map(K).join(' ')+' = do re mi fa sol la si (ikut tangga nada partitur)<br>'+K('Shift')+' + angka = ♯ (mis. Shift+4 = 4♯) · '+K('Alt')+' + angka = ♭';
-  if(kbMode!=='off') h+='<ul><li>'+K('Z')+' / '+K('X')+' = oktaf turun / naik</li>'+(kbMode!=='num'?'<li>Nilai not: '+K('1')+' penuh, '+K('2')+' ½, '+K('4')+' ¼, '+K('8')+' ⅛, '+K('6')+' 1/16</li>':'')+'<li>'+K('.')+' = titik (bertitik), '+K('R')+' = rehat</li><li>Tekan beberapa tombol bersamaan = akor</li><li>'+K('Esc')+' = tutup / lepas sorotan / berhenti memutar</li></ul>';
+  if(kbMode!=='off') h+='<ul><li>'+K('Z')+' / '+K('X')+' = oktaf turun / naik</li>'+(kbMode!=='num'?'<li>Nilai not: '+K('1')+' penuh, '+K('2')+' ½, '+K('4')+' ¼, '+K('8')+' ⅛, '+K('6')+' 1/16</li>':'')+'<li>'+K('.')+' = titik (bertitik), '+K('R')+' = rehat</li><li>Tekan beberapa tombol bersamaan = akor</li><li>'+K('↑')+' / '+K('↓')+' = nilai not lebih panjang / pendek ('+K('Shift')+' + '+K('↑')+K('↓')+' = pilih nada di akor)</li><li>'+K('Esc')+' = tutup / lepas sorotan / berhenti memutar</li></ul>';
   else h='Keyboard tetap bisa dipakai untuk pintasan biasa: '+K('Ctrl+Z')+' urungkan, '+K('Spasi')+' putar, '+K('←')+' '+K('→')+' pindah not, '+K('Esc')+' lepas sorotan.';
   $('#skbdHelp').innerHTML=h;
 }
@@ -6182,8 +6188,10 @@ function bindScore(){
     }
     if(e.key==='ArrowLeft'){ e.preventDefault(); navMove(-1,e.shiftKey); }
     else if(e.key==='ArrowRight'){ e.preventDefault(); navMove(1,e.shiftKey); }
-    else if(e.key==='ArrowUp'){ e.preventDefault(); pitchMove(1); }
-    else if(e.key==='ArrowDown'){ e.preventDefault(); pitchMove(-1); }
+    /* ↑ / ↓ = nilai not lebih panjang / lebih pendek (diminta Ferdi, Okt 2026): 1/16 ↔ ⅛ ↔ ¼ ↔ ½ ↔ penuh, lewat tombol nilai
+       (not terpilih ikut berubah seperti menekan tombolnya). Shift + ↑ / ↓ = pilih nada di dalam akor (dulu ↑ / ↓). */
+    else if((e.key==='ArrowUp'||e.key==='ArrowDown') && e.shiftKey){ e.preventDefault(); pitchMove(e.key==='ArrowUp'?1:-1); }
+    else if(e.key==='ArrowUp'||e.key==='ArrowDown'){ e.preventDefault(); durStep(e.key==='ArrowUp'?1:-1); }
     else if(e.key==='Delete' || e.key==='Backspace'){ e.preventDefault(); delNote(); }
   });
   /* Spasi tidak boleh ikut "menekan" tombol yang sedang terfokus (keyup), karena sudah dipakai untuk Putar */
