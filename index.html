@@ -2803,6 +2803,19 @@ function keyNote(d){
 }
 /* Tambahan ♯ kromatis hanya pada huruf yang tidak diubah tanda kunci, dan tidak jadi E♯/B♯. */
 function addSharp(k){ var pc=k.m%12; if(k.al===0 && [0,2,5,7,9].indexOf(pc)>=0){ k.m+=1; k.a='#'; } return k; }
+/* Soal buatan (Acak, Arcade, Custom) SELALU diakhiri nada dasar "1" / do tangga nadanya (diminta Ferdi, Okt 2026), seperti
+   akhir lagu. Not terakhir diganti ke "1" terdekat dari not sebelumnya, di dalam rentang soal [lo,hi] (indeks diatonik). */
+function tonicLetter(key){ key=key||0; return key>=0 ? (4*key)%7 : (3*(-key))%7; }
+function endOnTonic(notes,lo,hi){
+  var last=-1, i; for(i=notes.length-1;i>=0;i--) if(notes[i].m!==null){ last=i; break; }
+  if(last<0) return notes;
+  var ref = last>0 && notes[last-1].m!==null ? diaOf(notes[last-1]) : diaOf(notes[last]);
+  var tl=tonicLetter(pr.key), best=null, d;
+  for(var widen=0; widen<=7 && best===null; widen+=7)
+    for(d=Math.max(21,lo-widen); d<=Math.min(41,hi+widen); d++) if(((d%7)+7)%7===tl && (best===null || Math.abs(d-ref)<Math.abs(best-ref))) best=d;
+  if(best!==null){ var k=keyNote(best); notes[last].m=k.m; notes[last].a=k.a; }
+  return notes;
+}
 function genRandom(){
   var r=(pr.inst==='guitar'?RANGES_GUITAR:RANGES[pr.clef])[pr.range], lo=r[0], hi=r[1], notes=[], d=lo+Math.floor(Math.random()*(hi-lo+1)), i;
   for(i=0;i<pr.len;i++){
@@ -2812,7 +2825,7 @@ function genRandom(){
     var opts=[-3,-2,-1,0,1,2,3].filter(function(s){ return d+s>=lo && d+s<=hi; });
     d+=opts[Math.floor(Math.random()*opts.length)];
   }
-  return notes;
+  return endOnTonic(notes,lo,hi);
 }
 
 /* =====================================================================
@@ -2897,7 +2910,7 @@ function genArcade(letterIdx,subLv){
       d+=opts[Math.floor(Math.random()*opts.length)];
     });
   }
-  return notes;
+  return endOnTonic(notes,lo,hi);
 }
 
 /* =====================================================================
@@ -2912,6 +2925,10 @@ function genCustom(){
     var m=pool[Math.floor(Math.random()*pool.length)];
     notes.push({m:m,d:1,a:spellIn(m,pr.key)});
   }
+  /* diakhiri "1" (do) kalau nada dasar ada di pilihan nada; pilih yang terdekat dari not sebelumnya */
+  var tpc=KEY_TONIC[String(pr.key||0)], prev=notes.length>1?notes[notes.length-2].m:notes[0].m;
+  var tons=pool.filter(function(m){ return ((m%12)+12)%12===tpc; });
+  if(tons.length){ tons.sort(function(a,b){ return Math.abs(a-prev)-Math.abs(b-prev); }); notes[notes.length-1].m=tons[0]; notes[notes.length-1].a=spellIn(tons[0],pr.key); }
   return notes;
 }
 /* Ejaan nada pilihan bebas (Custom) menurut tangga nada: pakai ejaan tanda kunci kalau cocok (F♯ di G, B♭ di F, E♯ di F♯). */
