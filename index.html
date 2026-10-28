@@ -1559,6 +1559,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Tekan satu tuts. Nama nada dan akor tampil di layar. Selanjutnya sambungan otomatis tersambung lagi saat aplikasi dibuka.</li>
       </ol>
       <p><b>Di laptop atau PC:</b> colok kabel USB keyboard <b>langsung</b> ke laptop (tanpa OTG), buka FerTune di <b>Chrome atau Edge</b>, lalu ikuti langkah 3 dan 4.</p>
+      <p><b>Not panjang harus ditahan:</b> saat berlatih lewat MIDI, not minim, minim bertitik, dan not penuh (semibreve) baru dihitung benar kalau tutsnya <b>tetap ditekan</b> sampai nilainya hampir habis (minimal ¾ panjang not). Menyentuh sebentar lalu dilepas = salah ("Dilepas terlalu cepat"). Pedal tidak dihitung; tutsnya sendiri yang harus ditahan.</p>
       <div class="tip"><b>Kalau tidak terdeteksi:</b> cabut lalu colok lagi; coba kabel lain (ada kabel yang hanya untuk mengisi daya); pastikan keyboard menyala dan mode USB-MIDI aktif; tutup aplikasi musik lain yang sedang memakai MIDI; di HP tertentu OTG perlu diaktifkan di pengaturan sistem.</div>
       <div class="tip">Keyboard yang hanya punya colokan MIDI bulat (DIN 5 pin) butuh kabel atau antarmuka MIDI-ke-USB. iPhone dan Safari belum mendukung MIDI di browser.</div>
     </div></details>
@@ -2129,6 +2130,7 @@ function midiNoteOn(n,v){
 }
 function midiNoteOff(n){
   delete midi.held[n];
+  if((app.tab==='latih'||app.tab==='arcade') && pr.playing) holdRelease(n);
   if(rec.on) recNoteOff(n);
   if(!midi.sustain) synthOff(n);
   renderHeld();
@@ -3148,7 +3150,7 @@ function newRound(keep){
       t+=n.d; });
   });
   { var sl=$('#pstageLbl'); if(sl){ if(pr.src==='arcade'){ sl.textContent='Stage '+ARC_LETTERS[pr.arcLetter]+pr.arcSub; sl.hidden=false; } else sl.hidden=true; } }
-  clearTimeout(endT); pr.ending=false; pr.lastPct=null; pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0; pr.lateMiss=null;
+  clearTimeout(endT); pr.ending=false; pr.lastPct=null; pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0; pr.lateMiss=null; pr.holds=[]; pr.holdFail={};
   pr.lastAdvanceT=0; pr.fast=false;
   pr.drawn=null; pr.lo=undefined;   /* soal baru / ejaan not bisa berubah: gambar ulang partitur & hitung ulang rentang */
   pd.armed=false; pd.cand=null; pd.count=0; pd.last=null; pd.legCand=null; pd.legCount=0; pd.peak=0; pd.dip=0;
@@ -3445,6 +3447,7 @@ function practiceHit(m,exact){
     pr.tries++; pr.missStreak=0;
     prIds(ni).forEach(function(q){ pr.marks[q]='ok'; }); pr.pos++;
     pr.lastMsg={t:'Benar!',c:'ok'};
+    if(exact && holdStart(ni)) pr.lastMsg={t:'Benar! Tahan terus… ⏳',c:'ok'};
     if(pr.pos>=pr.idx.length) endRound();
   } else {
     /* Toleransi: deteksi meleset 1x (sisa dengungan not sebelumnya, dsb) diabaikan diam-diam.
@@ -3461,6 +3464,38 @@ function practiceHit(m,exact){
     /* Tetap di not yang sama; harus benar-benar dimainkan dengan benar sebelum lanjut (mode tempo: waktu terus berjalan, lanjut ke not berikutnya). */
     if(pr.tempoOn){ pr.got={}; pr.pos++; if(pr.pos>=pr.idx.length) endRound(); }
   }
+  renderPractice();
+}
+/* ===== MIDI: not panjang (minim, minim bertitik, semibreve; tie ikut) harus DITAHAN (diminta Ferdi, Okt 2026: siswa hanya
+   menyentuh tuts sebentar tapi tetap benar). Lepas sebelum 75% nilainya habis = salah. Pedal tidak dihitung — tutsnya sendiri
+   yang harus tetap ditekan. Hanya lewat MIDI; mode suara tidak berubah. ===== */
+var HOLD_MIN=2, HOLD_PART=0.75;
+function holdBeatMs(){ return pr.tempoOn && tp.run ? tp.beatMs : 60000/(pr.bpm||70); }
+function holdStart(ni){
+  var now=performance.now(), sh=instShift(), any=false;
+  prIds(ni).forEach(function(q){
+    var N=q>=LH_OFF?pr.score.lh:pr.score.notes, i=q>=LH_OFF?q-LH_OFF:q, n=N[i];
+    if(!n || n.m==null) return;
+    var d=tieLen(N,i); if(d<HOLD_MIN) return;
+    (pr.holds||(pr.holds=[])).push({q:q, step:ni, ms:pitchList(n).map(function(p){ return p.m-sh; }), need:now+HOLD_PART*d*holdBeatMs()});
+    any=true;
+  });
+  return any;
+}
+function holdRelease(n){
+  if(!pr.holds || !pr.holds.length || pr.done || pr.paused) return;
+  var now=performance.now(), fail=null;
+  pr.holds=pr.holds.filter(function(h){
+    if(now>=h.need) return false;                        /* sudah ditahan cukup lama */
+    if(h.ms.indexOf(n)<0) return true;
+    if(pr.marks[h.q]==='ok'){ pr.marks[h.q]='bad'; fail=fail||h; }
+    return false;
+  });
+  if(!fail) return;
+  if(!pr.holdFail) pr.holdFail={};
+  if(!pr.holdFail[fail.step]){ pr.holdFail[fail.step]=1; if(pr.tempoOn) pr.wrong++; else pr.tries++; }
+  pr.flash={m:n,ok:false,t:now};
+  pr.lastMsg={t:'Dilepas terlalu cepat! Tahan tuts sampai nilai notnya habis.',c:'bad'};
   renderPractice();
 }
 function advanceArcadeLevel(){
@@ -3880,7 +3915,7 @@ function startPractice(){
 function whenPlaying(fn){ return function(){ if(pr.paused) pr.deferred=fn; else fn(); }; }
 function pausePlay(){
   if(pr.paused) return;
-  pr.paused=true; pr.pauseT=performance.now();
+  pr.paused=true; pr.pauseT=performance.now(); pr.holds=[];
   if(tp.run){ cancelAnimationFrame(tp.raf); tp.paused=true; }
   pd.armed=false;
 }
