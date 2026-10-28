@@ -489,7 +489,7 @@ header .sel select{max-width:100%;min-width:0}
 .insl{stroke:var(--bad);stroke-width:3;stroke-linecap:round;opacity:0}
 .n.st-ins .insl{opacity:1}
 .tie{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
-.n.st-cur .hl,.n.st-sel .hl{opacity:1}
+.n.st-cur .hl,.n.st-sel .hl,.n.pvHit .hl{opacity:1}
 .n.st-ok{color:var(--ok)}
 .n.st-bad{color:var(--bad)}
 .pstatus{text-align:center;font-size:19px;font-weight:700;min-height:30px;margin:6px 8px 0}
@@ -1903,7 +1903,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <details class="helpitem"><summary>Latihan baca not</summary><div class="hb">
       <ol>
         <li>Buka menu <b>Latihan</b>. Pilih <b>Piano</b> atau <b>Gitar</b>, lalu <b>Not balok</b> atau <b>Not angka</b>.</li>
-        <li>Pilih <b>Mode Latihan</b>: Acak, Arcade, Custom (pilih sendiri nada yang keluar), atau Partitur saya (soal dari partitur buatanmu).</li>
+        <li>Pilih <b>Mode Latihan</b>: Acak, Arcade, Custom (pilih sendiri nada yang keluar; nada yang dipilih langsung berbunyi), atau Partitur saya (soal dari partitur buatanmu). Ketuk not di pratinjau soal untuk mendengar bunyinya.</li>
         <li>Atur <b>Tangga nada</b> bila perlu, lalu tekan <b>Mulai berlatih</b>. Layar latihan terbuka penuh.</li>
         <li>Mainkan not yang disorot. Nada dibaca lewat <b>mikrofon</b>, <b>kabel audio</b>, atau <b>keyboard MIDI</b>.</li>
         <li>Selesai satu soal, aplikasi menunjukkan hasilnya lalu otomatis pindah ke soal berikutnya.</li>
@@ -4510,7 +4510,8 @@ function renderPractice(){
   } else {
     /* Menu Latihan: pratinjau 2 birama pertama saja */
     pr.drawn=null;
-    drawScore(host,previewScore(sc),app.mode,function(){ return ''; });
+    pr.pv=previewScore(sc);
+    drawScore(host,pr.pv,app.mode,function(){ return ''; });
   }
   if(pr.playing) followCur(host, redrawn);
   $('#pprebtns').hidden = !(pr.playing && !(mic.active || midiConnected()));
@@ -4610,10 +4611,22 @@ function buildCustGrid(){
     for(var pc=0; pc<12; pc++){ m=(oct+1)*12+pc; html+='<button type="button" data-note="'+m+'">'+NOTE_NAMES_UI[pc]+'</button>'; }
   });
   g.innerHTML=html;
+  /* Pratinjau soal di menu Latihan: ketuk not = dengar bunyinya (diminta Ferdi, Okt 2026: yang belum bisa membaca not tetap
+     tahu bunyinya). Hanya saat belum bermain; not angka/balok sama. */
+  $('#pscore').addEventListener('click',function(e){
+    if(pr.playing || !pr.pv) return;
+    var t=e.target.closest && e.target.closest('g[data-i]'); if(!t) return;
+    var id=parseInt(t.getAttribute('data-i'),10), lh=id>=LH_OFF, N=lh?(pr.pv.lh||[]):pr.pv.notes, n=N[lh?id-LH_OFF:id];
+    if(!n || n.m===null) return;
+    try{ var c=ac(); pitchList(n).forEach(function(q){ pluck(q.m-instShift(),c.currentTime,0.6); }); }catch(er){}
+    t.classList.add('pvHit'); setTimeout(function(){ t.classList.remove('pvHit'); },350);
+  });
   g.addEventListener('click',function(e){
     var b=e.target.closest('button[data-note]'); if(!b) return;
     var m=parseInt(b.getAttribute('data-note'),10), i=pr.custNotes.indexOf(m);
     if(i>=0) pr.custNotes.splice(i,1); else pr.custNotes.push(m);
+    /* nada yang dipilih langsung berbunyi (diminta Ferdi, Okt 2026: yang belum bisa membaca not tetap tahu bunyinya) */
+    if(i<0){ try{ pluck(m-instShift(),ac().currentTime,0.6); }catch(er){} }
     store.set('yg.custNotes',JSON.stringify(pr.custNotes));
     syncPracticeOpts();
     if(pr.custNotes.length>=2) newRound();
