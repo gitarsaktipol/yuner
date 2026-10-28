@@ -954,6 +954,25 @@ html.csOpen select:focus{outline:none}
   box-shadow:0 4px 0 #2E2548;transform-origin:top;
 }
 .bk:active{background:var(--accent2);transform:scaleY(.96);box-shadow:0 1px 0 #2E2548}
+/* pintasan keyboard (Okt 2026): tuts yang ditekan lewat keyboard ikut "ditekan" + label huruf/angka kecil di tuts */
+.key.kbHit{transform:scaleY(.96);box-shadow:0 1px 0 rgba(120,80,160,.18);filter:brightness(.92)}
+.bk.kbHit{background:var(--accent2);transform:scaleY(.96);box-shadow:0 1px 0 #2E2548}
+.key .kl,.bk .kl{position:absolute;left:0;right:0;text-align:center;font-size:11px;font-weight:800;pointer-events:none}
+.key{position:relative}
+.key .kl{bottom:30px;color:var(--ink);opacity:.75;font-size:12px}
+.bk .kl{bottom:6px;color:#fff;opacity:.85}
+.kbdBox{max-width:440px;text-align:left}
+.kbdBox h2,.kbdBox>p{text-align:center}
+.kbdOpts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.kbdOpts button{border:2px solid var(--line);background:var(--panel);color:var(--ink);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:2px;text-align:left;cursor:pointer;font:inherit}
+.kbdOpts button b{font-size:15px}
+.kbdOpts button small{font-size:12px;color:var(--muted)}
+.kbdOpts button[aria-pressed="true"]{border-color:var(--brass);background:var(--pPink);box-shadow:0 3px 0 var(--brassDeep)}
+.kbdHelp{font-size:13px;line-height:1.55;margin:0 0 12px;color:var(--ink)}
+.kbdHelp kbd{display:inline-block;min-width:1.6em;padding:1px 6px;border-radius:7px;border:2px solid var(--line);border-bottom-width:4px;background:var(--panel);font:inherit;font-weight:800;font-size:12px;text-align:center}
+.kbdHelp ul{margin:4px 0 0;padding-left:18px}
+.kbdHelp li{margin:2px 0}
+@media (hover:none) and (pointer:coarse){ .skbdRow{display:none!important} }
 .imgpanel{background:var(--panel);border:2px solid var(--line);border-radius:24px;padding:10px}
 .imgpanel img{display:block;max-width:100%;max-height:340px;margin:0 auto;border-radius:8px;background:#fff}
 .empty{text-align:center;color:var(--muted);font-size:14px;padding:8px 14px 2px}
@@ -1698,6 +1717,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     </div>
     <div class="stl">Edit</div>
     <div class="chips" style="margin-top:6px"><button class="chip" type="button" id="sauto" style="flex:1" aria-pressed="false">Maju otomatis: mati</button></div>
+    <div class="chips skbdRow" style="margin-top:6px"><button class="chip" type="button" id="skbd" style="flex:1" title="Tulis not lewat keyboard laptop/PC">⌨️ Pintasan keyboard: Mati</button></div>
     <div class="chips" style="margin-top:6px"><button class="chip" type="button" id="sundo" style="flex:1" title="Ctrl+Z" disabled>↶ Urungkan</button><button class="chip" type="button" id="sredo" style="flex:1" title="Ctrl+Y" disabled>↷ Ulangi</button></div>
     <div class="chips" id="sclip" style="margin-top:6px"><button class="chip" type="button" id="smulti" style="flex:1.3" aria-pressed="false" title="Shift+klik">⬚ Pilih banyak</button><button class="chip" type="button" id="scopy" style="flex:1" title="Ctrl+C">📋 Salin</button><button class="chip" type="button" id="scut" style="flex:1" title="Ctrl+X">✂️ Potong</button><button class="chip" type="button" id="spaste" style="flex:1" title="Ctrl+V">📥 Tempel</button></div>
     <div class="row" style="margin-top:10px;align-items:center">
@@ -1919,6 +1939,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>Rehat</b>: Maju otomatis <b>MATI</b> = not yang disorot <b>diganti jadi 0</b> (seperti dihapus). Maju otomatis <b>NYALA</b> = 0 <b>disisipkan di belakang (kanan)</b> not yang disorot (not di belakangnya bergeser). Ketuk bagian kosong partitur untuk melepas sorotan (kursor kembali ke akhir lagu).</li>
         <li><b>▶ Putar</b> (di tengah, antara Sambungkan dan Rekam) membunyikan partitur (mulai dari not yang dipilih). Partitur otomatis tersimpan di HP.</li>
         <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>＋ Buat baru</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
+        <li><b>Pintasan keyboard (laptop/PC)</b>: tekan <b>⌨️ Pintasan keyboard</b> di bagian Edit, lalu pilih gaya: <b>Gaya piano</b> (A S D F G H J K L = tuts putih, W E T Y U O P = tuts hitam), <b>Nama nada</b> (huruf C D E F G A B) atau <b>Not angka</b> (angka 1–7 = do re mi fa sol la si). Shift + tombol = ♯, Alt + tombol = ♭, Z / X = oktaf turun / naik, R = rehat, titik = bertitik, angka 1/2/4/8/6 = nilai not (gaya piano &amp; nama nada). Tekan beberapa tombol bersamaan = akor. Esc = tutup / lepas sorotan / berhenti memutar. Huruf/angka kecil di tuts layar menunjukkan tombolnya.</li>
         <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan</b> (di kartu di bawah tuts piano, di samping <b>▶ Putar</b> dan <b>⏺ Rekam</b>). Setelah tersambung, tombol <b>MIDI OFF / MIDI ON</b> menentukan apakah tuts menulis not: <b>OFF</b> = piano hanya berbunyi, bebas berlatih dulu tanpa mengubah partitur; <b>ON</b> = setiap tuts langsung menulis not seperti tuts di layar (tekan bersamaan = akor). Tombol <b>Rekam</b> tetap merekam walau MIDI OFF.</li>
         <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. Selama merekam, not yang kamu mainkan langsung tergambar di partitur dan kursor ikut berjalan mengikuti ketukan. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, rekaman masuk ke tangan yang sedang dipilih saja (<i>Tulis &amp; rekam ke</i>: Kanan / Kiri), mulai di birama baru setelah not terakhir tangan itu, dan tangan yang lain ikut berbunyi supaya bisa diikuti (bisa dimatikan). Jadi tangan kanan bisa direkam dulu, lalu tangan kiri dari awal lagu. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
         <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
@@ -2019,6 +2040,21 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       </div>
       <div class="wxPrev" id="wxPrev" aria-label="Pratinjau halaman"></div>
     </div>
+  </div>
+</div>
+
+<div class="pwOv" id="skbdOv" hidden role="dialog" aria-modal="true" aria-labelledby="skbdT">
+  <div class="pwBox kbdBox">
+    <h2 id="skbdT">⌨️ Pintasan keyboard</h2>
+    <p>Tulis not lewat keyboard laptop/PC. Pilih salah satu gaya:</p>
+    <div class="kbdOpts" id="skbdOpts" role="group" aria-label="Gaya pintasan keyboard">
+      <button type="button" data-kbm="off"><b>Mati</b><small>Hanya pintasan biasa</small></button>
+      <button type="button" data-kbm="piano"><b>🎹 Gaya piano</b><small>A S D F… tuts putih, W E T Y U tuts hitam</small></button>
+      <button type="button" data-kbm="name"><b>🔤 Nama nada</b><small>C D E F G A B</small></button>
+      <button type="button" data-kbm="num"><b>🔢 Not angka</b><small>1 2 3 4 5 6 7 = do re mi…</small></button>
+    </div>
+    <div class="kbdHelp" id="skbdHelp"></div>
+    <button class="start" id="skbdOk" type="button" style="width:100%;padding:11px 8px;font-size:15px">Selesai</button>
   </div>
 </div>
 
@@ -5114,6 +5150,7 @@ function setZoom(v){
 }
 function zoomStep(dir){ setZoom((szoom>0 ? szoom : (drawStudioScore.sc||1.2))+dir*0.15); }
 function renderScoreView(){
+  if(kbMode==='num' && kbdTon!==kbdTonic()){ kbdTon=kbdTonic(); buildKeyboard(); }   /* label angka di tuts mengikuti tangga nada */
   var s=curScore(), EN=edScore().notes, eP=(s.grand && hand==='lh') ? 1 : 0;
   undoBase(s); syncUndoUI();
   if(!editing || selA>=EN.length) selA=-1;
@@ -5138,15 +5175,72 @@ function buildKeyboard(){
   var kb=$('#kb'), W=[0,2,4,5,7,9,11], lab=['C','D','E','F','G','A','B'], nw=7*KB_OCT+1, h='<div class="w">', i, o;
   for(i=0;i<nw;i++){
     var oo=Math.floor(i/7), li=i%7, m=(inp.oct+1+oo)*12+W[li], on=inp.oct+oo;
-    h+='<button type="button" class="key" data-m="'+m+'" aria-label="Nada '+lab[li]+on+'">'+lab[li]+(li===0?on:'')+'</button>';
+    h+='<button type="button" class="key" data-m="'+m+'" aria-label="Nada '+lab[li]+on+'">'+kbdLabel(m)+lab[li]+(li===0?on:'')+'</button>';
   }
   h+='</div>';
   for(o=0;o<KB_OCT;o++) [[1,0.7],[3,1.7],[6,3.7],[8,4.7],[10,5.7]].forEach(function(b){
     var m=(inp.oct+1+o)*12+b[0];
-    h+='<button type="button" class="bk" style="left:'+((o*7+b[1])*100/nw)+'%;width:'+(60/nw)+'%" data-m="'+m+'" data-black="1" aria-label="Nada hitam '+nameOf(m,inp.flat?'b':'#')+'"></button>';
+    h+='<button type="button" class="bk" style="left:'+((o*7+b[1])*100/nw)+'%;width:'+(60/nw)+'%" data-m="'+m+'" data-black="1" aria-label="Nada hitam '+nameOf(m,inp.flat?'b':'#')+'">'+kbdLabel(m)+'</button>';
   });
   kb.innerHTML=h; kb.classList.toggle('k2',KB_OCT>1);
   $('#soctval').textContent='Oktaf '+inp.oct+(KB_OCT>1?'–'+(inp.oct+KB_OCT-1):'');
+}
+/* ===== Pintasan keyboard (diminta Ferdi, Okt 2026): tulis not lewat keyboard laptop/PC, 3 gaya (yg.kbMode):
+   'piano' = A S D F G H J K L ; tuts putih + W E T Y U O P tuts hitam (mulai C tuts paling kiri di layar);
+   'name'  = huruf C D E F G A B (oktaf tuts paling kiri), Shift = ♯, Alt = ♭;
+   'num'   = angka 1–7 = do–si di tangga nada partitur (1 = nada dasar oktaf tuts kiri), Shift = ♯, Alt = ♭.
+   Semua gaya: Z/X oktaf turun/naik, R rehat, titik (.) = not bertitik; gaya piano & nama: angka 1/2/4/8/6 = nilai not.
+   Tombol ditekan hampir bersamaan (<160 ms) = akor (lewat midiScoreNote, sama seperti keyboard MIDI). ===== */
+var kbMode=(['piano','name','num'].indexOf(store.get('yg.kbMode','off'))>=0)?store.get('yg.kbMode','off'):'off';
+var KBD_PIANO={KeyA:0,KeyW:1,KeyS:2,KeyE:3,KeyD:4,KeyF:5,KeyT:6,KeyG:7,KeyY:8,KeyH:9,KeyU:10,KeyJ:11,KeyK:12,KeyO:13,KeyL:14,KeyP:15,Semicolon:16};
+var KBD_NAME={KeyC:0,KeyD:2,KeyE:4,KeyF:5,KeyG:7,KeyA:9,KeyB:11}, KBD_DEG=[0,2,4,5,7,9,11];
+var KBD_DUR={Digit1:4,Digit2:2,Digit4:1,Digit8:0.5,Digit6:0.25};
+function kbdBase(){ return (inp.oct+1)*12; }
+var kbdTon=-1;
+function kbdTonic(){ var k=0; try{ k=edScore().key||0; }catch(e){} return ((k*7)%12+12)%12; }
+function kbdLabel(m){
+  if(kbMode==='piano'){ var d=m-kbdBase(), k; for(k in KBD_PIANO) if(KBD_PIANO[k]===d) return '<span class="kl">'+(k==='Semicolon'?';':k.slice(3))+'</span>'; }
+  else if(kbMode==='num'){ var r=m-kbdBase()-kbdTonic(), i=KBD_DEG.indexOf(r); if(i>=0) return '<span class="kl">'+(i+1)+'</span>'; }
+  return '';
+}
+function kbdFlash(m){
+  var b=document.querySelector('#kb [data-m="'+m+'"]'); if(!b) return;
+  b.classList.add('kbHit'); clearTimeout(b._kt); b._kt=setTimeout(function(){ b.classList.remove('kbHit'); },180);
+}
+/* hasil: true kalau tombol dipakai sebagai pintasan */
+function kbdKey(e){
+  if(kbMode==='off' || e.ctrlKey || e.metaKey) return false;
+  var c=e.code||'', m=null, acc='';
+  if(c==='KeyZ'||c==='KeyX'){ if(!e.repeat){ inp.oct=clamp(inp.oct+(c==='KeyZ'?-1:1),1,7-KB_OCT); buildKeyboard(); } return true; }
+  if(c==='KeyR' && !e.altKey){ if(!e.repeat) addRest(); return true; }
+  if(c==='Period'||c==='NumpadDecimal'){ if(!e.repeat) $('#sdot').click(); return true; }
+  if(kbMode!=='num' && KBD_DUR[c]!=null && !e.shiftKey && !e.altKey){
+    if(!e.repeat){ var b=document.querySelector('#sdur [data-d="'+KBD_DUR[c]+'"]'); if(b) b.click(); } return true;
+  }
+  if(kbMode==='piano' && KBD_PIANO[c]!=null && !e.altKey) m=kbdBase()+KBD_PIANO[c];
+  else if(kbMode==='name' && KBD_NAME[c]!=null) m=kbdBase()+KBD_NAME[c];
+  else if(kbMode==='num'){ var d=/^(Digit|Numpad)([1-7])$/.exec(c); if(d) m=kbdBase()+kbdTonic()+KBD_DEG[+d[2]-1]; }
+  if(m===null) return false;
+  if(kbMode!=='piano'){ if(e.shiftKey){ m++; acc='#'; } else if(e.altKey){ m--; acc='b'; } }
+  if(e.repeat) return true;
+  m=clamp(m,21,108);
+  var keep=inp.flat; if(acc && isBlack(m)) inp.flat=(acc==='b');
+  midiScoreNote(m);
+  inp.flat=keep;
+  kbdFlash(m);
+  return true;
+}
+function kbdSync(){
+  var nm={off:'Mati',piano:'Gaya piano',name:'Nama nada',num:'Not angka'}[kbMode];
+  var b=$('#skbd'); if(b){ b.textContent='⌨️ Pintasan keyboard: '+nm; b.setAttribute('aria-pressed',kbMode!=='off'?'true':'false'); }
+  $$('#skbdOpts [data-kbm]').forEach(function(x){ x.setAttribute('aria-pressed',x.getAttribute('data-kbm')===kbMode?'true':'false'); });
+  var K=function(t){ return '<kbd>'+t+'</kbd>'; }, h='';
+  if(kbMode==='piano') h='<b>Tuts putih:</b> '+['A','S','D','F','G','H','J','K','L',';'].map(K).join(' ')+' = C D E F G A B C D E<br><b>Tuts hitam:</b> '+['W','E'].map(K).join(' ')+' = C♯ D♯, '+['T','Y','U'].map(K).join(' ')+' = F♯ G♯ A♯, '+['O','P'].map(K).join(' ')+' = C♯ D♯ atas';
+  else if(kbMode==='name') h='<b>Nada:</b> '+['C','D','E','F','G','A','B'].map(K).join(' ')+'<br>'+K('Shift')+' + huruf = ♯ (mis. Shift+F = F♯) · '+K('Alt')+' + huruf = ♭';
+  else if(kbMode==='num') h='<b>Not angka:</b> '+['1','2','3','4','5','6','7'].map(K).join(' ')+' = do re mi fa sol la si (ikut tangga nada partitur)<br>'+K('Shift')+' + angka = ♯ (mis. Shift+4 = 4♯) · '+K('Alt')+' + angka = ♭';
+  if(kbMode!=='off') h+='<ul><li>'+K('Z')+' / '+K('X')+' = oktaf turun / naik</li>'+(kbMode!=='num'?'<li>Nilai not: '+K('1')+' penuh, '+K('2')+' ½, '+K('4')+' ¼, '+K('8')+' ⅛, '+K('6')+' 1/16</li>':'')+'<li>'+K('.')+' = titik (bertitik), '+K('R')+' = rehat</li><li>Tekan beberapa tombol bersamaan = akor</li><li>'+K('Esc')+' = tutup / lepas sorotan / berhenti memutar</li></ul>';
+  else h='Keyboard tetap bisa dipakai untuk pintasan biasa: '+K('Ctrl+Z')+' urungkan, '+K('Spasi')+' putar, '+K('←')+' '+K('→')+' pindah not, '+K('Esc')+' lepas sorotan.';
+  $('#skbdHelp').innerHTML=h;
 }
 var DURS=[4,3,2,1.5,1,0.75,0.5,0.375,0.25];
 function splitDur(x){
@@ -6055,7 +6149,20 @@ function bindScore(){
   syncAuto();
   document.addEventListener('keydown',function(e){
     if(app.tab!=='score' || e.target.closest && e.target.closest('input,select,textarea')) return;
-    if($$('.pwOv').some(function(o){ return !o.hidden; })) return;   /* ada dialog terbuka */
+    var openOv=$$('.pwOv').filter(function(o){ return !o.hidden; });
+    if(openOv.length){
+      /* Esc = tutup dialog (lewat klik latar belakang, sama seperti mengetuk di luar kotak) */
+      if(e.key==='Escape'){ e.preventDefault(); var ov=openOv[openOv.length-1]; ov.dispatchEvent(new MouseEvent('click',{bubbles:true})); }
+      return;   /* ada dialog terbuka */
+    }
+    if(e.key==='Escape'){
+      /* Esc: berhenti memutar/merekam, kalau tidak: lepas sorotan / pilih banyak (kursor kembali ke ujung lagu) */
+      e.preventDefault();
+      if(rec.on) recStop(); else if(playing) stopPlay();
+      else { if(multiSel) $('#smulti').click(); selectAt(-1); }
+      return;
+    }
+    if(kbdKey(e)){ e.preventDefault(); return; }
     var k=(e.key||'').toLowerCase();
     if((e.ctrlKey||e.metaKey) && !e.altKey && (k==='c'||k==='x'||k==='v'||k==='a')){
       e.preventDefault();
@@ -6112,6 +6219,11 @@ function bindScore(){
       szT=setTimeout(function(){ var h=$('#sscore').clientHeight; if(Math.abs(h-(drawStudioScore.h||0))>6) renderScoreView(); },80);
     }).observe($('#sscore'));
   }
+  $('#skbd').addEventListener('click',function(){ kbdSync(); $('#skbdOv').hidden=false; });
+  $$('#skbdOpts [data-kbm]').forEach(function(b){ b.addEventListener('click',function(){ kbMode=b.getAttribute('data-kbm'); store.set('yg.kbMode',kbMode); kbdSync(); buildKeyboard(); }); });
+  $('#skbdOk').addEventListener('click',function(){ $('#skbdOv').hidden=true; });
+  $('#skbdOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) e.currentTarget.hidden=true; });
+  kbdSync();
   $('#kb').addEventListener('click',function(e){
     var b=e.target.closest('[data-m]'); if(!b) return; addNote(parseInt(b.getAttribute('data-m'),10));
   });
