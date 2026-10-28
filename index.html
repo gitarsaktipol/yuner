@@ -2984,7 +2984,7 @@ function newRound(keep){
       t+=n.d; });
   });
   { var sl=$('#pstageLbl'); if(sl){ if(pr.src==='arcade'){ sl.textContent='Stage '+ARC_LETTERS[pr.arcLetter]+pr.arcSub; sl.hidden=false; } else sl.hidden=true; } }
-  pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
+  pr.lastPct=null; pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
   pr.lastAdvanceT=0; pr.fast=false;
   pr.drawn=null; pr.lo=undefined;   /* soal baru / ejaan not bisa berubah: gambar ulang partitur & hitung ulang rentang */
   pd.armed=false; pd.cand=null; pd.count=0; pd.last=null; pd.legCand=null; pd.legCount=0; pd.peak=0; pd.dip=0;
@@ -3296,7 +3296,7 @@ function showGrade(pct,ms){
   g.className='pgrade '+cls; g.hidden=false;
   var calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var gv=$('#pgv'), t0=performance.now(), dur=Math.min(900,ms*.4);
-  $('#pgm').textContent= pct>=100?'Sempurna! 🎉' : pct>=80?'Hebat!' : pct>=50?'Coba lagi' : '';
+  $('#pgm').textContent= pct>=100?'Sempurna! 🎉' : pct>=80?'Hebat!' : pct>=50?'Lumayan' : 'Ayo coba lagi';
   (function count(now){
     var k=Math.min(1,(now-t0)/dur); gv.textContent=Math.round(pct*(1-Math.pow(1-k,3)));
     if(k<1) requestAnimationFrame(count);
@@ -3580,6 +3580,7 @@ function finishRound(){
      Nilai dihitung dari not yang benar. Mode biasa: not salah diulang, jadi percobaan bertambah. */
   var good=pr.tempoOn ? Math.max(0,pr.idx.length-pr.wrong) : pr.idx.length;
   var pct=pr.tempoOn ? Math.round(100*good/Math.max(1,pr.idx.length)) : Math.round(100*pr.idx.length/Math.max(1,pr.tries));
+  pr.lastPct=pct;
   $('#psumT').textContent='Selesai! Ketepatan '+pct+'%';
   $('#psumD').textContent= pr.tempoOn ? good+' not benar dari '+pr.idx.length+' not, waktu '+secs+' detik.' : pr.idx.length+' not benar dari '+pr.tries+' percobaan, waktu '+secs+' detik.';
   $('#psum').hidden=false;
@@ -3725,7 +3726,8 @@ function renderPractice(){
   $('#pprebtns').hidden = !(pr.playing && !(mic.active || midiConnected()));
   var st=$('#pstatus'), t, c='';
   if(!pr.idx.length){ t = pr.src==='custom' ? 'Pilih minimal 2 nada dulu di atas.' : 'Partitur ini belum punya not. Tambahkan not di menu Partitur.'; }
-  else if(pr.done){ t='Bagus sekali!'; c='ok'; }
+  /* pesan akhir mengikuti nilai (diminta Ferdi, Okt 2026: nilai di bawah 50 jangan "Bagus sekali") */
+  else if(pr.done){ var lp=pr.lastPct==null?100:pr.lastPct; t = lp>=100?'Sempurna!':lp>=80?'Bagus sekali!':lp>=50?'Lumayan, terus berlatih!':'Belum berhasil, ayo coba lagi!'; c = lp>=50?'ok':'bad'; }
   else if(pr.lastMsg){ t=pr.lastMsg.t; c=pr.lastMsg.c; }
   else if(midiConnected()){ t='Mainkan not yang disorot di keyboard MIDI.'; }
   else if(!mic.active){ t = pr.playing ? 'Pilih cara bermain: mikrofon atau alat musik.' : 'Ketuk Mulai berlatih untuk bermain.'; }
