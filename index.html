@@ -2850,6 +2850,9 @@ function arcLevelParams(letterIdx,subLv){
   var total=ARC_LETTERS.length*9, prog=letterIdx*9+(subLv-1), p=prog/(total-1);
   var durPool=[[1],[1,0.5,1.5],[1,1,0.5,0.5,0.25,1.5],[1,0.5,0.5,0.25,1.5]];   /* 1.5 = pola 1/4 bertitik + 1/8 ("4 .4", umum di lagu, mis. KJ 429); muncul begitu 1/8 muncul */
   var durs = durPool[p<0.2?0:(p<0.45?1:(p<0.75?2:3))];
+  /* batas not 1/8 per birama (diminta Ferdi, Okt 2026: stage F terlalu sulit): huruf F–H maks 2 (satu pasang / satu titik+1/8),
+     sampai akhir tahap 1/8 pertama (±L) maks 4; sesudahnya bebas */
+  var maxQ = (p<0.2 || p>=0.45) ? 99 : (letterIdx<=7 ? 2 : 4);
   /* Prioritas: lebar rentang dulu (1 oktaf -> 2 oktaf -> 3 oktaf), baru nada ♯ muncul setelah 3 oktaf tercapai */
   var w = prog<27 ? 5+Math.round(prog/26*3) : (prog<81 ? 8+Math.round((prog-27)/53*13) : 21);
   /* Urutan kesulitan: (1) oktaf 1->3 (level A-I), (2) jarak antar not makin jauh (J-R), (3) baru nada kres (S-Z) */
@@ -2857,7 +2860,7 @@ function arcLevelParams(letterIdx,subLv){
   var steps=[], s0; for(s0=-maxStep;s0<=maxStep;s0++) steps.push(s0);
   if(maxStep>=3) steps.push(maxStep,-maxStep,maxStep-1,-(maxStep-1));
   var sharpProb = prog<162 ? 0 : Math.min(0.5,0.05+(prog-162)/71*0.45);
-  return { measures:arcadeMeasures(letterIdx), steps:steps, maxStep:maxStep, durs:durs, sharpProb:sharpProb, width:w, octaves:(w<=8?1:(w<=15?2:3)) };
+  return { measures:arcadeMeasures(letterIdx), steps:steps, maxStep:maxStep, durs:durs, maxQ:maxQ, sharpProb:sharpProb, width:w, octaves:(w<=8?1:(w<=15?2:3)) };
 }
 /* Rentang nada (indeks diatonik) untuk lebar w: dimulai di sekitar tengah, melebar ke bawah dan atas */
 function arcRange(w){
@@ -2876,7 +2879,7 @@ function arcRange(w){
    (ketuk 1/2), semibreve 4 ketuk (birama utuh). Bobot pola pendek mengikuti banyaknya nilai itu di daftar level (allowedDurs).
    last=true (birama terakhir lagu): biasanya ditutup not panjang, seperti akhir kalimat lagu. */
 var RHY_16=[[0.25,0.25,0.25,0.25],[0.5,0.25,0.25],[0.25,0.25,0.5]];
-function genMeasureRhythm(allowedDurs,beatsPerBar,last){
+function genMeasureRhythm(allowedDurs,beatsPerBar,last,maxQ){
   function cnt(v){ return allowedDurs.filter(function(d){ return Math.abs(d-v)<1e-6; }).length; }
   var base=[{p:[1],w:cnt(1)||1},{p:[0.5,0.5],w:cnt(0.5)},{p:null,w:cnt(0.25)},{p:[1.5,0.5],w:cnt(1.5)*0.7}];
   var W=base.reduce(function(x,o){ return x+o.w; },0);
@@ -2888,7 +2891,9 @@ function genMeasureRhythm(allowedDurs,beatsPerBar,last){
   while(remaining>0.001 && guard<50){
     guard++;
     var pos=+(beatsPerBar-(endLong||0)-remaining).toFixed(4);
-    var ok=pats.filter(function(o){ return o.w>0 && (o.p ? o.p.reduce(function(x,y){ return x+y; },0) : 1)<=remaining+1e-6 && (!o.at || o.at.indexOf(pos)>=0); });
+    var nq=out.filter(function(d){ return d===0.5; }).length;   /* banyak not 1/8 di birama ini sejauh ini */
+    var ok=pats.filter(function(o){ return o.w>0 && (o.p ? o.p.reduce(function(x,y){ return x+y; },0) : 1)<=remaining+1e-6 && (!o.at || o.at.indexOf(pos)>=0)
+      && (!maxQ || !o.p || nq+o.p.filter(function(d){ return d===0.5; }).length<=maxQ); });
     if(!ok.length){ out.push(remaining); break; }
     var tot=ok.reduce(function(x,o){ return x+o.w; },0), r=Math.random()*tot, pick=ok[0];
     for(var i=0;i<ok.length;i++){ r-=ok[i].w; if(r<0){ pick=ok[i]; break; } }
@@ -2902,7 +2907,7 @@ function genArcade(letterIdx,subLv){
   var pm=arcLevelParams(letterIdx,subLv);
   var r=arcRange(pm.width), lo=r[0], hi=r[1];
   var notes=[], d=lo+Math.floor(Math.random()*(hi-lo+1)), bar, durs=[], j;
-  for(bar=0; bar<pm.measures; bar++) durs=durs.concat(genMeasureRhythm(pm.durs,4,bar===pm.measures-1));
+  for(bar=0; bar<pm.measures; bar++) durs=durs.concat(genMeasureRhythm(pm.durs,4,bar===pm.measures-1,pm.maxQ));
   /* Not cepat (1/8, 1/16, dan not sesudah 1/4 bertitik) lompatannya dibatasi (diminta Ferdi, Okt 2026: soal ber-1/8 terlalu
      sulit): ke/dari not cepat paling jauh 1 langkah (huruf A–R), 2 langkah (S–Z). Not 1/4 ke atas tetap memakai maxStep level. */
   var prog=letterIdx*9+(subLv-1), fastCap = prog<162 ? 1 : 2;
