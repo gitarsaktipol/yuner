@@ -773,6 +773,8 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 .arcGame .bigopts{gap:clamp(12px,3vw,28px);max-width:720px;width:100%;margin:0 auto}
 .arcGame .bigopts button{padding:clamp(14px,6vmin,34px) 8px;font-size:clamp(18px,6vmin,28px);border-radius:30px}
 .arcGame .bigopts .bi{font-size:clamp(40px,17vmin,90px)}
+.arcGame .bigopts .agClef{display:flex;align-items:center;justify-content:center;height:1.3em}
+.arcGame .bigopts .agClef svg{height:100%;width:auto;overflow:visible}
 .arcGame .hint{margin:0;text-align:center}
 .agReady{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:clamp(10px,3vw,26px);align-items:center;height:100%;min-height:0}
 .agHero{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:0}
@@ -1165,7 +1167,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   <div class="astep agPage" id="arcS3" hidden>
     <h2 class="atitle">Pilih jenis not</h2>
     <div class="bigopts" role="group" aria-label="Jenis notasi">
-      <button type="button" data-amode="staff"><span class="bi">𝄞</span>Not balok</button>
+      <button type="button" data-amode="staff"><span class="bi agClef" id="agClef"></span>Not balok</button>
       <button type="button" data-amode="num"><span class="bi">1 2 3</span>Not angka</button>
     </div>
     <div class="agRow"><button class="sound agBack" id="arcBack3" type="button">◀ Kembali</button><button class="start agGo" id="arcNext3" type="button">Lanjut ▶</button></div>
@@ -6407,6 +6409,8 @@ function bindArcade(){
     pr.inst=b.getAttribute('data-ainst')==='guitar'?'guitar':'piano'; store.set('yg.inst',pr.inst); syncPracticeOpts(); renderArcade();
   }); });
   $$('[data-amode]').forEach(function(b){ b.addEventListener('click',function(){ setMode(b.getAttribute('data-amode')); renderArcade(); }); });
+  /* kunci G digambar dari path Bravura (huruf 𝄞 di font HP tampil terlalu besar & keluar kotak — keluhan Ferdi) */
+  $('#agClef').innerHTML='<svg viewBox="-2 -16 31 74" aria-hidden="true">'+CLEF_TREBLE+'</svg>';
   $('#arcNext2').addEventListener('click',function(){ arcGo(3); });
   $('#arcNext3').addEventListener('click',function(){ arcGo(4); });
   $('#arcPlay').addEventListener('click',startArcade);
