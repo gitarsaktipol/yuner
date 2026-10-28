@@ -3108,7 +3108,10 @@ function tempoAttach(){
   var inv=ctm.inverse(), seen={}, list=[], rows=[], row=-1, prevX=-1e9;
   svg.querySelectorAll('g[data-i]').forEach(function(g){
     var i=parseInt(g.getAttribute('data-i'),10); if(seen[i]) return; seen[i]=1;
-    var bb=g.getBBox(), m=inv.multiply(g.getScreenCTM()), pt=new DOMPoint(bb.x+bb.width/2,bb.y+bb.height/2).matrixTransform(m), h=bb.height*Math.hypot(m.c,m.d);
+    /* posisi mendatar = kotak sorotan (.hl) yang berpusat di angka/kepala not; dulu tengah seluruh gambar not, sehingga
+       pada not panjang ("6 · ·", minim/semibreve) garis jatuh DI BELAKANG angkanya saat hitung mundur (keluhan Ferdi) */
+    var bb=g.getBBox(), hl=g.querySelector('rect.hl'), hb=hl ? hl.getBBox() : bb, m=inv.multiply(g.getScreenCTM());
+    var pt=new DOMPoint(hb.x+hb.width/2,bb.y+bb.height/2).matrixTransform(m), h=bb.height*Math.hypot(m.c,m.d);
     list.push({i:i,x:pt.x,y:pt.y,h:h});
   });
   list.sort(function(a,b){ return (tp.beat[a.i]-tp.beat[b.i]) || (a.i-b.i); });
@@ -3131,7 +3134,7 @@ function tempoMove(t){
   var g=tp.geo; if(!g || !g.list.length) return;
   var L=g.list, k=-1, i, x, row;
   for(i=0;i<L.length;i++){ if(tp.beat[L[i].i]<=t) k=i; else break; }
-  if(k<0){ x=L[0].x-14; row=L[0].row; }
+  if(k<0){ x=L[0].x-20; row=L[0].row; }   /* sebelum mulai: garis di depan kotak sorotan not pertama (lebar kotak 30) */
   else {
     var a=L[k], b=L[k+1], bb=tp.beat[a.i], endB=b?tp.beat[b.i]:tp.end, fr=Math.min(1,Math.max(0,(t-bb)/Math.max(0.001,endB-bb)));
     var xe=(b && b.row===a.row) ? b.x : a.rowEnd; x=a.x+(xe-a.x)*fr; row=a.row;
