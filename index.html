@@ -781,9 +781,11 @@ body{
   filter:drop-shadow(0 .03em 0 #fff) drop-shadow(0 0 .04em #fff);animation:gradeIn .6s var(--bounce) both,gradeWiggle 1s .6s ease-in-out infinite,gradeHue 2s linear infinite}
 .pquit{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(59,51,85,.55);padding:12px}
 .pquit[hidden]{display:none}
-.pqbox{background:var(--surf);border-radius:26px;padding:18px 22px;max-width:380px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);animation:popIn .35s var(--bounce)}
+.pqbox{background:var(--surf);border-radius:26px;padding:18px 22px;max-width:520px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);animation:popIn .35s var(--bounce)}
 .pqbox h3{margin:0 0 4px;font-size:22px}
 .pqbox p{margin:0 0 14px;color:var(--muted);font-size:15px}
+.pqbox .row{flex-wrap:wrap;justify-content:center}
+.pqbox .row button{flex:1 1 auto;white-space:nowrap;padding-left:14px;padding-right:14px}
 .pqbox .row{gap:12px}
 .pqbox .start,.pqbox .sound{flex:1;padding:12px;font-size:18px}
 .tpline{stroke:#FF4F94;stroke-width:4;stroke-linecap:round;opacity:.92;filter:drop-shadow(0 0 4px rgba(255,79,148,.8));pointer-events:none}
@@ -998,7 +1000,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
   <div class="pstage" id="pstage"></div>
   <div class="phill" id="phill" hidden><svg id="phsvg" viewBox="0 0 800 340" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg><div class="hscore" id="hscore"><span aria-hidden="true">⭐</span> <b id="hscoreV">0</b><i class="hbonus" id="hbonus" hidden>BONUS ×2</i></div><canvas class="hfw" id="hfw"></canvas><div class="hperf" id="hperf" hidden>PERFECT!</div><div class="hcap" id="hcap"></div><button class="start hgo" id="hgo" type="button">Lanjut ▶</button></div>
-  <div class="pquit" id="pquit" hidden role="alertdialog" aria-modal="true" aria-labelledby="pqT"><div class="pqbox"><h3 id="pqT">⏸ Permainan dijeda</h3><p>Mau keluar dari latihan, atau lanjut main?</p><div class="row"><button class="sound" id="pqNo" type="button">▶ Lanjutkan</button><button class="start" id="pqYes" type="button">Keluar</button></div></div></div>
+  <div class="pquit" id="pquit" hidden role="alertdialog" aria-modal="true" aria-labelledby="pqT"><div class="pqbox"><h3 id="pqT">⏸ Permainan dijeda</h3><p>Lanjut main, ulang dari awal, atau keluar?</p><div class="row"><button class="sound" id="pqNo" type="button">▶ Lanjutkan</button><button class="sound" id="pqRe" type="button">↺ Mulai dari awal</button><button class="start" id="pqYes" type="button">Keluar</button></div></div></div>
   <div class="pgrade" id="pgrade" hidden aria-hidden="true"><canvas id="pfw"></canvas><div class="gv" id="pgv"></div><div class="gm" id="pgm"></div></div>
   <div class="connSheet" id="pconnSheet" hidden>
     <button class="sound" id="pconnClose" type="button">✕ Tutup</button>
@@ -3863,6 +3865,11 @@ function bindPracticeOpts(){
   $('#pclose').addEventListener('click',askQuit);
   $('#pqYes').addEventListener('click',function(){ closePractice(); });
   $('#pqNo').addEventListener('click',function(){ $('#pquit').hidden=true; resumePlay(); });
+  /* Mulai dari awal (diminta Ferdi, Okt 2026): soal yang SAMA diulang dari not pertama (nilai & tanda direset; Tempo: "Siap?" + 4 3 2 1 lagi) */
+  $('#pqRe').addEventListener('click',function(){
+    $('#pquit').hidden=true; pr.paused=false; pr.deferred=null; tp.paused=false;
+    newRound(true);
+  });
   $('#pmidiGo').addEventListener('click',async function(){
     var m=$('#pmsg'); m.textContent='';
     $('#pconnSheet').hidden=false;
