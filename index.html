@@ -1343,6 +1343,8 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 .tempoCard{display:flex;flex-direction:column;gap:8px}
 .tempoCard label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
 .tempoCard label.chk{flex-direction:row;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--ink)}
+.tempoCard label.chk input[type=checkbox]{width:22px;height:22px;margin:0;flex:none;accent-color:var(--brass);cursor:pointer}
+.tempoCard label.chk{cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 0}
 /* Anti-zoom (ketuk dua kali / cubit) + animasi ketuk untuk semua tombol */
 html,body,*{touch-action:manipulation}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -7609,7 +7611,9 @@ function bindArcade(){
   /* animasi tekan + bunyi untuk semua tombol di layar game */
   $('#tab-arcade').addEventListener('pointerdown',function(e){
     var el=e.target.closest('button, label.chk'); if(!el || el.disabled) return;
-    el.classList.remove('agPress'); void el.offsetWidth; el.classList.add('agPress');
+    /* baris centang (Tempo, Tuts petunjuk) TIDAK dianimasikan: saat mengecil, kotak centang kecilnya bergeser dari bawah
+       jari/mouse sehingga klik tidak terhitung (keluhan Ferdi, Okt 2026: klik kotaknya tidak terjadi apa-apa) */
+    if(!el.matches('label.chk')){ el.classList.remove('agPress'); void el.offsetWidth; el.classList.add('agPress'); }
     arcSfx(el.id==='arcPlay'?'play':(el.classList.contains('agBack')||el.id==='agHome'||el.id==='pNewNo'?'back':'tap'));
   });
   $('#tab-arcade').addEventListener('animationend',function(e){ if(e.target.classList) e.target.classList.remove('agPress'); });
