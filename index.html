@@ -504,7 +504,13 @@ body.playing{overflow:hidden}
 .pclose{width:44px;height:44px;border-radius:50%;border:0;background:var(--pLilac);box-shadow:0 3px 0 var(--dLilac);font-size:18px;font-weight:800;color:var(--ink);cursor:pointer}
 .pstageLbl{margin-left:auto;background:var(--surf);border:3px solid var(--dMint);border-radius:22px;padding:4px 20px;font-weight:900;font-size:clamp(22px,7vh,34px);line-height:1.2;box-shadow:0 4px 0 var(--dMint);white-space:nowrap}
 .pstage{flex:1;min-height:0;display:flex;flex-direction:column}
-.play .board{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:8px 10px}
+.play .board{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:8px 10px;position:relative}
+/* Mode Tempo: "Siap?" lalu hitung mundur 4 3 2 1 besar di tengah partitur */
+.pcount{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5;
+  font-weight:800;font-size:clamp(56px,22vh,150px);color:var(--brass);text-shadow:0 4px 0 var(--brassDeep),0 0 24px var(--panel)}
+.pcount.word{font-size:clamp(44px,16vh,110px)}
+.pcount.pop{animation:yay .45s var(--bounce)}
+.pcount[hidden]{display:none}
 .play .scorehost{flex:1;min-height:0;overflow:auto;display:flex;align-items:flex-start}
 /* lagu panjang yang tidak muat: margin auto (bukan align-items:center) supaya bagian atas partitur tidak terpotong & bisa digulir */
 .play .scorehost>svg{margin:auto 0;flex:none}
@@ -907,6 +913,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   <div id="pboardHome">
   <section class="board" id="pboard" aria-live="polite">
     <div class="scorehost" id="pscore"></div>
+    <div class="pcount" id="pcount" hidden aria-live="assertive"></div>
     <div class="pkeys" id="pkeys" hidden aria-hidden="true"></div>
     <div class="prebtns" id="pprebtns" hidden>
       <button class="start" id="pstart" type="button">Aktifkan mikrofon</button>
@@ -3037,7 +3044,13 @@ function tempoTick(accent){
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.06); }catch(e){}
   pr.mute=performance.now()+90;   /* mikrofon jangan mendengar bunyi ketukan sendiri */
 }
-function tempoStop(){ tp.run=false; cancelAnimationFrame(tp.raf); if(tp.geo && tp.geo.line && tp.geo.line.parentNode) tp.geo.line.parentNode.removeChild(tp.geo.line); tp.geo=null; }
+function tpCount(txt, word){
+  var el=$('#pcount'); if(!el) return;
+  if(!txt){ el.hidden=true; el.textContent=''; return; }
+  el.textContent=txt; el.hidden=false; el.className='pcount'+(word?' word':'');
+  void el.offsetWidth; el.classList.add('pop');
+}
+function tempoStop(){ tpCount(''); tp.run=false; cancelAnimationFrame(tp.raf); if(tp.geo && tp.geo.line && tp.geo.line.parentNode) tp.geo.line.parentNode.removeChild(tp.geo.line); tp.geo=null; }
 function tempoMaybeStart(){
   if(!pr.tempoOn || !pr.playing || pr.done || tp.run || !pr.score || !pr.idx.length || pr.paused) return;
   if(!inputReady()) return;
@@ -3045,8 +3058,11 @@ function tempoMaybeStart(){
   pr.score.notes.forEach(function(n,i){ tp.beat[i]=b; tp.win[i]=Math.max(0.2,Math.min(0.45,0.6*n.d)); b+=n.d; });
   if(pr.score.grand && pr.score.lh){ var b2=0; pr.score.lh.forEach(function(n,i){ tp.beat[i+LH_OFF]=b2; tp.win[i+LH_OFF]=Math.max(0.2,Math.min(0.45,0.6*n.d)); b2+=n.d; }); b=Math.max(b,b2); }
   tp.end=b; tp.beatMs=60000/pr.bpm;
-  var cnt=tp.first?4:2; tp.first=false;
-  tp.t0=performance.now()+cnt*tp.beatMs; tp.lastInt=-cnt-1; tp.run=true; pr.t0=tp.t0;
+  /* awal latihan: tulisan "Siap?" dulu (±1,5 dtk, tanpa ketukan), baru hitung mundur 4 3 2 1 (diminta Ferdi, Okt 2026);
+     ronde berikutnya cukup hitung mundur 2 1 */
+  var cnt=tp.first?4:2, ready=tp.first?1500:0; tp.first=false;
+  tp.readyEnd=performance.now()+ready; tp.t0=tp.readyEnd+cnt*tp.beatMs; tp.lastInt=-cnt-1; tp.run=true; pr.t0=tp.t0;
+  tpCount(ready ? 'Siap?' : '', true);
   renderPractice();
   tp.raf=requestAnimationFrame(tempoLoop);
 }
@@ -3091,11 +3107,12 @@ function tempoMove(t){
 }
 function tempoLoop(now){
   if(!tp.run) return;
+  if(now<tp.readyEnd){ tp.raf=requestAnimationFrame(tempoLoop); return; }   /* masih "Siap?" */
   var t=(now-tp.t0)/tp.beatMs, bi=Math.floor(t), changed=false;
   if(bi!==tp.lastInt){
     tp.lastInt=bi; if(bi<=tp.end) tempoTick(((bi%4)+4)%4===0);
-    if(bi<0){ pr.lastMsg={t:'Siap... '+(-bi),c:''}; changed=true; }
-    else if(bi===0){ pr.lastMsg=null; changed=true; }
+    if(bi<0) tpCount(String(-bi));
+    else if(bi===0){ tpCount(''); pr.lastMsg=null; changed=true; }
   }
   /* not yang waktunya sudah lewat tanpa dibunyikan = terlewat */
   while(!pr.done && pr.pos<pr.idx.length){
