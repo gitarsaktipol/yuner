@@ -998,7 +998,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
   <div class="pstage" id="pstage"></div>
   <div class="phill" id="phill" hidden><svg id="phsvg" viewBox="0 0 800 340" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg><div class="hscore" id="hscore"><span aria-hidden="true">⭐</span> <b id="hscoreV">0</b><i class="hbonus" id="hbonus" hidden>BONUS ×2</i></div><canvas class="hfw" id="hfw"></canvas><div class="hperf" id="hperf" hidden>PERFECT!</div><div class="hcap" id="hcap"></div><button class="start hgo" id="hgo" type="button">Lanjut ▶</button></div>
-  <div class="pquit" id="pquit" hidden role="alertdialog" aria-modal="true" aria-labelledby="pqT"><div class="pqbox"><h3 id="pqT">Yakin mau keluar?</h3><p>Permainan yang sedang berjalan akan dihentikan.</p><div class="row"><button class="start" id="pqYes" type="button">Ya</button><button class="sound" id="pqNo" type="button">Tidak</button></div></div></div>
+  <div class="pquit" id="pquit" hidden role="alertdialog" aria-modal="true" aria-labelledby="pqT"><div class="pqbox"><h3 id="pqT">⏸ Permainan dijeda</h3><p>Mau keluar dari latihan, atau lanjut main?</p><div class="row"><button class="sound" id="pqNo" type="button">▶ Lanjutkan</button><button class="start" id="pqYes" type="button">Keluar</button></div></div></div>
   <div class="pgrade" id="pgrade" hidden aria-hidden="true"><canvas id="pfw"></canvas><div class="gv" id="pgv"></div><div class="gm" id="pgm"></div></div>
   <div class="connSheet" id="pconnSheet" hidden>
     <button class="sound" id="pconnClose" type="button">✕ Tutup</button>
@@ -3050,7 +3050,7 @@ function tpCount(txt, word){
   el.textContent=txt; el.hidden=false; el.className='pcount'+(word?' word':'');
   void el.offsetWidth; el.classList.add('pop');
 }
-function tempoStop(){ tpCount(''); tp.run=false; cancelAnimationFrame(tp.raf); if(tp.geo && tp.geo.line && tp.geo.line.parentNode) tp.geo.line.parentNode.removeChild(tp.geo.line); tp.geo=null; }
+function tempoStop(){ tpCount(''); tp.run=false; tp.paused=false; cancelAnimationFrame(tp.raf); if(tp.geo && tp.geo.line && tp.geo.line.parentNode) tp.geo.line.parentNode.removeChild(tp.geo.line); tp.geo=null; }
 function tempoMaybeStart(){
   if(!pr.tempoOn || !pr.playing || pr.done || tp.run || !pr.score || !pr.idx.length || pr.paused) return;
   if(!inputReady()) return;
@@ -3554,20 +3554,20 @@ function finishRound(){
       advanceArcadeLevel(); /* level naik langsung disimpan, supaya bisa dilanjutkan walau keluar di tengah */
       /* Gunung tampil: stage 9 tamat (wajib), atau 100 pertama setelah nilai bukan-100. 100 berturut-turut: langsung lanjut
          (stage yang dilewati itu nanti ikut didaki saat gunung tampil berikutnya). */
-      if(played%9===8 || !was100) autoT=setTimeout(function(){ showHill(played,pct,function(){ syncPracticeOpts(); newRound(); },perf); },2000);
-      else autoT=setTimeout(function(){ syncPracticeOpts(); newRound(); },2200);
+      if(played%9===8 || !was100) autoT=setTimeout(whenPlaying(function(){ showHill(played,pct,whenPlaying(function(){ syncPracticeOpts(); newRound(); }),perf); }),2000);
+      else autoT=setTimeout(whenPlaying(function(){ syncPracticeOpts(); newRound(); }),2200);
     } else {
       /* Semua mode: benar 100% -> otomatis ganti soal baru */
       $('#psumD').textContent+=' Soal baru...';
-      autoT=setTimeout(function(){ newRound(); },2200);
+      autoT=setTimeout(whenPlaying(function(){ newRound(); }),2200);
     }
   } else {
     /* Belum 100%: bunyi nada turun, lalu otomatis ganti soal. Arcade tetap naik ke level berikutnya (diputuskan Ferdi,
        Okt 2026); nilainya tercatat, dan PERFECT huruf itu hanya kalau 9 level semuanya 100. */
     practiceMiss();
     $('#psumD').textContent+= pr.src==='arcade' ? ' Lanjut ke level berikutnya...' : ' Soal baru...';
-    if(pr.src==='arcade'){ advanceArcadeLevel(); autoT=setTimeout(function(){ showHill(played,pct,function(){ syncPracticeOpts(); newRound(); }); },1700); }
-    else autoT=setTimeout(function(){ newRound(); },1800);
+    if(pr.src==='arcade'){ advanceArcadeLevel(); autoT=setTimeout(whenPlaying(function(){ showHill(played,pct,whenPlaying(function(){ syncPracticeOpts(); newRound(); })); }),1700); }
+    else autoT=setTimeout(whenPlaying(function(){ newRound(); }),1800);
   }
 }
 /* Pratinjau di menu: hanya 2 birama pertama */
@@ -3607,12 +3607,32 @@ function startPractice(){
   goLandscape();
   newRound(true);
 }
-function askQuit(){ if(!pr.playing) return; pr.paused=true; $('#pquit').hidden=false; try{ $('#pqNo').focus(); }catch(e){} }
+/* JEDA (diminta Ferdi, Okt 2026: dulu tombol ✕ hanya memunculkan dialog, permainan tetap jalan — garis tempo terus
+   berjalan & not jadi "Terlewat", soal berikutnya tetap muncul). Sekarang ✕ / tombol Kembali = permainan berhenti total
+   sampai dipilih "Lanjutkan" (atau keluar). */
+function whenPlaying(fn){ return function(){ if(pr.paused) pr.deferred=fn; else fn(); }; }
+function pausePlay(){
+  if(pr.paused) return;
+  pr.paused=true; pr.pauseT=performance.now();
+  if(tp.run){ cancelAnimationFrame(tp.raf); tp.paused=true; }
+  pd.armed=false;
+}
+function resumePlay(){
+  if(!pr.paused) return;
+  var dt=performance.now()-(pr.pauseT||performance.now());
+  pr.paused=false;
+  if(tp.run && tp.paused){ tp.paused=false; tp.t0+=dt; tp.readyEnd=(tp.readyEnd||0)+dt; pr.t0=tp.t0; tp.raf=requestAnimationFrame(tempoLoop); }
+  if(pr.t0 && !pr.tempoOn) pr.t0+=dt;   /* waktu jeda tidak dihitung di "waktu" hasil */
+  var f=pr.deferred; pr.deferred=null;
+  if(f) autoT=setTimeout(whenPlaying(f),600);
+  else tempoMaybeStart();
+}
+function askQuit(){ if(!pr.playing) return; pausePlay(); $('#pquit').hidden=false; try{ $('#pqNo').focus(); }catch(e){} }
 function closePractice(fromPop){
   hideGrade(); hideHill(); tempoStop(); var tpp=$('#ptop'); if(tpp) tpp.hidden=true;
   if(!pr.playing) return;
   clearTimeout(autoT);
-  pr.playing=false; pr.paused=false; document.body.classList.remove('playing'); $('#pconnSheet').hidden=true; $('#pdock').hidden=(app.tab!=='latih');
+  pr.playing=false; pr.paused=false; pr.deferred=null; document.body.classList.remove('playing'); $('#pconnSheet').hidden=true; $('#pdock').hidden=(app.tab!=='latih');
   $('#pplay').hidden=true; $('#psum').hidden=true; $('#pquit').hidden=true;
   try{ if(mic.active) micStop(); }catch(e){ console.warn(e); }
   $('#pboardHome').appendChild($('#pboard'));
@@ -3804,7 +3824,7 @@ function bindPracticeOpts(){
   $('#pgo').addEventListener('click',startPractice);
   $('#pclose').addEventListener('click',askQuit);
   $('#pqYes').addEventListener('click',function(){ closePractice(); });
-  $('#pqNo').addEventListener('click',function(){ pr.paused=false; $('#pquit').hidden=true; });
+  $('#pqNo').addEventListener('click',function(){ $('#pquit').hidden=true; resumePlay(); });
   $('#pmidiGo').addEventListener('click',async function(){
     var m=$('#pmsg'); m.textContent='';
     $('#pconnSheet').hidden=false;
