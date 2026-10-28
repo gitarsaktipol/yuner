@@ -626,6 +626,34 @@ body.dock-inflow .app{padding-bottom:110px}
 .sum{background:var(--pMint);border:2px solid var(--dMint);border-radius:24px;padding:14px 16px;text-align:center;animation:popIn .5s var(--bounce)}
 .sum b{display:block;font-size:20px;margin-bottom:4px}
 
+/* Animasi perkenalan materi Arcade (ARC_INTRO): teks dulu, lalu contoh not balok (atas) + not angka (bawah) yang diputar
+   otomatis dengan metronom. Di atas layar berlatih (z 2600); layar sentuh tegak diputar 90° seperti .play */
+.aintro{position:fixed;inset:0;z-index:2600;display:flex;flex-direction:column;gap:6px;color:var(--ink);
+  padding:calc(8px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) calc(14px + env(safe-area-inset-left,0px));
+  background:radial-gradient(120% 90% at 15% 0%,var(--pLilac),transparent 60%),radial-gradient(110% 90% at 100% 100%,var(--pSky),transparent 60%),linear-gradient(160deg,var(--pPink),var(--bg) 70%)}
+.aintro[hidden]{display:none}
+@media (orientation:portrait) and (pointer:coarse){
+  .aintro{inset:auto;top:0;left:0;width:100vh;height:100vw;transform-origin:top left;transform:rotate(90deg) translateY(-100%)}
+}
+.aiTop{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.aiTag{font-weight:800;font-size:clamp(13px,3.8vmin,16px);background:var(--pLemon);box-shadow:0 3px 0 var(--dLemon);border-radius:999px;padding:5px 14px}
+.aintro .aiSkip{width:auto;flex:none;padding:7px 14px;font-size:14px}
+.aiBody{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(4px,1.6vmin,10px);text-align:center}
+.aiTitle{margin:0;font-size:clamp(20px,6.4vmin,32px);text-shadow:0 3px 0 var(--surf);animation:popIn .45s var(--bounce)}
+.aiText{font-size:clamp(15px,4.8vmin,21px);line-height:1.5;max-width:680px;animation:popIn .5s var(--bounce)}
+.aiText:empty{display:none}
+.aiText b{color:var(--brass)}
+.aiScore{flex:1;min-height:0;width:100%;max-width:980px;display:flex;flex-direction:column;background:var(--surf);border-radius:20px;padding:4px 12px 8px;box-shadow:0 4px 0 var(--line);animation:popIn .45s var(--bounce)}
+.aiScore[hidden]{display:none}
+.aiLab{font-size:12px;color:var(--muted);text-align:left;font-weight:800;line-height:1.2}
+.aiHost{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.aiDots{display:flex;gap:10px;justify-content:center;padding-top:2px}
+.aiDots i{width:14px;height:14px;border-radius:50%;background:var(--track);box-shadow:0 2px 0 var(--line);transition:transform .12s,background .12s}
+.aiDots i.on{background:var(--brass);transform:scale(1.35)}
+.aiBar{display:flex;justify-content:center;gap:10px}
+.aiBar>button{width:auto;flex:none;padding:10px 26px;font-size:clamp(15px,4.4vmin,18px)}
+.aiBar>button[hidden]{display:none}
+.arcGame .agIntroBtn{width:auto;flex:none;align-self:center;padding:6px 16px;font-size:clamp(13px,3.8vmin,15px);margin-top:6px}
 /* ---------- editor partitur ---------- */
 .fields{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
 .fields label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
@@ -1549,6 +1577,19 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 <!-- ================= LAYAR BERLATIH (layar penuh, landscape) ================= -->
 <div class="midiToast" id="midiToast" hidden role="status" aria-live="polite"><span class="mtI" id="mtI">🎹</span><div><span id="mtT"></span><small id="mtD"></small></div><button class="mtX" id="mtX" type="button" aria-label="Tutup">✕</button></div>
+<div class="aintro" id="aintro" hidden role="dialog" aria-label="Materi baru">
+  <div class="aiTop"><span class="aiTag" id="aiTag">📖 Materi baru</span><button class="sound aiSkip" id="aiSkip" type="button">Lewati ⏭</button></div>
+  <div class="aiBody">
+    <h2 class="aiTitle" id="aiTitle"></h2>
+    <div class="aiText" id="aiText"></div>
+    <div class="aiScore" id="aiScore" hidden>
+      <div class="aiLab">Not balok</div><div class="aiHost" id="aiStaff"></div>
+      <div class="aiLab">Not angka</div><div class="aiHost" id="aiNum"></div>
+      <div class="aiDots" id="aiDots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    </div>
+  </div>
+  <div class="aiBar"><button class="sound" id="aiAgain" type="button" hidden>↺ Putar lagi</button><button class="start" id="aiGo" type="button">Lanjut ▶</button></div>
+</div>
 <div class="play" id="pplay" hidden role="dialog" aria-label="Berlatih baca not">
   <div class="playbar">
     <button class="pclose" id="pclose" type="button" aria-label="Keluar dari latihan">✕</button>
@@ -1651,7 +1692,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
   <div class="astep agPage" id="arcS4" hidden>
     <div class="agReady">
-      <div class="agHero"><div class="agHeroSvg" id="agHero"></div><div class="card asum" id="arcSum"></div></div>
+      <div class="agHero"><div class="agHeroSvg" id="agHero"></div><div class="card asum" id="arcSum"></div><button class="sound agIntroBtn" id="agIntro" type="button">📖 Materi</button></div>
       <div class="agOpts">
         <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo (garis berjalan)</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk</label></div>
         <div class="agRow">
@@ -3694,90 +3735,70 @@ function arcadeMeasures(letterIdx){
   if(letterIdx<=23) return 9;  // V,W,X
   return 10;                   // Y,Z
 }
-function arcLevelParams(letterIdx,subLv){
-  var total=ARC_LETTERS.length*9, prog=letterIdx*9+(subLv-1), p=prog/(total-1);
-  var durPool=[[1],[1,0.5,1.5],[1,1,0.5,0.5,0.25,1.5],[1,0.5,0.5,0.25,1.5]];   /* 1.5 = pola 1/4 bertitik + 1/8 ("4 .4", umum di lagu, mis. KJ 429); muncul begitu 1/8 muncul */
-  var durs = durPool[p<0.2?0:(p<0.45?1:(p<0.75?2:3))];
-  /* batas not 1/8 per birama (diminta Ferdi, Okt 2026: stage F terlalu sulit): huruf F–H maks 2 (satu pasang / satu titik+1/8),
-     sampai akhir tahap 1/8 pertama (±L) maks 4; sesudahnya bebas */
-  var maxQ = (p<0.2 || p>=0.45) ? 99 : (letterIdx<=7 ? 2 : 4);
-  /* Prioritas: lebar rentang dulu (1 oktaf -> 2 oktaf -> 3 oktaf), baru nada ♯ muncul setelah 3 oktaf tercapai */
-  var w = prog<27 ? 5+Math.round(prog/26*3) : (prog<81 ? 8+Math.round((prog-27)/53*13) : 21);
-  /* Huruf F (5) = tahap pertama not 1/8: cukup 1 oktaf dulu (diminta Ferdi, Okt 2026: masih terlalu sulit) */
-  if(letterIdx===5) w=8;
-  /* Urutan kesulitan: (1) oktaf 1->3 (level A-I), (2) jarak antar not makin jauh (J-R), (3) baru nada kres (S-Z) */
-  var maxStep = prog<81 ? 1 : 1+Math.floor((prog-81)/80*6); if(maxStep>7) maxStep=7;
-  var steps=[], s0; for(s0=-maxStep;s0<=maxStep;s0++) steps.push(s0);
-  if(maxStep>=3) steps.push(maxStep,-maxStep,maxStep-1,-(maxStep-1));
-  var sharpProb = prog<162 ? 0 : Math.min(0.5,0.05+(prog-162)/71*0.45);
-  return { measures:arcadeMeasures(letterIdx), steps:steps, maxStep:maxStep, durs:durs, maxQ:maxQ, sharpProb:sharpProb, width:w, octaves:(w<=8?1:(w<=15?2:3)) };
+/* ===== MATERI ARCADE per huruf (diminta Ferdi, Okt 2026). Tangga nada SELALU 1 = C (not balok tanpa ♯/♭).
+   top = nada tertinggi (5 = not 1–5 do..sol, 6 = sampai la, 7 = sampai si, 8 = sampai 1 tinggi / do dengan titik atas),
+   pat = jenis not: q 1/4 (crotchet), w penuh (semibreve), h 1/2 (minim), e sepasang 1/8 bergandeng, s 1/4 bertitik + 1/8 (sinkop);
+   step = lompatan maks. dalam langkah diatonik (1 = melangkah ke not tetangga, 2 = melewati 1 not mis. 1 3 5 7);
+   maxE = berapa pasang 1/8 per birama; intro = huruf ini diawali animasi perkenalan not baru (ARC_INTRO). ===== */
+var ARC_CUR=[
+  {top:5,pat:'qw',step:1,maxE:0},       /* A: not 1–5, 1/4 & penuh (perkenalan) */
+  {top:5,pat:'qwh',step:1,maxE:0},      /* B: + minim (perkenalan) */
+  {top:6,pat:'qwh',step:1,maxE:0},      /* C: + 6 (la) */
+  {top:7,pat:'qwh',step:1,maxE:0},      /* D: + 7 (si) */
+  {top:8,pat:'qwh',step:1,maxE:0},      /* E: + 1 tinggi */
+  {top:5,pat:'qwhe',step:1,maxE:1},     /* F: perkenalan 1/8 bergandeng, kembali ke not 1–5 */
+  {top:6,pat:'qwhe',step:1,maxE:1},     /* G: + 6 */
+  {top:8,pat:'qwhes',step:1,maxE:1},    /* H: perkenalan 1/4 bertitik + 1/8, not 1–7 & 1 tinggi */
+  {top:8,pat:'qwhes',step:2,maxE:2},    /* I: + lompatan melewati 1 not (campur dengan melangkah) */
+  {top:8,pat:'qwhes',step:2,maxE:2}     /* J: sama dengan I */
+];
+/* K–Z belum diatur Ferdi: lanjutan J (not 1–i, semua jenis not di atas), lompatan makin jauh sampai 1 oktaf di Z */
+function arcCur(L){ return L<ARC_CUR.length ? ARC_CUR[L] : {top:8,pat:'qwhes',step:Math.min(7,2+Math.ceil((L-9)*5/16)),maxE:3}; }
+/* keterangan level (menu Latihan) */
+function arcInfo(L,sub){
+  var c=arcCur(L), nt={5:'not 1–5',6:'not 1–6',7:'not 1–7',8:'not 1–7 & 1 tinggi'}[c.top];
+  var rh=[]; if(c.pat.indexOf('q')>=0) rh.push('1/4'); if(c.pat.indexOf('h')>=0) rh.push('1/2'); if(c.pat.indexOf('w')>=0) rh.push('penuh');
+  if(c.pat.indexOf('e')>=0) rh.push('1/8 bergandeng'); if(c.pat.indexOf('s')>=0) rh.push('1/4 bertitik + 1/8');
+  return 'Level '+ARC_LETTERS[L]+sub+' • '+arcadeMeasures(L)+' birama • '+nt+' • '+rh.join(', ')+' • '+(c.step<=1?'melangkah':(c.step===2?'lompat lewati 1 not':'lompatan s.d. '+c.step+' langkah'));
 }
-/* Rentang nada (indeks diatonik) untuk lebar w: dimulai di sekitar tengah, melebar ke bawah dan atas */
-function arcRange(w){
-  /* Batas oktaf: C3-B5 (indeks 21..41) supaya not angka cukup memakai SATU titik atas/bawah (tidak pernah dua titik) */
-  var lo, hi;
-  if(pr.clef==='bass' && pr.inst!=='guitar'){ lo=21; hi=Math.min(35,lo+w-1); return [lo,hi]; }
-  var base=(pr.inst==='guitar')?30:28, minLo=(pr.inst==='guitar')?23:21;
-  lo = w>8 ? Math.max(minLo, base-Math.round((w-8)*7/13)) : base;
-  hi = lo+w-1;
-  if(hi>41){ hi=41; lo=Math.max(minLo,hi-w+1); }
-  return [lo,hi];
-}
-/* Ritme satu birama disusun PER KETUKAN dari pola utuh (diminta Ferdi, Okt 2026: jangan ada not 1/8 sendirian — jarang
-   dan sulit dibaca): 1/4, sepasang 1/8 (satu balok), kelompok 1/16 (4x1/16, 1/8+2x1/16, 2x1/16+1/8), 1/4 bertitik + 1/8
-   (2 ketuk). Juga NOT PANJANG (diminta Ferdi: jarang muncul): minim 2 ketuk (mulai ketuk 1/3), minim bertitik 3 ketuk
-   (ketuk 1/2), semibreve 4 ketuk (birama utuh). Bobot pola pendek mengikuti banyaknya nilai itu di daftar level (allowedDurs).
-   last=true (birama terakhir lagu): biasanya ditutup not panjang, seperti akhir kalimat lagu. */
-var RHY_16=[[0.25,0.25,0.25,0.25],[0.5,0.25,0.25],[0.25,0.25,0.5]];
-function genMeasureRhythm(allowedDurs,beatsPerBar,last,maxQ){
-  function cnt(v){ return allowedDurs.filter(function(d){ return Math.abs(d-v)<1e-6; }).length; }
-  var base=[{p:[1],w:cnt(1)||1},{p:[0.5,0.5],w:cnt(0.5)},{p:null,w:cnt(0.25)},{p:[1.5,0.5],w:cnt(1.5)*0.7}];
-  var W=base.reduce(function(x,o){ return x+o.w; },0);
-  var pats=base.concat([{p:[2],w:0.3*W,at:[0,2]},{p:[3],w:0.1*W,at:[0,1]},{p:[4],w:0.08*W,at:[0]}]);
-  var out=[], remaining=beatsPerBar, guard=0, endLong=0;
-  if(last && beatsPerBar===4 && Math.random()<0.8) endLong = Math.random()<0.35 ? 4 : (Math.random()<0.6 ? 2 : 3);
-  if(endLong===4) return [4];
-  if(endLong) remaining-=endLong;
-  while(remaining>0.001 && guard<50){
-    guard++;
-    var pos=+(beatsPerBar-(endLong||0)-remaining).toFixed(4);
-    var nq=out.filter(function(d){ return d===0.5; }).length;   /* banyak not 1/8 di birama ini sejauh ini */
-    var ok=pats.filter(function(o){ return o.w>0 && (o.p ? o.p.reduce(function(x,y){ return x+y; },0) : 1)<=remaining+1e-6 && (!o.at || o.at.indexOf(pos)>=0)
-      && (!maxQ || !o.p || nq+o.p.filter(function(d){ return d===0.5; }).length<=maxQ); });
-    if(!ok.length){ out.push(remaining); break; }
-    var tot=ok.reduce(function(x,o){ return x+o.w; },0), r=Math.random()*tot, pick=ok[0];
-    for(var i=0;i<ok.length;i++){ r-=ok[i].w; if(r<0){ pick=ok[i]; break; } }
-    var pat=pick.p || RHY_16[Math.floor(Math.random()*RHY_16.length)];
-    pat.forEach(function(d){ out.push(d); remaining=+(remaining-d).toFixed(4); });
+/* Ritme satu birama 4/4 dari pola utuh (posisi selalu di ketukan, jadi 1/8 selalu sepasang dalam satu ketukan).
+   last = birama terakhir: ditutup not panjang (penuh, atau ½ di akhir) seperti akhir kalimat lagu. */
+function arcRhythm(c,last){
+  var has=function(k){ return c.pat.indexOf(k)>=0; }, out=[], pos=0, ne=0, ns=0, end=4;
+  if(last){ if(has('w') && (!has('h') || Math.random()<0.45)) return [4]; if(has('h')) end=2; }
+  while(pos<end-1e-6){
+    var ok=[{p:[1],w:4}];
+    if(has('w') && pos===0 && end===4) ok.push({p:[4],w:1.2});
+    if(has('h') && (pos===0||pos===2) && pos+2<=end) ok.push({p:[2],w:2.2});
+    if(has('e') && ne<c.maxE) ok.push({p:[0.5,0.5],w:2.6,e:1});
+    if(has('s') && ns<1 && (pos===0||pos===2) && pos+2<=end) ok.push({p:[1.5,0.5],w:2.2,s:1});
+    var tot=ok.reduce(function(x,o){ return x+o.w; },0), r=Math.random()*tot, pick=ok[0], i;
+    for(i=0;i<ok.length;i++){ r-=ok[i].w; if(r<0){ pick=ok[i]; break; } }
+    pick.p.forEach(function(d){ out.push(d); pos+=d; });
+    if(pick.e) ne++; if(pick.s) ns++;
   }
-  if(endLong) out.push(endLong);
+  if(end===2) out.push(2);
   return out;
 }
 function genArcade(letterIdx,subLv){
-  var pm=arcLevelParams(letterIdx,subLv);
-  var r=arcRange(pm.width), lo=r[0], hi=r[1];
-  /* Huruf F (tahap pertama not 1/8): HANYA not 1 2 3 4 5 6 7 tanpa titik oktaf (diminta Ferdi, Okt 2026: masih ketemu 1 tinggi).
-     Rentang = nada dasar tangga nada di oktaf 4 sampai not ke-7-nya. Kunci F piano tetap memakai rentang biasanya. */
-  if(letterIdx===5 && !(pr.clef==='bass' && pr.inst!=='guitar')){
-    lo=28+tonicLetter(pr.key);
-    var j0=jianpu(keyNote(lo),pr.key); if(j0.oct<4) lo+=7; else if(j0.oct>4) lo-=7;   /* mis. C♭: "1" tanpa titik = C♭5 */
-    hi=lo+6;
-  }
-  var notes=[], d=lo+Math.floor(Math.random()*(hi-lo+1)), bar, durs=[], j;
-  for(bar=0; bar<pm.measures; bar++) durs=durs.concat(genMeasureRhythm(pm.durs,4,bar===pm.measures-1,pm.maxQ));
-  /* Not cepat (1/8, 1/16, dan not sesudah 1/4 bertitik) lompatannya dibatasi (diminta Ferdi, Okt 2026: soal ber-1/8 terlalu
-     sulit): ke/dari not cepat paling jauh 1 langkah (huruf A–R), 2 langkah (S–Z). Not 1/4 ke atas tetap memakai maxStep level. */
-  var prog=letterIdx*9+(subLv-1), fastCap = prog<162 ? 1 : 2;
+  var c=arcCur(letterIdx), n=arcadeMeasures(letterIdx), bass=pr.clef==='bass' && pr.inst!=='guitar';
+  var lo=bass?21:28, hi=lo+c.top-1;   /* "1" = C4 (kunci F piano: C3); gitar ditulis C4 (bunyi C3) */
+  var durs=[], b, j, notes=[];
+  for(b=0;b<n;b++) durs=durs.concat(arcRhythm(c,b===n-1));
+  /* ke/dari not cepat (1/8, juga 1/8 sesudah 1/4 bertitik) lompatannya tetap kecil */
+  var fastCap=Math.min(c.step, letterIdx<18?1:2), d=lo+Math.floor(Math.random()*Math.min(3,hi-lo+1));
   for(j=0;j<durs.length;j++){
-    var dur=durs[j], k=keyNote(d);
-    if(pm.sharpProb>0 && Math.random()<pm.sharpProb) addSharp(k);
-    notes.push({m:k.m,d:dur,a:k.a});
-    var fast = dur<1 || (j+1<durs.length && durs[j+1]<1);
-    var opts=pm.steps.filter(function(s){ return d+s>=lo && d+s<=hi && (!fast || Math.abs(s)<=fastCap); });
-    if(!opts.length) opts=[0];
-    d+=opts[Math.floor(Math.random()*opts.length)];
+    notes.push({m:midiFromDia(d),d:durs[j],a:''});
+    var fast = durs[j]<1 || (j+1<durs.length && durs[j+1]<1), opts=[], s;
+    /* bobot: mengulang not yang sama 1, bergerak 2, melangkah (±1) di level berlompatan 3 (lompatan tidak selalu) */
+    for(s=-c.step;s<=c.step;s++) if(d+s>=lo && d+s<=hi && (!fast || Math.abs(s)<=fastCap)){ opts.push(s); if(s){ opts.push(s); if(c.step>=2 && Math.abs(s)===1) opts.push(s); } }
+    d+=opts[Math.floor(Math.random()*opts.length)]||0;
   }
-  return endOnTonic(notes,lo,hi);
+  /* akhir soal = "1" (do) terdekat dari not sebelumnya */
+  var L=notes.length-1, prev=L>0 ? notes[L-1].m : notes[L].m, cand=[lo]; if(lo+7<=hi) cand.push(lo+7);
+  cand.sort(function(x,y){ return Math.abs(midiFromDia(x)-prev)-Math.abs(midiFromDia(y)-prev); });
+  notes[L].m=midiFromDia(cand[0]);
+  return notes;
 }
 
 /* =====================================================================
@@ -3822,7 +3843,7 @@ function newRound(keep){
   clearTimeout(autoT); hideGrade(); hideHill(); tempoStop();
   if(!keep){
     if(pr.src==='score') pr.score=curScoreCopy();
-    else if(pr.src==='arcade') pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genArcade(pr.arcLetter,pr.arcSub)};
+    else if(pr.src==='arcade') pr.score={title:'',ts:[4,4],clef:(pr.clef==='bass'&&pr.inst!=='guitar')?'bass':'treble',key:0,notes:genArcade(pr.arcLetter,pr.arcSub)};
     else if(pr.src==='custom') pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genCustom()};
     else pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genRandom()};
   }
@@ -3853,7 +3874,7 @@ function newRound(keep){
   $('#psum').hidden=true;
   buildKeySelect();
   renderPractice();
-  tempoMaybeStart();
+  if(!arcMaybeIntro()) tempoMaybeStart();
 }
 var pd = { armed:false, cand:null, count:0, lastOnset:0, rms:[], last:null, legCand:null, legCount:0, peak:0, dip:0, hitT:0 };
 /* Not yang diminta = not yang baru saja dimainkan (masih berdengung)? Serangan ulangnya naik dari sisa bunyi, bukan dari sunyi,
@@ -4201,6 +4222,98 @@ function advanceArcadeLevel(){
   pr.arcSub++;
   if(pr.arcSub>9){ pr.arcSub=1; pr.arcLetter=Math.min(pr.arcLetter+1,ARC_LETTERS.length-1); }
   arcSave();
+}
+/* ===== Perkenalan materi baru Arcade (diminta Ferdi, Okt 2026): sebelum huruf A, B, F, H dimainkan PERTAMA kali (per
+   pemain, `intro` di data pemain) tampil teks, lalu contoh not balok (atas) + not angka (bawah) yang diputar otomatis
+   dengan metronom & penanda ketukan, baru permainan mulai (Tempo: "Siap? 4 3 2 1"). Bisa ditonton ulang lewat 📖 Materi. ===== */
+function aiN(m,d){ return {m:m,d:d,a:''}; }
+var ARC_INTRO={
+  0:{title:'Kenalan dengan not 🎵',text:'Di Stage A kamu memainkan not <b>1 2 3 4 5</b> (do re mi fa sol).<br>Ada 2 jenis not: <b>not 1/4</b> (crotchet) = <b>1 ketuk</b>, dan <b>not penuh</b> (semibreve) = <b>4 ketuk</b>.<br>Atas: not balok · Bawah: not angka.',
+     demos:[{cap:'Not penuh (semibreve) = 4 ketuk — tahan sampai hitungan ke-4',notes:[aiN(60,4),aiN(64,4)]},
+            {cap:'Not 1/4 (crotchet) = 1 ketuk',notes:[aiN(60,1),aiN(62,1),aiN(64,1),aiN(65,1)]}]},
+  1:{title:'Not baru: not 1/2 (minim) 🎵',text:'<b>Not 1/2</b> (minim) = <b>2 ketuk</b>.<br>Di not angka ditulis angka + satu titik, mis. <b>5 ·</b>',
+     demos:[{cap:'Not 1/2 (minim) = 2 ketuk',notes:[aiN(60,2),aiN(64,2),aiN(67,2),aiN(64,2)]}]},
+  5:{title:'Not baru: not 1/8 (quaver) 🎵',text:'<b>Not 1/8</b> (quaver) = <b>½ ketuk</b>. Dua not 1/8 <b>digandeng</b> = 1 ketuk.<br>Di not angka: ada <b>garis di atas</b> angkanya. Kita kembali ke not 1 2 3 4 5 dulu.',
+     demos:[{cap:'Dua not 1/8 bergandeng = 1 ketuk',notes:[aiN(60,1),aiN(62,1),aiN(64,0.5),aiN(65,0.5),aiN(67,1),aiN(67,0.5),aiN(65,0.5),aiN(64,0.5),aiN(62,0.5),aiN(60,2)]}]},
+  7:{title:'Not baru: 1/4 bertitik + 1/8 🎵',text:'<b>Not 1/4 bertitik</b> = <b>1½ ketuk</b>, lalu <b>satu not 1/8</b> (½ ketuk) melengkapi 2 ketuk.<br>Di not angka: <b>1 .</b> lalu <b>1</b> dengan garis di atas titik & angkanya. Sekarang not 1 sampai 1 tinggi.',
+     demos:[{cap:'1/4 bertitik + 1/8, lalu not 1/2',notes:[aiN(60,1.5),aiN(60,0.5),aiN(60,2),aiN(62,1.5),aiN(62,0.5),aiN(62,2)]}]}
+};
+/* huruf materi terakhir yang sudah sampai (untuk tombol 📖 Materi) */
+function arcIntroAt(L){ for(var k=L;k>=0;k--) if(ARC_INTRO[k]) return k; return 0; }
+var ai={T:[],gain:null,steps:[],i:0,done:null,letter:0};
+function aiClear(){
+  ai.T.forEach(clearTimeout); ai.T=[];
+  if(ai.gain){ try{ ai.gain.disconnect(); }catch(e){} ai.gain=null; }
+}
+function aiOpen(){ return !$('#aintro').hidden; }
+function aiShow(L,done,game){
+  var I=ARC_INTRO[L]; if(!I){ if(done) done(); return; }
+  aiClear(); ai.letter=L; ai.done=done||null; ai.game=!!game; ai.i=-1;
+  ai.steps=[{text:I.text,title:I.title}].concat(I.demos.map(function(d){ return {demo:d,title:I.title}; }));
+  $('#aiTag').textContent='📖 Materi baru · Stage '+ARC_LETTERS[L];
+  $('#aintro').hidden=false;
+  aiNext();
+}
+function aiNext(){
+  aiClear(); ai.i++;
+  if(ai.i>=ai.steps.length){ aiEnd(); return; }
+  var st=ai.steps[ai.i], last=ai.i===ai.steps.length-1;
+  $('#aiTitle').textContent = st.demo ? st.demo.cap : st.title;
+  $('#aiText').innerHTML = st.demo ? '' : st.text;
+  $('#aiScore').hidden = !st.demo;
+  $('#aiAgain').hidden = !st.demo;
+  $('#aiGo').textContent = last ? (ai.game ? '▶ Mulai Stage '+ARC_LETTERS[ai.letter]+pr.arcSub : '✓ Selesai') : 'Lanjut ▶';
+  if(st.demo) aiDemo(st.demo, last);
+  else ai.T.push(setTimeout(aiNext, 7000));   /* teks dulu (±7 dtk), lalu contoh dimainkan */
+}
+function aiEnd(){
+  aiClear(); $('#aintro').hidden=true;
+  var f=ai.done; ai.done=null; if(f) f();
+}
+function aiDemo(dm, last){
+  var bass=pr.clef==='bass' && pr.inst!=='guitar', sh=bass?12:0;
+  var sc={title:'',ts:[4,4],clef:bass?'bass':'treble',key:0,notes:dm.notes.map(function(n){ return {m:n.m-sh,d:n.d,a:''}; })};
+  var hs=$('#aiStaff'), hn=$('#aiNum'), none=function(){ return ''; };
+  drawFit(hs,sc,none,'staff'); drawFit(hn,sc,none,'num');
+  var dots=$$('#aiDots i');
+  function mark(i){
+    [hs,hn].forEach(function(h){ h.querySelectorAll('g[data-i]').forEach(function(g){ var c=+g.getAttribute('data-i')===i ? 'n st-cur' : 'n'; if(g.getAttribute('class')!==c) g.setAttribute('class',c); }); });
+  }
+  function dot(b){ dots.forEach(function(d,k){ d.classList.toggle('on',k===b); }); }
+  mark(-1); dot(-1);
+  var c=ac(), g=c.createGain(); g.connect(c.destination); ai.gain=g;
+  var bpm=80, beat=60/bpm, t0=c.currentTime+0.6, now=c.currentTime, t=0, total=0, b;
+  sc.notes.forEach(function(n){ total+=n.d; });
+  for(b=0;b<total-1e-6;b++){
+    metClick(t0+b*beat, b%4===0, g);
+    (function(bb){ ai.T.push(setTimeout(function(){ dot(bb%4); }, (t0-now+bb*beat)*1000)); })(b);
+  }
+  sc.notes.forEach(function(n,i){
+    pluck(n.m-instShift(), t0+t*beat, n.d*beat*0.95, g);
+    ai.T.push(setTimeout(function(){ mark(i); }, (t0-now+t*beat)*1000));
+    t+=n.d;
+  });
+  var endMs=(t0-now+total*beat)*1000;
+  ai.T.push(setTimeout(function(){ mark(-1); dot(-1); }, endMs));
+  /* contoh terakhir: permainan mulai sendiri setelah jeda sebentar (atau tekan tombol) */
+  ai.T.push(setTimeout(aiNext, endMs+(last?1800:1200)));
+}
+function aiReplay(){ if(ai.i>=0 && ai.steps[ai.i] && ai.steps[ai.i].demo){ ai.i--; aiNext(); } }
+/* Dipanggil saat soal Arcade baru siap: huruf dengan materi baru yang belum pernah dilihat pemain ini -> perkenalan dulu */
+function arcMaybeIntro(){
+  if(pr.src!=='arcade' || !pr.playing || aiOpen() || !ARC_INTRO[pr.arcLetter]) return false;
+  var p=activePlayer(), seen=(p && p.intro) || [];
+  if(seen.indexOf(pr.arcLetter)>=0) return false;
+  arcSetPl({intro:seen.concat([pr.arcLetter])});
+  pr.paused=true; pr.intro=true; tempoStop();
+  aiShow(pr.arcLetter, function(){ pr.intro=false; pr.paused=false; if(!pr.playing) return; renderPractice(); tempoMaybeStart(); }, true);
+  return true;
+}
+function bindIntro(){
+  $('#aiGo').addEventListener('click',aiNext);
+  $('#aiSkip').addEventListener('click',aiEnd);
+  $('#aiAgain').addEventListener('click',aiReplay);
+  $('#agIntro').addEventListener('click',function(){ aiShow(arcIntroAt(activePlayer().letter)); });
 }
 
 /* Nilai besar + kembang api saat satu soal selesai (animasi di atas partitur) */
@@ -4581,11 +4694,12 @@ function previewScore(sc){
   return o;
 }
 /* Gambar partitur sebesar mungkin yang masih muat di tinggi tempatnya (layar berlatih). */
-function drawFit(host,sc,fn){
+function drawFit(host,sc,fn,mode){
   var maxH=host.clientHeight, w=host.clientWidth, f;
-  if(maxH<60){ drawScore(host,sc,app.mode,fn); return; }
+  mode=mode||app.mode;
+  if(maxH<60){ drawScore(host,sc,mode,fn); return; }
   for(f=(w>600?Math.min(2.2,w/520):1); f>=0.7; f-=0.1){
-    drawScore.force=f; drawScore(host,sc,app.mode,fn);
+    drawScore.force=f; drawScore(host,sc,mode,fn);
     var sv=host.firstChild;
     if(!sv || parseFloat(sv.getAttribute('height'))<=maxH) break;
   }
@@ -4628,8 +4742,9 @@ function resumePlay(){
   if(f) autoT=setTimeout(whenPlaying(f),600);
   else tempoMaybeStart();
 }
-function askQuit(){ if(!pr.playing) return; pausePlay(); $('#pquit').hidden=false; try{ $('#pqNo').focus(); }catch(e){} }
+function askQuit(){ if(aiOpen()){ aiEnd(); return; } if(!pr.playing) return; pausePlay(); $('#pquit').hidden=false; try{ $('#pqNo').focus(); }catch(e){} }
 function closePractice(fromPop){
+  if(aiOpen()){ ai.done=null; aiEnd(); } pr.intro=false;
   hideGrade(); hideHill(); tempoStop(); var tpp=$('#ptop'); if(tpp) tpp.hidden=true;
   if(!pr.playing) return;
   clearTimeout(autoT);
@@ -4729,10 +4844,7 @@ function syncPracticeOpts(){
   $('#pCustomOpts').hidden = !isCust;
   {
     renderLvPick();
-    var pm=arcLevelParams(pr.arcLetter,pr.arcSub);
-    var leapTxt = pm.maxStep<=1?'langkah kecil':(pm.maxStep<=3?'lompatan sedang':'lompatan luas');
-    var rhTxt = pm.durs.length<=1?'not seperempat saja':(pm.durs.length===2?'seperempat & seperdelapan':'berbagai nilai not');
-    $('#parcInfo').textContent='Level '+ARC_LETTERS[pr.arcLetter]+String(pr.arcSub)+' • '+pm.measures+' birama • '+pm.octaves+' oktaf • '+leapTxt+' • '+rhTxt+(pm.sharpProb>0.05?' • ada nada ♯':'');
+    $('#parcInfo').textContent=arcInfo(pr.arcLetter,pr.arcSub);
   }
   if(isCust){
     $$('#custGrid button').forEach(function(b){ b.setAttribute('aria-pressed', pr.custNotes.indexOf(parseInt(b.getAttribute('data-note'),10))>=0 ? 'true':'false'); });
@@ -4800,7 +4912,7 @@ function buildCustGrid(){
   });
 }
 function bindPracticeOpts(){
-  buildArcadeSelects(); buildCustGrid(); bindPlayers(); bindArcade(); bindTempoUI();
+  buildArcadeSelects(); buildCustGrid(); bindPlayers(); bindArcade(); bindIntro(); bindTempoUI();
   $$('#pinst button').forEach(function(b){ b.addEventListener('click',function(){ setInst(b.getAttribute('data-inst')); }); });
   $('#psrc').addEventListener('change',function(e){
     var v=e.target.value;
@@ -4834,6 +4946,7 @@ function bindPracticeOpts(){
   $('#pcfg').addEventListener('toggle',function(){ if(this.open) window.scrollTo({top:0,behavior:'smooth'}); });
   $('#pconnClose').addEventListener('click',function(){ $('#pconnSheet').hidden=true; });
   document.body.appendChild($('#pplay'));   /* di luar .app supaya menutupi menu bawah */
+  document.body.appendChild($('#aintro'));  /* perkenalan materi Arcade: di atas layar berlatih */
   $('#pgo').addEventListener('click',startPractice);
   $('#pclose').addEventListener('click',askQuit);
   $('#pqYes').addEventListener('click',function(){ closePractice(); });
@@ -7593,7 +7706,7 @@ function startArcade(){
   if(!isPremium()){ showPaywall('arcade'); return; }
   var a=activePlayer(); pr.arcLetter=a.letter; pr.arcSub=a.sub; arcSave();
   pr.prevSrc = pr.src==='arcade' ? 'random' : pr.src; pr.src='arcade';
-  syncPracticeOpts(); newRound(); startPractice(); refreshTop();
+  syncPracticeOpts(); newRound(); startPractice(); refreshTop(); arcMaybeIntro();
 }
 function bindArcade(){
   $('#arcNext1').addEventListener('click',function(){ arcGo(2); });
