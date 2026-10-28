@@ -708,7 +708,6 @@ body.dock-inflow .app{padding-bottom:110px}
   #tab-score .spanel #sprac{font-size:15px;padding:12px 6px}
   #tab-score .spanel .hint{font-size:12px}
   #tab-score #ssaveInfo{margin:0 2px !important}
-  #tab-score .spanel .imgpanel{margin-top:6px}
 }
 /* menu bawah di PC (menu Partitur): kapsul di tengah, tidak menutupi panel kiri & kanan */
 @media (min-width:900px) and (min-height:601px){
@@ -975,6 +974,22 @@ html.csOpen select:focus{outline:none}
 @media (hover:none) and (pointer:coarse){ .skbdRow{display:none!important} }
 .imgpanel{background:var(--panel);border:2px solid var(--line);border-radius:24px;padding:10px}
 .imgpanel img{display:block;max-width:100%;max-height:340px;margin:0 auto;border-radius:8px;background:#fff}
+.imgpanel{margin-bottom:12px}
+.imgHead{display:flex;align-items:center;gap:8px;margin:0 2px 8px;font-size:14px;color:var(--ink)}
+.imgHead .imgHint{display:none;flex:1;font-size:11px;color:var(--muted)}
+.imgHead b{flex:1}
+.imgX{border:0;background:var(--pPink);color:var(--ink);width:30px;height:30px;border-radius:50%;font-weight:800;cursor:pointer;flex:none}
+/* Laptop/PC: gambar acuan jadi jendela melayang di atas partitur — bisa diseret & diubah ukurannya (dulu terselip kecil di bawah panel kanan) */
+@media (min-width:900px) and (min-height:601px){
+  body.on-score #simgpanel{position:fixed;top:96px;right:24px;width:min(520px,42vw);max-height:calc(100vh - 120px);z-index:950;margin:0;
+    overflow:auto;resize:both;min-width:260px;min-height:160px;box-shadow:0 18px 50px rgba(60,40,90,.28);border-color:var(--pLilac)}
+  body.on-score #simgpanel img{max-height:none;width:100%}
+  body.on-score .imgHead{cursor:move;user-select:none;touch-action:none}
+  body.on-score .imgHead b{flex:none}
+  body.on-score .imgHead .imgHint{display:block}
+  body.on-score #simgpanel #sclose{display:none}
+}
+body:not(.on-score) > #simgpanel{display:none!important}
 /* seret-lepas gambar partitur: bingkai putus-putus di seluruh layar */
 body.imgDrag::after{content:'🖼️ Lepaskan gambar partitur di sini';position:fixed;inset:12px;z-index:4000;display:flex;align-items:center;justify-content:center;
   border:4px dashed var(--brass);border-radius:28px;background:var(--hl);color:var(--ink);font-weight:800;font-size:24px;line-height:1.3;text-align:center;padding:20px;pointer-events:none;backdrop-filter:blur(2px)}
@@ -1730,6 +1745,15 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
   </div>
   <div class="smain">
+  <section class="imgpanel" id="simgpanel" hidden>
+    <div class="imgHead" id="simgHead"><b>🖼️ Gambar acuan</b><span class="imgHint">seret untuk memindah · tarik pojok kanan bawah untuk mengubah ukuran</span><button type="button" class="imgX" id="simgX" aria-label="Tutup gambar">✕</button></div>
+    <img id="simgview" alt="Gambar partitur yang diunggah">
+    <div class="row" style="margin-top:10px">
+      <button class="start" id="sai" type="button" style="flex:1.4;padding:12px;font-size:16px" hidden>Baca otomatis dengan AI</button>
+      <button class="sound" id="sclose" type="button">Tutup gambar</button>
+    </div>
+    <p class="hint" id="saimsg" style="margin-top:10px"></p>
+  </section>
   <section class="board">
     <div class="szoom" id="szoom" role="group" aria-label="Ukuran partitur"><button type="button" id="szOut" title="Perkecil (Ctrl + gulir mouse)" aria-label="Perkecil">−</button><button type="button" id="szFit" title="Pas satu layar">Pas</button><button type="button" id="szIn" title="Perbesar (Ctrl + gulir mouse)" aria-label="Perbesar">＋</button></div>
     <div class="scorehost" id="sscore"></div>
@@ -1821,14 +1845,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
   <p class="hint" id="smidiMsg"></p>
 
-  <section class="imgpanel" id="simgpanel" hidden>
-    <img id="simgview" alt="Gambar partitur yang diunggah">
-    <div class="row" style="margin-top:10px">
-      <button class="start" id="sai" type="button" style="flex:1.4;padding:12px;font-size:16px" hidden>Baca otomatis dengan AI</button>
-      <button class="sound" id="sclose" type="button">Tutup gambar</button>
-    </div>
-    <p class="hint" id="saimsg" style="margin-top:10px"></p>
-  </section>
   </div>
 </section>
 
@@ -6317,7 +6333,25 @@ function bindScore(){
   $('#simg').addEventListener('click',function(e){ if(!isPremium()){ e.preventDefault(); showPaywall('gambar'); } });
   $('#simg').addEventListener('change',function(e){ if(!isPremium()) return; onImage(e); });
   bindImageDrop();
+  matchMedia(IMG_PC_Q).addEventListener('change',placeImgPanel);
   $('#sclose').addEventListener('click',function(){ $('#simgpanel').hidden=true; });
+  $('#simgX').addEventListener('click',function(){ $('#simgpanel').hidden=true; });
+  /* jendela gambar acuan (PC) bisa diseret lewat judulnya */
+  (function(){
+    var pn=$('#simgpanel'), hd=$('#simgHead'), dr=null;
+    hd.addEventListener('pointerdown',function(e){
+      if(getComputedStyle(pn).position!=='fixed' || e.target.closest('button')) return;
+      var r=pn.getBoundingClientRect(); dr={dx:e.clientX-r.left, dy:e.clientY-r.top};
+      hd.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    hd.addEventListener('pointermove',function(e){
+      if(!dr) return;
+      var x=clamp(e.clientX-dr.dx,0,innerWidth-80), y=clamp(e.clientY-dr.dy,0,innerHeight-60);
+      pn.style.left=x+'px'; pn.style.top=y+'px'; pn.style.right='auto';
+    });
+    hd.addEventListener('pointerup',function(){ dr=null; });
+    hd.addEventListener('pointercancel',function(){ dr=null; });
+  })();
   $('#sai').addEventListener('click',function(){ if(!isPremium()){ showPaywall('gambar'); return; } readWithAI(); });
   $('#smidiOut').addEventListener('click',function(){ if(!isPremium()){ showPaywall('ekspor'); return; } exportMidi(); });
   bindWordExport();
@@ -7020,8 +7054,8 @@ function loadImage(f){
   if(!isPremium()){ showPaywall('gambar'); return true; }
   imgFile=f; if(imgUrl) URL.revokeObjectURL(imgUrl);
   imgUrl=URL.createObjectURL(f);
-  $('#simgview').src=imgUrl; $('#simgpanel').hidden=false; updateImgUI();
-  try{ $('#simgpanel').scrollIntoView({behavior:'smooth',block:'nearest'}); }catch(er){}
+  placeImgPanel(); $('#simgview').src=imgUrl; $('#simgpanel').hidden=false; updateImgUI();
+  try{ if(getComputedStyle($('#simgpanel')).position!=='fixed') $('#simgpanel').scrollIntoView({behavior:'smooth',block:'nearest'}); }catch(er){}
   showScoreAlert('Gambar partitur dimuat ✓',true);
   return true;
 }
@@ -7031,6 +7065,14 @@ function imgOf(list){
     if(f && /^image\//.test(f.type||'')) return f;
   }
   return null;
+}
+/* PC: jendela melayang dipasang langsung di <body> (di dalam .smain posisinya ikut bergeser karena animasi transform);
+   HP: tetap di .smain tepat di atas partitur */
+var IMG_PC_Q='(min-width:900px) and (min-height:601px)';
+function placeImgPanel(){
+  var pn=$('#simgpanel'), pc=matchMedia(IMG_PC_Q).matches, sm=$('#tab-score .smain');
+  if(pc && pn.parentNode!==document.body) document.body.appendChild(pn);
+  else if(!pc && pn.parentNode===document.body && sm){ sm.insertBefore(pn,sm.firstChild); pn.style.left=pn.style.top=pn.style.right=''; }
 }
 var pasteWait=0;
 function bindImageDrop(){
