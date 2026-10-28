@@ -743,6 +743,81 @@ body{
 .bigopts button:nth-child(2){background:var(--pLemon);box-shadow:0 6px 0 var(--dLemon)}
 .bigopts button[aria-pressed="true"]{background:var(--brass);color:var(--brassText);box-shadow:0 6px 0 var(--brassDeep)}
 .bigopts .bi{font-size:46px;line-height:1.1}
+/* ===== Layar game Arcade (Okt 2026): layar penuh mendatar, tanpa gulir ===== */
+body.on-arcade{overflow:hidden}
+body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seperti masuk game: menu bawah aplikasi disembunyikan, keluar lewat 🏠 */
+.arcGame{position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;gap:0;overflow:hidden;
+  padding:calc(6px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) calc(14px + env(safe-area-inset-left,0px));
+  background:radial-gradient(120% 90% at 15% 0%,var(--pLilac),transparent 60%),radial-gradient(110% 90% at 100% 100%,var(--pSky),transparent 60%),linear-gradient(160deg,var(--pPink),var(--bg) 70%)}
+.arcGame[hidden]{display:none}
+.arcGame::before{content:"♪  ♫  ♩  ♬  ♪  ♫  ♩";position:absolute;left:-10%;right:-10%;top:12%;font-size:clamp(28px,9vh,60px);letter-spacing:.7em;color:var(--brass);opacity:.12;white-space:nowrap;pointer-events:none;animation:agFloat 14s linear infinite}
+@keyframes agFloat{ from{transform:translateX(0)} to{transform:translateX(-30%)} }
+@media (orientation:portrait) and (pointer:coarse){
+  .arcGame{inset:auto;top:0;left:0;width:100vh;height:100vw;transform-origin:top left;transform:rotate(90deg) translateY(-100%)}
+}
+.agTop{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;position:relative;z-index:2}
+.agIco{border:0;border-radius:16px;width:46px;height:42px;font-size:22px;background:var(--surf);box-shadow:0 4px 0 var(--line);cursor:pointer}
+.agStar{font-weight:800;font-size:clamp(14px,4.2vh,18px);background:var(--pLemon);box-shadow:0 4px 0 var(--dLemon);border-radius:999px;padding:6px 14px;color:var(--ink)}
+.arcGame .adots i{width:clamp(26px,6vw,46px);height:10px}
+.agPage{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:clamp(6px,2.4vh,14px);position:relative;z-index:1;max-width:980px;width:100%;margin:0 auto}
+.agPage[hidden]{display:none}
+.arcGame .atitle{font-size:clamp(20px,6.5vh,32px);margin:0;text-shadow:0 3px 0 var(--surf)}
+.agRow{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+.agRow>button{flex:0 1 auto;padding:clamp(8px,2.6vh,13px) clamp(14px,3vw,24px);font-size:clamp(14px,4.4vh,18px);width:auto}
+.agRow .txt{flex:1 1 220px;max-width:340px;margin:0}
+.agGo{min-width:150px}
+.arcGame .chars.agChars{justify-content:center;flex-wrap:nowrap;margin:0}
+.arcGame .chars.agChars button{flex:0 1 150px;max-width:170px;padding:clamp(6px,2vh,12px) 6px;font-size:clamp(13px,4vh,17px);border-radius:22px}
+.arcGame .chars.agChars button svg{max-width:none;width:auto;height:clamp(60px,26vh,130px)}
+.arcGame .chars.agChars button[aria-pressed="true"]{transform:translateY(-6px) scale(1.04);transition:transform .25s var(--bounce)}
+.arcGame .bigopts{gap:clamp(12px,3vw,28px);max-width:720px;width:100%;margin:0 auto}
+.arcGame .bigopts button{padding:clamp(14px,6vh,34px) 8px;font-size:clamp(18px,6vh,28px);border-radius:30px}
+.arcGame .bigopts .bi{font-size:clamp(40px,17vh,90px)}
+.arcGame .hint{margin:0;text-align:center}
+.agReady{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:clamp(10px,3vw,26px);align-items:center;height:100%;min-height:0}
+.agHero{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:0}
+.agHeroSvg svg{height:clamp(90px,40vh,210px);width:auto;animation:agBob 2.2s ease-in-out infinite}
+@keyframes agBob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.arcGame .asum{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 16px;margin:0;text-align:center;font-size:clamp(13px,4vh,16px)}
+.arcGame .asum b{font-size:clamp(17px,5.5vh,24px)}
+.agOpts{display:flex;flex-direction:column;gap:clamp(6px,2.2vh,12px);min-height:0}
+.arcGame .tempoCard{margin:0;padding:8px 14px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:clamp(13px,4vh,15px)}
+.arcGame .tempoCard label{margin:0}
+.agPlay{font-size:clamp(24px,9vh,40px)!important;padding:clamp(10px,3.5vh,18px)!important;border-radius:28px;animation:agGlow 1.6s ease-in-out infinite}
+@keyframes agGlow{ 0%,100%{box-shadow:0 6px 0 var(--brassDeep),0 0 0 0 var(--brass)} 50%{box-shadow:0 6px 0 var(--brassDeep),0 0 0 10px transparent} }
+.agLv label{display:flex;flex-direction:column;font-weight:700;gap:4px;font-size:clamp(14px,4.4vh,18px)}
+.agLv select{font-size:clamp(16px,5vh,22px);padding:8px 14px;border-radius:14px}
+.arcGame .lockCard{max-width:520px}
+/* animasi tekan tombol */
+.agPress{animation:agPress .32s var(--bounce)}
+@keyframes agPress{ 0%{transform:scale(1)} 35%{transform:scale(.88) translateY(3px)} 100%{transform:scale(1)} }
+/* layar loading */
+.agLoad{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,4vh,22px);
+  background:radial-gradient(circle at 50% 40%,var(--pLilac),var(--pSky) 70%);transition:opacity .35s}
+.agLoad[hidden]{display:none}
+.agLoad.out{opacity:0}
+.agLogo{display:flex;flex-direction:column;align-items:center;line-height:1}
+.agLogo b{font-size:clamp(34px,15vh,72px);color:var(--brass);text-shadow:0 5px 0 var(--brassDeep);animation:agPop .7s var(--bounce)}
+.agLogo em{font-style:normal;font-weight:800;letter-spacing:.35em;font-size:clamp(14px,5.5vh,24px);color:var(--ink);margin-top:6px}
+.agNotes{display:flex;gap:14px;font-size:clamp(22px,8vh,40px);color:var(--ink);margin-bottom:8px}
+.agNotes i{font-style:normal;animation:agHop 0.9s ease-in-out infinite}
+.agNotes i:nth-child(2){animation-delay:.15s;color:var(--brass)} .agNotes i:nth-child(3){animation-delay:.3s} .agNotes i:nth-child(4){animation-delay:.45s;color:var(--brass)}
+@keyframes agHop{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+@keyframes agPop{ 0%{transform:scale(.3);opacity:0} 100%{transform:scale(1);opacity:1} }
+.agBar{width:min(60%,420px);height:14px;border-radius:999px;background:var(--surf);box-shadow:inset 0 2px 4px rgba(0,0,0,.12);overflow:hidden}
+.agBar i{display:block;height:100%;width:100%;transform-origin:left;background:linear-gradient(90deg,var(--brass),var(--peach));animation:agFill 1.5s ease-out forwards}
+@keyframes agFill{ from{transform:scaleX(0)} to{transform:scaleX(1)} }
+.agTip{font-weight:700;color:var(--ink);font-size:clamp(13px,4.2vh,17px)}
+@media (prefers-reduced-motion: reduce){ .arcGame::before,.agNotes i,.agHeroSvg svg,.agPlay,.agPress{animation:none} }
+/* Pemberitahuan sambungan MIDI (diminta Ferdi, Okt 2026) */
+.midiToast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));z-index:3000;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:min(92vw,520px);
+  padding:12px 18px;border-radius:20px;font-weight:800;font-size:15px;color:var(--ink);background:var(--pMint);box-shadow:0 6px 0 var(--dMint),0 10px 30px rgba(0,0,0,.18);animation:mtIn .5s var(--bounce)}
+.midiToast[hidden]{display:none}
+.midiToast.bad{background:var(--pPink);box-shadow:0 6px 0 var(--dPink),0 10px 30px rgba(0,0,0,.18)}
+.midiToast.warn{background:var(--pLemon);box-shadow:0 6px 0 var(--dLemon),0 10px 30px rgba(0,0,0,.18)}
+.midiToast .mtI{font-size:28px;animation:agHop .8s ease-in-out 3}
+.midiToast small{display:block;font-weight:600;font-size:12px;opacity:.85}
+@keyframes mtIn{ from{opacity:0;transform:translate(-50%,-30px) scale(.8)} to{opacity:1;transform:translate(-50%,0) scale(1)} }
 .asum{text-align:center;font-weight:700}
 /* Halaman bukit Arcade: karakter naik dari level ke level, nilai muncul saat dilewati */
 .phill{position:absolute;left:0;right:0;bottom:0;top:calc(46px + env(safe-area-inset-top,0px));z-index:6;display:flex;flex-direction:column;background:linear-gradient(var(--hillTop),var(--bg) 75%);overflow:hidden;animation:popIn .45s var(--bounce)}
@@ -992,6 +1067,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 </section>
 
 <!-- ================= LAYAR BERLATIH (layar penuh, landscape) ================= -->
+<div class="midiToast" id="midiToast" hidden role="status" aria-live="polite"><span class="mtI" id="mtI">🎹</span><div><span id="mtT"></span><small id="mtD"></small></div></div>
 <div class="play" id="pplay" hidden role="dialog" aria-label="Berlatih baca not">
   <div class="playbar">
     <button class="pclose" id="pclose" type="button" aria-label="Keluar dari latihan">✕</button>
@@ -1026,64 +1102,92 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 </div>
 
 <!-- ================= ARCADE ================= -->
-<section class="tab" id="tab-arcade" hidden>
-  <header><h1><svg class="mascot" viewBox="0 0 40 40" aria-hidden="true"><path class="mf" d="M25 29V6c4 1 8 4 9 9"/><ellipse class="mb" cx="17" cy="29" rx="10" ry="8"/><circle class="me" cx="13.5" cy="27.5" r="1.6"/><circle class="me" cx="20.5" cy="27.5" r="1.6"/><path d="M14 31.5q3 2.6 6 0" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/><circle class="mc" cx="10.5" cy="31" r="1.8"/><circle class="mc" cx="23.5" cy="31" r="1.8"/></svg>Arcade</h1></header>
-  <div class="card lockCard" id="arcLock" hidden>
+<section class="tab arcGame" id="tab-arcade" hidden>
+  <!-- Layar game Arcade (diminta Ferdi, Okt 2026): layar penuh mendatar, loading, halaman pilihan tanpa gulir, efek tombol -->
+  <div class="agLoad" id="agLoad" hidden aria-live="polite">
+    <div class="agLogo"><span class="agNotes" aria-hidden="true"><i>♪</i><i>♫</i><i>♩</i><i>♬</i></span><b>FerTune</b><em>ARCADE</em></div>
+    <div class="agBar"><i id="agBarFill"></i></div>
+    <div class="agTip" id="agTip">Memuat panggung…</div>
+  </div>
+  <div class="agTop">
+    <button class="agIco" id="agHome" type="button" aria-label="Keluar dari Arcade">🏠</button>
+    <div class="adots" id="arcDots" aria-hidden="true"></div>
+    <div class="agStar" id="agStar">⭐ 0</div>
+  </div>
+  <div class="agPage card lockCard" id="arcLock" hidden>
     <div style="font-size:42px" aria-hidden="true">⭐</div>
     <h2>Arcade khusus Premium</h2>
     <p>Main game baca not dengan karakter, level A sampai Z, dan bukit petualangan. Berlangganan Premium untuk membukanya.</p>
     <button class="start" id="arcLockGo" type="button">Lihat Premium</button>
   </div>
-  <div class="adots" id="arcDots" aria-hidden="true"></div>
 
-  <div class="astep" id="arcS1">
-    <h2 class="atitle">1. Pilih karakter</h2>
-    <div class="chars wrap big" id="pplayers" role="group" aria-label="Pilih karakter"></div>
-    <div class="row" style="gap:8px;margin:2px 0 8px">
+  <div class="astep agPage" id="arcS1">
+    <h2 class="atitle">Pilih karakter</h2>
+    <div class="chars big agChars" id="pplayers" role="group" aria-label="Pilih karakter"></div>
+    <div class="agRow">
       <button class="sound" id="pAddPl" type="button">+ Karakter baru</button>
-      <button class="sound" id="pDelPl" type="button">Hapus karakter</button>
+      <button class="sound" id="agRen" type="button">✏️ Ganti nama</button>
+      <button class="sound" id="pDelPl" type="button">🗑 Hapus</button>
+      <button class="start agGo" id="arcNext1" type="button">Lanjut ▶</button>
     </div>
-    <div class="card" id="pNewPl" hidden>
-      <span class="charLab">Pilih tampilan &amp; nama karakter baru (maks. 5 karakter)</span>
-      <div class="chars" id="pchars" role="group" aria-label="Pilih tampilan"></div>
+  </div>
+  <div class="astep agPage agSub" id="pNewPl" hidden>
+    <h2 class="atitle">Karakter baru</h2>
+    <div class="chars agChars" id="pchars" role="group" aria-label="Pilih tampilan"></div>
+    <div class="agRow">
       <input class="txt" id="pnewName" type="text" maxlength="12" placeholder="Nama karakter baru" autocomplete="off" aria-label="Nama karakter baru">
-      <div class="row" style="gap:8px;margin-top:8px">
-        <button class="start" id="pNewOk" type="button" style="padding:10px">Mulai dari A1</button>
-        <button class="sound" id="pNewNo" type="button">Batal</button>
-      </div>
+      <button class="sound" id="pNewNo" type="button">Batal</button>
+      <button class="start agGo" id="pNewOk" type="button">Mulai dari A1</button>
     </div>
-    <span class="charLab">Nama karakter ini</span>
-    <input class="txt" id="pcharName" type="text" maxlength="12" placeholder="Nama karakter" autocomplete="off" aria-label="Nama karakter">
-    <button class="start" id="arcNext1" type="button" style="margin-top:14px;width:100%">Lanjut ▶</button>
+  </div>
+  <div class="astep agPage agSub" id="agRenPg" hidden>
+    <h2 class="atitle">Ganti nama karakter</h2>
+    <div class="agRow">
+      <input class="txt" id="pcharName" type="text" maxlength="12" placeholder="Nama karakter" autocomplete="off" aria-label="Nama karakter">
+      <button class="start agGo" id="agRenOk" type="button">Simpan ✓</button>
+    </div>
   </div>
 
-  <div class="astep" id="arcS2" hidden>
-    <h2 class="atitle">2. Pilih alat musik</h2>
+  <div class="astep agPage" id="arcS2" hidden>
+    <h2 class="atitle">Pilih alat musik</h2>
     <div class="bigopts" role="group" aria-label="Alat musik">
       <button type="button" data-ainst="piano"><span class="bi">🎹</span>Piano</button>
       <button type="button" data-ainst="guitar"><span class="bi">🎸</span>Gitar</button>
     </div>
     <p class="hint" id="arcInstHint"></p>
-    <button class="sound" id="arcBack2" type="button" style="margin-top:12px;width:100%">◀ Kembali</button>
+    <div class="agRow"><button class="sound agBack" id="arcBack2" type="button">◀ Kembali</button></div>
   </div>
 
-  <div class="astep" id="arcS3" hidden>
-    <h2 class="atitle">3. Pilih jenis not</h2>
+  <div class="astep agPage" id="arcS3" hidden>
+    <h2 class="atitle">Pilih jenis not</h2>
     <div class="bigopts" role="group" aria-label="Jenis notasi">
       <button type="button" data-amode="staff"><span class="bi">𝄞</span>Not balok</button>
       <button type="button" data-amode="num"><span class="bi">1 2 3</span>Not angka</button>
     </div>
-    <div class="card asum" id="arcSum"></div>
-    <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo: garis berjalan, not harus dibunyikan saat garis lewat</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk: tuts piano yang harus ditekan menyala</label></div>
-    <details class="card cfg"><summary>Ganti level</summary>
-      <div class="grid">
-        <label>Level <select id="parcLetter"></select></label>
-        <label>Sub-level <select id="parcSub"></select></label>
+    <div class="agRow"><button class="sound agBack" id="arcBack3" type="button">◀ Kembali</button></div>
+  </div>
+
+  <div class="astep agPage" id="arcS4" hidden>
+    <div class="agReady">
+      <div class="agHero"><div class="agHeroSvg" id="agHero"></div><div class="card asum" id="arcSum"></div></div>
+      <div class="agOpts">
+        <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo (garis berjalan)</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk</label></div>
+        <div class="agRow">
+          <button class="sound agBack" id="arcBack4" type="button">◀ Kembali</button>
+          <button class="sound" id="agLvBtn" type="button">🎯 Ganti level</button>
+        </div>
+        <button class="start agPlay" id="arcPlay" type="button">▶ PLAY</button>
       </div>
-    </details>
+    </div>
+  </div>
+  <div class="astep agPage agSub" id="arcS5" hidden>
+    <h2 class="atitle">Ganti level</h2>
+    <div class="agRow agLv">
+      <label>Level <select id="parcLetter"></select></label>
+      <label>Sub-level <select id="parcSub"></select></label>
+    </div>
     <p class="hint" id="parcInfo"></p>
-    <button class="start" id="arcPlay" type="button" style="width:100%;font-size:22px">▶ PLAY</button>
-    <button class="sound" id="arcBack3" type="button" style="margin-top:12px;width:100%">◀ Kembali</button>
+    <div class="agRow"><button class="start agGo" id="agLvOk" type="button">OK ✓</button></div>
   </div>
 </section>
 
@@ -1903,6 +2007,7 @@ async function midiConnect(){
   if(!midiSupported()){
     st.className='cstat';
     st.textContent='Browser ini belum mendukung MIDI. Pakai Google Chrome atau Microsoft Edge (Android, Windows, Mac, Linux). Safari/iPhone belum bisa.';
+    midiToast('bad','Browser ini belum mendukung MIDI','Pakai Google Chrome atau Microsoft Edge');
     smidiSync(); return;
   }
   try{
@@ -1910,12 +2015,15 @@ async function midiConnect(){
     midi.access.onstatechange=midiBindInputs;
     store.set('yg.midi','1');
     midiBindInputs();
+    if(!midiConnected()) midiToast('warn','MIDI siap, tapi belum ada alat','Colok keyboard MIDI (di HP pakai kabel OTG). Akan tersambung otomatis.');
   }catch(e){
     st.className='cstat';
     st.textContent='Akses MIDI ditolak. Izinkan "perangkat MIDI" untuk situs ini di pengaturan browser, lalu coba lagi.';
+    midiToast('bad','Akses MIDI ditolak / terblokir','Gembok di kolom alamat → Setelan situs → Perangkat MIDI → Izinkan');
     smidiSync();
   }
 }
+var midiPrevNames=null;
 function midiBindInputs(){
   if(!midi.access) return;
   midi.inputs=[];
@@ -1923,10 +2031,29 @@ function midiBindInputs(){
     inp.onmidimessage=midiMessage;
     if(inp.state!=='disconnected') midi.inputs.push(inp);
   });
+  /* beri tahu saat alat tersambung / terputus (diminta Ferdi: dulu tidak ada tanda, jadi tidak tahu kabel rusak atau aplikasi macet) */
+  var names=midi.inputs.map(function(i){ return i.name||'Perangkat MIDI'; }), prev=midiPrevNames||[];
+  var added=names.filter(function(n){ return prev.indexOf(n)<0; }), gone=prev.filter(function(n){ return names.indexOf(n)<0; });
+  if(added.length) midiToast('ok','MIDI terhubung! 🎉',added.join(', ')+' siap dimainkan');
+  else if(gone.length) midiToast('bad','MIDI terputus',gone.join(', ')+' — cek kabel/OTG, lalu colok lagi');
+  midiPrevNames=names;
   if(!midi.inputs.length){ midi.held={}; midiReleaseAll(); }
   syncMidiUI(); tempoMaybeStart();
 }
 function midiConnected(){ return midi.inputs.length>0; }
+var mtT=0;
+function midiToast(kind,title,detail){
+  var t=$('#midiToast'); if(!t) return;
+  t.className='midiToast'+(kind==='ok'?'':' '+kind); $('#mtI').textContent= kind==='ok'?'🎹':(kind==='warn'?'🔌':'⚠️');
+  $('#mtT').textContent=title; $('#mtD').textContent=detail||'';
+  t.hidden=false; t.style.animation='none'; void t.offsetWidth; t.style.animation='';
+  try{ var c=ac(), tt=c.currentTime, seq = kind==='ok' ? [[659,0],[880,.1],[1175,.2]] : [[440,0],[330,.14]];
+    seq.forEach(function(q){ var o=c.createOscillator(), g=c.createGain(); o.type='sine'; o.frequency.value=q[0];
+      g.gain.setValueAtTime(0.0001,tt+q[1]); g.gain.exponentialRampToValueAtTime(0.14,tt+q[1]+0.01); g.gain.exponentialRampToValueAtTime(0.0001,tt+q[1]+0.3);
+      o.connect(g); g.connect(c.destination); o.start(tt+q[1]); o.stop(tt+q[1]+0.32); }); }catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate(kind==='ok'?[40,40,40]:120); }catch(e){}
+  clearTimeout(mtT); mtT=setTimeout(function(){ t.hidden=true; }, kind==='ok'?3200:5200);
+}
 function syncMidiUI(){
   var st=$('#midiStat'), b=$('#midiBtn');
   if(midi.access){
@@ -3402,16 +3529,16 @@ function bindPlayers(){
   $('#pcharName').addEventListener('change',buildChars);
   $('#pAddPl').addEventListener('click',function(){
     if(loadPlayers().length>=5) return;
-    newLook=0; $('#pnewName').value=CHARS[0].name; $('#pNewPl').hidden=false; buildChars();
+    newLook=0; $('#pnewName').value=CHARS[0].name; arc.sub='new'; renderArcade();
   });
-  $('#pNewNo').addEventListener('click',function(){ $('#pNewPl').hidden=true; });
+  $('#pNewNo').addEventListener('click',function(){ arc.sub=null; renderArcade(); });
   $('#pNewOk').addEventListener('click',function(){
     var l=loadPlayers(); if(l.length>=5) return;
     var id=1; l.forEach(function(x){ if(x.id>=id) id=x.id+1; });
     l.push({id:id,name:($('#pnewName').value||'').trim()||CHARS[newLook].name,look:newLook,letter:0,sub:1,res:{}});
     savePlayers(l); store.set('yg.arcActive',String(id));
-    pr.arcLetter=0; pr.arcSub=1; arcSave(); $('#pNewPl').hidden=true;
-    buildChars(); syncPracticeOpts();
+    pr.arcLetter=0; pr.arcSub=1; arcSave(); arc.sub=null;
+    syncPracticeOpts(); renderArcade();
   });
   $('#pDelPl').addEventListener('click',function(){
     var l=loadPlayers(); if(l.length<=1) return;
@@ -3719,7 +3846,7 @@ function closePractice(fromPop){
   try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
   if(!fromPop){ try{ if(history.state && history.state.play) history.back(); }catch(e){} }
   pr.lastMsg=null;
-  if(wasArc){ pr.src=pr.prevSrc||'random'; pr.score=null; syncPracticeOpts(); arc.step=3; if(app.tab==='arcade') renderArcade(); return; }
+  if(wasArc){ pr.src=pr.prevSrc||'random'; pr.score=null; syncPracticeOpts(); arc.step=4; arc.sub=null; if(app.tab==='arcade'){ goLandscape(); renderArcade(); } return; }
   renderPractice();
 }
 var shownMsg=null;
@@ -6191,19 +6318,57 @@ window.addEventListener('popstate',function(e){
 });
 
 /* ===== Menu Arcade: pilih karakter -> alat musik -> jenis not -> PLAY ===== */
-var arc={step:1};
+var arc={step:1,sub:null};
 function renderArcade(){
   var lock=!isPremium(); $('#arcLock').hidden=!lock; $('#arcDots').hidden=lock;
-  if(lock){ [1,2,3].forEach(function(n){ $('#arcS'+n).hidden=true; }); window.scrollTo(0,0); return; }
-  [1,2,3].forEach(function(n){ $('#arcS'+n).hidden=(arc.step!==n); });
-  $('#arcDots').innerHTML=[1,2,3].map(function(n){ return '<i class="'+(n<=arc.step?'on':'')+'"></i>'; }).join('');
+  [1,2,3,4,5].forEach(function(n){ $('#arcS'+n).hidden = lock || !!arc.sub || arc.step!==n; });
+  $('#pNewPl').hidden = lock || arc.sub!=='new';
+  $('#agRenPg').hidden = lock || arc.sub!=='ren';
+  if(lock) return;
+  var dn=Math.min(4,arc.step);
+  $('#arcDots').innerHTML=[1,2,3,4].map(function(n){ return '<i class="'+(n<=dn?'on':'')+'"></i>'; }).join('');
   buildChars();
   $$('[data-ainst]').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-ainst')===pr.inst?'true':'false'); });
   $$('[data-amode]').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-amode')===app.mode?'true':'false'); });
   $('#arcInstHint').textContent = pr.inst==='guitar' ? 'Not ditulis satu oktaf lebih tinggi dari bunyi gitar, seperti partitur gitar pada umumnya.' : '';
-  var a=activePlayer();
-  $('#arcSum').textContent=charName()+' • Level '+ARC_LETTERS[a.letter]+a.sub+' • '+(pr.inst==='guitar'?'Gitar':'Piano')+' • '+(app.mode==='num'?'Not angka':'Not balok');
-  window.scrollTo(0,0);
+  var a=activePlayer(), c=CHARS[clamp(a.look||0,0,CHARS.length-1)];
+  $('#arcSum').innerHTML='<b>'+charName().replace(/[<&]/g,'')+'</b><span>Level '+ARC_LETTERS[a.letter]+a.sub+'</span><span>'+(pr.inst==='guitar'?'🎸 Gitar':'🎹 Piano')+' · '+(app.mode==='num'?'Not angka':'Not balok')+'</span>';
+  $('#agHero').innerHTML='<svg viewBox="-24 -80 48 86" aria-hidden="true">'+charBody(c)+'</svg>';
+  $('#agStar').textContent='⭐ '+fmtScore(arcTotal());
+}
+/* ===== Layar game Arcade: loading, mendatar, efek tombol & suara ===== */
+var agLoadT=0;
+function arcLoading(){
+  var L=$('#agLoad'); if(!L) return;
+  var tips=['Memuat panggung…','Menyetel piano…','Menyiapkan not…','Siap-siap main!'];
+  $('#agTip').textContent=tips[Math.floor(Math.random()*tips.length)];
+  L.hidden=false; L.classList.remove('out'); var f=$('#agBarFill'); f.style.animation='none'; void f.offsetWidth; f.style.animation='';
+  arcSfx('start');
+  clearTimeout(agLoadT);
+  agLoadT=setTimeout(function(){ L.classList.add('out'); agLoadT=setTimeout(function(){ L.hidden=true; },380); },1600);
+}
+/* efek suara tombol (dibuat langsung dengan AudioContext, tanpa file) */
+function arcSfx(kind){
+  try{
+    var c=ac(), t=c.currentTime, seq;
+    if(kind==='start') seq=[[523,0],[659,.09],[784,.18],[1047,.27]];
+    else if(kind==='play') seq=[[392,0],[523,.07],[659,.14],[784,.21],[1047,.3]];
+    else if(kind==='back') seq=[[660,0],[440,.06]];
+    else seq=[[880,0],[1320,.04]];
+    seq.forEach(function(q){
+      var o=c.createOscillator(), g=c.createGain(); o.type=kind==='tap'?'triangle':'square';
+      o.frequency.setValueAtTime(q[0],t+q[1]);
+      g.gain.setValueAtTime(0.0001,t+q[1]); g.gain.exponentialRampToValueAtTime(kind==='tap'?0.12:0.07,t+q[1]+0.008); g.gain.exponentialRampToValueAtTime(0.0001,t+q[1]+(kind==='start'||kind==='play'?0.2:0.09));
+      o.connect(g); g.connect(c.destination); o.start(t+q[1]); o.stop(t+q[1]+0.25);
+    });
+  }catch(e){}
+}
+function arcEnter(){
+  document.body.classList.add('on-arcade'); goLandscape(); arcLoading();
+}
+function arcLeave(){
+  document.body.classList.remove('on-arcade'); clearTimeout(agLoadT); var L=$('#agLoad'); if(L) L.hidden=true;
+  if(!pr.playing){ try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){} }
 }
 function arcGo(n){ arc.step=n; renderArcade(); }
 function startArcade(){
@@ -6216,11 +6381,24 @@ function bindArcade(){
   $('#arcNext1').addEventListener('click',function(){ arcGo(2); });
   $('#arcBack2').addEventListener('click',function(){ arcGo(1); });
   $('#arcBack3').addEventListener('click',function(){ arcGo(2); });
+  $('#arcBack4').addEventListener('click',function(){ arcGo(3); });
+  $('#agLvBtn').addEventListener('click',function(){ arcGo(5); });
+  $('#agLvOk').addEventListener('click',function(){ arcGo(4); });
+  $('#agRen').addEventListener('click',function(){ arc.sub='ren'; renderArcade(); setTimeout(function(){ try{ $('#pcharName').focus(); }catch(e){} },50); });
+  $('#agRenOk').addEventListener('click',function(){ arc.sub=null; renderArcade(); });
+  $('#agHome').addEventListener('click',function(){ goTab('tuner'); });
   $$('[data-ainst]').forEach(function(b){ b.addEventListener('click',function(){
     pr.inst=b.getAttribute('data-ainst')==='guitar'?'guitar':'piano'; store.set('yg.inst',pr.inst); syncPracticeOpts(); arcGo(3);
   }); });
-  $$('[data-amode]').forEach(function(b){ b.addEventListener('click',function(){ setMode(b.getAttribute('data-amode')); renderArcade(); }); });
+  $$('[data-amode]').forEach(function(b){ b.addEventListener('click',function(){ setMode(b.getAttribute('data-amode')); arcGo(4); }); });
   $('#arcPlay').addEventListener('click',startArcade);
+  /* animasi tekan + bunyi untuk semua tombol di layar game */
+  $('#tab-arcade').addEventListener('pointerdown',function(e){
+    var el=e.target.closest('button, label.chk'); if(!el || el.disabled) return;
+    el.classList.remove('agPress'); void el.offsetWidth; el.classList.add('agPress');
+    arcSfx(el.id==='arcPlay'?'play':(el.classList.contains('agBack')||el.id==='agHome'||el.id==='pNewNo'?'back':'tap'));
+  });
+  $('#tab-arcade').addEventListener('animationend',function(e){ if(e.target.classList) e.target.classList.remove('agPress'); });
 }
 /* ===== Terapkan hak akses ke tampilan ===== */
 function applyEntitlements(){
@@ -6383,7 +6561,8 @@ function showTab(name){
   if(name==='latih'){ if(!pr.score) newRound(); else renderPractice(); }
   if(name==='score'){ applyEntitlements(); syncScoreFields(); renderScoreView(); }
   if(name==='lib') renderLib();
-  if(name==='arcade'){ if(prevTab!=='arcade') arc.step=1; renderArcade(); }
+  if(name==='arcade'){ if(prevTab!=='arcade'){ arc.step=1; arc.sub=null; arcEnter(); } renderArcade(); }
+  else if(prevTab==='arcade') arcLeave();
 }
 function setMode(m){
   app.mode=m; store.set('yg.mode',m);
