@@ -1787,7 +1787,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button class="start" id="splay" type="button">▶ Putar</button>
       <button class="sound" id="srec" type="button">⏺ Rekam</button>
     </div>
-    <div class="chips" style="margin-top:10px"><button class="chip" type="button" id="smet" style="flex:1" aria-pressed="true">🥁 Metronom: ON</button></div>
+    <div class="chips" style="margin-top:10px"><button class="chip" type="button" id="splay0" style="flex:1">⏮ Putar dari awal</button><button class="chip" type="button" id="smet" style="flex:1" aria-pressed="true">🥁 Metronom: ON</button></div>
     <div class="srecSet" id="srecHandRow" hidden>
       <span class="lbl">Tulis &amp; rekam ke</span>
       <div class="chips" id="srecHand" role="group" aria-label="Tangan yang ditulis dan direkam"><button class="chip" type="button" data-hand="rh">Kanan (kunci G)</button><button class="chip" type="button" data-hand="lh">Kiri (kunci F)</button></div>
@@ -2051,6 +2051,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <div class="srecSet"><span class="lbl">Ukuran judul</span><div class="stepper"><button class="ctl" type="button" data-k="title" data-s="-10" aria-label="Judul lebih kecil">−</button><output id="wxTitle" style="flex:1"></output><button class="ctl" type="button" data-k="title" data-s="10" aria-label="Judul lebih besar">+</button></div></div>
         <div class="srecSet"><span class="lbl">Margin atas &amp; bawah</span><div class="stepper"><button class="ctl" type="button" data-k="mv" data-s="-1" aria-label="Kurangi">−</button><output id="wxMv" style="flex:1"></output><button class="ctl" type="button" data-k="mv" data-s="1" aria-label="Tambah">+</button></div></div>
         <div class="srecSet"><span class="lbl">Margin kiri &amp; kanan</span><div class="stepper"><button class="ctl" type="button" data-k="mh" data-s="-1" aria-label="Kurangi">−</button><output id="wxMh" style="flex:1"></output><button class="ctl" type="button" data-k="mh" data-s="1" aria-label="Tambah">+</button></div></div>
+        <div class="srecSet"><span class="lbl">Birama per baris</span><div class="stepper"><button class="ctl" type="button" data-k="per" data-s="-1" aria-label="Lebih sedikit">−</button><output id="wxPer" style="flex:1"></output><button class="ctl" type="button" data-k="per" data-s="1" aria-label="Lebih banyak">+</button></div></div>
+        <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxStd">📄 Gaya partitur cetak: 4 birama per baris, rapat</button></div></div>
         <div class="srecSet"><span class="lbl">Jarak antar baris</span><div class="stepper"><button class="ctl" type="button" data-k="gap" data-s="-1" aria-label="Rapatkan">−</button><output id="wxGap" style="flex:1"></output><button class="ctl" type="button" data-k="gap" data-s="1" aria-label="Renggangkan">+</button></div></div>
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxFill" aria-pressed="false">↕ Ratakan baris sampai bawah halaman</button></div></div>
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxBal" aria-pressed="true">⚖ Bagi birama rata per baris</button></div></div>
@@ -3260,9 +3262,18 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
     return sy;
   }
   var systems=breakLines(1e9);
+  /* cetak/PDF: jumlah birama per baris ditentukan sendiri (seperti partitur cetak, mis. 4 birama per baris) */
+  var perLine=(drawScore.print && drawScore.perLine)|0;
+  if(perLine>0){
+    systems=[];
+    allLay.forEach(function(lay,mi){
+      if(mi%perLine===0) systems.push({ms:[],w:0});
+      var cu=systems[systems.length-1]; cu.ms.push({mIdx:mi,w:lay.w,lay:lay}); cu.w+=lay.w;
+    });
+  }
   /* cetak/PDF: birama dibagi RATA ke semua baris (jumlah baris tetap) — baris atas tidak berdempetan,
      baris terakhir tidak tinggal sedikit lalu terlalu renggang */
-  if(drawScore.print && drawScore.balance && systems.length>1){
+  if(drawScore.print && drawScore.balance && systems.length>1 && !perLine){
     var nSys=systems.length, lo=0, hi=W-margin*2-clefW, it2;
     allLay.forEach(function(l){ lo=Math.max(lo,l.w); });
     for(it2=0;it2<24 && hi-lo>0.5;it2++){ var mid=(lo+hi)/2; if(breakLines(mid).length<=nSys) hi=mid; else lo=mid; }
@@ -3305,7 +3316,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
     var avail=W-margin*2-clefW-(si===0?tsW:0);
     var isLast=(si===systems.length-1);
     /* Baris direnggangkan memenuhi lebar layar (layar miring/lebar); baris terakhir dari banyak baris tetap rapat */
-    var k = sys.w>avail ? avail/sys.w : ((isLast && drawScore.fullLast) ? avail/sys.w : ((isLast && systems.length>1) ? 1 : Math.min(avail/sys.w, systems.length===1 ? 4 : 2.5)));
+    var k = (perLine>0 && (!isLast || drawScore.fullLast || sys.ms.length===perLine)) ? avail/sys.w : sys.w>avail ? avail/sys.w : ((isLast && drawScore.fullLast) ? avail/sys.w : ((isLast && systems.length>1) ? 1 : Math.min(avail/sys.w, systems.length===1 ? 4 : 2.5)));
     var xStart=margin+clefW+(si===0?tsW:0), i;
     var Y=parts.map(function(P){ return yTop+P.yOff; });
     if(si===0){ startX=xStart+10; startY=Y[editP]; }
@@ -5247,7 +5258,9 @@ function renderScoreView(){
   }, (playing || editing) ? null : sel, !playing);
   $('#sempty').hidden = s.notes.length>0 || !!(s.grand && s.lh && s.lh.length);
   syncDynUI();
-  $('#splay').textContent = playing ? '■ Berhenti' : '▶ Putar';
+  if(playing) playFollow();
+  $('#splay').textContent = playing ? '■ Berhenti' : ((editing && sel>0) ? '▶ Putar dari sorotan' : '▶ Putar');
+  $('#splay0').disabled = !hasPitch(s.notes) && !(s.grand && hasPitch(s.lh));
   $('#splay').disabled = !hasPitch(s.notes) && !(s.grand && hasPitch(s.lh)) && !playing;
   $('#sprac').disabled = !s.notes.some(function(n){return n.m!==null;});
 }
@@ -5917,7 +5930,19 @@ function stopPlay(){
   playMet=null;
   playing=false; playIdx=-1; playIdxL=-1; renderScoreView();
 }
-function playScore(){
+/* Saat Putar: tampilan ikut not yang sedang dibunyikan (diminta Ferdi, Okt 2026: dulu tetap di awal lagu padahal yang diputar
+   sudah sampai bawah). Hanya menggulir kalau not itu keluar dari daerah yang terlihat (layar, atau papan partitur studio PC). */
+function playFollow(){
+  var g=$('#sscore g.st-cur'); if(!g) return;
+  var hl=g.querySelector('rect.hl')||g, r=hl.getBoundingClientRect(), top=60, bot=innerHeight-110;
+  for(var el=$('#sscore'); el && el!==document.body; el=el.parentElement){
+    var cs=getComputedStyle(el);
+    if(/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight>el.clientHeight+2){ var br=el.getBoundingClientRect(); top=Math.max(top,br.top); bot=Math.min(bot,br.bottom); break; }
+  }
+  if(r.top<top+8 || r.bottom>bot-8){ try{ hl.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){ hl.scrollIntoView(); } }
+}
+function playScore(fromStart){
+  if(fromStart===true && playing) stopPlay();   /* ⏮ Dari awal saat sedang memutar: langsung mulai lagi dari awal */
   if(playing){
     /* dihentikan di tengah lagu: sorotan BERHENTI di not yang sedang dibunyikan (bukan kembali ke sorotan awal),
        supaya not yang salah langsung bisa dikoreksi; Putar lagi = mulai dari not itu */
@@ -5942,7 +5967,7 @@ function playScore(){
   var c=ac(), spb=60/(clamp(s.bpm||90,30,240)*spdF()), t=c.currentTime+0.15, end=0;
   playGain=c.createGain(); playGain.gain.value=1; playGain.connect(c.destination);
   /* Kalau ada not yang disorot (dipilih), putar mulai dari not itu (bukan dari awal); piano 2 tangan: kedua tangan mulai dari ketukan itu */
-  var startIdx = (editing && sel>=0 && sel<EN.length) ? sel : 0, startB=0, k;
+  var startIdx = (fromStart!==true && editing && sel>=0 && sel<EN.length) ? sel : 0, startB=0, k;
   while(startIdx>0 && tieFrom(EN,startIdx)) startIdx--;
   for(k=0;k<startIdx;k++) startB+=EN[k].d;
   playing=true;
@@ -6320,7 +6345,8 @@ function bindScore(){
   $('#kb').addEventListener('click',function(e){
     var b=e.target.closest('[data-m]'); if(!b) return; addNote(parseInt(b.getAttribute('data-m'),10));
   });
-  $('#splay').addEventListener('click',playScore);
+  $('#splay').addEventListener('click',function(){ playScore(); });
+  $('#splay0').addEventListener('click',function(){ playScore(true); });
   $('#snewBig').addEventListener('click',openNewDialog);
   $$('#snewOv [data-inst]').forEach(function(b){ b.addEventListener('click',function(){ chooseNewInst(b.getAttribute('data-inst')); }); });
   $('#snewCancel').addEventListener('click',function(){ $('#snewOv').hidden=true; });
@@ -6655,7 +6681,7 @@ function exportMidi(){
 var WX_PAPER={A4:[210,297],F4:[215,330]}, WX_MM=96/25.4, WX_DPI=200;
 var wx={paper:'A4',orient:'p',mode:'num',zoom:85,mv:15,mh:15,gap:5,fill:false,last:true,bal:true,title:100}, wxFont=null, wxT=0, wxPages=null;
 try{ var wxs=JSON.parse(store.get('yg.wordExp','null')); if(wxs) for(var wk in wxs) if(wk in wx) wx[wk]=wxs[wk]; }catch(e){}
-var WX_LIM={zoom:[50,150],mv:[5,40],mh:[5,40],gap:[0,30],title:[60,250]};
+var WX_LIM={per:[0,8],zoom:[50,150],mv:[5,40],mh:[5,40],gap:[0,30],title:[60,250]};
 function wxDims(){ var d=WX_PAPER[wx.paper]||WX_PAPER.A4; return wx.orient==='l' ? [d[1],d[0]] : [d[0],d[1]]; }
 var WX_CSS='svg{color:#1d1b2b}text{fill:currentColor;font-family:"Bricolage Grotesque",Arial,sans-serif}.stf{stroke:#6d6880;stroke-width:1.2}.bar{stroke:#1d1b2b;stroke-width:1.6}'
   +'.tie{fill:none;stroke:#1d1b2b;stroke-width:1.6;stroke-linecap:round}.hl,.insl,.handbg,.caret,.inscur{display:none}'
@@ -6674,8 +6700,8 @@ function wxLayout(){
   var sc=curScore(), d=wxDims(), cw=d[0]-2*wx.mh, ch=d[1]-2*wx.mv, u=WX_MM/(wx.zoom/100);
   var Wv=Math.max(240,Math.round(cw*u)), host=document.createElement('div');
   host.style.cssText='position:absolute;left:-99999px;top:0;width:'+Wv+'px'; document.body.appendChild(host);
-  drawScore.force=1; drawScore.print=true; drawScore.fullLast=!!wx.last; drawScore.titleF=(wx.title||100)/100; drawScore.balance=wx.bal!==false;
-  try{ drawScore(host,sc,wx.mode,null,null,false); } finally{ drawScore.force=0; drawScore.print=false; drawScore.fullLast=false; drawScore.titleF=1; drawScore.balance=false; }
+  drawScore.force=1; drawScore.print=true; drawScore.fullLast=!!wx.last; drawScore.titleF=(wx.title||100)/100; drawScore.balance=wx.bal!==false; drawScore.perLine=wx.per|0;
+  try{ drawScore(host,sc,wx.mode,null,null,false); } finally{ drawScore.force=0; drawScore.print=false; drawScore.fullLast=false; drawScore.titleF=1; drawScore.balance=false; drawScore.perLine=0; }
   var L=drawScore.lay, sv=host.querySelector('svg'), inner=sv ? sv.innerHTML : ''; host.remove();
   var blocks=[], i; if(L.head>0) blocks.push([0,L.head]);
   for(i=0;i<L.n;i++) blocks.push([L.head+i*L.sysH, i===L.n-1 ? L.sysH+6 : L.sysH]);
@@ -6704,7 +6730,7 @@ function wxSync(){
   $$('#wxPaper .chip').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-v')===wx.paper?'true':'false'); });
   $$('#wxOrient .chip').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-v')===wx.orient?'true':'false'); });
   $$('#wxMode .chip').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-v')===wx.mode?'true':'false'); });
-  $('#wxZoom').textContent=wx.zoom+'%'; $('#wxTitle').textContent=(wx.title||100)+'%'; $('#wxMv').textContent=wx.mv+' mm'; $('#wxMh').textContent=wx.mh+' mm'; $('#wxGap').textContent=wx.gap+' mm';
+  $('#wxZoom').textContent=wx.zoom+'%'; $('#wxTitle').textContent=(wx.title||100)+'%'; $('#wxMv').textContent=wx.mv+' mm'; $('#wxMh').textContent=wx.mh+' mm'; $('#wxGap').textContent=wx.gap+' mm'; $('#wxPer').textContent=(wx.per|0) ? (wx.per|0)+' birama' : 'Otomatis';
   $('#wxFill').setAttribute('aria-pressed',wx.fill?'true':'false');
   $('#wxLast').setAttribute('aria-pressed',wx.last?'true':'false');
   $('#wxBal').setAttribute('aria-pressed',wx.bal!==false?'true':'false');
@@ -6823,6 +6849,8 @@ function bindWordExport(){
   [['#wxPaper','paper'],['#wxOrient','orient'],['#wxMode','mode']].forEach(function(q){
     $$(q[0]+' .chip').forEach(function(b){ b.addEventListener('click',function(){ wx[q[1]]=b.getAttribute('data-v'); if(q[1]==='mode') wx.modeSet=1; wxSync(); wxPreview(); }); });
   });
+  /* gaya partitur cetak (diminta Ferdi, Okt 2026: PDF seperti lembaran aslinya, muat satu kertas) */
+  $('#wxStd').addEventListener('click',function(){ wx.per=4; wx.zoom=70; wx.gap=3; wx.title=Math.min(wx.title||100,100); wxSync(); wxPreview(); });
   $$('#wxOv .ctl[data-k]').forEach(function(b){ b.addEventListener('click',function(){
     var k=b.getAttribute('data-k'), lim=WX_LIM[k]; wx[k]=clamp(wx[k]+parseFloat(b.getAttribute('data-s')),lim[0],lim[1]); wxSync(); wxPreview(); }); });
   $('#wxFill').addEventListener('click',function(){ wx.fill=!wx.fill; wxSync(); wxPreview(); });
