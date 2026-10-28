@@ -3114,7 +3114,13 @@ function numSvg(n,x,yb,i,cls,bm,key,sp){
     for(i2=0;i2<up;i2++) o+='<circle cx="'+x+'" cy="'+(yy-17-(top?ul*4:0)-i2*6)+'" r="2.2" fill="currentColor"/>';
     for(i2=0;i2<-up;i2++) o+='<circle cx="'+x+'" cy="'+(yy+15+i2*6)+'" r="2.2" fill="currentColor"/>';
     /* titik not: dijauhkan dari angka, diletakkan di dekat not berikutnya (standar not angka), sejajar dasar angka */
-    if(bd<2 && n.d>bd) o+='<circle cx="'+(x+Math.max(14,half/2))+'" cy="'+(yy+5)+'" r="2.1" fill="currentColor"/>';
+    if(bd<2 && n.d>bd){
+      var dx=x+Math.max(14,half/2);
+      o+='<circle cx="'+dx+'" cy="'+(yy+5)+'" r="2.1" fill="currentColor"/>';
+      /* titik = sisa ½ nilai not: diberi garis di atasnya (¼ bertitik: 1 garis = ⅛, ⅛ bertitik: 2 garis), supaya "5 ." bertitik
+         tidak tampak seperti not ½ (diminta Ferdi, Okt 2026). Hanya sekali (nada teratas akor tidak perlu, garis di atas tumpukan). */
+      if(pi===0) for(i2=0;i2<Math.min(2,ul+1);i2++){ var gy=yb-lift-18+i2*4; o+='<line class="dotl" x1="'+(dx-7)+'" x2="'+(dx+7)+'" y1="'+gy+'" y2="'+gy+'" stroke="currentColor" stroke-width="1.8"/>'; }
+    }
     if(bd>=2) for(k=1;k<beats;k++) o+='<circle cx="'+(x+cell*k)+'" cy="'+(yy+1)+'" r="2.3" fill="currentColor"/>';
     if(sp===pi && stk>1) o+='<rect x="'+(x-13)+'" y="'+(yy-13)+'" width="26" height="26" rx="7" fill="none" stroke="var(--brass)" stroke-width="2.6"/>';
   });
