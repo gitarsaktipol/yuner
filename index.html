@@ -412,11 +412,13 @@ header .sel select{max-width:100%;min-width:0}
 .wxSet .chips .chip{flex:1}
 /* laptop/PC: semua pengaturan muat tanpa gulir — tombol & jarak diperkecil, ukuran teks tetap (diminta Ferdi, Okt 2026) */
 @media (min-width:761px){
-  .wxSet .srecSet{flex-direction:row;align-items:center;gap:8px;margin-top:5px}
+  /* ruang sisa dibagi rata di antara baris (tidak berhimpitan di atas, sisa kosong di bawah) */
+  .wxSet{display:flex;flex-direction:column;justify-content:space-between;gap:clamp(3px,calc(1vh - 3px),10px)}
+  .wxSet .srecSet{flex-direction:row;align-items:center;gap:8px;margin-top:0}
   .wxSet .srecSet .lbl{min-width:92px;max-width:92px;font-size:12px;line-height:1.2}
   .wxSet .srecSet .lbl:empty{display:none}
   .wxBody{grid-template-columns:360px 1fr}
-  .wxInfo{margin-top:6px;font-size:12px;line-height:1.35}
+  .wxInfo{margin:8px 0 2px;font-size:12px;line-height:1.35}
   .wxSet .srecSet > .stepper,.wxSet .srecSet > .chips{flex:1}
   .wxSet .chips{gap:6px}
   .wxSet .chip{padding:5px 8px;border-radius:12px;min-height:0;line-height:1.25}
