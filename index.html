@@ -1016,8 +1016,8 @@ html.csOpen select:focus{outline:none}
 .imgDrop .imgDropTouch{display:none}
 @media (pointer:coarse){ .imgDrop .imgDropPc{display:none} .imgDrop .imgDropTouch{display:block} }
 /* saat jendela terbuka, kotak unggahnya sendiri yang menyala (bukan bingkai layar penuh) */
-body.imgDrag:has(#simgOv:not([hidden]))::after{display:none}
-body.imgDrag #simgDrop{border-color:var(--brass);background:var(--hl);transform:scale(1.02)}
+body.imgDrag:has(#simgOv:not([hidden]))::after,body.imgDrag:has(#saudOv:not([hidden]))::after{display:none}
+body.imgDrag #simgDrop,body.imgDrag #saudDrop{border-color:var(--brass);background:var(--hl);transform:scale(1.02)}
 .imgHead{display:flex;align-items:center;gap:8px;margin:0 2px 8px;font-size:14px;color:var(--ink)}
 .imgHead .imgHint{display:none;flex:1;font-size:11px;color:var(--muted)}
 .imgHead b{flex:1}
@@ -1867,23 +1867,16 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <button class="sound" id="snew" type="button">＋ Buat baru</button>
   </div>
   <p class="hint" id="ssaveInfo" style="margin:6px 4px 10px;text-align:center"></p>
-  <!-- tombol berkas dirapikan (diminta Ferdi, Okt 2026): 2 per baris, gambar lewat SATU tombol + jendela unggah -->
+  <!-- hanya 3 tombol berkas (diminta Ferdi, Okt 2026): Masukkan gambar, Masukkan audio (+ file MIDI), Ekspor PDF (+ MIDI).
+       Hapus partitur ada di halaman Partitur Saya (tombol lama disembunyikan, tetap ada untuk kode lama). -->
   <div class="row">
     <button class="sound" id="simgOpen" type="button">🖼️ Masukkan gambar</button>
-    <button class="sound" id="swordOut" type="button">📄 Ekspor ke PDF</button>
+    <button class="sound" id="saudOpen" type="button">🎵 Masukkan audio</button>
   </div>
   <div class="row">
-    <label class="sound" style="cursor:pointer">Impor file MIDI
-      <input type="file" accept=".mid,.midi,audio/midi,audio/x-midi" id="smidiIn" hidden>
-    </label>
-    <button class="sound" id="smidiOut" type="button">Ekspor ke MIDI</button>
+    <button class="sound" id="swordOut" type="button">📄 Ekspor PDF</button>
   </div>
-  <div class="row">
-    <label class="sound" style="cursor:pointer">🎵 Impor lagu (audio)
-      <input type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.aac" id="saudIn" hidden>
-    </label>
-    <button class="sound" id="sdel" type="button">Hapus partitur</button>
-  </div>
+  <div hidden><button class="sound" id="sdel" type="button">Hapus partitur</button></div>
   <p class="hint" id="smidiMsg"></p>
 
   </div>
@@ -2006,9 +1999,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. Selama merekam, not yang kamu mainkan langsung tergambar di partitur dan kursor ikut berjalan mengikuti ketukan. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, rekaman masuk ke tangan yang sedang dipilih saja (<i>Tulis &amp; rekam ke</i>: Kanan / Kiri), mulai di birama baru setelah not terakhir tangan itu, dan tangan yang lain ikut berbunyi supaya bisa diikuti (bisa dimatikan). Jadi tangan kanan bisa direkam dulu, lalu tangan kiri dari awal lagu. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
         <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
         <li><b>📂 Partitur Saya</b> (tombol di atas, samping "Bikin Partitur Baru"): halaman berisi semua partitur yang sudah kamu buat, yang terakhir diubah di paling atas, lengkap dengan pratinjau kecil. Tiap partitur punya tombol <b>✏️ Buka</b>, <b>▶ Latih</b>, dan <b>🗑 Hapus</b> (ada konfirmasi, dan bisa <b>↶ Batalkan</b> beberapa detik setelah dihapus). Ada juga kotak cari judul.</li>
-        <li><b>💾 Simpan</b> menyimpan partitur (sebenarnya juga tersimpan otomatis tiap ada perubahan). Tanpa masuk akun, partitur <b>hanya ada di perangkat itu</b> — partitur dari laptop tidak muncul di HP. Supaya sama di semua perangkat, masuk akun Gitar Sakti di <b>Pengaturan › Akun</b> di setiap perangkat (laptop dan HP) dengan akun yang sama. <b>＋ Buat baru</b> membuat partitur kosong baru. <b>Ekspor ke MIDI</b> dan <b>Impor file MIDI</b> ada di bawah tombol itu.</li>
-        <li><b>📄 Ekspor ke PDF</b>: membuat file PDF siap cetak. Pilih kertas <b>A4</b> atau <b>F4</b>, tegak/mendatar, not balok/not angka, lalu atur <b>ukuran not</b>, <b>ukuran judul</b>, <b>margin</b>, dan <b>jarak antar baris</b> sambil melihat pratinjau halamannya. Baris partitur tidak pernah terpotong di antara dua halaman. Tekan <b>Unduh PDF</b>, lalu buka dan cetak dengan ukuran kertas yang sama (skala 100%).</li>
-        <li><b>🎵 Impor lagu (audio)</b>: pilih rekaman (mp3, wav, m4a). FerTune mendengarkannya langsung di HP, mengubahnya jadi not, lalu jadi partitur (maks. 2 menit pertama). Hasil terbaik dari rekaman satu alat musik atau nyanyian saja; lagu lengkap dengan band hasilnya kurang rapi. Setelah selesai ada tautan <b>Unduh MIDI lengkap</b> berisi semua nada yang terdengar.</li>
+        <li><b>💾 Simpan</b> menyimpan partitur (sebenarnya juga tersimpan otomatis tiap ada perubahan). Tanpa masuk akun, partitur <b>hanya ada di perangkat itu</b> — partitur dari laptop tidak muncul di HP. Supaya sama di semua perangkat, masuk akun Gitar Sakti di <b>Pengaturan › Akun</b> di setiap perangkat (laptop dan HP) dengan akun yang sama. <b>＋ Buat baru</b> membuat partitur kosong baru. Di bawahnya hanya ada 3 tombol berkas: <b>🖼️ Masukkan gambar</b>, <b>🎵 Masukkan audio</b> (lagu atau file MIDI) dan <b>📄 Ekspor PDF</b> (di dalamnya juga ada <b>Unduh juga sebagai MIDI</b>). Menghapus partitur lewat <b>📂 Partitur Saya</b>.</li>
+        <li><b>📄 Ekspor PDF</b>: membuat file PDF siap cetak. Pilih kertas <b>A4</b> atau <b>F4</b>, tegak/mendatar, not balok/not angka, lalu atur <b>ukuran not</b>, <b>ukuran judul</b>, <b>margin</b>, dan <b>jarak antar baris</b> sambil melihat pratinjau halamannya. Baris partitur tidak pernah terpotong di antara dua halaman. Tekan <b>Unduh PDF</b>, lalu buka dan cetak dengan ukuran kertas yang sama (skala 100%).</li>
+        <li><b>🎵 Masukkan audio</b>: seret &amp; lepas atau pilih rekaman (mp3, wav, m4a), atau file MIDI (.mid) yang langsung jadi partitur. FerTune mendengarkannya langsung di HP, mengubahnya jadi not, lalu jadi partitur (maks. 2 menit pertama). Hasil terbaik dari rekaman satu alat musik atau nyanyian saja; lagu lengkap dengan band hasilnya kurang rapi. Setelah selesai ada tautan <b>Unduh MIDI lengkap</b> berisi semua nada yang terdengar.</li>
       </ol>
       <div class="tip">Dengan keyboard MIDI tersambung, tuts yang kamu tekan langsung menjadi not di partitur.</div>
     </div></details>
@@ -2098,6 +2091,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxFill" aria-pressed="false">↕ Ratakan baris sampai bawah halaman</button></div></div>
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxBal" aria-pressed="true">⚖ Bagi birama rata per baris</button></div></div>
         <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="wxLast" aria-pressed="true">↔ Baris terakhir penuh sampai pojok</button></div></div>
+        <div class="srecSet"><span class="lbl"></span><div class="chips"><button class="chip" type="button" id="smidiOut">🎹 Unduh juga sebagai MIDI</button></div></div>
         <p class="wxInfo" id="wxInfo"></p>
         <div class="wxGoBar">
         <div class="row" style="margin-top:0"><button class="start" id="wxGo" type="button" style="flex:1">⬇️ Unduh PDF</button></div>
@@ -2178,6 +2172,26 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <button class="sound" id="simgPaste" type="button">📋 Tempel gambar</button>
     </div>
     <div class="row" style="margin-top:8px"><button class="sound" id="simgNo" type="button">Tutup</button></div>
+  </div>
+</div>
+<div class="pwOv" id="saudOv" hidden role="dialog" aria-modal="true" aria-labelledby="saudOvT">
+  <div class="pwBox imgDropBox">
+    <h2 id="saudOvT">🎵 Masukkan audio</h2>
+    <div class="imgDrop" id="saudDrop" role="button" tabindex="0" aria-label="Pilih lagu atau file MIDI">
+      <div class="ic" aria-hidden="true">🎧</div>
+      <b class="imgDropPc">Seret &amp; lepas lagu atau file MIDI di sini</b>
+      <b class="imgDropTouch">Ketuk untuk memilih lagu</b>
+      <span>Lagu (MP3 / WAV / M4A) diubah jadi not — paling bagus melodi satu alat. File MIDI (.mid) langsung jadi partitur.</span>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <label class="sound" style="cursor:pointer">🎵 Pilih lagu (audio)
+        <input type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.aac" id="saudIn" hidden>
+      </label>
+      <label class="sound" style="cursor:pointer">🎹 Pilih file MIDI
+        <input type="file" accept=".mid,.midi,audio/midi,audio/x-midi" id="smidiIn" hidden>
+      </label>
+    </div>
+    <div class="row" style="margin-top:8px"><button class="sound" id="saudNo" type="button">Tutup</button></div>
   </div>
 </div>
 <div class="pwOv" id="sloginOv" hidden role="dialog" aria-modal="true" aria-labelledby="sloginT">
@@ -6466,6 +6480,13 @@ function bindScore(){
   bindImageDrop();
   $('#simgOpen').addEventListener('click',function(){ if(!isPremium()){ showPaywall('gambar'); return; } $('#simgOv').hidden=false; try{ $('#simgDrop').focus({preventScroll:true}); }catch(e){} });
   $('#simgNo').addEventListener('click',function(){ $('#simgOv').hidden=true; });
+  $('#saudOpen').addEventListener('click',function(){ if(!isPremium()){ showPaywall('audio'); return; } $('#saudOv').hidden=false; try{ $('#saudDrop').focus({preventScroll:true}); }catch(e){} });
+  $('#saudNo').addEventListener('click',function(){ $('#saudOv').hidden=true; });
+  $('#saudOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) e.currentTarget.hidden=true; });
+  $('#saudDrop').addEventListener('click',function(){ $('#saudIn').click(); });
+  $('#saudDrop').addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('#saudIn').click(); } });
+  /* file dipilih -> jendela ditutup supaya kemajuan impor (di bawah tombol) terlihat */
+  ['#saudIn','#smidiIn'].forEach(function(q){ $(q).addEventListener('change',function(){ $('#saudOv').hidden=true; }); });
   $('#simgOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) e.currentTarget.hidden=true; });
   $('#simgDrop').addEventListener('click',function(){ $('#simg').click(); });
   $('#simgDrop').addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('#simg').click(); } });
@@ -7232,6 +7253,16 @@ function bindImageDrop(){
     depth=0; document.body.classList.remove('imgDrag');
     if(app.tab!=='score') return;
     e.preventDefault();
+    if(!$('#saudOv').hidden){
+      /* jendela Masukkan audio terbuka: lagu -> importAudio, .mid -> importMidi */
+      var af=e.dataTransfer.files && e.dataTransfer.files[0];
+      if(!af) return;
+      var fake={target:{files:[af],value:''}};
+      if(/\.midi?$/i.test(af.name||'') || /midi/.test(af.type||'')){ $('#saudOv').hidden=true; importMidi(fake); }
+      else if(/^audio\//.test(af.type||'') || /\.(mp3|wav|m4a|ogg|flac|aac)$/i.test(af.name||'')){ $('#saudOv').hidden=true; importAudio(fake); }
+      else showScoreAlert('Yang dilepas bukan lagu atau file MIDI.');
+      return;
+    }
     var f=imgOf(e.dataTransfer.files);
     if(f) loadImage(f); else showScoreAlert('Yang dilepas bukan gambar. Seret gambar partitur (JPG/PNG).');
   });
@@ -7477,7 +7508,7 @@ function applyEntitlements(){
   $('#sdel').hidden = !prem && !trial;
   $('#sdel').textContent = (!prem && trial) ? 'Buang coba menulis' : 'Hapus partitur';
   ['#smidiOut','#sprac'].forEach(function(q){ var b=$(q); if(!b._t){ b._t=b.textContent; } b.textContent=b._t+(prem?'':' ⭐'); });
-  [['#smidiIn','Impor file MIDI'],['#saudIn','🎵 Impor lagu (audio)'],['#simg','📁 Pilih dari file']].forEach(function(x){
+  [['#smidiIn','🎹 Pilih file MIDI'],['#saudIn','🎵 Pilih lagu (audio)'],['#simg','📁 Pilih dari file']].forEach(function(x){
     var lab=$(x[0]).parentNode; lab.firstChild.nodeValue=x[1]+(prem?'':' ⭐')+' ';
   });
   syncScoreFields();
