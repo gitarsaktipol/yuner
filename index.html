@@ -3148,7 +3148,7 @@ function newRound(keep){
       t+=n.d; });
   });
   { var sl=$('#pstageLbl'); if(sl){ if(pr.src==='arcade'){ sl.textContent='Stage '+ARC_LETTERS[pr.arcLetter]+pr.arcSub; sl.hidden=false; } else sl.hidden=true; } }
-  clearTimeout(endT); pr.ending=false; pr.lastPct=null; pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0;
+  clearTimeout(endT); pr.ending=false; pr.lastPct=null; pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0; pr.lateMiss=null;
   pr.lastAdvanceT=0; pr.fast=false;
   pr.drawn=null; pr.lo=undefined;   /* soal baru / ejaan not bisa berubah: gambar ulang partitur & hitung ulang rentang */
   pd.armed=false; pd.cand=null; pd.count=0; pd.last=null; pd.legCand=null; pd.legCount=0; pd.peak=0; pd.dip=0;
@@ -3234,6 +3234,11 @@ function practiceTarget(f){
     for(i=0;i<ps.length;i++){ m=ps[i].m-sh; if(fm===m || (pr.anyOct && (fm-m)%12===0)) return {m:fm,f:f}; }
   }
   for(i=0;i<ps.length;i++){ m=ps[i].m-sh; hz=heardTarget(m,pr.anyOct); if(hz) return {m:m,f:hz}; }
+  /* not cepat yang baru terlewat (masa tenggang Tempo) juga didengarkan, supaya petikan terlambatnya langsung tertangkap */
+  if(pr.lateMiss && pr.tempoOn){
+    ps=prPitches(pr.lateMiss.ni);
+    for(i=0;i<ps.length;i++){ m=ps[i].m-sh; if(f && Math.round(69+12*Math.log2(f/A4))===m) return {m:m,f:f}; hz=heardTarget(m,pr.anyOct); if(hz) return {m:m,f:hz}; }
+  }
   return null;
 }
 /* Gitar berbunyi satu oktaf lebih rendah dari not yang tertulis (aturan penulisan partitur gitar). */
@@ -3330,6 +3335,10 @@ function tempoLoop(now){
     var ni=pr.idx[pr.pos];
     if(t>tp.beat[ni]+tp.win[ni]){
       pr.tries++; pr.wrong++; prIds(ni).forEach(function(q){ pr.marks[q]='bad'; }); pr.got={}; pr.pos++; pr.missStreak=0; pr.lastMsg={t:'Terlewat! Bunyikan saat garis lewat.',c:'bad'}; changed=true;
+      /* Mode suara: not cepat (1/8, 1/16) yang sedikit terlambat masih boleh dihitung benar (keluhan Ferdi, Okt 2026:
+         quaver sering dianggap terlambat padahal dipencet benar — deteksi suara butuh waktu, garis sudah lewat). */
+      pr.lateMiss = (!(midi.lastT && now-midi.lastT<2500) && prN(ni) && prN(ni).d<=0.5 && pr.pos<pr.idx.length)
+        ? {ni:ni, until:tp.beat[ni]+tp.win[ni]+Math.min(0.6,Math.max(0.35,240/tp.beatMs))} : null;
       if(pr.pos>=pr.idx.length){ endRound(); break; }
     } else break;
   }
@@ -3391,6 +3400,17 @@ function practiceHit(m,exact){
     if(!tp.run) return;
     /* kompensasi jeda deteksi mikrofon (jendela ±43 ms terbaru + 1 putaran analisis) */
     var tb=((performance.now()-(exact?0:(mic.interval<20?50:90)))-tp.t0)/tp.beatMs;
+    /* masa tenggang not cepat yang baru "Terlewat" (mode suara): nadanya terdengar sedikit terlambat -> jadi benar */
+    if(pr.lateMiss && tb>pr.lateMiss.until) pr.lateMiss=null;
+    if(pr.lateMiss && !exact){
+      var lm=pr.lateMiss, mt=function(pp){ return pr.anyOct ? (m%12===pp.m%12) : (m===pp.m); };
+      if(prPitches(lm.ni).some(mt) && !(tb>=tp.beat[ni]-tp.win[ni] && ps.some(mt))){
+        pr.lateMiss=null; pr.wrong=Math.max(0,pr.wrong-1); pr.missStreak=0;
+        prIds(lm.ni).forEach(function(q){ pr.marks[q]='ok'; });
+        pr.flash={m:m,ok:true,t:performance.now()}; pr.lastMsg={t:'Benar! (sedikit terlambat)',c:'ok'};
+        renderPractice(); return;
+      }
+    }
     if(tb<tp.beat[ni]-tp.win[ni]) return;   /* terlalu cepat: belum waktunya, abaikan */
   }
   var ok = ps.some(function(pp){ return pr.anyOct ? (m%12===pp.m%12) : (m===pp.m); });
