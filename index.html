@@ -3058,9 +3058,9 @@ function tempoMaybeStart(){
   pr.score.notes.forEach(function(n,i){ tp.beat[i]=b; tp.win[i]=Math.max(0.2,Math.min(0.45,0.6*n.d)); b+=n.d; });
   if(pr.score.grand && pr.score.lh){ var b2=0; pr.score.lh.forEach(function(n,i){ tp.beat[i+LH_OFF]=b2; tp.win[i+LH_OFF]=Math.max(0.2,Math.min(0.45,0.6*n.d)); b2+=n.d; }); b=Math.max(b,b2); }
   tp.end=b; tp.beatMs=60000/pr.bpm;
-  /* awal latihan: tulisan "Siap?" dulu (±1,5 dtk, tanpa ketukan), baru hitung mundur 4 3 2 1 (diminta Ferdi, Okt 2026);
-     ronde berikutnya cukup hitung mundur 2 1 */
-  var cnt=tp.first?4:2, ready=tp.first?1500:0; tp.first=false;
+  /* SETIAP ronde (Latihan, Arcade, Partitur saya): tulisan "Siap?" dulu (±1,5 dtk, tanpa ketukan), lalu hitung mundur
+     selalu dari 4: 4 3 2 1 (diminta Ferdi, Okt 2026: dulu ronde berikutnya hanya 2 1, membingungkan) */
+  var cnt=4, ready=1500; tp.first=false;
   tp.readyEnd=performance.now()+ready; tp.t0=tp.readyEnd+cnt*tp.beatMs; tp.lastInt=-cnt-1; tp.run=true; pr.t0=tp.t0;
   tpCount(ready ? 'Siap?' : '', true);
   renderPractice();
