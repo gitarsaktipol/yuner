@@ -282,7 +282,8 @@ header .sel select{max-width:100%;min-width:0}
 .met .maRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .met .maRow[hidden],.met .maStat[hidden]{display:none}
 .met .maRow label{display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:700;color:var(--muted);margin:0}
-.met .maRow select{width:100%;padding:7px 4px;font-size:14px}
+.met .maRow select{width:100%;padding:8px 10px;font-size:14px;font-weight:700;color:var(--ink);background:var(--panel);border:2px solid var(--pLilac);border-radius:14px;box-shadow:0 3px 0 var(--pLilac);cursor:pointer}
+.met .maRow select:focus{outline:none;border-color:var(--dLilac)}
 .met .maStat{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;color:var(--ink)}
 .met .maStat i{display:block;height:6px;border-radius:6px;background:var(--track);overflow:hidden}
 .met .maStat b{display:block;height:100%;width:0;background:var(--brass);border-radius:6px}
