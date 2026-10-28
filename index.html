@@ -975,6 +975,9 @@ html.csOpen select:focus{outline:none}
 @media (hover:none) and (pointer:coarse){ .skbdRow{display:none!important} }
 .imgpanel{background:var(--panel);border:2px solid var(--line);border-radius:24px;padding:10px}
 .imgpanel img{display:block;max-width:100%;max-height:340px;margin:0 auto;border-radius:8px;background:#fff}
+/* seret-lepas gambar partitur: bingkai putus-putus di seluruh layar */
+body.imgDrag::after{content:'🖼️ Lepaskan gambar partitur di sini';position:fixed;inset:12px;z-index:4000;display:flex;align-items:center;justify-content:center;
+  border:4px dashed var(--brass);border-radius:28px;background:var(--hl);color:var(--ink);font-weight:800;font-size:24px;line-height:1.3;text-align:center;padding:20px;pointer-events:none;backdrop-filter:blur(2px)}
 .empty{text-align:center;color:var(--muted);font-size:14px;padding:8px 14px 2px}
 .foot{text-align:center;font-size:12.5px;color:var(--muted);margin:26px 0 0}
 .foot a{color:var(--muted);text-decoration:underline;text-underline-offset:2px}
@@ -1801,6 +1804,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <label class="sound" style="cursor:pointer">Unggah gambar partitur
       <input type="file" accept="image/*" id="simg" hidden>
     </label>
+    <button class="sound" id="simgPaste" type="button" title="Tempel gambar dari papan klip (atau Ctrl+V / seret gambar ke halaman ini)">📋 Tempel gambar</button>
     <button class="sound" id="sdel" type="button">Hapus partitur</button>
   </div>
   <div class="row">
@@ -1941,6 +1945,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li><b>＋ Bikin Partitur Baru</b> (paling atas, atau tombol <b>＋ Buat baru</b>): pilih instrumennya. <b>Vokal</b> = 1 suara (satu nada sekaligus), 1 paranada. <b>Gitar</b> = sampai 10 nada bersamaan, 1 paranada kunci G. <b>Piano</b> = sampai 10 nada bersamaan, 2 paranada (tangan kanan kunci G, tangan kiri kunci F). Instrumen bisa diganti lagi di kolom <i>Instrumen</i>.</li>
         <li><b>Pintasan keyboard (laptop/PC)</b>: tekan <b>⌨️ Pintasan keyboard</b> di bagian Edit, lalu pilih gaya: <b>Gaya piano</b> (A S D F G H J K L = tuts putih, W E T Y U O P = tuts hitam), <b>Nama nada</b> (huruf C D E F G A B) atau <b>Not angka</b> (angka 1–7 = do re mi fa sol la si). Shift + tombol = ♯, Alt + tombol = ♭, Z / X = oktaf turun / naik, R = rehat, titik = bertitik, angka 1/2/4/8/6 = nilai not (gaya piano &amp; nama nada). Tekan beberapa tombol bersamaan = akor. Panah ↑ / ↓ = nilai not lebih panjang / lebih pendek (Shift + ↑ / ↓ = pilih nada di dalam akor). Esc = tutup / lepas sorotan / berhenti memutar. Huruf/angka kecil di tuts layar menunjukkan tombolnya.</li>
         <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan</b> (di kartu di bawah tuts piano, di samping <b>▶ Putar</b> dan <b>⏺ Rekam</b>). Setelah tersambung, tombol <b>MIDI OFF / MIDI ON</b> menentukan apakah tuts menulis not: <b>OFF</b> = piano hanya berbunyi, bebas berlatih dulu tanpa mengubah partitur; <b>ON</b> = setiap tuts langsung menulis not seperti tuts di layar (tekan bersamaan = akor). Tombol <b>Rekam</b> tetap merekam walau MIDI OFF.</li>
+        <li><b>Gambar partitur sebagai acuan</b>: tekan <b>Unggah gambar partitur</b>, atau <b>📋 Tempel gambar</b> setelah menyalin/screenshot gambar. Di laptop juga bisa tekan <b>Ctrl+V</b> atau seret berkas gambar ke halaman Partitur.</li>
         <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. Selama merekam, not yang kamu mainkan langsung tergambar di partitur dan kursor ikut berjalan mengikuti ketukan. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, rekaman masuk ke tangan yang sedang dipilih saja (<i>Tulis &amp; rekam ke</i>: Kanan / Kiri), mulai di birama baru setelah not terakhir tangan itu, dan tangan yang lain ikut berbunyi supaya bisa diikuti (bisa dimatikan). Jadi tangan kanan bisa direkam dulu, lalu tangan kiri dari awal lagu. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
         <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
         <li><b>📂 Partitur Saya</b> (tombol di atas, samping "Bikin Partitur Baru"): halaman berisi semua partitur yang sudah kamu buat, yang terakhir diubah di paling atas, lengkap dengan pratinjau kecil. Tiap partitur punya tombol <b>✏️ Buka</b>, <b>▶ Latih</b>, dan <b>🗑 Hapus</b> (ada konfirmasi, dan bisa <b>↶ Batalkan</b> beberapa detik setelah dihapus). Ada juga kotak cari judul.</li>
@@ -6190,8 +6195,10 @@ function bindScore(){
     if(kbdKey(e)){ e.preventDefault(); return; }
     var k=(e.key||'').toLowerCase();
     if((e.ctrlKey||e.metaKey) && !e.altKey && (k==='c'||k==='x'||k==='v'||k==='a')){
+      /* Ctrl+V tidak dicegah: event 'paste' memutuskan gambar partitur atau tempel not (cadangan 150 ms bila event tidak datang) */
+      if(k==='v'){ if(pasteWait) clearTimeout(pasteWait); pasteWait=setTimeout(function(){ pasteWait=0; clipPaste(); },150); return; }
       e.preventDefault();
-      if(k==='c') clipCopy(false); else if(k==='x') clipCopy(true); else if(k==='v') clipPaste(); else selectAll();
+      if(k==='c') clipCopy(false); else if(k==='x') clipCopy(true); else selectAll();
       return;
     }
     if((e.ctrlKey||e.metaKey) && !e.altKey && (k==='z'||k==='y')){
@@ -6309,6 +6316,7 @@ function bindScore(){
   });
   $('#simg').addEventListener('click',function(e){ if(!isPremium()){ e.preventDefault(); showPaywall('gambar'); } });
   $('#simg').addEventListener('change',function(e){ if(!isPremium()) return; onImage(e); });
+  bindImageDrop();
   $('#sclose').addEventListener('click',function(){ $('#simgpanel').hidden=true; });
   $('#sai').addEventListener('click',function(){ if(!isPremium()){ showPaywall('gambar'); return; } readWithAI(); });
   $('#smidiOut').addEventListener('click',function(){ if(!isPremium()){ showPaywall('ekspor'); return; } exportMidi(); });
@@ -7002,10 +7010,66 @@ function updateImgUI(){
 }
 function onImage(e){
   var f=e.target.files && e.target.files[0]; if(!f) return;
+  loadImage(f);
+  e.target.value='';
+}
+/* Gambar partitur dari berkas, tempel (Ctrl+V / tombol Tempel gambar) atau seret-lepas (diminta Ferdi, Okt 2026: screenshot
+   tidak bisa ditempel, semuanya harus lewat berkas). */
+function loadImage(f){
+  if(!f || !/^image\//.test(f.type||'')) return false;
+  if(!isPremium()){ showPaywall('gambar'); return true; }
   imgFile=f; if(imgUrl) URL.revokeObjectURL(imgUrl);
   imgUrl=URL.createObjectURL(f);
   $('#simgview').src=imgUrl; $('#simgpanel').hidden=false; updateImgUI();
-  e.target.value='';
+  try{ $('#simgpanel').scrollIntoView({behavior:'smooth',block:'nearest'}); }catch(er){}
+  showScoreAlert('Gambar partitur dimuat ✓',true);
+  return true;
+}
+function imgOf(list){
+  for(var i=0;list && i<list.length;i++){
+    var it=list[i], f = it.getAsFile ? (it.kind==='file' ? it.getAsFile() : null) : it;
+    if(f && /^image\//.test(f.type||'')) return f;
+  }
+  return null;
+}
+var pasteWait=0;
+function bindImageDrop(){
+  /* Ctrl+V: kalau papan klip berisi gambar -> gambar partitur; kalau tidak -> tempel not seperti biasa (clipPaste) */
+  document.addEventListener('paste',function(e){
+    if(app.tab!=='score') return;
+    var cd=e.clipboardData, f=cd && (imgOf(cd.files) || imgOf(cd.items));
+    if(f){ e.preventDefault(); if(pasteWait){ clearTimeout(pasteWait); pasteWait=0; } loadImage(f); return; }
+    if(pasteWait){ e.preventDefault(); clearTimeout(pasteWait); pasteWait=0; clipPaste(); }
+  });
+  var depth=0;
+  function hasFiles(e){ var t=e.dataTransfer && e.dataTransfer.types; return !!t && Array.prototype.indexOf.call(t,'Files')>=0; }
+  document.addEventListener('dragenter',function(e){ if(app.tab!=='score' || !hasFiles(e)) return; e.preventDefault(); depth++; document.body.classList.add('imgDrag'); });
+  document.addEventListener('dragover',function(e){ if(app.tab!=='score' || !hasFiles(e)) return; e.preventDefault(); e.dataTransfer.dropEffect='copy'; });
+  document.addEventListener('dragleave',function(e){ if(!hasFiles(e)) return; depth=Math.max(0,depth-1); if(!depth) document.body.classList.remove('imgDrag'); });
+  document.addEventListener('drop',function(e){
+    if(!hasFiles(e)) return;
+    depth=0; document.body.classList.remove('imgDrag');
+    if(app.tab!=='score') return;
+    e.preventDefault();
+    var f=imgOf(e.dataTransfer.files);
+    if(f) loadImage(f); else showScoreAlert('Yang dilepas bukan gambar. Seret gambar partitur (JPG/PNG).');
+  });
+  /* Tombol "Tempel gambar" (HP / tanpa keyboard): baca gambar dari papan klip */
+  var pb=$('#simgPaste');
+  if(pb){
+    if(!(navigator.clipboard && navigator.clipboard.read)) pb.hidden=true;
+    pb.addEventListener('click',async function(){
+      if(!isPremium()){ showPaywall('gambar'); return; }
+      try{
+        var items=await navigator.clipboard.read(), i, j;
+        for(i=0;i<items.length;i++) for(j=0;j<items[i].types.length;j++){
+          var ty=items[i].types[j];
+          if(/^image\//.test(ty)){ var b=await items[i].getType(ty); loadImage(new File([b],'tempel.'+(ty.split('/')[1]||'png'),{type:ty})); return; }
+        }
+        showScoreAlert('Papan klip belum berisi gambar. Salin/screenshot gambar partitur dulu, lalu tekan Tempel gambar.');
+      }catch(er){ showScoreAlert('Tidak bisa membaca papan klip. Izinkan akses papan klip, atau pakai Unggah gambar partitur.'); }
+    });
+  }
 }
 function parsePitch(str){
   var m=/^([A-Ga-g])([#b♯♭]?)(-?\d)$/.exec(String(str).trim()); if(!m) return null;
