@@ -2833,7 +2833,7 @@ function arcadeMeasures(letterIdx){
 }
 function arcLevelParams(letterIdx,subLv){
   var total=ARC_LETTERS.length*9, prog=letterIdx*9+(subLv-1), p=prog/(total-1);
-  var durPool=[[1],[1,0.5],[1,1,0.5,0.5,0.25],[1,0.5,0.5,0.25,1.5]];
+  var durPool=[[1],[1,0.5],[1,1,0.5,0.5,0.25,1.5],[1,0.5,0.5,0.25,1.5]];   /* 1.5 = pola 1/4 bertitik + 1/8 (umum di lagu, mis. KJ 429) */
   var durs = durPool[p<0.2?0:(p<0.45?1:(p<0.75?2:3))];
   /* Prioritas: lebar rentang dulu (1 oktaf -> 2 oktaf -> 3 oktaf), baru nada ♯ muncul setelah 3 oktaf tercapai */
   var w = prog<27 ? 5+Math.round(prog/26*3) : (prog<81 ? 8+Math.round((prog-27)/53*13) : 21);
@@ -2855,14 +2855,32 @@ function arcRange(w){
   if(hi>41){ hi=41; lo=Math.max(minLo,hi-w+1); }
   return [lo,hi];
 }
-function genMeasureRhythm(allowedDurs,beatsPerBar){
-  var out=[], remaining=beatsPerBar, guard=0;
+/* Ritme satu birama disusun PER KETUKAN dari pola utuh (diminta Ferdi, Okt 2026: jangan ada not 1/8 sendirian — jarang
+   dan sulit dibaca): 1/4, sepasang 1/8 (satu balok), kelompok 1/16 (4x1/16, 1/8+2x1/16, 2x1/16+1/8), 1/4 bertitik + 1/8
+   (2 ketuk). Juga NOT PANJANG (diminta Ferdi: jarang muncul): minim 2 ketuk (mulai ketuk 1/3), minim bertitik 3 ketuk
+   (ketuk 1/2), semibreve 4 ketuk (birama utuh). Bobot pola pendek mengikuti banyaknya nilai itu di daftar level (allowedDurs).
+   last=true (birama terakhir lagu): biasanya ditutup not panjang, seperti akhir kalimat lagu. */
+var RHY_16=[[0.25,0.25,0.25,0.25],[0.5,0.25,0.25],[0.25,0.25,0.5]];
+function genMeasureRhythm(allowedDurs,beatsPerBar,last){
+  function cnt(v){ return allowedDurs.filter(function(d){ return Math.abs(d-v)<1e-6; }).length; }
+  var base=[{p:[1],w:cnt(1)||1},{p:[0.5,0.5],w:cnt(0.5)},{p:null,w:cnt(0.25)},{p:[1.5,0.5],w:cnt(1.5)}];
+  var W=base.reduce(function(x,o){ return x+o.w; },0);
+  var pats=base.concat([{p:[2],w:0.3*W,at:[0,2]},{p:[3],w:0.1*W,at:[0,1]},{p:[4],w:0.08*W,at:[0]}]);
+  var out=[], remaining=beatsPerBar, guard=0, endLong=0;
+  if(last && beatsPerBar===4 && Math.random()<0.8) endLong = Math.random()<0.35 ? 4 : (Math.random()<0.6 ? 2 : 3);
+  if(endLong===4) return [4];
+  if(endLong) remaining-=endLong;
   while(remaining>0.001 && guard<50){
     guard++;
-    var choices=allowedDurs.filter(function(d){ return d<=remaining+1e-6; });
-    var d = choices.length ? choices[Math.floor(Math.random()*choices.length)] : remaining;
-    out.push(d); remaining=+(remaining-d).toFixed(4);
+    var pos=+(beatsPerBar-(endLong||0)-remaining).toFixed(4);
+    var ok=pats.filter(function(o){ return o.w>0 && (o.p ? o.p.reduce(function(x,y){ return x+y; },0) : 1)<=remaining+1e-6 && (!o.at || o.at.indexOf(pos)>=0); });
+    if(!ok.length){ out.push(remaining); break; }
+    var tot=ok.reduce(function(x,o){ return x+o.w; },0), r=Math.random()*tot, pick=ok[0];
+    for(var i=0;i<ok.length;i++){ r-=ok[i].w; if(r<0){ pick=ok[i]; break; } }
+    var pat=pick.p || RHY_16[Math.floor(Math.random()*RHY_16.length)];
+    pat.forEach(function(d){ out.push(d); remaining=+(remaining-d).toFixed(4); });
   }
+  if(endLong) out.push(endLong);
   return out;
 }
 function genArcade(letterIdx,subLv){
@@ -2870,7 +2888,7 @@ function genArcade(letterIdx,subLv){
   var r=arcRange(pm.width), lo=r[0], hi=r[1];
   var notes=[], d=lo+Math.floor(Math.random()*(hi-lo+1)), bar;
   for(bar=0; bar<pm.measures; bar++){
-    genMeasureRhythm(pm.durs,4).forEach(function(dur){
+    genMeasureRhythm(pm.durs,4,bar===pm.measures-1).forEach(function(dur){
       var k=keyNote(d);
       if(pm.sharpProb>0 && Math.random()<pm.sharpProb) addSharp(k);
       notes.push({m:k.m,d:dur,a:k.a});
