@@ -1559,7 +1559,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <li>Tekan satu tuts. Nama nada dan akor tampil di layar. Selanjutnya sambungan otomatis tersambung lagi saat aplikasi dibuka.</li>
       </ol>
       <p><b>Di laptop atau PC:</b> colok kabel USB keyboard <b>langsung</b> ke laptop (tanpa OTG), buka FerTune di <b>Chrome atau Edge</b>, lalu ikuti langkah 3 dan 4.</p>
-      <p><b>Not panjang harus ditahan:</b> saat berlatih lewat MIDI, not minim, minim bertitik, dan not penuh (semibreve) baru dihitung benar kalau tutsnya <b>tetap ditekan</b> sampai nilainya hampir habis (minimal ¾ panjang not). Menyentuh sebentar lalu dilepas = salah ("Dilepas terlalu cepat"). Pedal tidak dihitung; tutsnya sendiri yang harus ditahan.</p>
+      <p><b>Not panjang harus ditahan:</b> saat berlatih lewat MIDI, not minim, minim bertitik, dan not penuh (semibreve) baru dihitung benar kalau tutsnya <b>tetap ditekan</b> sampai garis/hitungan sampai di <b>titik terakhir</b> not itu (mis. "5 ·" sampai ketuk ke-2, "5 · · ·" sampai ketuk ke-4); sesudah itu boleh dilepas. Menyentuh sebentar lalu dilepas = salah ("Dilepas terlalu cepat"). Pedal tidak dihitung; tutsnya sendiri yang harus ditahan.</p>
       <div class="tip"><b>Kalau tidak terdeteksi:</b> cabut lalu colok lagi; coba kabel lain (ada kabel yang hanya untuk mengisi daya); pastikan keyboard menyala dan mode USB-MIDI aktif; tutup aplikasi musik lain yang sedang memakai MIDI; di HP tertentu OTG perlu diaktifkan di pengaturan sistem.</div>
       <div class="tip">Keyboard yang hanya punya colokan MIDI bulat (DIN 5 pin) butuh kabel atau antarmuka MIDI-ke-USB. iPhone dan Safari belum mendukung MIDI di browser.</div>
     </div></details>
@@ -3467,9 +3467,11 @@ function practiceHit(m,exact){
   renderPractice();
 }
 /* ===== MIDI: not panjang (minim, minim bertitik, semibreve; tie ikut) harus DITAHAN (diminta Ferdi, Okt 2026: siswa hanya
-   menyentuh tuts sebentar tapi tetap benar). Lepas sebelum 75% nilainya habis = salah. Pedal tidak dihitung — tutsnya sendiri
-   yang harus tetap ditekan. Hanya lewat MIDI; mode suara tidak berubah. ===== */
-var HOLD_MIN=2, HOLD_PART=0.75;
+   menyentuh tuts sebentar tapi tetap benar). Cukup ditahan sampai TITIK TERAKHIR not itu ("5 ·" minim = ketuk ke-2,
+   "5 · · ·" semibreve = ketuk ke-4; dengan Tempo dihitung dari ketukan not di partitur, bukan saat ditekan), sesudah itu boleh
+   dilepas (diubah Ferdi, Okt 2026: dulu 75% nilainya terasa terlalu lama). Pedal tidak dihitung — tutsnya sendiri yang harus
+   tetap ditekan. Hanya lewat MIDI; mode suara tidak berubah. ===== */
+var HOLD_MIN=2, HOLD_TOL=0.1;   /* toleransi 0,1 ketuk sebelum titik terakhir */
 function holdBeatMs(){ return pr.tempoOn && tp.run ? tp.beatMs : 60000/(pr.bpm||70); }
 function holdStart(ni){
   var now=performance.now(), sh=instShift(), any=false;
@@ -3477,7 +3479,8 @@ function holdStart(ni){
     var N=q>=LH_OFF?pr.score.lh:pr.score.notes, i=q>=LH_OFF?q-LH_OFF:q, n=N[i];
     if(!n || n.m==null) return;
     var d=tieLen(N,i); if(d<HOLD_MIN) return;
-    (pr.holds||(pr.holds=[])).push({q:q, step:ni, ms:pitchList(n).map(function(p){ return p.m-sh; }), need:now+HOLD_PART*d*holdBeatMs()});
+    var bm=holdBeatMs(), need = (pr.tempoOn && tp.run && tp.beat[q]!=null) ? tp.t0+(tp.beat[q]+d-1-HOLD_TOL)*bm : now+(d-1-HOLD_TOL)*bm;
+    (pr.holds||(pr.holds=[])).push({q:q, step:ni, ms:pitchList(n).map(function(p){ return p.m-sh; }), need:need});
     any=true;
   });
   return any;
@@ -3495,7 +3498,7 @@ function holdRelease(n){
   if(!pr.holdFail) pr.holdFail={};
   if(!pr.holdFail[fail.step]){ pr.holdFail[fail.step]=1; if(pr.tempoOn) pr.wrong++; else pr.tries++; }
   pr.flash={m:n,ok:false,t:now};
-  pr.lastMsg={t:'Dilepas terlalu cepat! Tahan tuts sampai nilai notnya habis.',c:'bad'};
+  pr.lastMsg={t:'Dilepas terlalu cepat! Tahan tuts sampai titik terakhir not itu.',c:'bad'};
   renderPractice();
 }
 function advanceArcadeLevel(){
