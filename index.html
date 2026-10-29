@@ -5065,6 +5065,18 @@ function kj432(){
   notes[notes.length-1].bl='end';
   return {id:'b-kj432',title:'KJ 432 – Jika Padaku Ditanyakan',sub:'Kidung Jemaat (1b)',ts:[4,4],bpm:90,clef:'treble',key:-1,inst:'vocal',notes:notes};
 }
+/* Lagu contoh kelima (diminta Ferdi, Okt 2026): "Cicak-Cicak di Dinding" (A.T. Mahmud), Do = C, 2/4, Andante, vokal + lirik;
+   dibaca Claude dari FOTO partitur not angka kiriman Ferdi. Akor iringan (C/G/F) & tanda staccato belum dimasukkan. */
+function cicak(){
+  var R=null, D={1:60,2:62,3:64,4:65,5:67,6:69,7:71,8:72};
+  var mel=[5,3, 5,3, 3,4, 5,0, 4,2, 4,6, 5,4, 3,0, 6,4, 6,4, 6,7, 8,0, 8,0, 3,5, 4,2, 1,0];
+  var ly=['Ci-','cak','ci-','cak','di','din-','ding','','di-','am','di-','am','me-','ra-','yap','',
+          'Da-','tang','se-','e-','kor','nya-','muk','','hap!','','la-','lu','di-','tang-','kap',''];
+  var notes=mel.map(function(x,i){ var n={m:x?D[x]:R,d:1,a:''}; if(x && ly[i]) n.ly=ly[i]; return n; });
+  notes[0].dyn='f';
+  notes[notes.length-1].bl='end';
+  return {id:'b-cicak',title:'Cicak-Cicak di Dinding',comp:'A.T. Mahmud',tempoTxt:'Andante',ts:[2,4],bpm:84,clef:'treble',key:0,inst:'vocal',notes:notes};
+}
 /* Lagu contoh keempat (diminta Ferdi, Okt 2026): Canon in D (Pachelbel, arr. lemontart), piano 2 tangan, D mayor (2♯),
    birama 1–20 = halaman 1 PDF kiriman Ferdi (dibaca Claude). Tangan kiri: pola arpeggio ⅛ D–A | Bm–F#m | G–D | G–A. */
 function canonD(){
@@ -5100,6 +5112,7 @@ function loadScores(){
   /* Lagu contoh kedua: ditambahkan sekali ke daftar (di paling atas). */
   if(!scores.some(function(x){return x.id==='b-mary';}) && store.get('yg.seedMary','')!=='1'){ scores.unshift(maryLamb()); store.set('yg.seedMary','1'); store.set('yg.scores',JSON.stringify(scores)); }
   if(!scores.some(function(x){return x.id==='b-canon';}) && store.get('yg.seedCanon','')!=='1'){ scores.unshift(canonD()); store.set('yg.seedCanon','1'); store.set('yg.scores',JSON.stringify(scores)); }
+  if(!scores.some(function(x){return x.id==='b-cicak';}) && store.get('yg.seedCicak','')!=='1'){ scores.unshift(cicak()); store.set('yg.seedCicak','1'); store.set('yg.scores',JSON.stringify(scores)); }
   if(!scores.some(function(x){return x.id==='b-kj432';}) && store.get('yg.seedKj432','')!=='1'){ scores.unshift(kj432()); store.set('yg.seedKj432','1'); store.set('yg.scores',JSON.stringify(scores)); }
   curId=store.get('yg.curScore',scores[0].id);
   if(!scores.some(function(s){return s.id===curId;})) curId=scores[0].id;
@@ -5163,7 +5176,7 @@ var CLOUD={url:'https://addtajuxfoxcaezmkice.supabase.co',key:'sb_publishable_zc
 var snap={}, tomb={}, sb=null, sbUser=null, pushT=0, syncing=false, syncAgain=false, syncMsg='', authWatched=false, lastSyncAt=0;
 try{ tomb=JSON.parse(store.get('yg.tomb','{}'))||{}; }catch(e){ tomb={}; }
 function scoreJson(s){ var c={}; for(var k in s){ if(k!=='updatedAt') c[k]=s[k]; } return JSON.stringify(c); }
-function isSample(s){ return (s.id==='s0' && scoreJson(s)===scoreJson(twinkle())) || (s.id==='b-mary' && scoreJson(s)===scoreJson(maryLamb())) || (s.id==='b-kj432' && scoreJson(s)===scoreJson(kj432())) || (s.id==='b-canon' && scoreJson(s)===scoreJson(canonD())); }
+function isSample(s){ return (s.id==='s0' && scoreJson(s)===scoreJson(twinkle())) || (s.id==='b-mary' && scoreJson(s)===scoreJson(maryLamb())) || (s.id==='b-kj432' && scoreJson(s)===scoreJson(kj432())) || (s.id==='b-canon' && scoreJson(s)===scoreJson(canonD())) || (s.id==='b-cicak' && scoreJson(s)===scoreJson(cicak())); }
 function initSnap(){ snap={}; scores.forEach(function(s){ snap[s.id]=scoreJson(s); }); }
 function trackChanges(){
   var now=Date.now(), seen={};
