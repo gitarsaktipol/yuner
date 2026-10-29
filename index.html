@@ -641,7 +641,8 @@ body.dock-inflow .app{padding-bottom:110px}
 .aiBody{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(4px,1.6vmin,10px);text-align:center}
 .aiTitle:empty{display:none}
 .aiTitle{margin:0;font-size:clamp(20px,6.4vmin,32px);text-shadow:0 3px 0 var(--surf);animation:popIn .45s var(--bounce)}
-.aiText{font-size:clamp(16px,5.2vmin,24px);line-height:1.5;max-width:680px;animation:popIn .5s var(--bounce)}
+/* teks penjelasan di TENGAH, di antara not balok & not angka, besar (diminta Ferdi, Okt 2026: dulu kecil & jauh di atas) */
+.aiText{font-size:clamp(17px,5.6vmin,40px);font-weight:700;line-height:1.3;text-align:center;padding:clamp(2px,1vmin,10px) 8px;animation:popIn .5s var(--bounce)}
 .aiText:empty{display:none}
 .aiText b{color:var(--brass)}
 .aiScore{flex:1;min-height:0;width:100%;max-width:980px;display:flex;flex-direction:column;background:var(--surf);border-radius:20px;padding:4px 12px 8px;box-shadow:0 4px 0 var(--line);animation:popIn .45s var(--bounce)}
@@ -1588,9 +1589,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   <div class="aiTop"><span class="aiTag" id="aiTag">📖 Materi baru</span><button class="sound aiSkip" id="aiSkip" type="button">Lewati ⏭</button></div>
   <div class="aiBody">
     <h2 class="aiTitle" id="aiTitle"></h2>
-    <div class="aiText" id="aiText"></div>
     <div class="aiScore" id="aiScore" hidden>
       <div class="aiLab">Not balok</div><div class="aiHost" id="aiStaff"></div>
+      <div class="aiText" id="aiText"></div>
       <div class="aiLab">Not angka</div><div class="aiHost" id="aiNum"></div>
       <div class="aiDots" id="aiDots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     </div>
