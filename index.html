@@ -3747,17 +3747,20 @@ function arcadeMeasures(letterIdx){
    top = nada tertinggi (5 = not 1–5 do..sol, 6 = sampai la, 7 = sampai si, 8 = sampai 1 tinggi / do dengan titik atas),
    pat = jenis not: q 1/4 (crotchet), w penuh (semibreve), h 1/2 (minim), e sepasang 1/8 bergandeng, s 1/4 bertitik + 1/8 (sinkop);
    step = lompatan maks. dalam langkah diatonik (1 = melangkah ke not tetangga, 2 = melewati 1 not mis. 1 3 5 7);
-   maxE = berapa pasang 1/8 per birama; intro = huruf ini diawali animasi perkenalan not baru (ARC_INTRO). ===== */
+   maxE = berapa pasang 1/8 per birama; intro = huruf ini diawali animasi perkenalan not baru (ARC_INTRO).
+   FOKUS MATERI BARU (diminta Ferdi, Okt 2026: H1 malah tidak ada sinkopnya): fr = pola ritme baru, fn = not tertinggi baru,
+   fl = lompatan baru. Kekuatan fokus arcFocus(sub): stage 1–3 penuh (tiap birama dibuka pola baru / not baru & lompatan
+   sering muncul), 4–6 separuh, 7–9 biasa (materi lama makin sering). ===== */
 var ARC_CUR=[
   {top:5,pat:'qw',step:1,maxE:0},       /* A: not 1–5, 1/4 & penuh (perkenalan) */
-  {top:5,pat:'qwh',step:1,maxE:0},      /* B: + minim (perkenalan) */
-  {top:6,pat:'qwh',step:1,maxE:0},      /* C: + 6 (la) */
-  {top:7,pat:'qwh',step:1,maxE:0},      /* D: + 7 (si) */
-  {top:8,pat:'qwh',step:1,maxE:0},      /* E: + 1 tinggi */
-  {top:5,pat:'qwhe',step:1,maxE:1},     /* F: perkenalan 1/8 bergandeng, kembali ke not 1–5 */
-  {top:6,pat:'qwhe',step:1,maxE:1},     /* G: + 6 */
-  {top:8,pat:'qwhes',step:1,maxE:1},    /* H: perkenalan 1/4 bertitik + 1/8, not 1–7 & 1 tinggi */
-  {top:8,pat:'qwhes',step:2,maxE:2},    /* I: + lompatan melewati 1 not (campur dengan melangkah) */
+  {top:5,pat:'qwh',step:1,maxE:0,fr:'h'}, /* B: + minim (perkenalan) */
+  {top:6,pat:'qwh',step:1,maxE:0,fn:1},  /* C: + 6 (la) */
+  {top:7,pat:'qwh',step:1,maxE:0,fn:1},  /* D: + 7 (si) */
+  {top:8,pat:'qwh',step:1,maxE:0,fn:1},  /* E: + 1 tinggi */
+  {top:5,pat:'qwhe',step:1,maxE:1,fr:'e'}, /* F: perkenalan 1/8 bergandeng, kembali ke not 1–5 */
+  {top:6,pat:'qwhe',step:1,maxE:1,fn:1}, /* G: + 6 */
+  {top:8,pat:'qwhes',step:1,maxE:1,fr:'s'}, /* H: perkenalan 1/4 bertitik + 1/8, not 1–7 & 1 tinggi */
+  {top:8,pat:'qwhes',step:2,maxE:2,fl:1}, /* I: + lompatan melewati 1 not (campur dengan melangkah) */
   {top:8,pat:'qwhes',step:2,maxE:2}     /* J: sama dengan I */
 ];
 /* K–Z belum diatur Ferdi: lanjutan J (not 1–i, semua jenis not di atas), lompatan makin jauh sampai 1 oktaf di Z */
@@ -3769,17 +3772,23 @@ function arcInfo(L,sub){
   if(c.pat.indexOf('e')>=0) rh.push('1/8 bergandeng'); if(c.pat.indexOf('s')>=0) rh.push('1/4 bertitik + 1/8');
   return 'Level '+ARC_LETTERS[L]+sub+' • '+arcadeMeasures(L)+' birama • '+nt+' • '+rh.join(', ')+' • '+(c.step<=1?'melangkah':(c.step===2?'lompat lewati 1 not':'lompatan s.d. '+c.step+' langkah'));
 }
+function arcFocus(sub){ return sub<=3 ? 1 : (sub<=6 ? 0.5 : 0); }
 /* Ritme satu birama 4/4 dari pola utuh (posisi selalu di ketukan, jadi 1/8 selalu sepasang dalam satu ketukan).
-   last = birama terakhir: ditutup not panjang (penuh, atau ½ di akhir) seperti akhir kalimat lagu. */
-function arcRhythm(c,last){
-  var has=function(k){ return c.pat.indexOf(k)>=0; }, out=[], pos=0, ne=0, ns=0, end=4;
-  if(last){ if(has('w') && (!has('h') || Math.random()<0.45)) return [4]; if(has('h')) end=2; }
+   last = birama terakhir: ditutup not panjang (penuh, atau ½ di akhir) seperti akhir kalimat lagu.
+   f = kekuatan fokus pola baru c.fr: birama dibuka pola baru (f=1 selalu, f=0,5 ±60%), bobotnya dinaikkan, pola lama dikurangi. */
+var ARC_FPAT={h:[2],e:[0.5,0.5],s:[1.5,0.5]};
+function arcRhythm(c,last,f){
+  var has=function(k){ return c.pat.indexOf(k)>=0; }, out=[], pos=0, ne=0, ns=0, end=4, fr=f>0 && c.fr;
+  if(last && !(fr && f>=1)){ if(has('w') && (!has('h') || Math.random()<0.45)) return [4]; if(has('h')) end=2; }
+  else if(last && has('h')) end=2;
+  if(fr && (f>=1 || Math.random()<0.6)){ ARC_FPAT[c.fr].forEach(function(d){ out.push(d); pos+=d; }); if(c.fr==='e') ne++; if(c.fr==='s') ns++; }
+  var wt=function(k,w){ return !fr ? w : (k===c.fr ? w*(1+4*f) : (k==='q' ? w : w*(1-0.6*f))); };
   while(pos<end-1e-6){
     var ok=[{p:[1],w:4}];
-    if(has('w') && pos===0 && end===4) ok.push({p:[4],w:1.2});
-    if(has('h') && (pos===0||pos===2) && pos+2<=end) ok.push({p:[2],w:2.2});
-    if(has('e') && ne<c.maxE) ok.push({p:[0.5,0.5],w:2.6,e:1});
-    if(has('s') && ns<1 && (pos===0||pos===2) && pos+2<=end) ok.push({p:[1.5,0.5],w:2.2,s:1});
+    if(has('w') && pos===0 && end===4 && !(fr && f>=1)) ok.push({p:[4],w:wt('w',1.2)});
+    if(has('h') && (pos===0||pos===2) && pos+2<=end) ok.push({p:[2],w:wt('h',2.2)});
+    if(has('e') && ne<c.maxE) ok.push({p:[0.5,0.5],w:wt('e',2.6),e:1});
+    if(has('s') && ns<(fr && c.fr==='s' ? 2 : 1) && (pos===0||pos===2) && pos+2<=end) ok.push({p:[1.5,0.5],w:wt('s',2.2),s:1});
     var tot=ok.reduce(function(x,o){ return x+o.w; },0), r=Math.random()*tot, pick=ok[0], i;
     for(i=0;i<ok.length;i++){ r-=ok[i].w; if(r<0){ pick=ok[i]; break; } }
     pick.p.forEach(function(d){ out.push(d); pos+=d; });
@@ -3789,17 +3798,36 @@ function arcRhythm(c,last){
   return out;
 }
 function genArcade(letterIdx,subLv){
-  var c=arcCur(letterIdx), n=arcadeMeasures(letterIdx), bass=pr.clef==='bass' && pr.inst!=='guitar';
+  var c=arcCur(letterIdx), f=arcFocus(subLv||1), notes, tries=0;
+  /* fokus not baru (fn) / lompatan baru (fl): soal diulang sampai materi barunya cukup sering muncul */
+  var need = f>=1 ? 3 : (f>0 ? 1 : 0);
+  var best=null, bk=-1, k;
+  do { notes=genArcadeOnce(letterIdx,c,f); tries++; k=arcFocusCount(notes,c,letterIdx); if(k>bk){ best=notes; bk=k; } } while(need && tries<40 && k<need);
+  return best;
+}
+function arcFocusCount(notes,c,L){
+  var bass=pr.clef==='bass' && pr.inst!=='guitar', top=midiFromDia((bass?21:28)+c.top-1), k=0, i;
+  if(c.fn) notes.forEach(function(n,i){ if(n.m===top && i<notes.length-1) k++; });
+  if(c.fl) for(i=1;i<notes.length;i++){ if(Math.abs(diaOf(notes[i])-diaOf(notes[i-1]))===2) k++; }
+  return (c.fn||c.fl) ? k : 99;
+}
+function genArcadeOnce(letterIdx,c,f){
+  var n=arcadeMeasures(letterIdx), bass=pr.clef==='bass' && pr.inst!=='guitar';
   var lo=bass?21:28, hi=lo+c.top-1;   /* "1" = C4 (kunci F piano: C3); gitar ditulis C4 (bunyi C3) */
   var durs=[], b, j, notes=[];
-  for(b=0;b<n;b++) durs=durs.concat(arcRhythm(c,b===n-1));
+  for(b=0;b<n;b++) durs=durs.concat(arcRhythm(c,b===n-1,f));
   /* ke/dari not cepat (1/8, juga 1/8 sesudah 1/4 bertitik) lompatannya tetap kecil */
-  var fastCap=Math.min(c.step, letterIdx<18?1:2), d=lo+Math.floor(Math.random()*Math.min(3,hi-lo+1));
+  var fastCap=Math.min(c.step, letterIdx<18?1:2), d=(f>0 && c.fn) ? hi-1-Math.floor(Math.random()*2) : lo+Math.floor(Math.random()*Math.min(c.fn?hi-lo+1:3,hi-lo+1));   /* fokus not baru: mulai dekat not baru; sesudahnya mulai di mana saja */
   for(j=0;j<durs.length;j++){
     notes.push({m:midiFromDia(d),d:durs[j],a:''});
-    var fast = durs[j]<1 || (j+1<durs.length && durs[j+1]<1), opts=[], s;
-    /* bobot: mengulang not yang sama 1, bergerak 2, melangkah (±1) di level berlompatan 3 (lompatan tidak selalu) */
-    for(s=-c.step;s<=c.step;s++) if(d+s>=lo && d+s<=hi && (!fast || Math.abs(s)<=fastCap)){ opts.push(s); if(s){ opts.push(s); if(c.step>=2 && Math.abs(s)===1) opts.push(s); } }
+    var fast = durs[j]<1 || (j+1<durs.length && durs[j+1]<1), opts=[], s, x;
+    /* bobot: mengulang not yang sama 1, bergerak 2, melangkah (±1) di level berlompatan 3 (lompatan tidak selalu);
+       fokus: naik ke arah not baru (fn) / lompatan 2 langkah (fl) lebih sering */
+    for(s=-c.step;s<=c.step;s++) if(d+s>=lo && d+s<=hi && (!fast || Math.abs(s)<=fastCap)){
+      opts.push(s); if(s){ opts.push(s); if(c.step>=2 && Math.abs(s)===1 && !(c.fl && f>0)) opts.push(s); }
+      if(f>0 && c.fn && s>0) for(x=0;x<2*f;x++) opts.push(s);
+      if(f>0 && c.fl && Math.abs(s)===2) for(x=0;x<3*f;x++) opts.push(s);
+    }
     d+=opts[Math.floor(Math.random()*opts.length)]||0;
   }
   /* akhir soal = "1" (do) terdekat dari not sebelumnya */
