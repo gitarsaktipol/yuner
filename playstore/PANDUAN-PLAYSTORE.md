@@ -32,25 +32,26 @@ Pakai email yang sama di Play Console (Listingan toko → Detail kontak).
 
 ## Langkah 2 — Pastikan versi terbaru sudah live
 
-Buka `https://gitarsakti.com/fertune/` dan `https://gitarsakti.com/fertune/privacy.html`,
-pastikan keduanya tampil (alamat ini disajikan website Gitar Sakti dari repo ini lewat rewrite Vercel,
-jadi memperbarui repo ini otomatis memperbarui keduanya).
+Buka `https://fertune.gitarsakti.com/` dan `https://fertune.gitarsakti.com/privacy.html`,
+pastikan keduanya tampil (subdomain ini langsung menunjuk ke GitHub Pages repo ini lewat file `CNAME`;
+DNS-nya catatan CNAME `fertune` → `gitarsaktipol.github.io` di Cloudflare, *DNS only*).
+Alamat lama `gitarsakti.com/fertune/` dialihkan ke sini.
 
 ## Langkah 3 — Buat paket Android di PWABuilder
 
-1. Buka **https://www.pwabuilder.com**, masukkan alamat `https://gitarsakti.com/fertune/`, tekan **Start**.
+1. Buka **https://www.pwabuilder.com**, masukkan alamat `https://fertune.gitarsakti.com/`, tekan **Start**.
 2. Tekan **Package For Stores** → **Android** → **Generate Package** (pilih opsi *Google Play*).
 3. Di **Options / All Settings**, isi seperti ini (yang lain biarkan bawaan):
 
    | Pengaturan | Isi |
    |---|---|
-   | Package ID | `com.gitarsakti.fertune` ⚠️ **tidak bisa diganti setelah terbit** (sudah diputuskan: memakai domain gitarsakti.com) |
+   | Package ID | `com.gitarsakti.fertune` ⚠️ **tidak bisa diganti setelah terbit** (sudah diputuskan; tetap dipakai walau alamatnya subdomain) |
    | App name | `FerTune` |
    | Launcher name | `FerTune` |
    | App version | `1.0.0` |
    | App version code | `1` (naikkan 1 setiap upload versi baru) |
-   | Host | `gitarsakti.com` |
-   | Start URL | `/fertune/` |
+   | Host | `fertune.gitarsakti.com` |
+   | Start URL | `/` |
    | Theme color / Background color | `#FFF7FB` |
    | Status bar / Nav bar color | `#FFF7FB` |
    | Display mode | Standalone |
@@ -81,20 +82,19 @@ Tanpa langkah ini aplikasi tetap jalan, tapi di bagian atas akan terlihat **bari
    - Dari `assetlinks.json` di ZIP PWABuilder (kunci upload kamu).
    - Dari **Play Console → Pengujian dan rilis → Integritas aplikasi → Penandatanganan aplikasi**,
      bagian *Sertifikat kunci penandatanganan aplikasi* → **SHA-256**.
-2. Berikan kedua SHA-256 itu ke Claude yang mengurus **website Gitar Sakti** (repo `gitarsaktipol/gitarsaktipol`).
-   File `public/.well-known/assetlinks.json` ditaruh di repo website itu (bukan repo baru), dengan isi
-   dari `playstore/assetlinks-template/` (package: `com.gitarsakti.fertune`) dan dua SHA-256 tadi, lalu di-merge.
-3. Cek setelah deploy: `https://gitarsakti.com/.well-known/assetlinks.json` harus menampilkan isi file tersebut
-   (dibuka langsung di browser, tanpa pengalihan).
+2. Berikan kedua SHA-256 itu ke Claude. File `.well-known/assetlinks.json` ditaruh di **repo ini** (`yuner`,
+   folder `.well-known/` di akar repo; `.nojekyll` sudah ada supaya GitHub Pages mau menyajikan folder bertitik),
+   isinya dari `playstore/assetlinks-template/.well-known/assetlinks.json` + dua SHA-256 tadi.
+3. Cek setelah deploy: `https://fertune.gitarsakti.com/.well-known/assetlinks.json` harus menampilkan isi file
+   tersebut (dibuka langsung di browser, tanpa pengalihan).
 
-> Catatan: verifikasi ini berlaku untuk seluruh domain `gitarsakti.com`, tapi aplikasi FerTune hanya membuka
-> jalur `/fertune/`.
+> Catatan: verifikasi ini hanya untuk subdomain `fertune.gitarsakti.com`; website Gitar Sakti tidak terpengaruh.
 
 ## Langkah 6 — Lengkapi halaman toko & formulir kebijakan
 
 **Listingan toko:** salin dari `deskripsi-toko.md`, upload ikon, gambar fitur, dan 6 screenshot dari folder ini.
 
-**Kebijakan privasi:** `https://gitarsakti.com/fertune/privacy.html`
+**Kebijakan privasi:** `https://fertune.gitarsakti.com/privacy.html`
 
 **Akses aplikasi:** *Semua fungsi tersedia tanpa akses khusus.* Login akun Gitar Sakti bersifat opsional (hanya untuk simpan cloud); semua fitur bisa dipakai tanpa login.
 
@@ -115,7 +115,7 @@ Tanpa langkah ini aplikasi tetap jalan, tapi di bagian atas akan terlihat **bari
 | Audio mikrofon | Diproses di perangkat, tidak dikumpulkan/dikirim → tidak dicantumkan sebagai data terkumpul |
 
 > ✅ **Hapus akun sudah ada.** Google Play meminta jalur hapus akun di dalam aplikasi *dan* tautan web. Keduanya tersedia:
-> tombol **Hapus akun** di kartu akun menu Partitur, dan halaman web `https://gitarsakti.com/fertune/hapus-akun.html`.
+> tombol **Hapus akun** di kartu akun menu Partitur, dan halaman web `https://fertune.gitarsakti.com/hapus-akun.html`.
 > Isi tautan web itu di Play Console → Konten aplikasi → Keamanan data → *Hapus akun*.
 > Aturannya: akun yang punya pesanan tidak dihapus (riwayat pembelian wajib disimpan), hanya data FerTune di cloud;
 > akun tanpa pesanan dihapus seluruhnya. Sebutkan ini di formulir Play Console bila ditanya data yang dipertahankan.
