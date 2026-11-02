@@ -1395,6 +1395,211 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @keyframes tapPop{0%{transform:scale(1)}30%{transform:scale(.9)}65%{transform:scale(1.07)}100%{transform:scale(1)}}
 .tapPop{animation:tapPop .38s var(--bounce)}
 @media (prefers-reduced-motion:reduce){.tapRipple{display:none}.tapPop{animation:none}}
+
+/* ===================== TAMPILAN HP (diminta Ferdi, Nov 2026) =====================
+   body.mob dipasang JS (mobApply) bila lebar < 900 px ATAU tinggi <= 600 px (HP tegak/miring). Semua aturan di bawah
+   HANYA berlaku saat body.mob, jadi tampilan PC/laptop TIDAK berubah. Elemen .mOnly hanya ada di HP. */
+body:not(.mob) .mOnly{display:none !important}
+body.mob .tabs{bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+.mDots{display:flex;gap:8px;justify-content:center}
+.mDots i{width:10px;height:10px;border-radius:50%;background:var(--line);transition:transform .25s var(--bounce),background-color .2s}
+.mDots i.on{background:var(--brass)}
+.mDots i.cur{transform:scale(1.45)}
+.mStepT{margin:6px 0 0;text-align:center;font-size:22px;font-weight:800;color:var(--ink)}
+.mNav{display:flex;gap:12px}
+.mNav>button{flex:1;padding:13px 8px;font-size:17px}
+.mNav>.start{flex:1.4}
+/* --- Tuner: tombol Tuner | Metronome besar, Aktifkan mikrofon tepat di atas menu, Kebijakan Privasi paling bawah --- */
+body.mob.on-tuner .app{padding-top:10px;padding-bottom:100px}
+body.mob #tab-tuner{min-height:calc(100vh - 110px);min-height:calc(100dvh - 110px)}
+body.mob #tab-tuner header{flex-wrap:wrap;row-gap:clamp(6px,1.2vh,10px)}
+body.mob #tab-tuner .tmseg{flex:1 1 100%;padding:5px;gap:6px;border-radius:22px}
+body.mob #tab-tuner .tmseg button{flex:1;padding:clamp(9px,1.7vh,14px) 8px;font-size:clamp(17px,2.6vh,20px);font-weight:800;border-radius:18px}
+body.mob #tmSeg button[data-tm="tuner"]::before{content:"🎸 "}
+body.mob #tmSeg button[data-tm="metro"]::before{content:"🥁 "}
+body.mob #tab-tuner #tuneSel{flex:1 1 100%;justify-content:stretch}
+body.mob #tab-tuner #tuneSel select{max-width:none;padding:7px 12px}
+body.mob #tab-tuner #msg{order:4}
+body.mob #tab-tuner #start{order:5;margin-top:auto}
+body.mob.on-tuner .app>.foot{position:fixed;left:0;right:0;bottom:calc(3px + env(safe-area-inset-bottom,0px));margin:0;font-size:11px;z-index:5}
+body.mob #tab-tuner .met{flex:1}
+body.mob #tab-tuner .met .metGoRow{margin-top:auto}
+@media (max-height:700px){
+  body.mob #tab-tuner{gap:6px}
+  body.mob #tab-tuner .reader .noteRow{height:50px}
+  body.mob #tab-tuner #noteName{font-size:48px}
+  body.mob #tab-tuner .readout{min-height:18px;font-size:14px}
+  body.mob #tab-tuner .track{height:30px;margin-top:4px}
+  body.mob #tab-tuner .verdict{font-size:17px;min-height:22px;margin-top:4px}
+  body.mob #tab-tuner .head{--pg:40px;--pgap:4px}
+  body.mob #tab-tuner #hint{display:none}
+  body.mob #tab-tuner .row .stepper{padding:3px 8px}
+  body.mob #tab-tuner .row .ctl{width:36px;height:36px}
+  body.mob #tab-tuner #start{padding:11px}
+}
+/* --- Latihan: langkah demi langkah tanpa gulir (1 alat musik, 2 notasi, 3 mode latihan, 4 pengaturan, 5 siap main) --- */
+body.mob.on-latih .app{padding-top:10px;padding-bottom:100px}
+body.mob #tab-latih{padding-bottom:0;gap:14px;min-height:calc(100vh - 110px);min-height:calc(100dvh - 110px)}
+body.mob #tab-latih>header{display:none}
+body.mob #mlatNav{order:20;margin-top:auto}
+body.mob #tab-latih[data-lst="1"] #mlatBack{display:none}
+body.mob #tab-latih[data-lst="5"] #mlatNext{display:none}
+body.mob #tab-latih:not([data-lst="1"]) #pinst,body.mob #tab-latih:not([data-lst="1"]) #pinsthint,
+body.mob #tab-latih:not([data-lst="2"]) #pmodeSeg,body.mob #tab-latih:not([data-lst="3"]) #mlatSrc,
+body.mob #tab-latih:not([data-lst="4"]) #mlatScoreRow,body.mob #tab-latih:not([data-src="score"]) #mlatScoreRow,
+body.mob #tab-latih:is([data-lst="1"],[data-lst="2"],[data-lst="3"]) #pcfg,
+body.mob #tab-latih:not([data-lst="5"]) #pdock{display:none !important}
+body.mob #pinst,body.mob #pmodeSeg{flex-direction:column;background:none;padding:0;gap:16px}
+body.mob #pinst button,body.mob #pmodeSeg button,.mPick button{
+  display:flex;flex-direction:column;align-items:center;gap:4px;padding:clamp(14px,3vh,26px) 14px;font-size:22px;font-weight:800;border-radius:26px;
+  background:var(--panel);border:3px solid var(--line);box-shadow:0 5px 0 var(--line);color:var(--ink);cursor:pointer;animation:none}
+body.mob #pinst button::before,body.mob #pmodeSeg button::before{font-size:clamp(34px,7vh,52px);line-height:1.1}
+body.mob #pinst button[data-inst="piano"]::before{content:"🎹"}
+body.mob #pinst button[data-inst="guitar"]::before{content:"🎸"}
+body.mob #pmodeSeg button[data-mode="staff"]::before{content:"🎼"}
+body.mob #pmodeSeg button[data-mode="num"]::before{content:"1 2 3";font-weight:900;letter-spacing:.08em;color:var(--brass)}
+body.mob #pmodeSeg button::after{font-size:13px;font-weight:600;color:var(--muted)}
+body.mob #pmodeSeg button[data-mode="staff"]::after{content:"Not di garis paranada"}
+body.mob #pmodeSeg button[data-mode="num"]::after{content:"Not angka 1 2 3 4 5 6 7"}
+body.mob #pinst button[aria-pressed="true"],body.mob #pmodeSeg button[aria-pressed="true"],.mPick button[aria-pressed="true"]{
+  border-color:var(--brass);background:var(--pPink);box-shadow:0 5px 0 var(--dPink);color:var(--ink);animation:pop .4s var(--bounce)}
+.mPick{display:flex;flex-direction:column;gap:14px}
+.mPick button{display:grid;grid-template-columns:52px 1fr;align-items:center;gap:0 10px;text-align:left;padding:clamp(12px,2.4vh,20px) 16px;font-size:inherit}
+.mPick .ic{grid-row:span 2;font-size:34px;text-align:center;line-height:1}
+.mPick b{font-size:20px}
+.mPick small{font-size:13px;font-weight:600;color:var(--muted);line-height:1.3}
+.mPick button:disabled{opacity:.5}
+body.mob #pcfg{padding:12px 14px}
+body.mob #pcfg>summary,body.mob #pcfg label:has(#psrc){display:none}
+body.mob #pcfg>*:not(summary){margin-top:10px}
+body.mob #pcfg>:nth-child(2),body.mob #pcfg>:nth-child(3){margin-top:0}
+body.mob #tab-latih[data-lst="4"] #pcfg .tempoCard{display:none}
+body.mob #tab-latih[data-lst="5"] #pcfg>*:not(.tempoCard){display:none}
+body.mob #tab-latih[data-lst="5"] #pcfg{padding:4px;border:0;background:none;box-shadow:none}
+body.mob #tab-latih[data-lst="5"] #pcfg .tempoCard{margin-top:0}
+body.mob #tab-latih:not([data-src="random"]) :is(.pclefLbl,#pclefSeg,#pcfg>.grid){display:none}
+body.mob #pCustomOpts>*{margin-top:8px}
+body.mob #pCustomOpts .octLabel{margin:6px 0 2px}
+.mScorePick{display:flex;flex-direction:column;gap:6px;font-weight:800;font-size:14px;color:var(--muted)}
+.mScorePick select{background:var(--panel);border:2px solid var(--pLilac);border-radius:16px;padding:12px;font-size:17px;font-weight:700;color:var(--ink);box-shadow:0 3px 0 var(--pLilac)}
+body.mob #tab-latih .pdock.inflow{margin:0}
+/* HP dimiringkan (pendek): kartu pilihan berjajar menyamping supaya tetap muat */
+@media (orientation:landscape) and (max-height:600px){
+  body.mob #tab-latih{gap:8px}
+  body.mob #pinst,body.mob #pmodeSeg,body.mob .mPick{flex-direction:row;gap:12px}
+  body.mob #pinst button,body.mob #pmodeSeg button,body.mob .mPick button{flex:1;padding:10px;font-size:18px}
+  body.mob #pinst button::before,body.mob #pmodeSeg button::before{font-size:30px}
+  body.mob .mPick button{grid-template-columns:40px 1fr;padding:10px}
+  body.mob .mPick .ic{font-size:26px}
+  body.mob .mPick b{font-size:16px}
+  body.mob .mStepT{font-size:18px;margin-top:2px}
+  body.mob .mNav>button{padding:9px 8px;font-size:15px}
+}
+/* tinggi menu Latihan tetap = satu layar: tombol Kembali/Lanjut selalu terlihat; isi yang panjang mengecil / digulir di dalam kartunya */
+body.mob #tab-latih{height:calc(100vh - 110px);height:calc(100dvh - 110px)}
+body.mob #tab-latih>*{flex:none}
+body.mob #tab-latih #pcfg{flex:0 1 auto;min-height:0;overflow:auto}
+body.mob #tab-latih[data-lst="5"] #pcfg{flex:none;overflow:visible}
+body.mob #tab-latih .pdock.inflow{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:10px}
+body.mob #tab-latih .pdock #pboardHome{flex:1;min-height:0;display:flex;flex-direction:column}
+body.mob #tab-latih .pdock .board{flex:1;min-height:0;overflow:auto}
+body.mob #tab-latih .pdock #pgo{order:2;flex:none;padding:13px}
+body.mob #tab-latih[data-lst="5"] #pcfg .tempoCard{padding:8px 12px;gap:4px}
+body.mob #tab-latih[data-lst="5"] #pcfg .tempoCard label.chk{font-size:14px;padding:2px 0;line-height:1.25}
+body.mob #tab-latih[data-lst="5"] #pcfg .tempoCard label:not(.chk){flex-direction:row;align-items:center;gap:8px}
+body.mob #tab-latih[data-lst="5"] #pcfg .tempoCard select{flex:1;padding:6px 10px}
+body.mob #pCustomOpts>*{margin-top:6px}
+body.mob #pCustomOpts .octLabel{margin:4px 0 1px;font-size:11px}
+body.mob #custGrid button{padding:6px 0}
+body.mob #pCustomOpts .row .sound{padding:7px 8px;font-size:14px}
+body.mob #pCustomOpts>label{flex-direction:row;align-items:center;gap:8px}
+body.mob #pCustomOpts>label select{flex:1;padding:6px 10px}
+body.mob #pCustomOpts>.hint{margin-top:4px;font-size:13px}
+body.mob #pcfg label:has(#pkey){flex-direction:row;align-items:center;gap:8px}
+body.mob #pcfg label:has(#pkey) select{flex:1;padding:7px 10px}
+body.mob #tab-latih .pdock .dockfoot{display:none}
+/* --- Partitur: halaman demi halaman (awal / isi data lagu / menulis) --- */
+body.mob.on-score .app,body.mob.on-lib .app{padding-top:10px}
+body.mob #tab-score>header .sel{display:none}
+body.mob #tab-score[data-mph="home"]>:not(header):not(.snewRow):not(#mscCont):not(#sfree),
+body.mob #tab-score[data-mph="form"]>:not(#mscFormT):not(#sinfo):not(#mscFormNav),
+body.mob #tab-score[data-mph="edit"]>:is(header,.snewRow,#mscCont,#mscFormT,#sinfo,#mscFormNav){display:none !important}
+body.mob #tab-score[data-mph="home"]{min-height:calc(100vh - 120px);min-height:calc(100dvh - 120px)}
+body.mob #tab-score .snewRow{flex-direction:column;gap:18px;margin-top:8px}
+body.mob #tab-score .snewRow>button{flex:none;padding:clamp(20px,5vh,40px) 14px;font-size:22px;border-radius:26px}
+body.mob #tab-score .snewRow #slibGo::before{content:"";display:none}
+.mScCont{flex:none !important;display:flex;flex-direction:column;align-items:center;gap:2px;--c:var(--pLemon);--cd:var(--dLemon);padding:14px}
+.mScCont small{font-size:13px;font-weight:600;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.mob #tab-score[data-mph="form"] .sinfoHead{display:none}
+body.mob #tab-score[data-mph="form"] #mscFormNav{position:sticky;bottom:calc(98px + env(safe-area-inset-bottom,0px));z-index:3;padding-top:4px}
+body.mob #tab-score .slyLbl{display:none}
+body.mob #mscFormNav>.start{flex:1.7;font-size:16px}
+body.mob #mscFormNav>.sound{font-size:16px}
+body.mob #tab-score .slyRow{padding-left:6px}
+body.mob #tab-score[data-mph="form"] #sinfoBody{display:block !important;margin-top:0}
+body.mob #tab-score[data-mph="form"] #sinfo{padding:14px}
+body.mob #tab-score[data-mph="form"] #stitle{font-size:18px;padding:12px}
+body.mob #tab-score[data-mph="form"] .fields{gap:10px;margin-top:12px}
+.mEdBar{display:flex;align-items:center;gap:8px}
+.mEdBar>.chip{flex:none;min-width:46px;padding:10px 12px;font-size:17px}
+.mEdInfo{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:5px 12px;cursor:pointer;color:var(--ink)}
+.mEdInfo b{font-size:15.5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mEdInfo small{font-size:12px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mEdInfo small::after{content:" · ✏️ ubah"}
+.mModeBar{display:flex;gap:8px;align-items:stretch}
+.mModeBar .seg{flex:1;padding:4px;gap:4px}
+.mModeBar .seg button{padding:8px 6px;font-size:15.5px}
+.mModeBar .seg button[data-mm="rec"][aria-pressed="true"]{color:#E0457F}
+.mModeBar>.chip{flex:none;min-width:0;padding:8px 12px}
+.mModeBar>.chip[aria-pressed="true"],#slyInfo[aria-pressed="true"]{background:var(--pLemon);color:var(--ink);box-shadow:0 3px 0 var(--dLemon)}
+.mModeBar .undoRow{display:flex;gap:6px;margin:0 !important;flex:none}
+.mModeBar .undoRow .chip{flex:none !important;min-width:0;padding:8px 11px;font-size:16px}
+.mModeBar .undoRow .chip .ut{display:none}
+body.mob #tab-score[data-mph="edit"]{gap:10px}
+body.mob #tab-score[data-mph="edit"] #mscBar{order:-5}
+body.mob #tab-score[data-mph="edit"] #sfree{order:-4}
+body.mob #tab-score[data-mph="edit"] #mscMode{order:-3}
+body.mob #tab-score[data-mph="edit"] #simgpanel{order:-2}
+body.mob #tab-score[data-mph="edit"] :is(#slyRow,#slyHint){order:-1}
+body.mob #tab-score[data-mph="edit"] #srecCard{order:10}
+body.mob #tab-score[data-mph="edit"] #mscMore{order:11}
+body.mob #tab-score[data-mph="edit"] .sside>*{order:12}
+body.mob #tab-score[data-mph="edit"] .spanel>*{order:13}
+body.mob #tab-score[data-mph="edit"] .spanel>#srecCard{order:10}
+body.mob #tab-score .slyRow{margin:0}
+body.mob #tab-score:not(.mly) #slyRow,body.mob #tab-score:not(.mly) #slyHint,body.mob #tab-score:not(.mlyi) #slyHint{display:none !important}
+body.mob #tab-score .slyHint{margin:-4px 6px 0}
+/* kertas partitur: paling banyak ±3 baris, sisanya digulir di dalam kertas; tombol kursor menempel di bawahnya */
+body.mob #tab-score .board{padding:6px 6px 8px;border-bottom-left-radius:14px;border-bottom-right-radius:14px}
+body.mob #sscore{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+body.mob #tab-score[data-mph="edit"] #snav{margin-top:-8px !important;gap:5px}
+body.mob #tab-score[data-mph="edit"] #snav .chip{padding:8px 4px;font-size:14px;border-radius:0 0 14px 14px}
+body.mob #tab-score .skb{padding:8px}
+.mNotePanel{display:flex;flex-direction:column;gap:7px;margin-top:9px}
+.mNotePanel>*{margin:0 !important}
+.mNotePanel .chips .chip{padding:8px 4px;min-width:0}
+.mNotePanel #sdur .chip{font-size:15px}
+.mNotePanel .row{gap:8px}
+.mNotePanel .row .sound{padding:9px 6px;font-size:14.5px}
+.mNotePanel .seg{padding:4px;gap:4px}
+.mNotePanel .seg button{padding:7px}
+body.mob #tab-score .skbOct{margin-top:7px}
+body.mob #tab-score .skbOct .stepper{padding:3px 8px}
+body.mob #tab-score .skbOct .ctl{width:36px;height:36px}
+.mMore{width:100%;padding:11px 8px;font-size:14.5px}
+body.mob #tab-score:not(.mmore) #stools{display:none !important}
+body.mob #tab-score.mrec :is(#mscPanel,#mscMore,#stools){display:none !important}
+body.mob #tab-score:not(.mrec) :is(.srecSet:has(#sgrid),#smidiStat){display:none !important}
+body.mob.on-lib #libBack{flex:.8}
+
+/* Bikin Partitur Baru di HP: satu halaman penuh (bukan kotak kecil) */
+body.mob #snewOv{background:var(--bg);align-items:stretch;padding:calc(16px + env(safe-area-inset-top,0px)) 18px calc(16px + env(safe-area-inset-bottom,0px))}
+body.mob #snewOv .pwBox{max-width:460px;margin:0 auto;background:none;box-shadow:none;display:flex;flex-direction:column;justify-content:center;padding:0}
+body.mob #snewOv h2{font-size:24px}
+body.mob #snewOv .instList{gap:16px}
+body.mob #snewOv .instList button{padding:clamp(14px,3vh,24px) 16px}
+body.mob #snewOv .instList .ic{font-size:38px}
+body.mob #snewOv .instList b{font-size:20px}
 </style>
 </head>
 <body class="on-tuner">
@@ -1501,6 +1706,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <!-- ================= LATIHAN BACA NOT ================= -->
 <section class="tab" id="tab-latih" hidden>
   <header><h1><svg class="mascot" viewBox="0 0 40 40" aria-hidden="true"><path class="mf" d="M25 29V6c4 1 8 4 9 9"/><ellipse class="mb" cx="17" cy="29" rx="10" ry="8"/><circle class="me" cx="13.5" cy="27.5" r="1.6"/><circle class="me" cx="20.5" cy="27.5" r="1.6"/><path d="M14 31.5q3 2.6 6 0" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/><circle class="mc" cx="10.5" cy="31" r="1.8"/><circle class="mc" cx="23.5" cy="31" r="1.8"/></svg>Latihan baca not</h1></header>
+  <!-- Tampilan HP (diminta Ferdi, Nov 2026): menu Latihan = langkah satu per satu seperti Arcade, tanpa gulir. Hanya tampil di HP (body.mob). -->
+  <div class="mOnly mStepTop" id="mlatTop"><div class="mDots" id="mlatDots" aria-hidden="true"></div><h2 class="mStepT" id="mlatT"></h2></div>
 
   <div class="pdock" id="pdock" hidden>
   <button class="start" id="pgo" type="button">▶ Mulai berlatih</button>
@@ -1531,10 +1738,17 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
   <p class="hint" id="pinsthint" hidden></p>
 
-  <div class="seg" role="group" aria-label="Jenis notasi">
+  <div class="seg" id="pmodeSeg" role="group" aria-label="Jenis notasi">
     <button type="button" data-mode="staff" aria-pressed="true">Not balok</button>
     <button type="button" data-mode="num" aria-pressed="false">Not angka</button>
   </div>
+
+  <div class="mOnly mPick" id="mlatSrc" role="group" aria-label="Mode latihan">
+    <button type="button" data-msrc="random" aria-pressed="false"><span class="ic" aria-hidden="true">🎲</span><b>Acak</b><small>Soal acak sesuai pengaturanmu</small></button>
+    <button type="button" data-msrc="custom" aria-pressed="false"><span class="ic" aria-hidden="true">🎯</span><b>Custom</b><small>Pilih sendiri nada yang boleh muncul</small></button>
+    <button type="button" data-msrc="score" aria-pressed="false"><span class="ic" aria-hidden="true">📄</span><b>Partitur saya</b><small>Berlatih dari partitur yang kamu tulis</small></button>
+  </div>
+  <label class="mOnly mScorePick" id="mlatScoreRow">Partitur yang dilatih<select id="mlatScore"></select></label>
 
   <details class="card cfg" id="pcfg">
     <summary>Mode Latihan</summary>
@@ -1546,7 +1760,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     </label>
     <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo: garis berjalan, not harus dibunyikan saat garis lewat</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk: tuts piano yang harus ditekan menyala</label></div>
     
-    <label>Kunci</label>
+    <label class="pclefLbl">Kunci</label>
     <div class="clefSeg" id="pclefSeg" role="group" aria-label="Kunci">
       <button type="button" data-clef="treble" aria-pressed="true">
         <span class="clefIcon" aria-hidden="true">𝄞</span>
@@ -1579,6 +1793,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <p class="hint" id="custHint"></p>
     </div>
   </details>
+  <div class="mOnly mNav" id="mlatNav"><button class="sound" id="mlatBack" type="button">◀ Kembali</button><button class="start" id="mlatNext" type="button">Lanjut ▶</button></div>
 
 
 </section>
@@ -1757,6 +1972,21 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <button class="sound" id="slibGo" type="button">📂 Partitur Saya</button>
     <button class="start snewbig" id="snewBig" type="button">＋ Bikin Partitur Baru</button>
   </div>
+  <!-- Tampilan HP (diminta Ferdi, Nov 2026): Partitur = halaman demi halaman (awal -> Partitur Saya / Bikin baru -> isi data lagu -> menulis). Hanya di HP (body.mob). -->
+  <button class="mOnly sound mScCont" id="mscCont" type="button"><span>✏️ Lanjutkan menulis</span><small id="mscContT"></small></button>
+  <h2 class="mOnly mStepT" id="mscFormT">📝 Isi data lagu</h2>
+  <div class="mOnly mEdBar" id="mscBar">
+    <button class="chip" id="mscBack" type="button" aria-label="Kembali ke menu Partitur">◀</button>
+    <button class="mEdInfo" id="mscInfo" type="button" aria-label="Ubah data lagu"><b id="mscInfoT"></b><small id="mscInfoS"></small></button>
+    <button class="chip" id="mscSave" type="button" aria-label="Simpan">💾</button>
+  </div>
+  <div class="mOnly mModeBar" id="mscMode">
+    <div class="seg" role="group" aria-label="Mode menulis atau merekam">
+      <button type="button" data-mm="write" aria-pressed="true">✍️ Tulis</button>
+      <button type="button" data-mm="rec" aria-pressed="false">⏺ Rekam</button>
+    </div>
+    <button class="chip" id="mscLy" type="button" aria-pressed="false" hidden>📝 Lirik</button>
+  </div>
 
   <div class="card sinfo" id="sinfo">
     <div class="sinfoHead">
@@ -1794,6 +2024,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     </div>
     </div>
   </div>
+  <div class="mOnly mNav" id="mscFormNav"><button class="sound" id="mscFormBack" type="button">◀ Kembali</button><button class="start" id="mscFormGo" type="button">Mulai menulis ▶</button></div>
 
   <div class="sside">
   <div class="stl">Tampilan</div>
@@ -1883,6 +2114,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <input id="slyIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" maxlength="24" placeholder="Pilih not, lalu ketik suku kata…">
     <button class="chip" id="slyPrev" type="button" aria-label="Not sebelumnya">◀</button>
     <button class="chip" id="slyNext" type="button" aria-label="Not berikutnya">▶</button>
+    <button class="chip mOnly" id="slyInfo" type="button" aria-label="Keterangan cara menulis lirik" aria-pressed="false">ⓘ</button>
   </div>
   <p class="slyHint" id="slyHint" hidden>Spasi / Enter = not berikutnya · akhiri dengan "-" untuk suku kata bersambung (mis. "Tu-") · hapus semua lalu Backspace = kembali</p>
   <div class="chips" id="snav" role="group" aria-label="Pindah kursor" style="margin:0">
@@ -1892,6 +2124,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <button class="chip" type="button" id="sright" style="flex:1" aria-label="Kursor ke kanan">Kanan ▶</button>
   </div>
   <div class="card skb"><div class="kb" id="kb"></div>
+    <div class="mOnly mNotePanel" id="mscPanel"></div>
     <div class="row skbOct">
       <div class="stepper" style="flex:1;justify-content:space-between">
         <button class="ctl" id="soctdn" type="button" aria-label="Oktaf lebih rendah">−</button>
@@ -1902,6 +2135,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
   </div>
 
+  <button class="mOnly chip mMore" id="mscMore" type="button" aria-expanded="false">🧰 Alat lainnya (dinamika, bagian lagu, salin-tempel…) ▾</button>
   <div class="spanel">
   <div class="stl">Putar &amp; rekam</div>
   <div class="card srec" id="srecCard">
@@ -4942,6 +5176,7 @@ function syncPracticeOpts(){
     ih.textContent='Not ditulis satu oktaf lebih tinggi dari bunyi gitar, seperti partitur gitar pada umumnya. Contoh: C tengah (C4) dipetik di senar 5 fret 3.';
     ih.hidden=false;
   } else { ih.textContent=''; ih.hidden=true; }
+  if(typeof mob!=='undefined' && mob.init) mobLatRender();
 }
 /* Pilihan tangga nada: di not angka ditulis "Tangga nada A (1 = A)", di not balok "♯♯♯ (A)". */
 function buildKeySelect(){
@@ -5513,7 +5748,9 @@ function openNewDialog(){ $('#snewOv').hidden=false; try{ $('#snewOv .instList b
 function chooseNewInst(inst){
   $('#snewOv').hidden=true;
   if(isPremium()) newScore(inst); else startTrial(inst);
+  if(mob.on){ mob.ph='form'; mob.formFrom='home'; mob.rec=false; }
   if(app.tab==='lib') goTab('score');
+  if(mob.on) mobScGo('form','home');
 }
 /* ringkasan info lagu (judul · instrumen · birama · tempo) */
 function syncInfoSum(){
@@ -5548,6 +5785,7 @@ var STUDIO_Q='(min-width:1280px) and (min-height:640px)', szoom=parseFloat(store
 function studioOn(){ return app.tab==='score' && !!(window.matchMedia && matchMedia(STUDIO_Q).matches); }
 function drawEditorScore(host,s,fn,cur,ed){
   if(studioOn() && host.id==='sscore') return drawStudioScore(host,s,fn,cur,ed);
+  if(host.id==='sscore'){ if(mob.on) return mobDrawPaper(host,s,fn,cur,ed); if(host.style.maxHeight) host.style.maxHeight=''; }
   var Wpx=Math.max(240,Math.floor(host.clientWidth||320));
   var sc = Wpx>600 ? Math.min(1.9,Wpx/520) : 1, min = Wpx>600 ? 1 : 0.85;
   var target=Math.max(360,(window.innerHeight||800)*0.7), svg, h;
@@ -5602,6 +5840,7 @@ function renderScoreView(){
   $('#splay').disabled = !hasPitch(s.notes) && !(s.grand && hasPitch(s.lh)) && !playing;
   $('#sprac').disabled = !s.notes.some(function(n){return n.m!==null;});
   syncLyUI();
+  if(mob.on) mobScRender();
 }
 /* ===== Lirik (diminta Ferdi, Okt 2026): tiap not (bukan rehat / sambungan tie) bisa diberi satu suku kata, n.ly.
    Akhiran "-" = suku kata bersambung ke not berikutnya. Kotak #slyIn tampil untuk partitur vokal (atau yang sudah berlirik). */
@@ -6406,6 +6645,7 @@ function openScoreById(id){
   curId=id; lastRealId=id; sel=-1; editing=false; selA=-1; saveScores();
   buildScoreList(); syncScoreFields(); applyEntitlements();
   goTab('score'); renderScoreView();
+  if(mob.on){ mob.rec=false; mobScGo('edit'); }
 }
 function libCount(sc){ return buildMeasures(sc.notes||[],sc.ts[0]*4/sc.ts[1]).length; }
 function renderLib(){
@@ -6847,6 +7087,7 @@ function recNoteOn(n){ if(rec.open[n]) recNoteOff(n); rec.open[n]={m:n,s:recBeat
 function recNoteOff(n){ var o=rec.open[n]; if(!o) return; delete rec.open[n]; o.e=recBeatNow(); rec.ev.push(o); rec.dirty=true; }
 function recStart(){
   if(!isPremium()){ showPaywall('rekam'); return; }
+  if(mob.on && !mob.rec){ mob.rec=true; mobScRender(); }   /* HP: Rekam = panel nilai not disembunyikan */
   if(!midiConnected()){
     midiConnect(true);
     $('#srecMsg').className='hint'; $('#srecMsg').textContent='Sambungkan piano MIDI dulu: colok keyboard MIDI (di HP pakai kabel OTG), tunggu tulisan "Terhubung", lalu tekan Rekam lagi.';
@@ -7853,6 +8094,7 @@ async function readWithAI(){
 /* Tombol "kembali" Android: dari Latihan/Partitur kembali ke Tuner dulu, baru keluar aplikasi. */
 function goTab(name){
   if(name===app.tab) return;
+  if(history.state && history.state.sub){ mob.leave=name; try{ history.back(); return; }catch(e){ mob.leave=null; } }
   try{
     if(name==='tuner'){ if(history.state && history.state.tab) { history.back(); return; } }
     else if(history.state && history.state.tab) history.replaceState({tab:name},'');
@@ -7862,6 +8104,10 @@ function goTab(name){
 }
 window.addEventListener('popstate',function(e){
   if(pr.playing){ try{ history.pushState({tab:app.tab,play:1},''); }catch(e){} askQuit(); return; }
+  if(mob.leave){ var nx=mob.leave; mob.leave=null; goTab(nx); return; }
+  /* HP: Kembali = langkah / halaman sebelumnya di menu yang sama */
+  if(mob.on && e.state && e.state.tab===app.tab && !e.state.sub && mobDepth()>0){ mobBack(); if(mobDepth()>0) mobSubPush(); return; }
+  mob.toHome=false;
   showTab((e.state && e.state.tab) || 'tuner');
 });
 
@@ -8188,6 +8434,7 @@ function showTab(name){
   if(name==='lib') renderLib();
   if(name==='arcade'){ if(prevTab!=='arcade'){ arc.step=1; arc.sub=null; arcEnter(); } renderArcade(); }
   else if(prevTab==='arcade') arcLeave();
+  mobOnTab(name,prevTab);
 }
 function setMode(m){
   app.mode=m; store.set('yg.mode',m);
@@ -8200,12 +8447,158 @@ function setMode(m){
 /* Dock (pratinjau + Mulai): terpaku di bawah saat layar tegak; di layar miring/pendek ikut halaman di dalam menu Latihan */
 function placeDock(){
   var dock=$('#pdock'), tab=$('#tab-latih'); if(!dock||!tab) return;
-  var landShort = window.matchMedia && matchMedia('(orientation:landscape) and (max-height:600px)').matches;
+  var landShort = mob.on || (window.matchMedia && matchMedia('(orientation:landscape) and (max-height:600px)').matches);
   if(landShort){ if(dock.parentNode!==tab || tab.lastElementChild!==dock) tab.appendChild(dock); }
   else if(dock.parentNode!==document.body) document.body.appendChild(dock);
   dock.classList.toggle('inflow',!!landShort);
   document.body.classList.toggle('dock-inflow',!!landShort);
   if((app.tab==='latih'||app.tab==='arcade') && pr.score) renderPractice();
+}
+
+/* ===================== Tampilan HP (diminta Ferdi, Nov 2026) =====================
+   Hanya saat layar HP (MOB_Q: lebar < 900 px atau tinggi <= 600 px) -> body.mob. PC/laptop TIDAK berubah.
+   - Latihan: langkah demi langkah (mob.lst 1..5) seperti Arcade, tanpa gulir.
+   - Partitur: halaman demi halaman (mob.ph: 'home' = Partitur Saya / Bikin baru, 'form' = isi data lagu, 'edit' = menulis).
+     Di 'edit': kertas partitur maks ±3 baris (gulir di dalam kertas), kursor menempel di bawah kertas, nilai not/titik/rehat/
+     jenis notasi menempel di bawah tuts piano (#mscPanel), mode Tulis | Rekam (Rekam menyembunyikan panel nilai not),
+     tombol 📝 Lirik di atas kertas (keterangan lirik disembunyikan, tombol ⓘ).
+   - Tombol Kembali Android: langkah/halaman sebelumnya dulu (state history {sub:1}). */
+var MOB_Q='(max-width:899px), (max-height:600px)';
+var mob={on:false,init:false,lst:1,ph:'home',formFrom:'home',rec:false,ly:false,lyi:false,more:false,moved:[],leave:null,toHome:false,pcfgOpen:false,libTxt:''};
+function mobQ(){ return !!(window.matchMedia && matchMedia(MOB_Q).matches); }
+function mobMove(on){
+  if(on){
+    if(mob.moved.length) return;
+    var panel=$('#mscPanel'), list=[$('#shand'),$('#sdur'),$('#sdot').parentNode,$('#sdelnote').parentNode,$('#sundo').parentNode,$('#tab-score .sside > .seg')];
+    list.forEach(function(el){ if(!el) return; mob.moved.push({el:el,p:el.parentNode,n:el.nextSibling}); panel.appendChild(el); });
+  } else {
+    for(var i=mob.moved.length-1;i>=0;i--){ var m=mob.moved[i]; m.p.insertBefore(m.el,m.n); }
+    mob.moved=[];
+  }
+}
+function mobApply(){
+  var on=mobQ(); if(mob.init && on===mob.on) return;
+  mob.init=true; mob.on=on; document.body.classList.toggle('mob',on);
+  mobMove(on);
+  var cfg=$('#pcfg'), lb=$('#libBack');
+  if(on){ mob.pcfgOpen=cfg.open; cfg.open=true; mob.libTxt=lb.textContent; lb.textContent='◀ Kembali'; }
+  else { cfg.open=mob.pcfgOpen; if(mob.libTxt) lb.textContent=mob.libTxt; }
+  placeDock(); mobLatRender(); mobScRender();
+  if(app.tab==='score') renderScoreView();
+}
+function mobDepth(){ return app.tab==='latih' ? mob.lst-1 : (app.tab==='score' ? (mob.ph==='home'?0:1) : 0); }
+function mobSubPush(){ if(!mob.on) return; try{ if(!(history.state && history.state.sub)) history.pushState({tab:app.tab,sub:1},''); }catch(e){} }
+function mobBack(){
+  if(app.tab==='latih'){ if(mob.lst>1) mobLatGo(mob.lst-1,true); }
+  else if(app.tab==='score'){
+    if(mob.toHome){ mob.toHome=false; mobScGo('home',null,true); }
+    else if(mob.ph==='form' && mob.formFrom==='edit') mobScGo('edit',null,true);
+    else if(mob.ph!=='home') mobScGo('home',null,true);
+  }
+}
+/* tombol Kembali di layar: lewat history supaya tombol Kembali Android tetap sejalan */
+function mobBackBtn(){ if(history.state && history.state.sub){ try{ history.back(); return; }catch(e){} } mobBack(); }
+function mobOnTab(name,prev){
+  if(name==='latih' && prev!=='latih') mob.lst = (pr.src==='score' && (prev==='score'||prev==='lib')) ? 5 : 1;
+  if(name==='score' && prev!=='score' && prev!=='lib'){ mob.ph='home'; mob.more=false; }
+  mobLatRender(); mobScRender();
+}
+/* ---- Latihan ---- */
+function mobLatGo(n,noPush){
+  mob.lst=clamp(n,1,5); mobLatRender(); window.scrollTo(0,0);
+  if(mob.lst>1 && !noPush) mobSubPush();
+  if(mob.lst===5 && pr.score && !pr.playing) renderPractice();
+}
+function mobLatRender(){
+  var t=$('#tab-latih'); if(!t) return;
+  t.setAttribute('data-lst',String(mob.lst)); t.setAttribute('data-src',pr.src);
+  if(!mob.on) return;
+  var t4={random:'⚙️ Atur soal acak',custom:'🎯 Pilih nada sendiri',score:'📄 Pilih partitur'}[pr.src]||'⚙️ Atur latihan';
+  $('#mlatT').textContent=['','🎹 Pilih alat musik','🎼 Pilih jenis notasi','🎯 Pilih mode latihan',t4,'▶ Siap berlatih'][mob.lst];
+  $('#mlatDots').innerHTML=[1,2,3,4,5].map(function(n){ return '<i class="'+(n<=mob.lst?'on':'')+(n===mob.lst?' cur':'')+'"></i>'; }).join('');
+  $$('#mlatSrc [data-msrc]').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-msrc')===pr.src?'true':'false'); });
+  var ss=$('#mlatScore'), h=scores.map(function(x){ return '<option value="'+x.id+'"></option>'; }).join('');
+  if(ss._h!==h){ ss._h=h; ss.innerHTML=h; scores.forEach(function(x,i){ ss.options[i].textContent=x.title||'Tanpa judul'; }); }
+  if(!curIsTrial()) ss.value=curId;
+}
+/* ---- Partitur ---- */
+function mobScGo(ph,from,noPush){
+  if(ph==='form'){ mob.formFrom=from||'home'; setInfoOpen(true); }
+  else setInfoOpen(false);
+  mob.ph=ph; mobScRender(); window.scrollTo(0,0);
+  if(ph!=='home' && !noPush) mobSubPush();
+  if(ph==='edit' && app.tab==='score') renderScoreView();
+}
+function mobScRender(){
+  var t=$('#tab-score'); if(!t) return;
+  t.setAttribute('data-mph',mob.ph);
+  t.classList.toggle('mrec',mob.rec); t.classList.toggle('mly',mob.ly); t.classList.toggle('mlyi',mob.lyi); t.classList.toggle('mmore',mob.more);
+  if(!mob.on) return;
+  var s=curScore(), ttl=s.title||'Tanpa judul';
+  $('#mscContT').textContent=ttl; $('#mscInfoT').textContent=ttl;
+  $('#mscInfoS').textContent=[(INST[s.inst]&&INST[s.inst].name)||'', s.ts[0]+'/'+s.ts[1], 'tempo '+(s.bpm||90)].filter(Boolean).join(' · ');
+  $$('#mscMode [data-mm]').forEach(function(b){ b.setAttribute('aria-pressed',(b.getAttribute('data-mm')==='rec')===mob.rec?'true':'false'); });
+  var ly=$('#mscLy'); ly.hidden=$('#slyRow').hidden; ly.setAttribute('aria-pressed',mob.ly?'true':'false');
+  $('#slyInfo').setAttribute('aria-pressed',mob.lyi?'true':'false');
+  var mo=$('#mscMore'); mo.setAttribute('aria-expanded',mob.more?'true':'false');
+  mo.textContent='🧰 Alat lainnya (dinamika, bagian lagu, salin-tempel…) '+(mob.more?'▴':'▾');
+  $('#mscFormGo').textContent = mob.formFrom==='edit' ? '✓ Selesai' : 'Mulai menulis ▶';
+  $('#mscFormBack').hidden = mob.formFrom==='edit';
+}
+/* kertas partitur di HP: ukuran not tetap (tidak diperkecil untuk lagu panjang), tinggi kertas maks ±3 baris -> gulir di dalamnya */
+function mobDrawPaper(host,s,fn,cur,ed){
+  var Wpx=Math.max(240,Math.floor(host.clientWidth||320)), sc = Wpx>600 ? Math.min(1.4,Wpx/520) : 1, st=host.scrollTop;
+  drawScore.force=sc; try{ drawScore(host,s,app.mode,fn,cur,ed); } finally { drawScore.force=0; }
+  var svg=host.firstChild, L=drawScore.lay, h=svg ? parseFloat(svg.getAttribute('height'))||0 : 0;
+  if(L && L.H && h){
+    var k=h/L.H, lim=((L.n>3?0:L.head)+Math.min(3,L.n)*L.sysH+8)*k;
+    lim=Math.min(lim,Math.max(170,(window.innerHeight||640)*0.5));
+    host.style.maxHeight=Math.ceil(lim)+'px';
+  }
+  host.scrollTop=st;
+  var c=host.querySelector('.caret, g.st-blink, g.st-cur, g.st-sel');
+  if(c && c.getBoundingClientRect && host.scrollHeight>host.clientHeight+2){
+    var b=c.getBoundingClientRect(), r=host.getBoundingClientRect();
+    if(b.top<r.top+4 || b.bottom>r.bottom-4) host.scrollTop+= (b.top+b.bottom)/2-(r.top+r.bottom)/2;
+  }
+}
+function bindMobile(){
+  /* Latihan */
+  $('#mlatNext').addEventListener('click',function(){
+    if(mob.lst===4 && pr.src==='custom' && pr.custNotes.length<2){ var hh=$('#custHint'); hh.classList.remove('tapPop'); void hh.offsetWidth; hh.classList.add('tapPop'); return; }
+    mobLatGo(mob.lst+1);
+  });
+  $('#mlatBack').addEventListener('click',mobBackBtn);
+  $$('#mlatSrc [data-msrc]').forEach(function(b){ b.addEventListener('click',function(){
+    var ps=$('#psrc'); ps.value=b.getAttribute('data-msrc'); ps.dispatchEvent(new Event('change',{bubbles:true}));
+    mobLatRender();
+  }); });
+  $('#mlatScore').addEventListener('change',function(e){
+    var sl=$('#slist'); sl.value=e.target.value; sl.dispatchEvent(new Event('change',{bubbles:true}));
+    syncPracticeOpts(); newRound(); mobLatRender();
+  });
+  /* Partitur */
+  $('#mscCont').addEventListener('click',function(){ mobScGo('edit'); });
+  $('#mscBack').addEventListener('click',mobBackBtn);
+  $('#mscInfo').addEventListener('click',function(){ mobScGo('form','edit'); });
+  $('#mscSave').addEventListener('click',function(){ $('#ssave').click(); });
+  $('#mscFormBack').addEventListener('click',mobBackBtn);
+  $('#mscFormGo').addEventListener('click',function(){ if(mob.formFrom==='edit') mobBackBtn(); else mobScGo('edit'); });
+  $$('#mscMode [data-mm]').forEach(function(b){ b.addEventListener('click',function(){
+    var r=b.getAttribute('data-mm')==='rec';
+    if(!r && rec.on) recStop();
+    mob.rec=r; mobScRender();
+  }); });
+  $('#mscLy').addEventListener('click',function(){ mob.ly=!mob.ly; mobScRender(); });
+  $('#slyInfo').addEventListener('click',function(){ mob.lyi=!mob.lyi; mobScRender(); });
+  $('#mscMore').addEventListener('click',function(){ mob.more=!mob.more; mobScRender(); });
+  /* Menu bawah "Partitur" saat sudah di Partitur = kembali ke halaman awal Partitur */
+  $('.tabs button[data-tab="score"]').addEventListener('click',function(){
+    if(!mob.on || app.tab!=='score' || mob.ph==='home') return;
+    if(history.state && history.state.sub){ mob.toHome=true; try{ history.back(); return; }catch(e){ mob.toHome=false; } }
+    mobScGo('home',null,true);
+  });
+  if(window.matchMedia){ var mq=matchMedia(MOB_Q); if(mq.addEventListener) mq.addEventListener('change',mobApply); else if(mq.addListener) mq.addListener(mobApply); }
 }
 var rsT=0;
 window.addEventListener('resize',function(){
@@ -8239,6 +8632,7 @@ bindSettings();
 bindMetro();
 bindPremium();
 setMode(app.mode);
+bindMobile(); mobApply();
 try{
   /* Pintasan dari ikon (tekan lama ikon FerTune): ?tab=latih / ?tab=score */
   var qTab=(location.search.match(/[?&]tab=(tuner|latih|arcade|score|set)/)||[])[1];
