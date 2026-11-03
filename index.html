@@ -1424,6 +1424,21 @@ body.mob #tab-tuner #start{order:5;margin-top:auto}
 body.mob.on-tuner .app>.foot{position:fixed;left:0;right:0;bottom:calc(3px + env(safe-area-inset-bottom,0px));margin:0;font-size:11px;z-index:5}
 body.mob #tab-tuner .met{flex:1}
 body.mob #tab-tuner .met .metGoRow{margin-top:auto}
+/* Tuner selalu muat di atas menu: mobFitTuner menambah tingkat rapat tc1 → tc2 → tc3 sampai tombol mikrofon tidak
+   tertutup menu (HP dengan huruf besar / tombol sistem Android membuat ruang lebih sempit; keluhan Ferdi, Nov 2026) */
+body.mob #tab-tuner:is(.tc1,.tc2,.tc3) .scale,body.mob #tab-tuner:is(.tc1,.tc2,.tc3) #hint{display:none}
+body.mob #tab-tuner.tc3 .reader .noteRow{height:40px !important}
+body.mob #tab-tuner.tc3 #noteName{font-size:40px !important}
+body.mob #tab-tuner.tc3 .head{--pg:34px !important;--pgap:3px !important}
+body.mob #tab-tuner.tc3 .tmseg button{padding:7px 8px;font-size:16px}
+body.mob #tab-tuner.tc3 #tuneSel select{padding:5px 10px}
+body.mob #tab-tuner.tc3 .verdict{font-size:15px !important;min-height:20px !important}
+body.mob #tab-tuner.tc3 .met .metBig{font-size:52px}
+body.mob #tab-tuner.tc3 .met .metCard{padding:8px 12px}
+body.mob #tab-tuner:is(.tc2,.tc3) .met{gap:8px}
+body.mob #tab-tuner:is(.tc2,.tc3) .met .row .sound{padding:8px 6px}
+body.mob #tab-tuner:is(.tc2,.tc3) .met .metBig{font-size:clamp(48px,10vh,80px)}
+body.mob #tab-tuner.tc2,body.mob #tab-tuner.tc3{gap:6px}
 @media (max-height:700px){
   body.mob #tab-tuner{gap:6px}
   body.mob #tab-tuner .reader .noteRow{height:50px}
@@ -1437,6 +1452,16 @@ body.mob #tab-tuner .met .metGoRow{margin-top:auto}
   body.mob #tab-tuner .row .ctl{width:36px;height:36px}
   body.mob #tab-tuner #start{padding:11px}
 }
+  body.mob #tab-tuner:is(.tc2,.tc3) .reader .noteRow{height:50px}
+  body.mob #tab-tuner:is(.tc2,.tc3) #noteName{font-size:48px}
+  body.mob #tab-tuner:is(.tc2,.tc3) .readout{min-height:18px;font-size:14px}
+  body.mob #tab-tuner:is(.tc2,.tc3) .track{height:30px;margin-top:4px}
+  body.mob #tab-tuner:is(.tc2,.tc3) .verdict{font-size:17px;min-height:22px;margin-top:4px}
+  body.mob #tab-tuner:is(.tc2,.tc3) .head{--pg:40px;--pgap:4px}
+  body.mob #tab-tuner:is(.tc2,.tc3) #hint{display:none}
+  body.mob #tab-tuner:is(.tc2,.tc3) .row .stepper{padding:3px 8px}
+  body.mob #tab-tuner:is(.tc2,.tc3) .row .ctl{width:36px;height:36px}
+  body.mob #tab-tuner:is(.tc2,.tc3) #start{padding:11px}
 /* --- Latihan: langkah demi langkah tanpa gulir (1 alat musik, 2 notasi, 3 mode latihan, 4 pengaturan, 5 siap main) --- */
 body.mob.on-latih .app{padding-top:10px;padding-bottom:0}
 body.mob #tab-latih{padding-bottom:0;gap:14px}
@@ -1589,6 +1614,9 @@ body.mob #tab-score .skbOct .ctl{width:36px;height:36px}
 .mMore{width:100%;padding:11px 8px;font-size:14.5px}
 body.mob #tab-score:not(.mmore) #stools{display:none !important}
 body.mob #tab-score.mrec :is(#mscPanel,#mscMore,#stools){display:none !important}
+body.mob #tab-score:not(.mrec) #smidiW{display:none !important}
+body.mob #srecCard>#smidiW{display:block;width:100%;margin-top:10px;flex:none}
+body.mob .mNotePanel #sdelnote{flex:1 !important}
 body.mob #tab-score:not(.mrec) :is(.srecSet:has(#sgrid),#smidiStat){display:none !important}
 body.mob.on-lib #libBack{flex:.8}
 
@@ -2257,6 +2285,7 @@ body.mob #snewOv .instList b{font-size:20px}
       </ol>
       <p>Pilih jenis <b>tuning</b> (Standar, Drop D, dan lainnya) dan <b>A4</b> acuan di bagian pengaturan tuner. Tombol nada acuan membunyikan nada senar sebagai pembanding.</p>
       <div class="tip">Tips: cari tempat yang tenang dan petik satu senar sekali, biarkan bunyi sampai habis.</div>
+      <div class="tip">Saat menyetem senar A (atau E rendah), senar E tinggi bisa ikut berdengung. Kalau jarum terasa tidak tenang, tempelkan jari pelan di senar lain supaya diam.</div>
       <p><b>Metronome:</b> tekan tombol <b>Metronome</b> di bagian atas menu Tuner. Atur tempo dengan geseran, tombol −/+, atau <b>Ketuk tempo</b> (ketuk beberapa kali mengikuti irama). Pilih birama (2/4, 3/4, 4/4, 6/8), lalu tekan <b>Mulai</b>. Ketukan pertama bunyinya lebih tinggi.</p>
     </div></details>
     <details class="helpitem"><summary>Gratis dan Premium</summary><div class="hb">
@@ -3263,6 +3292,10 @@ function toggleLock(i){
 }
 function tunerData(f,now){
   if(now<toneUntil) return;
+  /* petikan baru = volume melonjak (dipakai untuk membedakan senar lain yang dipetik vs nada "bayangan") */
+  var rmsNow=mic.lastRms||0;
+  if(rmsNow>0.02 && rmsNow>(tn.rPrev||0)*1.5) tn.attackT=now;
+  tn.rPrev=rmsNow;
   /* Penyaring suara bukan gitar: harus cukup keras, nadanya murni (yin.conf kecil), dan dalam rentang senar gitar
      (mode kunci: dekat senar yang dipilih). Selain itu diabaikan, jarum tidak ikut loncat. */
   if(f && (mic.lastRms<0.015 || yin.conf>0.1)) f=null;
@@ -3275,6 +3308,12 @@ function tunerData(f,now){
     if(hist.length>=3){
       var hs=hist.slice().sort(function(a,b){return a-b;}), hm=hs[hs.length>>1];
       if(Math.abs(1200*Math.log2(f/hm))>100){
+        /* Nada "bayangan" (×2, ×3, ×4 atau ½ dari nada yang sedang distem) TANPA petikan baru = bukan senar lain, tapi
+           harmonik / senar lain yang ikut bergetar. Contoh (keluhan Ferdi, Nov 2026): senar A (110 Hz) — nada ke-3-nya
+           330 Hz = senar E tinggi, yang ikut berdengung; setelah ±2-3 detik A melemah dan tuner dulu meloncat ke E.
+           Diabaikan (tidak memperbarui lastHit), jadi jarum tidak loncat; kalau A sudah habis, tampilan kembali kosong. */
+        var rt=f/hm, kk=[2,3,4,0.5].filter(function(k){ return Math.abs(1200*Math.log2(rt/k))<50; })[0];
+        if(kk && now-(tn.attackT||0)>300) return;
         /* nada menyimpang: baru dianggap ganti nada kalau 3x berturut-turut konsisten, kalau tidak dibuang sebagai gangguan */
         if(tn.odd && Math.abs(1200*Math.log2(f/tn.odd))<60) tn.oddN++; else { tn.odd=f; tn.oddN=1; }
         if(tn.oddN<3){ lastHit=now; return; }
@@ -8367,6 +8406,7 @@ function setTunerMode(mode){
   $$('#tmSeg button').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-tm')===mode?'true':'false'); });
   if(metro) metRender();
   window.scrollTo(0,0);
+  if(typeof mob!=='undefined' && mob.init) mobFitTuner();
 }
 function bindMetro(){
   $$('#tmSeg button').forEach(function(b){ b.addEventListener('click',function(){ setTunerMode(b.getAttribute('data-tm')); }); });
@@ -8471,6 +8511,9 @@ function mobMove(on){
     if(mob.moved.length) return;
     var panel=$('#mscPanel'), list=[$('#shand'),$('#sdur'),$('#sdot').parentNode,$('#sdelnote').parentNode,$('#sundo').parentNode,$('#tab-score .sside > .seg')];
     list.forEach(function(el){ if(!el) return; mob.moved.push({el:el,p:el.parentNode,n:el.nextSibling}); panel.appendChild(el); });
+    /* MIDI ON/OFF hanya di mode Rekam (diminta Ferdi, Nov 2026): pindah ke kartu rekam, di bawah baris Sambungkan/Putar/Rekam */
+    var mw=$('#smidiW'), rc=$('#srecCard'), r1=rc && rc.querySelector('.row');
+    if(mw && r1){ mob.moved.push({el:mw,p:mw.parentNode,n:mw.nextSibling}); r1.parentNode.insertBefore(mw,r1.nextSibling); }
   } else {
     for(var i=mob.moved.length-1;i>=0;i--){ var m=mob.moved[i]; m.p.insertBefore(m.el,m.n); }
     mob.moved=[];
@@ -8483,6 +8526,18 @@ function mobMeasure(){
   var t=$('.tabs'), r=t && t.getBoundingClientRect(), vh=window.innerHeight||640, root=document.documentElement.style;
   root.setProperty('--mVh',vh+'px');
   if(r && r.height>0) root.setProperty('--mBot',Math.max(0,Math.round(vh-r.top))+'px');
+  mobFitTuner();
+}
+/* Tuner HP: rapatkan bertahap sampai tombol "Aktifkan mikrofon" berada di atas menu bawah */
+function mobFitTuner(){
+  var t=$('#tab-tuner'); if(!t) return;
+  t.classList.remove('tc1','tc2','tc3');
+  if(!mob.on || app.tab!=='tuner') return;
+  var vh=window.innerHeight||640, r=$('.tabs').getBoundingClientRect(), lim=(r.height>0?r.top:vh)-4;
+  var last=function(){ var a=$('#tunerPane').hidden ? $('#metGo') : $('#start'); return a.getBoundingClientRect().bottom+window.scrollY; };
+  t.style.minHeight='0';   /* ukur tinggi isi sebenarnya (tanpa ruang kosong pendorong tombol ke bawah) */
+  for(var lv=1; lv<=3 && last()>lim+1; lv++) t.classList.add('tc'+lv);
+  t.style.minHeight='';
 }
 function mobApply(){
   mobMeasure();
@@ -8611,6 +8666,7 @@ function bindMobile(){
   window.addEventListener('resize',mobApply);
   if(window.visualViewport) visualViewport.addEventListener('resize',mobMeasure);
   setTimeout(mobMeasure,300); setTimeout(mobMeasure,1500);
+  try{ document.fonts.ready.then(mobMeasure); }catch(e){}
   if(window.matchMedia){ var mq=matchMedia(MOB_Q); if(mq.addEventListener) mq.addEventListener('change',mobApply); else if(mq.addListener) mq.addListener(mobApply); }
 }
 var rsT=0;
