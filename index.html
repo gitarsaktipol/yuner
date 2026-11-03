@@ -1410,8 +1410,8 @@ body.mob .tabs{bottom:calc(22px + env(safe-area-inset-bottom,0px))}
 .mNav>button{flex:1;padding:13px 8px;font-size:17px}
 .mNav>.start{flex:1.4}
 /* --- Tuner: tombol Tuner | Metronome besar, Aktifkan mikrofon tepat di atas menu, Kebijakan Privasi paling bawah --- */
-body.mob.on-tuner .app{padding-top:10px;padding-bottom:100px}
-body.mob #tab-tuner{min-height:calc(100vh - 110px);min-height:calc(100dvh - 110px)}
+body.mob.on-tuner .app{padding-top:10px;padding-bottom:calc(var(--mBot,94px) + 8px)}
+body.mob #tab-tuner{min-height:calc(var(--mVh,100vh) - var(--mBot,94px) - 18px)}
 body.mob #tab-tuner header{flex-wrap:wrap;row-gap:clamp(6px,1.2vh,10px)}
 body.mob #tab-tuner .tmseg{flex:1 1 100%;padding:5px;gap:6px;border-radius:22px}
 body.mob #tab-tuner .tmseg button{flex:1;padding:clamp(9px,1.7vh,14px) 8px;font-size:clamp(17px,2.6vh,20px);font-weight:800;border-radius:18px}
@@ -1438,10 +1438,10 @@ body.mob #tab-tuner .met .metGoRow{margin-top:auto}
   body.mob #tab-tuner #start{padding:11px}
 }
 /* --- Latihan: langkah demi langkah tanpa gulir (1 alat musik, 2 notasi, 3 mode latihan, 4 pengaturan, 5 siap main) --- */
-body.mob.on-latih .app{padding-top:10px;padding-bottom:100px}
-body.mob #tab-latih{padding-bottom:0;gap:14px;min-height:calc(100vh - 110px);min-height:calc(100dvh - 110px)}
+body.mob.on-latih .app{padding-top:10px;padding-bottom:0}
+body.mob #tab-latih{padding-bottom:0;gap:14px}
 body.mob #tab-latih>header{display:none}
-body.mob #mlatNav{order:20;margin-top:auto}
+body.mob #mlatNav{position:fixed;z-index:5;left:50%;transform:translateX(-50%);width:min(424px,calc(100% - 36px));bottom:calc(var(--mBot,94px) + 10px)}
 body.mob #tab-latih[data-lst="1"] #mlatBack{display:none}
 body.mob #tab-latih[data-lst="5"] #mlatNext{display:none}
 body.mob #tab-latih:not([data-lst="1"]) #pinst,body.mob #tab-latih:not([data-lst="1"]) #pinsthint,
@@ -1496,7 +1496,7 @@ body.mob #tab-latih .pdock.inflow{margin:0}
   body.mob .mNav>button{padding:9px 8px;font-size:15px}
 }
 /* tinggi menu Latihan tetap = satu layar: tombol Kembali/Lanjut selalu terlihat; isi yang panjang mengecil / digulir di dalam kartunya */
-body.mob #tab-latih{height:calc(100vh - 110px);height:calc(100dvh - 110px)}
+body.mob #tab-latih{height:calc(var(--mVh,100vh) - var(--mBot,94px) - 84px)}
 body.mob #tab-latih>*{flex:none}
 body.mob #tab-latih #pcfg{flex:0 1 auto;min-height:0;overflow:auto}
 body.mob #tab-latih[data-lst="5"] #pcfg{flex:none;overflow:visible}
@@ -1524,14 +1524,14 @@ body.mob #tab-score>header .sel{display:none}
 body.mob #tab-score[data-mph="home"]>:not(header):not(.snewRow):not(#mscCont):not(#sfree),
 body.mob #tab-score[data-mph="form"]>:not(#mscFormT):not(#sinfo):not(#mscFormNav),
 body.mob #tab-score[data-mph="edit"]>:is(header,.snewRow,#mscCont,#mscFormT,#sinfo,#mscFormNav){display:none !important}
-body.mob #tab-score[data-mph="home"]{min-height:calc(100vh - 120px);min-height:calc(100dvh - 120px)}
+
 body.mob #tab-score .snewRow{flex-direction:column;gap:18px;margin-top:8px}
 body.mob #tab-score .snewRow>button{flex:none;padding:clamp(20px,5vh,40px) 14px;font-size:22px;border-radius:26px}
 body.mob #tab-score .snewRow #slibGo::before{content:"";display:none}
 .mScCont{flex:none !important;display:flex;flex-direction:column;align-items:center;gap:2px;--c:var(--pLemon);--cd:var(--dLemon);padding:14px}
 .mScCont small{font-size:13px;font-weight:600;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 body.mob #tab-score[data-mph="form"] .sinfoHead{display:none}
-body.mob #tab-score[data-mph="form"] #mscFormNav{position:sticky;bottom:calc(98px + env(safe-area-inset-bottom,0px));z-index:3;padding-top:4px}
+body.mob #tab-score[data-mph="form"] #mscFormNav{position:sticky;bottom:calc(var(--mBot,94px) + 6px);z-index:3;padding-top:4px}
 body.mob #tab-score .slyLbl{display:none}
 body.mob #mscFormNav>.start{flex:1.7;font-size:16px}
 body.mob #mscFormNav>.sound{font-size:16px}
@@ -8434,7 +8434,7 @@ function showTab(name){
   if(name==='lib') renderLib();
   if(name==='arcade'){ if(prevTab!=='arcade'){ arc.step=1; arc.sub=null; arcEnter(); } renderArcade(); }
   else if(prevTab==='arcade') arcLeave();
-  mobOnTab(name,prevTab);
+  mobOnTab(name,prevTab); mobMeasure();
 }
 function setMode(m){
   app.mode=m; store.set('yg.mode',m);
@@ -8476,13 +8476,23 @@ function mobMove(on){
     mob.moved=[];
   }
 }
+/* ukuran nyata layar & menu bawah (HP Android "edge-to-edge" menggambar aplikasi sampai ke balik tombol sistem,
+   jadi menu bawah naik setinggi tombol sistem; 100dvh saja tidak cukup — tombol Lanjut dulu tertutup menu, Nov 2026) */
+function mobMeasure(){
+  if(!mob.on) return;
+  var t=$('.tabs'), r=t && t.getBoundingClientRect(), vh=window.innerHeight||640, root=document.documentElement.style;
+  root.setProperty('--mVh',vh+'px');
+  if(r && r.height>0) root.setProperty('--mBot',Math.max(0,Math.round(vh-r.top))+'px');
+}
 function mobApply(){
+  mobMeasure();
   var on=mobQ(); if(mob.init && on===mob.on) return;
   mob.init=true; mob.on=on; document.body.classList.toggle('mob',on);
   mobMove(on);
   var cfg=$('#pcfg'), lb=$('#libBack');
   if(on){ mob.pcfgOpen=cfg.open; cfg.open=true; mob.libTxt=lb.textContent; lb.textContent='◀ Kembali'; }
   else { cfg.open=mob.pcfgOpen; if(mob.libTxt) lb.textContent=mob.libTxt; }
+  mobMeasure();
   placeDock(); mobLatRender(); mobScRender();
   if(app.tab==='score') renderScoreView();
 }
@@ -8598,6 +8608,9 @@ function bindMobile(){
     if(history.state && history.state.sub){ mob.toHome=true; try{ history.back(); return; }catch(e){ mob.toHome=false; } }
     mobScGo('home',null,true);
   });
+  window.addEventListener('resize',mobApply);
+  if(window.visualViewport) visualViewport.addEventListener('resize',mobMeasure);
+  setTimeout(mobMeasure,300); setTimeout(mobMeasure,1500);
   if(window.matchMedia){ var mq=matchMedia(MOB_Q); if(mq.addEventListener) mq.addEventListener('change',mobApply); else if(mq.addListener) mq.addListener(mobApply); }
 }
 var rsT=0;
