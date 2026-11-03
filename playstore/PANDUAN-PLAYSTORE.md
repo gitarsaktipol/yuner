@@ -55,7 +55,7 @@ Alamat lama `gitarsakti.com/fertune/` dialihkan ke sini.
    | Theme color / Background color | `#FFF7FB` |
    | Status bar / Nav bar color | `#FFF7FB` |
    | Display mode | Standalone |
-   | Orientation | Portrait |
+   | Orientation | **Default / Any** ⚠️ JANGAN "Portrait": layar berlatih & Arcade harus bisa mendatar |
    | Signing key | **Create new** (isi nama & organisasi) |
 
 4. Tekan **Download**. Kamu mendapat file ZIP berisi:
@@ -70,6 +70,8 @@ Alamat lama `gitarsakti.com/fertune/` dialihkan ke sini.
 
 1. **https://play.google.com/console** → **Buat aplikasi**.
 2. Nama: `FerTune: Tuner & Belajar Not`, bahasa default: **Indonesia**, jenis: **Aplikasi**, **Gratis**.
+   (Gratis + langganan Premium di dalam aplikasi nanti. Aplikasi gratis BOLEH menambah pembelian dalam aplikasi kapan saja;
+   yang tidak bisa hanyalah mengubah aplikasi gratis menjadi aplikasi berbayar di muka.)
 3. Buka **Rilis → Pengujian → Pengujian tertutup** (atau **Pengujian internal** untuk mencoba sendiri dulu),
    buat rilis, upload file `.aab` dari langkah 3.
 4. Saat ditanya **Penandatanganan aplikasi oleh Play**, pilih **gunakan** (disarankan).
@@ -115,7 +117,7 @@ Tanpa langkah ini aplikasi tetap jalan, tapi di bagian atas akan terlihat **bari
 | Audio mikrofon | Diproses di perangkat, tidak dikumpulkan/dikirim → tidak dicantumkan sebagai data terkumpul |
 
 > ✅ **Hapus akun sudah ada.** Google Play meminta jalur hapus akun di dalam aplikasi *dan* tautan web. Keduanya tersedia:
-> tombol **Hapus akun** di kartu akun menu Partitur, dan halaman web `https://fertune.gitarsakti.com/hapus-akun.html`.
+> tombol **Hapus akun** di kartu akun menu Pengaturan, dan halaman web `https://fertune.gitarsakti.com/hapus-akun.html`.
 > Isi tautan web itu di Play Console → Konten aplikasi → Keamanan data → *Hapus akun*.
 > Aturannya: akun yang punya pesanan tidak dihapus (riwayat pembelian wajib disimpan), hanya data FerTune di cloud;
 > akun tanpa pesanan dihapus seluruhnya. Sebutkan ini di formulir Play Console bila ditanya data yang dipertahankan.
@@ -132,6 +134,23 @@ Setelah uji tertutup selesai: **Rilis → Produksi → Buat rilis baru** → pak
 → **Kirim untuk ditinjau**. Peninjauan bisa memakan beberapa hari.
 
 ---
+
+## Versi gratis & Premium (diputuskan Ferdi, Nov 2026)
+
+| Gratis | Premium |
+|---|---|
+| Tuner & Metronome | — |
+| Latihan mode **Acak**, tangga nada **C** saja | Semua tangga nada, Custom, Partitur saya |
+| Arcade **stage A** (A1–A9) | Huruf B–Z (225 level) |
+| Partitur: lagu contoh dilihat & diputar, **Coba menulis 2 birama** | Menulis tanpa batas, simpan, cloud, impor/ekspor, rekam, akor |
+
+- Aturannya sudah ada di kode (`TRIAL_BARS`, `freeKeyOk`, `freeLetterOk` di `index.html`), tapi **belum aktif**
+  (`GATING_ON=false`): selama pembayaran Google Play belum dipasang, semua fitur terbuka dan kartu harga
+  disembunyikan. Uji tampilan versi gratis: buka `?gating=1`.
+- **Sebelum menyalakan:** (1) buat produk langganan di Play Console → Monetisasi → Langganan,
+  (2) pasang Play Billing lewat Digital Goods API di TWA (PWABuilder: centang *Play Billing*),
+  (3) verifikasi pembelian di server (Edge Function Supabase), (4) ganti `isPremium()`, set `GATING_ON=true`,
+  hapus "Mode uji". Ini pekerjaan tersendiri setelah aplikasi ada di Play Console.
 
 ## Memperbarui aplikasi setelah terbit
 
