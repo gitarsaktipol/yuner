@@ -5361,59 +5361,10 @@ function maryLamb(){
   return {id:'b-mary',title:'Contoh: Mary Had a Little Lamb',ts:[4,4],bpm:100,clef:'treble',
     notes:P.map(function(m,i){ return {m:m,d:D[i],a:''}; })};
 }
-/* Lagu contoh ketiga (diminta Ferdi, Okt 2026): KJ 432 "Jika Padaku Ditanyakan" (1b), Do = F, 4/4, dibaca dari gambar not angka.
-   Birama gantung "0 1 3 4" diawali rehat 2 ketuk (FerTune belum punya birama gantung). Angka 1 = F4. */
-function kj432(){
-  var R=null, q=0.5, L=[
-    [R,2],[R,q],[65,q],[69,q],[70,q],
-    [72,q],[72,q],[72,q],[72,q],[74,q],[72,q],[69,q],[70,q],
-    [72,q],[72,q],[72,q],[72,q],[74,q],[72,q],[69,q],[67,q],
-    [65,q],[65,q],[65,q],[69,q],[72,q],[69,q],[67,q],[65,q],
-    [74,1],[74,1],[R,q],[70,q],[70,q],[69,q],
-    [67,q],[74,q],[74,1],[R,q],[70,q],[69,q],[67,q],
-    [65,q],[72,q],[72,1],[R,q],[69,q],[67,q],[65,q],
-    [67,q],[67,q],[67,q],[69,q],[70,q],[72,q],[74,q],[64,q],
-    [65,2]];
-  var notes=L.map(function(x){ return {m:x[0],d:x[1],a:x[0]===70?'b':''}; });
-  notes[notes.length-1].bl='end';
-  return {id:'b-kj432',title:'KJ 432 – Jika Padaku Ditanyakan',sub:'Kidung Jemaat (1b)',ts:[4,4],bpm:90,clef:'treble',key:-1,inst:'vocal',notes:notes};
-}
-/* Lagu contoh kelima (diminta Ferdi, Okt 2026): "Cicak-Cicak di Dinding" (A.T. Mahmud), Do = C, 2/4, Andante, vokal + lirik;
-   dibaca Claude dari FOTO partitur not angka kiriman Ferdi. Akor iringan (C/G/F) & tanda staccato belum dimasukkan. */
-function cicak(){
-  var R=null, D={1:60,2:62,3:64,4:65,5:67,6:69,7:71,8:72};
-  var mel=[5,3, 5,3, 3,4, 5,0, 4,2, 4,6, 5,4, 3,0, 6,4, 6,4, 6,7, 8,0, 8,0, 3,5, 4,2, 1,0];
-  var ly=['Ci-','cak','ci-','cak','di','din-','ding','','di-','am','di-','am','me-','ra-','yap','',
-          'Da-','tang','se-','e-','kor','nya-','muk','','hap!','','la-','lu','di-','tang-','kap',''];
-  var notes=mel.map(function(x,i){ var n={m:x?D[x]:R,d:1,a:''}; if(x && ly[i]) n.ly=ly[i]; return n; });
-  notes[0].dyn='f';
-  notes[notes.length-1].bl='end';
-  return {id:'b-cicak',title:'Cicak-Cicak di Dinding',comp:'A.T. Mahmud',tempoTxt:'Andante',ts:[2,4],bpm:84,clef:'treble',key:0,inst:'vocal',notes:notes};
-}
-/* Lagu contoh keempat (diminta Ferdi, Okt 2026): Canon in D (Pachelbel, arr. lemontart), piano 2 tangan, D mayor (2♯),
-   birama 1–20 = halaman 1 PDF kiriman Ferdi (dibaca Claude). Tangan kiri: pola arpeggio ⅛ D–A | Bm–F#m | G–D | G–A. */
-function canonD(){
-  function sp(m){ var pc=m%12; return (pc===6||pc===1)?'#':''; }
-  function N(ms,d){ if(ms===null) return {m:null,d:d,a:''}; ms=[].concat(ms); var n={m:ms[0],d:d,a:sp(ms[0])};
-    if(ms.length>1) n.x=ms.slice(1).map(function(m){ return {m:m,a:sp(m)}; }); return n; }
-  var P=[[50,57,62,66,45,52,57,61],[47,54,59,62,42,49,54,57],[43,50,55,59,38,45,50,54],[43,50,55,59,45,52,57,61]], lh=[], i;
-  for(i=0;i<20;i++) P[i%4].forEach(function(m){ lh.push(N(m,0.5)); });
-  lh[0].dyn='p'; lh[32].dyn='mp'; lh[96].dyn='mf';
-  var R=[
-    [null,4],[null,4],[null,4],[null,4],
-    [78,2],[76,2],[74,2],[73,2],[71,2],[69,2],[71,2],[73,2],
-    [[69,74,78],2],[[69,73,76],2],[[66,71,74],2],[[66,69,73],2],[[62,67,71],2],[[62,66,69],2],[[62,67,71],2],[[64,69,73],2],
-    [74,1],[78,1],[81,1],[79,1],
-    [78,1],[74,1],[78,1.5],[76,0.5],
-    [74,1],[71,1],[74,1],[78,1],
-    [79,1],[83,1],[81,1.5],[79,0.5],
-    [[74,78],1],[78,1],[[76,81],1],[79,1],
-    [[74,78],1],[74,1],[[73,78],1.5],[76,0.5],
-    [[71,74],1],[71,1],[[69,74],1],[78,1],
-    [[71,79],1],[83,1],[[73,81],1.5],[79,0.5]];
-  return {id:'b-canon',title:'Canon in D',sub:'Johann Pachelbel · arr. lemontart (birama 1–20)',ts:[4,4],bpm:100,clef:'treble',key:2,inst:'piano',grand:true,
-    notes:R.map(function(x){ return N(x[0],x[1]); }), lh:lh};
-}
+/* Lagu contoh berhak cipta (KJ 432, Cicak-Cicak di Dinding, Canon in D aransemen lemontart) DIHAPUS untuk Play Store
+   (diputuskan Ferdi, Nov 2026). Salinan yang dulu ditambahkan ke HP pemain dibuang saat aplikasi dibuka (DROP_IDS) dan tidak
+   diambil lagi dari cloud. Lagu contoh yang tersisa: Twinkle & Mary Had a Little Lamb (milik umum). */
+var DROP_IDS={'b-kj432':1,'b-canon':1,'b-cicak':1};
 var flashIdx={}, flashT=0, alertT=0, editing=false, pitchSel=0, autoAdv=(store.get('yg.autoAdv','0')==='1'), midiChordT=0;
 var scores=[], curId=null, sel=-1, playing=false, playIdx=-1, playTimers=[], playGain=null, playMet=null;
 var smet = store.get('yg.smet','1')!=='0';   /* metronom saat Putar & Rekam (ketukan pembuka rekam selalu bunyi) */
@@ -5424,9 +5375,9 @@ function loadScores(){
   if(!Array.isArray(scores)||!scores.length) scores=[twinkle()];
   /* Lagu contoh kedua: ditambahkan sekali ke daftar (di paling atas). */
   if(!scores.some(function(x){return x.id==='b-mary';}) && store.get('yg.seedMary','')!=='1'){ scores.unshift(maryLamb()); store.set('yg.seedMary','1'); store.set('yg.scores',JSON.stringify(scores)); }
-  if(!scores.some(function(x){return x.id==='b-canon';}) && store.get('yg.seedCanon','')!=='1'){ scores.unshift(canonD()); store.set('yg.seedCanon','1'); store.set('yg.scores',JSON.stringify(scores)); }
-  if(!scores.some(function(x){return x.id==='b-cicak';}) && store.get('yg.seedCicak','')!=='1'){ scores.unshift(cicak()); store.set('yg.seedCicak','1'); store.set('yg.scores',JSON.stringify(scores)); }
-  if(!scores.some(function(x){return x.id==='b-kj432';}) && store.get('yg.seedKj432','')!=='1'){ scores.unshift(kj432()); store.set('yg.seedKj432','1'); store.set('yg.scores',JSON.stringify(scores)); }
+  var nDrop=scores.length; scores=scores.filter(function(x){ return !DROP_IDS[x.id]; });
+  if(!scores.length) scores=[twinkle()];
+  if(scores.length!==nDrop) store.set('yg.scores',JSON.stringify(scores));
   curId=store.get('yg.curScore',scores[0].id);
   if(!scores.some(function(s){return s.id===curId;})) curId=scores[0].id;
   var t=Date.now(), mig=false;
@@ -5489,7 +5440,7 @@ var CLOUD={url:'https://addtajuxfoxcaezmkice.supabase.co',key:'sb_publishable_zc
 var snap={}, tomb={}, sb=null, sbUser=null, pushT=0, syncing=false, syncAgain=false, syncMsg='', authWatched=false, lastSyncAt=0;
 try{ tomb=JSON.parse(store.get('yg.tomb','{}'))||{}; }catch(e){ tomb={}; }
 function scoreJson(s){ var c={}; for(var k in s){ if(k!=='updatedAt') c[k]=s[k]; } return JSON.stringify(c); }
-function isSample(s){ return (s.id==='s0' && scoreJson(s)===scoreJson(twinkle())) || (s.id==='b-mary' && scoreJson(s)===scoreJson(maryLamb())) || (s.id==='b-kj432' && scoreJson(s)===scoreJson(kj432())) || (s.id==='b-canon' && scoreJson(s)===scoreJson(canonD())) || (s.id==='b-cicak' && scoreJson(s)===scoreJson(cicak())); }
+function isSample(s){ return (s.id==='s0' && scoreJson(s)===scoreJson(twinkle())) || (s.id==='b-mary' && scoreJson(s)===scoreJson(maryLamb())); }
 function initSnap(){ snap={}; scores.forEach(function(s){ snap[s.id]=scoreJson(s); }); }
 function trackChanges(){
   var now=Date.now(), seen={};
@@ -5559,6 +5510,7 @@ function pushDirty(uid,synced){
 function mergeCloud(rows,synced){
   var changed=false;
   rows.forEach(function(r){
+    if(DROP_IDS[r.id]) return;                 // lagu contoh berhak cipta yang sudah dihapus: jangan dipulihkan dari cloud
     var ts=Date.parse(r.updated_at)||0, i=-1, k;
     for(k=0;k<scores.length;k++) if(scores[k].id===r.id){ i=k; break; }
     var loc=i>=0?scores[i]:null, locTs=loc?(loc.updatedAt||0):(tomb[r.id]||0);
