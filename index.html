@@ -2228,7 +2228,7 @@ body.mob #snewOv .instList b{font-size:20px}
   <div class="card" id="planCard">
     <h2 class="sh" id="planTitle">Langganan <span class="planChip" id="planChip">Gratis</span></h2>
     <div class="plancols">
-      <div class="plancol"><b>Gratis</b><ul><li>Tuner</li><li>Metronome</li><li>Latihan Acak (tangga nada C)</li><li>Arcade stage A</li><li>Lagu contoh di Partitur (lihat &amp; putar)</li><li>Coba menulis 2 birama</li></ul></div>
+      <div class="plancol"><b>Gratis</b><ul><li>Tuner</li><li>Metronome</li><li>Latihan Acak (tangga nada C)</li><li>Arcade stage A</li><li>Lagu contoh di Partitur (lihat &amp; putar)</li><li>Coba menulis 4 birama</li></ul></div>
       <div class="plancol"><b>Premium ⭐</b><ul><li>Semua fitur Gratis</li><li>Arcade huruf B–Z</li><li>Semua tangga nada, Custom &amp; Partitur saya</li><li>Tulis, edit &amp; simpan partitur</li><li>Impor/ekspor MIDI, akor, gambar</li><li>Simpan di cloud</li></ul></div>
     </div>
     <p class="price"><b>Rp45.000 / bulan</b> atau <b>Rp350.000 / tahun</b><br><small>Gratis 1 bulan pertama, bisa dibatalkan kapan saja. Harga final tampil di Google Play saat berlangganan.</small></p>
@@ -2291,7 +2291,7 @@ body.mob #snewOv .instList b{font-size:20px}
       <p><b>Metronome:</b> tekan tombol <b>Metronome</b> di bagian atas menu Tuner. Atur tempo dengan geseran, tombol −/+, atau <b>Ketuk tempo</b> (ketuk beberapa kali mengikuti irama). Pilih birama (2/4, 3/4, 4/4, 6/8), lalu tekan <b>Mulai</b>. Ketukan pertama bunyinya lebih tinggi.</p>
     </div></details>
     <details class="helpitem" id="helpPrem"><summary>Gratis dan Premium</summary><div class="hb">
-      <p><b>Gratis:</b> Tuner, Metronome, Latihan mode Acak dengan tangga nada C, Arcade stage A (A1–A9), lagu contoh di Partitur (bisa dilihat dan diputar), dan mode <b>Coba menulis</b> (maksimal 2 birama 4/4, tidak bisa disimpan).</p>
+      <p><b>Gratis:</b> Tuner, Metronome, Latihan mode Acak dengan tangga nada C, Arcade stage A (A1–A9), lagu contoh di Partitur (bisa dilihat dan diputar), dan mode <b>Coba menulis</b> (maksimal 4 birama 4/4, tidak bisa disimpan).</p>
       <p><b>Premium:</b> semua fitur lain, yaitu Arcade huruf B–Z, semua tangga nada, Latihan Custom dan Partitur saya, menulis dan menyimpan partitur, impor/ekspor MIDI, akor, impor gambar, dan simpan di cloud.</p>
       <p>Lihat harga dan cara berlangganan di bagian <b>Langganan</b> (paling atas halaman Pengaturan ini).</p>
     </div></details>
@@ -5654,7 +5654,7 @@ function bindAcct(){
 var GATING_ON=false;
 /* Batas versi gratis (diputuskan Ferdi, Nov 2026): Tuner & Metronome gratis; Latihan hanya mode Acak dengan tangga nada C;
    Arcade hanya huruf/stage A (A1-A9); Partitur: lagu contoh dilihat & diputar + "Coba menulis" maks TRIAL_BARS birama. */
-var TRIAL_BARS=2;
+var TRIAL_BARS=4;
 function freeKeyOk(k){ return isPremium() || (k|0)===0; }
 function freeLetterOk(L){ return isPremium() || (L|0)===0; }
 function gatingOn(){ return GATING_ON || store.get('yg.gating','0')==='1'; }
@@ -5665,7 +5665,7 @@ function canEditNow(){ return isPremium() || curIsTrial(); }
 function advOn(){ return autoAdv || curIsTrial(); }   /* mode coba selalu maju otomatis (satu not per ketukan, bukan akor) */
 function guardEdit(){
   if(canEditNow()) return true;
-  showScoreAlert('Versi gratis: lagu contoh hanya bisa dilihat dan diputar. Tekan "Coba menulis" untuk mencoba (maks 2 birama), atau berlangganan Premium untuk mengedit.');
+  showScoreAlert('Versi gratis: lagu contoh hanya bisa dilihat dan diputar. Tekan "Coba menulis" untuk mencoba (maks 4 birama), atau berlangganan Premium untuk mengedit.');
   return false;
 }
 var PW={
@@ -5675,7 +5675,7 @@ var PW={
   custom:['Latihan Custom khusus Premium','Pilih sendiri nada yang keluar di latihan. Berlangganan Premium untuk membukanya.'],
   score:['Partitur saya khusus Premium','Berlatih dari lagu yang kamu tulis sendiri. Berlangganan Premium untuk membukanya.'],
   simpan:['Menyimpan khusus Premium','Di mode coba, tulisanmu tidak disimpan. Berlangganan Premium untuk menyimpan dan menulis tanpa batas.'],
-  trial4:['Batas mode coba: 2 birama','Berlangganan Premium untuk menulis tanpa batas, menyimpan, dan mengekspor.'],
+  trial4:['Batas mode coba: 4 birama','Berlangganan Premium untuk menulis tanpa batas, menyimpan, dan mengekspor.'],
   impor:['Impor MIDI khusus Premium','Ubah file MIDI jadi partitur. Berlangganan Premium untuk membukanya.'],
   audio:['Impor lagu khusus Premium','Ubah rekaman lagu jadi MIDI dan partitur. Berlangganan Premium untuk membukanya.'],
   word:['Ekspor PDF khusus Premium','Simpan partiturmu sebagai PDF siap cetak (A4/F4). Berlangganan Premium untuk membukanya.'],

@@ -142,7 +142,7 @@ Setelah uji tertutup selesai: **Rilis → Produksi → Buat rilis baru** → pak
 | Tuner & Metronome | — |
 | Latihan mode **Acak**, tangga nada **C** saja | Semua tangga nada, Custom, Partitur saya |
 | Arcade **stage A** (A1–A9) | Huruf B–Z (225 level) |
-| Partitur: lagu contoh dilihat & diputar, **Coba menulis 2 birama** | Menulis tanpa batas, simpan, cloud, impor/ekspor, rekam, akor |
+| Partitur: lagu contoh dilihat & diputar, **Coba menulis 4 birama** | Menulis tanpa batas, simpan, cloud, impor/ekspor, rekam, akor |
 
 - Aturannya sudah ada di kode (`TRIAL_BARS`, `freeKeyOk`, `freeLetterOk` di `index.html`), tapi **belum aktif**
   (`GATING_ON=false`): selama pembayaran Google Play belum dipasang, semua fitur terbuka dan kartu harga
