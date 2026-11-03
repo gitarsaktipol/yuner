@@ -1617,6 +1617,8 @@ body.mob #tab-score.mrec :is(#mscPanel,#mscMore,#stools){display:none !important
 body.mob #tab-score:not(.mrec) #smidiW{display:none !important}
 body.mob #srecCard>#smidiW{display:block;width:100%;margin-top:10px;flex:none}
 body.mob .mNotePanel #sdelnote{flex:1 !important}
+#parcLetter button.lvLock{opacity:.45;filter:grayscale(.6)}
+#parcLetter button.lvLock::after{content:"🔒";position:absolute;right:1px;top:-1px;font-size:10px}
 body.mob #tab-score:not(.mrec) :is(.srecSet:has(#sgrid),#smidiStat){display:none !important}
 body.mob.on-lib #libBack{flex:.8}
 
@@ -2226,8 +2228,8 @@ body.mob #snewOv .instList b{font-size:20px}
   <div class="card" id="planCard">
     <h2 class="sh" id="planTitle">Langganan <span class="planChip" id="planChip">Gratis</span></h2>
     <div class="plancols">
-      <div class="plancol"><b>Gratis</b><ul><li>Tuner</li><li>Metronome</li><li>Latihan mode Acak</li><li>Lagu contoh di Partitur (lihat &amp; putar)</li><li>Coba menulis 4 birama</li></ul></div>
-      <div class="plancol"><b>Premium ⭐</b><ul><li>Semua fitur Gratis</li><li>Arcade, Custom &amp; Partitur saya</li><li>Tulis, edit &amp; simpan partitur</li><li>Impor/ekspor MIDI, akor, gambar</li><li>Simpan di cloud</li></ul></div>
+      <div class="plancol"><b>Gratis</b><ul><li>Tuner</li><li>Metronome</li><li>Latihan Acak (tangga nada C)</li><li>Arcade stage A</li><li>Lagu contoh di Partitur (lihat &amp; putar)</li><li>Coba menulis 2 birama</li></ul></div>
+      <div class="plancol"><b>Premium ⭐</b><ul><li>Semua fitur Gratis</li><li>Arcade huruf B–Z</li><li>Semua tangga nada, Custom &amp; Partitur saya</li><li>Tulis, edit &amp; simpan partitur</li><li>Impor/ekspor MIDI, akor, gambar</li><li>Simpan di cloud</li></ul></div>
     </div>
     <p class="price"><b>Rp45.000 / bulan</b> atau <b>Rp350.000 / tahun</b><br><small>Gratis 1 bulan pertama, bisa dibatalkan kapan saja. Harga final tampil di Google Play saat berlangganan.</small></p>
     <button class="start" id="planBuy" type="button" disabled>Segera tersedia di Google Play</button>
@@ -2288,9 +2290,9 @@ body.mob #snewOv .instList b{font-size:20px}
       <div class="tip">Saat menyetem senar A (atau E rendah), senar E tinggi bisa ikut berdengung. Kalau jarum terasa tidak tenang, tempelkan jari pelan di senar lain supaya diam.</div>
       <p><b>Metronome:</b> tekan tombol <b>Metronome</b> di bagian atas menu Tuner. Atur tempo dengan geseran, tombol −/+, atau <b>Ketuk tempo</b> (ketuk beberapa kali mengikuti irama). Pilih birama (2/4, 3/4, 4/4, 6/8), lalu tekan <b>Mulai</b>. Ketukan pertama bunyinya lebih tinggi.</p>
     </div></details>
-    <details class="helpitem"><summary>Gratis dan Premium</summary><div class="hb">
-      <p><b>Gratis:</b> Tuner, Metronome, Latihan mode Acak, lagu contoh di Partitur (bisa dilihat dan diputar), dan mode <b>Coba menulis</b> (maksimal 4 birama 4/4, tidak bisa disimpan).</p>
-      <p><b>Premium:</b> semua fitur lain, yaitu Arcade, Latihan Custom dan Partitur saya, menulis dan menyimpan partitur, impor/ekspor MIDI, akor, impor gambar, dan simpan di cloud.</p>
+    <details class="helpitem" id="helpPrem"><summary>Gratis dan Premium</summary><div class="hb">
+      <p><b>Gratis:</b> Tuner, Metronome, Latihan mode Acak dengan tangga nada C, Arcade stage A (A1–A9), lagu contoh di Partitur (bisa dilihat dan diputar), dan mode <b>Coba menulis</b> (maksimal 2 birama 4/4, tidak bisa disimpan).</p>
+      <p><b>Premium:</b> semua fitur lain, yaitu Arcade huruf B–Z, semua tangga nada, Latihan Custom dan Partitur saya, menulis dan menyimpan partitur, impor/ekspor MIDI, akor, impor gambar, dan simpan di cloud.</p>
       <p>Lihat harga dan cara berlangganan di bagian <b>Langganan</b> (paling atas halaman Pengaturan ini).</p>
     </div></details>
     <details class="helpitem"><summary>Latihan baca not</summary><div class="hb">
@@ -4528,6 +4530,12 @@ function holdRelease(n){
   renderPractice();
 }
 function advanceArcadeLevel(){
+  /* versi gratis: selesai A9 = tetap di A9, tawarkan Premium (permainan dijeda) */
+  if(pr.arcSub>=9 && !freeLetterOk(pr.arcLetter+1)){
+    pr.arcSub=9; arcSave();
+    setTimeout(function(){ if(pr.playing && !pr.paused) askQuit(); showPaywall('arcadeDone'); },2600);
+    return;
+  }
   pr.arcSub++;
   if(pr.arcSub>9){ pr.arcSub=1; pr.arcLetter=Math.min(pr.arcLetter+1,ARC_LETTERS.length-1); }
   arcSave();
@@ -5224,6 +5232,7 @@ function buildKeySelect(){
     var nm=KEY_NAMES[String(k)], lab;
     if(app.mode==='num') lab='Tangga nada '+nm+' (1 = '+nm+')';
     else lab = k===0 ? 'Tanpa ♯/♭ (C)' : (new Array(Math.abs(k)+1).join(k>0?'♯':'♭'))+'  ('+nm+')';
+    if(!freeKeyOk(k)) lab+=' ⭐';
     h+='<option value="'+k+'">'+lab+'</option>';
   });
   if(sel.innerHTML!==h) sel.innerHTML=h;
@@ -5277,12 +5286,14 @@ function bindPracticeOpts(){
     pr.src=v; syncPracticeOpts(); newRound();
   });
   $('#pkey').addEventListener('change',function(e){
-    pr.key=clamp(parseInt(e.target.value,10)||0,-7,7); store.set('yg.key',String(pr.key));
+    var kv=clamp(parseInt(e.target.value,10)||0,-7,7);
+    if(pr.src!=='score' && !freeKeyOk(kv)){ e.target.value=String(pr.key); showPaywall('tangga'); return; }
+    pr.key=kv; store.set('yg.key',String(pr.key));
     if(pr.src==='score') return;
     if(pr.src==='custom' && pr.score){ pr.score.key=pr.key; pr.score.notes.forEach(function(n){ if(n.m!==null) n.a=spellIn(n.m,pr.key); }); newRound(true); }
     else newRound();
   });
-  $('#parcLetter').addEventListener('click',function(e){ var b=e.target.closest('button[data-l]'); if(!b) return; pr.arcLetter=parseInt(b.getAttribute('data-l'),10); arcSave(); syncPracticeOpts(); renderArcade(); });
+  $('#parcLetter').addEventListener('click',function(e){ var b=e.target.closest('button[data-l]'); if(!b) return; if(!freeLetterOk(parseInt(b.getAttribute('data-l'),10))){ showPaywall('arcade'); return; } pr.arcLetter=parseInt(b.getAttribute('data-l'),10); arcSave(); syncPracticeOpts(); renderArcade(); });
   $('#parcSub').addEventListener('click',function(e){ var b=e.target.closest('button[data-s]'); if(!b) return; pr.arcSub=parseInt(b.getAttribute('data-s'),10); arcSave(); syncPracticeOpts(); renderArcade(); });
   $('#custMeasures').addEventListener('change',function(e){ pr.custMeasures=parseInt(e.target.value,10); store.set('yg.custMeasures',String(pr.custMeasures)); newRound(); });
   $('#custAll').addEventListener('click',function(){ pr.custNotes=[]; for(var m=CUST_LO;m<=CUST_HI;m++) pr.custNotes.push(m); store.set('yg.custNotes',JSON.stringify(pr.custNotes)); syncPracticeOpts(); newRound(); });
@@ -5525,7 +5536,7 @@ function initCloud(){
   if(has) watchAuth().catch(function(){});
   window.addEventListener('online',function(){ syncNow(); });
   document.addEventListener('visibilitychange',function(){ if(!document.hidden&&Date.now()-lastSyncAt>30000) syncNow(); });
-  if(/(^|\.)gitarsakti\.com$/.test(location.hostname)) Array.prototype.forEach.call(document.querySelectorAll('.gsback'),function(a){ a.hidden=false; });
+  if(/(^|\.)gitarsakti\.com$/.test(location.hostname) && appSource()!=='playstore') Array.prototype.forEach.call(document.querySelectorAll('.gsback'),function(a){ a.hidden=false; });
 }
 function dirtyList(synced){
   var out=[];
@@ -5689,6 +5700,11 @@ function bindAcct(){
    - isPremium() nanti diganti pemeriksaan langganan Google Play (Digital Goods API + verifikasi server).
    ===================================================================== */
 var GATING_ON=false;
+/* Batas versi gratis (diputuskan Ferdi, Nov 2026): Tuner & Metronome gratis; Latihan hanya mode Acak dengan tangga nada C;
+   Arcade hanya huruf/stage A (A1-A9); Partitur: lagu contoh dilihat & diputar + "Coba menulis" maks TRIAL_BARS birama. */
+var TRIAL_BARS=2;
+function freeKeyOk(k){ return isPremium() || (k|0)===0; }
+function freeLetterOk(L){ return isPremium() || (L|0)===0; }
 function gatingOn(){ return GATING_ON || store.get('yg.gating','0')==='1'; }
 function isPremium(){ return !gatingOn() || store.get('yg.premTest','0')==='1'; }
 var trialScore=null, lastRealId=null;
@@ -5697,15 +5713,17 @@ function canEditNow(){ return isPremium() || curIsTrial(); }
 function advOn(){ return autoAdv || curIsTrial(); }   /* mode coba selalu maju otomatis (satu not per ketukan, bukan akor) */
 function guardEdit(){
   if(canEditNow()) return true;
-  showScoreAlert('Versi gratis: lagu contoh hanya bisa dilihat dan diputar. Tekan "Coba menulis" untuk mencoba (maks 4 birama), atau berlangganan Premium untuk mengedit.');
+  showScoreAlert('Versi gratis: lagu contoh hanya bisa dilihat dan diputar. Tekan "Coba menulis" untuk mencoba (maks 2 birama), atau berlangganan Premium untuk mengedit.');
   return false;
 }
 var PW={
-  arcade:['Arcade khusus Premium','Main game baca not dengan karakter dan level A sampai Z. Berlangganan Premium untuk membukanya.'],
+  arcade:['Huruf B sampai Z khusus Premium','Stage A (A1–A9) gratis untuk dicoba. Berlangganan Premium untuk membuka 225 level berikutnya, huruf B sampai Z.'],
+  arcadeDone:['Stage A selesai! 🎉','Hebat! Lanjutkan ke huruf B sampai Z (225 level lagi) dengan berlangganan Premium. Kamu tetap bisa mengulang stage A.'],
+  tangga:['Tangga nada lain khusus Premium','Versi gratis berlatih dengan tangga nada C (1 = C). Berlangganan Premium untuk semua tangga nada ♯ dan ♭.'],
   custom:['Latihan Custom khusus Premium','Pilih sendiri nada yang keluar di latihan. Berlangganan Premium untuk membukanya.'],
   score:['Partitur saya khusus Premium','Berlatih dari lagu yang kamu tulis sendiri. Berlangganan Premium untuk membukanya.'],
   simpan:['Menyimpan khusus Premium','Di mode coba, tulisanmu tidak disimpan. Berlangganan Premium untuk menyimpan dan menulis tanpa batas.'],
-  trial4:['Batas mode coba: 4 birama','Berlangganan Premium untuk menulis tanpa batas, menyimpan, dan mengekspor.'],
+  trial4:['Batas mode coba: 2 birama','Berlangganan Premium untuk menulis tanpa batas, menyimpan, dan mengekspor.'],
   impor:['Impor MIDI khusus Premium','Ubah file MIDI jadi partitur. Berlangganan Premium untuk membukanya.'],
   audio:['Impor lagu khusus Premium','Ubah rekaman lagu jadi MIDI dan partitur. Berlangganan Premium untuk membukanya.'],
   word:['Ekspor PDF khusus Premium','Simpan partiturmu sebagai PDF siap cetak (A4/F4). Berlangganan Premium untuk membukanya.'],
@@ -6034,9 +6052,9 @@ function showScoreAlert(msg,ok){
    not-not sesudahnya bergeser dan garis birama dirapikan (reflowBars). */
 var lastIns=null;
 function trialFull(s,item,bb){
-  if(!s.trial) return false;   /* mode coba: maksimal 4 birama */
+  if(!s.trial) return false;   /* mode coba: maksimal TRIAL_BARS birama */
   var tot=0; s.notes.forEach(function(n){ tot+=n.d; });
-  if(tot+item.d>4*bb+1e-6){ showPaywall('trial4'); return true; }
+  if(tot+item.d>TRIAL_BARS*bb+1e-6){ showPaywall('trial4'); return true; }
   return false;
 }
 function fillOrInsert(item,before){
@@ -6279,7 +6297,7 @@ function clipPaste(){
   if(!clip || !clip.length){ showScoreAlert('Belum ada not yang disalin. Pilih not lalu tekan Salin (Ctrl+C).'); return; }
   var s=edScore(), N=s.notes, bb=s.ts[0]*4/s.ts[1], items=cloneNotes(clip), L=0, k, tot=0;
   items.forEach(function(n){ L+=n.d; });
-  if(s.trial){ N.forEach(function(n){ tot+=n.d; }); if(tot+L>4*bb+1e-6){ showPaywall('trial4'); return; } }
+  if(s.trial){ N.forEach(function(n){ tot+=n.d; }); if(tot+L>TRIAL_BARS*bb+1e-6){ showPaywall('trial4'); return; } }
   var r=rangeOf(), ins=advOn(), i0;
   /* NYALA + pilihan: disisipkan di BELAKANG (kanan) pilihan; MATI: menimpa mulai pilihan */
   if(r){ i0 = ins ? r[1]+1 : r[0]; if(ins) while(i0<N.length && tieFrom(N,i0)) i0++; }
@@ -8153,7 +8171,7 @@ window.addEventListener('popstate',function(e){
 /* ===== Menu Arcade: pilih karakter -> alat musik -> jenis not -> PLAY ===== */
 var arc={step:1,sub:null};
 function renderArcade(){
-  var lock=!isPremium(); $('#arcLock').hidden=!lock; $('#arcDots').hidden=lock;
+  var lock=false; $('#arcLock').hidden=true; $('#arcDots').hidden=false;   /* versi gratis: Arcade terbuka, hanya huruf A (freeLetterOk) */
   [1,2,3,4,5].forEach(function(n){ $('#arcS'+n).hidden = lock || !!arc.sub || arc.step!==n; });
   $('#pNewPl').hidden = lock || arc.sub!=='new';
   $('#agRenPg').hidden = lock || arc.sub!=='ren';
@@ -8176,7 +8194,7 @@ function renderLvPick(){
   function hue(l){ return (l*47+130)%360; }
   lw.innerHTML=ARC_LETTERS.map(function(ch,l){
     var n=0; for(var k=l*9;k<l*9+9;k++) if(res[k]!=null) n++;
-    return '<button type="button" role="radio" data-l="'+l+'" style="--h:'+hue(l)+'" aria-checked="'+(l===L)+'" aria-label="Level '+ch+(n?', '+n+' dari 9 stage dimainkan':'')+'">'+ch+
+    return '<button type="button" role="radio" data-l="'+l+'" style="--h:'+hue(l)+'" aria-checked="'+(l===L)+'" aria-label="Level '+ch+(n?', '+n+' dari 9 stage dimainkan':'')+(freeLetterOk(l)?'':', Premium')+'"'+(freeLetterOk(l)?'':' class="lvLock"')+'>'+ch+
       (n?'<i><b style="width:'+Math.round(n/9*100)+'%"></b></i>':'')+(bon[l]?'<span class="cr">👑</span>':'')+'</button>';
   }).join('');
   var sb=''; for(var s=1;s<=9;s++){
@@ -8232,8 +8250,9 @@ function arcLeave(){
 }
 function arcGo(n){ arc.step=n; renderArcade(); }
 function startArcade(){
-  if(!isPremium()){ showPaywall('arcade'); return; }
-  var a=activePlayer(); pr.arcLetter=a.letter; pr.arcSub=a.sub; arcSave();
+  var a=activePlayer();
+  if(!freeLetterOk(a.letter)){ showPaywall('arcade'); arcGo(5); return; }
+  pr.arcLetter=a.letter; pr.arcSub=a.sub; arcSave();
   pr.prevSrc = pr.src==='arcade' ? 'random' : pr.src; pr.src='arcade';
   syncPracticeOpts(); newRound(); startPractice(); refreshTop(); arcMaybeIntro();
 }
@@ -8278,6 +8297,12 @@ function applyEntitlements(){
     if(o.value==='score') o.textContent='Partitur saya'+(prem?'':' ⭐');
   });
   if(!prem && (pr.src==='custom'||pr.src==='score')){ pr.src='random'; $('#psrc').value='random'; }
+  if(!prem && pr.key!==0){ pr.key=0; }
+  buildKeySelect();
+  try{ renderLvPick(); }catch(e){}
+  /* Kartu Langganan (harga) & bantuan Gratis/Premium hanya tampil saat pembatasan aktif. Selama pembayaran Google Play
+     belum dipasang (GATING_ON=false) semua fitur terbuka dan TIDAK ada harga yang ditampilkan (kebijakan Play). */
+  $('#planCard').hidden=!gatingOn(); var ph=$('#helpPrem'); if(ph) ph.hidden=!gatingOn();
   /* Partitur */
   var fb=$('#sfree');
   if(prem){ fb.hidden=true; }
@@ -8287,7 +8312,7 @@ function applyEntitlements(){
       +'<div class="row"><button class="sound" type="button" data-act="try">✏️ Coba menulis</button><button class="start" type="button" data-act="prem" style="flex:1.2;padding:9px 8px;font-size:14px">⭐ Lihat Premium</button></div>';
   } else {
     fb.hidden=false;
-    fb.innerHTML='<p><b>Mode coba:</b> maksimal <b>4 birama</b>, sukat 4/4, tidak bisa disimpan atau diekspor. Menutup aplikasi menghapusnya.</p>'
+    fb.innerHTML='<p><b>Mode coba:</b> maksimal <b>'+TRIAL_BARS+' birama</b>, sukat 4/4, tidak bisa disimpan atau diekspor. Menutup aplikasi menghapusnya.</p>'
       +'<div class="row"><button class="sound" type="button" data-act="reset">Kosongkan</button><button class="sound" type="button" data-act="back">Kembali ke lagu</button></div>'
       +'<div class="row" style="margin-top:8px"><button class="start" type="button" data-act="prem" style="padding:9px 8px;font-size:14px">⭐ Lihat Premium untuk menyimpan</button></div>';
   }
@@ -8581,7 +8606,11 @@ function mobLatRender(){
   var t4={random:'⚙️ Atur soal acak',custom:'🎯 Pilih nada sendiri',score:'📄 Pilih partitur'}[pr.src]||'⚙️ Atur latihan';
   $('#mlatT').textContent=['','🎹 Pilih alat musik','🎼 Pilih jenis notasi','🎯 Pilih mode latihan',t4,'▶ Siap berlatih'][mob.lst];
   $('#mlatDots').innerHTML=[1,2,3,4,5].map(function(n){ return '<i class="'+(n<=mob.lst?'on':'')+(n===mob.lst?' cur':'')+'"></i>'; }).join('');
-  $$('#mlatSrc [data-msrc]').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-msrc')===pr.src?'true':'false'); });
+  $$('#mlatSrc [data-msrc]').forEach(function(b){
+    var v=b.getAttribute('data-msrc'), t=b.querySelector('b');
+    b.setAttribute('aria-pressed',v===pr.src?'true':'false');
+    if(!t._t) t._t=t.textContent; t.textContent=t._t+(v==='random'||isPremium()?'':' ⭐');
+  });
   var ss=$('#mlatScore'), h=scores.map(function(x){ return '<option value="'+x.id+'"></option>'; }).join('');
   if(ss._h!==h){ ss._h=h; ss.innerHTML=h; scores.forEach(function(x,i){ ss.options[i].textContent=x.title||'Tanpa judul'; }); }
   if(!curIsTrial()) ss.value=curId;
