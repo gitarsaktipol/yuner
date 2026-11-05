@@ -664,6 +664,15 @@ body.dock-inflow .app{padding-bottom:110px}
 .aiText:not(:empty)+.aiScore{margin-top:2px}
 @media (prefers-reduced-motion:reduce){ .aiRing{animation:none;stroke-dashoffset:0} }
 .arcGame .agIntroBtn{width:auto;flex:none;align-self:center;padding:6px 16px;font-size:clamp(13px,3.8vmin,15px);margin-top:6px}
+/* percikan api not benar (okSpark) */
+.n.okFlash{filter:drop-shadow(0 0 4px #FFD23F) drop-shadow(0 0 9px #FF9248)}
+.okSpk{position:fixed;left:0;top:0;width:0;height:0;z-index:1500;pointer-events:none}
+.okSpk b{position:absolute;left:0;top:0;border-radius:50%;transform:translate(-50%,-50%) scale(.2);
+  background:radial-gradient(circle,rgba(255,243,176,.95) 0,rgba(255,210,63,.6) 35%,rgba(255,146,72,0) 70%);animation:okGlow .45s ease-out forwards}
+.okSpk i{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;box-shadow:0 0 6px currentColor;
+  animation:okFly .55s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes okGlow{ 0%{transform:translate(-50%,-50%) scale(.2);opacity:1} 100%{transform:translate(-50%,-50%) scale(1.3);opacity:0} }
+@keyframes okFly{ 0%{transform:translate(0,0) scale(1.2);opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0} }
 /* gempa saat salah di mode Arcade "Ulang dari awal" */
 .quake{animation:quake .75s cubic-bezier(.36,.07,.19,.97)}
 @keyframes quake{ 10%,90%{transform:translate(-3px,1px)} 20%,80%{transform:translate(6px,-2px)} 30%,50%,70%{transform:translate(-10px,3px) rotate(-.6deg)} 40%,60%{transform:translate(10px,-3px) rotate(.6deg)} }
@@ -4338,7 +4347,7 @@ function newRound(keep){
   });
   { var sl=$('#pstageLbl'); if(sl){ if(pr.src==='arcade'){ sl.textContent='Stage '+ARC_LETTERS[pr.arcLetter]+pr.arcSub; sl.hidden=false; } else sl.hidden=true; } }
   if(!keep) pr.retry=1;
-  pr.failing=false; pr.pendFail=null;
+  pr.failing=false; pr.pendFail=null; pr.sparked={};
   clearTimeout(endT); pr.ending=false; pr.lastPct=null; pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0; pr.lateMiss=null; pr.holds=[]; pr.holdFail={};
   pr.lastAdvanceT=0; pr.fast=false;
   pr.drawn=null; pr.lo=undefined;   /* soal baru / ejaan not bisa berubah: gambar ulang partitur & hitung ulang rentang */
@@ -5291,6 +5300,27 @@ function arcFail(){
     pr.lastMsg={t:'Percobaan ke-'+pr.retry+' — mulai dari awal',c:''}; renderPractice();
   }),1500);
 }
+/* ===== Percikan api saat not dimainkan benar (diminta Ferdi, Nov 2026): not menyala kuning keemasan + sinar,
+   bunga api memercik ke segala arah, lalu berubah hijau (st-ok). Lapisan position:fixed di <body> memakai koordinat
+   layar (getBoundingClientRect), jadi tetap pas walau layar berlatih diputar 90° lewat CSS. ===== */
+function okSpark(g){
+  try{
+    g.classList.add('okFlash'); g.style.color='#FFB020';
+    setTimeout(function(){ g.style.color=''; g.classList.remove('okFlash'); },260);
+    if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var hl=g.querySelector('rect.hl'), b=(hl||g).getBoundingClientRect();
+    if(!b.width && !b.height) return;
+    var cx=b.left+b.width/2, cy=b.top+b.height/2, sz=Math.max(18,Math.min(60,Math.min(b.width,b.height)));
+    var box=document.createElement('div'); box.className='okSpk'; box.style.left=cx+'px'; box.style.top=cy+'px';
+    var h='<b style="width:'+sz*1.6+'px;height:'+sz*1.6+'px"></b>', cols=['#FFD23F','#FF9248','#FFF3B0','#FF6FA8','#fff'];
+    for(var i=0;i<12;i++){
+      var a=i/12*Math.PI*2+Math.random()*0.4, d=sz*(0.9+Math.random()*0.9);
+      h+='<i style="--dx:'+(Math.cos(a)*d).toFixed(1)+'px;--dy:'+(Math.sin(a)*d).toFixed(1)+'px;background:'+cols[i%cols.length]+';animation-delay:'+(Math.random()*0.06).toFixed(2)+'s"></i>';
+    }
+    box.innerHTML=h; document.body.appendChild(box);
+    setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },700);
+  }catch(e){}
+}
 function whenPlaying(fn){ return function(){ if(pr.paused) pr.deferred=fn; else fn(); }; }
 function pausePlay(){
   if(pr.paused) return;
@@ -5361,7 +5391,15 @@ function renderPractice(){
     pr.pv=previewScore(sc);
     drawScore(host,pr.pv,app.mode,function(){ return ''; });
   }
-  if(pr.playing) followCur(host, redrawn);
+  if(pr.playing){
+    /* not yang baru benar: percikan api dulu, baru hijau (okSpark; sekali per not per ronde, pr.sparked) */
+    pr.sparked=pr.sparked||{};
+    host.querySelectorAll('g.st-ok[data-i]').forEach(function(g){
+      var id=parseInt(g.getAttribute('data-i'),10);
+      if(pr.marks[id]==='ok' && !pr.sparked[id]){ pr.sparked[id]=1; okSpark(g); }
+    });
+    followCur(host, redrawn);
+  }
   $('#pprebtns').hidden = !(pr.playing && !(mic.active || midiConnected()));
   var st=$('#pstatus'), t, c='';
   if(!pr.idx.length){ t = pr.src==='custom' ? 'Pilih minimal 2 nada dulu di atas.' : 'Partitur ini belum punya not. Tambahkan not di menu Partitur.'; }
