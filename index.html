@@ -664,6 +664,10 @@ body.dock-inflow .app{padding-bottom:110px}
 .aiText:not(:empty)+.aiScore{margin-top:2px}
 @media (prefers-reduced-motion:reduce){ .aiRing{animation:none;stroke-dashoffset:0} }
 .arcGame .agIntroBtn{width:auto;flex:none;align-self:center;padding:6px 16px;font-size:clamp(13px,3.8vmin,15px);margin-top:6px}
+/* gempa saat salah di mode Arcade "Ulang dari awal" */
+.quake{animation:quake .75s cubic-bezier(.36,.07,.19,.97)}
+@keyframes quake{ 10%,90%{transform:translate(-3px,1px)} 20%,80%{transform:translate(6px,-2px)} 30%,50%,70%{transform:translate(-10px,3px) rotate(-.6deg)} 40%,60%{transform:translate(10px,-3px) rotate(.6deg)} }
+@media (prefers-reduced-motion:reduce){ .quake{animation:none} }
 /* ---------- editor partitur ---------- */
 .fields{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
 .fields label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
@@ -1963,7 +1967,7 @@ body.mob #snewOv .instList b{font-size:20px}
     <div class="agReady">
       <div class="agHero"><div class="agHeroSvg" id="agHero"></div><div class="card asum" id="arcSum"></div><button class="sound agIntroBtn" id="agIntro" type="button">📖 Materi</button></div>
       <div class="agOpts">
-        <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo (garis berjalan)</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk</label></div>
+        <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo (garis berjalan)</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk</label><label>Kalau salah<select class="tpMiss" aria-label="Kalau salah"><option value="go">➡️ Lanjut, nilai berkurang</option><option value="restart">🔁 Ulang dari awal</option></select></label></div>
         <div class="agRow">
           <button class="sound agBack" id="arcBack4" type="button">◀ Kembali</button>
           <button class="sound" id="agLvBtn" type="button">🎯 Ganti level</button>
@@ -4114,6 +4118,7 @@ var pr = { got:{}, grp:{}, playing:false, inst: store.get('yg.inst','piano')==='
            key: clamp(parseInt(store.get('yg.key','0'),10)||0,-7,7),
            score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0, missStreak:0,
            lastAdvanceT:0, fast:false, paused:false,
+           missMode: store.get('yg.arcMiss','go')==='restart'?'restart':'go', retry:1,
            tempoOn: store.get('yg.tempoOn','0')==='1', bpm: clamp(parseInt(store.get('yg.bpm','70'),10)||70,30,160),
            keysOn: store.get('yg.pkeys','1')==='1', flash:null };
 var RANGES = {
@@ -4332,6 +4337,8 @@ function newRound(keep){
       t+=n.d; });
   });
   { var sl=$('#pstageLbl'); if(sl){ if(pr.src==='arcade'){ sl.textContent='Stage '+ARC_LETTERS[pr.arcLetter]+pr.arcSub; sl.hidden=false; } else sl.hidden=true; } }
+  if(!keep) pr.retry=1;
+  pr.failing=false; pr.pendFail=null;
   clearTimeout(endT); pr.ending=false; pr.lastPct=null; pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0; pr.lateMiss=null; pr.holds=[]; pr.holdFail={};
   pr.lastAdvanceT=0; pr.fast=false;
   pr.drawn=null; pr.lo=undefined;   /* soal baru / ejaan not bisa berubah: gambar ulang partitur & hitung ulang rentang */
@@ -4528,6 +4535,11 @@ function tempoLoop(now){
     if(bi<0) tpCount(String(-bi));
     else if(bi===0){ tpCount(''); pr.lastMsg=null; changed=true; }
   }
+  /* mode "ulang dari awal": not cepat yang terlewat menunggu masa tenggangnya habis dulu, baru dianggap salah */
+  if(arcStrict() && pr.pendFail!=null){
+    if(pr.marks[pr.pendFail]!=='bad') pr.pendFail=null;
+    else if(!pr.lateMiss || t>pr.lateMiss.until){ arcFail(); return; }
+  }
   /* not yang waktunya sudah lewat tanpa dibunyikan = terlewat */
   while(!pr.done && pr.pos<pr.idx.length){
     var ni=pr.idx[pr.pos];
@@ -4537,6 +4549,7 @@ function tempoLoop(now){
          quaver sering dianggap terlambat padahal dipencet benar — deteksi suara butuh waktu, garis sudah lewat). */
       pr.lateMiss = (!(midi.lastT && now-midi.lastT<2500) && prN(ni) && prN(ni).d<=0.5 && pr.pos<pr.idx.length)
         ? {ni:ni, until:tp.beat[ni]+tp.win[ni]+Math.min(0.6,Math.max(0.35,240/tp.beatMs))} : null;
+      if(arcStrict()){ if(pr.lateMiss) pr.pendFail=ni; else { arcFail(); return; } }
       if(pr.pos>=pr.idx.length){ endRound(); break; }
     } else break;
   }
@@ -4550,6 +4563,7 @@ function bindTempoUI(){
   function sync(){ $$('.tpOn').forEach(function(c){ c.checked=pr.tempoOn; }); $$('.tpBpm').forEach(function(s){ s.value=String(pr.bpm); }); }
   $$('.tpOn').forEach(function(c){ c.addEventListener('change',function(e){ pr.tempoOn=e.target.checked; store.set('yg.tempoOn',pr.tempoOn?'1':'0'); sync(); }); });
   $$('.tpBpm').forEach(function(s){ s.addEventListener('change',function(e){ pr.bpm=clamp(parseInt(e.target.value,10)||70,30,160); store.set('yg.bpm',String(pr.bpm)); sync(); }); });
+  $$('.tpMiss').forEach(function(s){ s.value=pr.missMode; s.addEventListener('change',function(e){ pr.missMode=e.target.value==='restart'?'restart':'go'; store.set('yg.arcMiss',pr.missMode); $$('.tpMiss').forEach(function(x){ x.value=pr.missMode; }); }); });
   $$('.pkOn').forEach(function(c){ c.checked=pr.keysOn; c.addEventListener('change',function(e){ pr.keysOn=e.target.checked; store.set('yg.pkeys',pr.keysOn?'1':'0'); $$('.pkOn').forEach(function(x){ x.checked=pr.keysOn; }); renderPkeys(); }); });
   sync();
 }
@@ -4590,7 +4604,7 @@ function renderPkeys(){
   if(fl){ clearTimeout(pkT); pkT=setTimeout(renderPkeys,430); }
 }
 function practiceHit(m,exact){
-  if(pr.done || pr.paused || pr.ending || !pr.idx.length || pr.pos>=pr.idx.length) return;
+  if(pr.done || pr.paused || pr.failing || pr.ending || !pr.idx.length || pr.pos>=pr.idx.length) return;
   m += instShift();
   if(!pr.t0) pr.t0=performance.now();
   var ni=pr.idx[pr.pos], ps=prPitches(ni), multi=prIds(ni).length>1;
@@ -4643,6 +4657,7 @@ function practiceHit(m,exact){
     var sk=pr.score.key||0, a = spellIn(m,sk);
     pr.lastMsg={t:'Belum tepat, yang terdengar: '+labelOf(m,a,sk),c:'bad'};
     pr.missStreak=0;
+    if(arcStrict()){ pr.flash={m:m,ok:false,t:performance.now()}; arcFail(); return; }
     /* Tetap di not yang sama; harus benar-benar dimainkan dengan benar sebelum lanjut (mode tempo: waktu terus berjalan, lanjut ke not berikutnya). */
     if(pr.tempoOn){ pr.got={}; pr.pos++; if(pr.pos>=pr.idx.length) endRound(); }
   }
@@ -4668,7 +4683,7 @@ function holdStart(ni){
   return any;
 }
 function holdRelease(n){
-  if(!pr.holds || !pr.holds.length || pr.done || pr.paused) return;
+  if(!pr.holds || !pr.holds.length || pr.done || pr.paused || pr.failing) return;
   var now=performance.now(), fail=null;
   pr.holds=pr.holds.filter(function(h){
     if(now>=h.need) return false;                        /* sudah ditahan cukup lama */
@@ -4681,6 +4696,7 @@ function holdRelease(n){
   if(!pr.holdFail[fail.step]){ pr.holdFail[fail.step]=1; if(pr.tempoOn) pr.wrong++; else pr.tries++; }
   pr.flash={m:n,ok:false,t:now};
   pr.lastMsg={t:'Dilepas terlalu cepat! Tahan tuts sampai titik terakhir not itu.',c:'bad'};
+  if(arcStrict()){ arcFail(); return; }
   renderPractice();
 }
 function advanceArcadeLevel(){
@@ -5161,6 +5177,7 @@ function endRound(){
   clearTimeout(endT); endT=setTimeout(whenPlaying(function(){ if(!pr.done){ finishRound(); renderPractice(); } }), Math.min(6000,d*60000/(pr.bpm||70)));
 }
 function finishRound(){
+  if(arcStrict() && pr.wrong>0){ arcFail(); return; }
   clearTimeout(endT); pr.ending=false;
   pr.done=true; tempoStop();
   var secs=Math.max(1,Math.round((performance.now()-pr.t0)/1000));
@@ -5243,6 +5260,37 @@ function startPractice(){
 /* JEDA (diminta Ferdi, Okt 2026: dulu tombol ✕ hanya memunculkan dialog, permainan tetap jalan — garis tempo terus
    berjalan & not jadi "Terlewat", soal berikutnya tetap muncul). Sekarang ✕ / tombol Kembali = permainan berhenti total
    sampai dipilih "Lanjutkan" (atau keluar). */
+/* ===== Arcade mode "🔁 Ulang dari awal" (diminta Ferdi, Nov 2026): salah sekali (nada salah resmi, terlewat di mode Tempo,
+   atau not panjang MIDI dilepas terlalu cepat) -> bunyi nada jatuh tajam + layar gempa + getar, lalu soal YANG SAMA diulang
+   dari not pertama (newRound(true); Tempo: "Siap? 4 3 2 1" lagi). Jadi soal hanya selesai kalau dimainkan tanpa salah (100).
+   Mode "➡️ Lanjut, nilai berkurang" (bawaan) = perilaku lama. Pilihan di kartu Tempo Arcade (.tpMiss, yg.arcMiss). ===== */
+function arcStrict(){ return pr.src==='arcade' && pr.missMode==='restart'; }
+function failSound(){
+  try{
+    var c=ac(), t=c.currentTime, o=c.createOscillator(), g=c.createGain(), o2=c.createOscillator(), g2=c.createGain();
+    o.type='sawtooth'; o.frequency.setValueAtTime(1500,t); o.frequency.exponentialRampToValueAtTime(70,t+0.75);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.22,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.8);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.85);
+    o2.type='sine'; o2.frequency.setValueAtTime(90,t+0.55); o2.frequency.exponentialRampToValueAtTime(40,t+1.05);   /* "duum" di akhir */
+    g2.gain.setValueAtTime(0.0001,t+0.55); g2.gain.exponentialRampToValueAtTime(0.5,t+0.58); g2.gain.exponentialRampToValueAtTime(0.0001,t+1.1);
+    o2.connect(g2); g2.connect(c.destination); o2.start(t+0.55); o2.stop(t+1.15);
+  }catch(e){}
+}
+function arcFail(){
+  if(pr.failing || pr.done) return;
+  pr.failing=true; pr.holds=[]; pr.lateMiss=null; pr.pendFail=null; pr.ending=false; clearTimeout(endT); tempoStop();
+  pr.retry=(pr.retry||1)+1;
+  failSound();
+  try{ if(navigator.vibrate) navigator.vibrate([90,40,140]); }catch(e){}
+  var b=$('#pboard'); if(b){ b.classList.remove('quake'); void b.offsetWidth; b.classList.add('quake'); setTimeout(function(){ b.classList.remove('quake'); },900); }
+  pr.lastMsg={t:'Salah! Ulang dari awal… 🔁',c:'bad'};
+  renderPractice();
+  setTimeout(whenPlaying(function(){
+    if(!pr.playing || !pr.failing) return;
+    pr.failing=false; newRound(true);
+    pr.lastMsg={t:'Percobaan ke-'+pr.retry+' — mulai dari awal',c:''}; renderPractice();
+  }),1500);
+}
 function whenPlaying(fn){ return function(){ if(pr.paused) pr.deferred=fn; else fn(); }; }
 function pausePlay(){
   if(pr.paused) return;
@@ -5262,7 +5310,7 @@ function resumePlay(){
 }
 function askQuit(){ if(aiOpen()){ aiEnd(); return; } if(!pr.playing) return; pausePlay(); $('#pquit').hidden=false; try{ $('#pqNo').focus(); }catch(e){} }
 function closePractice(fromPop){
-  if(aiOpen()){ ai.done=null; aiEnd(); } pr.intro=false;
+  if(aiOpen()){ ai.done=null; aiEnd(); } pr.intro=false; pr.failing=false; pr.pendFail=null;
   hideGrade(); hideHill(); tempoStop(); var tpp=$('#ptop'); if(tpp) tpp.hidden=true;
   if(!pr.playing) return;
   clearTimeout(autoT);
