@@ -3627,7 +3627,7 @@ function numSvg(n,x,yb,i,cls,bm,key,sp){
          tidak tampak seperti not ½ (diminta Ferdi, Okt 2026). Hanya sekali (nada teratas akor tidak perlu, garis di atas tumpukan). */
       if(pi===0) for(i2=0;i2<Math.min(2,ul+1);i2++){ var gy=yb-lift-18+i2*4; o+='<line class="dotl" x1="'+(dx-7)+'" x2="'+(dx+7)+'" y1="'+gy+'" y2="'+gy+'" stroke="currentColor" stroke-width="1.8"/>'; }
     }
-    if(bd>=2) for(k=1;k<beats;k++) o+='<circle cx="'+(x+cell*k)+'" cy="'+(yy+1)+'" r="2.3" fill="currentColor"/>';
+    if(bd>=2) for(k=1;k<beats;k++) o+='<circle class="bdot" data-k="'+k+'" cx="'+(x+cell*k)+'" cy="'+(yy+1)+'" r="2.3" fill="currentColor"/>';
     if(sp===pi && stk>1) o+='<rect x="'+(x-13)+'" y="'+(yy-13)+'" width="26" height="26" rx="7" fill="none" stroke="var(--brass)" stroke-width="2.6"/>';
   });
   for(k=0;k<ul;k++) o+=ulSvg(x,yb-lift,k,bm);
@@ -5303,14 +5303,16 @@ function arcFail(){
 /* ===== Percikan api saat not dimainkan benar (diminta Ferdi, Nov 2026): not menyala kuning keemasan + sinar,
    bunga api memercik ke segala arah, lalu berubah hijau (st-ok). Lapisan position:fixed di <body> memakai koordinat
    layar (getBoundingClientRect), jadi tetap pas walau layar berlatih diputar 90° lewat CSS. ===== */
-function okSpark(g){
+function okSpark(g,dot){
   try{
-    g.classList.add('okFlash'); g.style.color='#FFB020';
-    setTimeout(function(){ g.style.color=''; g.classList.remove('okFlash'); },260);
+    if(dot){ dot.style.fill='#FFB020'; dot.setAttribute('r','4'); dot.classList.add('okFlash');
+      setTimeout(function(){ dot.style.fill=''; dot.setAttribute('r','2.3'); dot.classList.remove('okFlash'); },300); }
+    else { g.classList.add('okFlash'); g.style.color='#FFB020';
+      setTimeout(function(){ g.style.color=''; g.classList.remove('okFlash'); },260); }
     if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var hl=g.querySelector('rect.hl'), b=(hl||g).getBoundingClientRect();
+    var hl=dot||g.querySelector('rect.hl'), b=(hl||g).getBoundingClientRect();
     if(!b.width && !b.height) return;
-    var cx=b.left+b.width/2, cy=b.top+b.height/2, sz=Math.max(18,Math.min(60,Math.min(b.width,b.height)));
+    var cx=b.left+b.width/2, cy=b.top+b.height/2, sz=dot?24:Math.max(18,Math.min(60,Math.min(b.width,b.height)));
     var box=document.createElement('div'); box.className='okSpk'; box.style.left=cx+'px'; box.style.top=cy+'px';
     var h='<b style="width:'+sz*1.6+'px;height:'+sz*1.6+'px"></b>', cols=['#FFD23F','#FF9248','#FFF3B0','#FF6FA8','#fff'];
     for(var i=0;i<12;i++){
@@ -5320,6 +5322,22 @@ function okSpark(g){
     box.innerHTML=h; document.body.appendChild(box);
     setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },700);
   }catch(e){}
+}
+/* Not panjang di not angka ("5 · · ·", minim/semibreve): tiap titik ketukan ikut memercik saat ketukannya tiba
+   (diminta Ferdi, Nov 2026). Tempo: dari jam garis tempo; tanpa Tempo: dari saat not dimainkan × 60000/bpm.
+   Dibatalkan bila not jadi salah (mis. MIDI dilepas terlalu cepat), soal berganti (pr.sparked baru), atau sedang dijeda. */
+function okDots(id){
+  var n=prN(id); if(!n || n.m===null || baseDur(n.d)<2) return;
+  var tok=pr.sparked, beats=Math.floor(n.d), now=performance.now(), k;
+  var tempo = pr.tempoOn && tp.run && tp.t0 && tp.beat && tp.beat[id]!=null;
+  for(k=1;k<beats;k++) (function(k){
+    var at = tempo ? tp.t0+(tp.beat[id]+k)*tp.beatMs : now+k*60000/pr.bpm;
+    setTimeout(function(){
+      if(pr.sparked!==tok || pr.marks[id]!=='ok' || !pr.playing || pr.paused || pr.failing) return;
+      var d=document.querySelector('#pscore g[data-i="'+id+'"] circle.bdot[data-k="'+k+'"]');
+      if(d) okSpark(d.parentNode,d);
+    }, Math.max(0,at-performance.now()));
+  })(k);
 }
 function whenPlaying(fn){ return function(){ if(pr.paused) pr.deferred=fn; else fn(); }; }
 function pausePlay(){
@@ -5396,7 +5414,7 @@ function renderPractice(){
     pr.sparked=pr.sparked||{};
     host.querySelectorAll('g.st-ok[data-i]').forEach(function(g){
       var id=parseInt(g.getAttribute('data-i'),10);
-      if(pr.marks[id]==='ok' && !pr.sparked[id]){ pr.sparked[id]=1; okSpark(g); }
+      if(pr.marks[id]==='ok' && !pr.sparked[id]){ pr.sparked[id]=1; okSpark(g); okDots(id); }
     });
     followCur(host, redrawn);
   }
