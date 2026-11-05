@@ -515,6 +515,7 @@ header .sel select{max-width:100%;min-width:0}
 .sv{display:block;color:var(--ink)}
 .sv text{fill:currentColor;font-family:'Bricolage Grotesque',system-ui,sans-serif}
 .sv .stf{stroke:var(--muted);stroke-width:1.2}
+.sv text.chd{fill:var(--brassDeep);font-family:'Bricolage Grotesque',system-ui,sans-serif}
 .sv text.tabf{font-weight:800;stroke:var(--panel);stroke-width:4px;paint-order:stroke;stroke-linejoin:round}
 .sv .bar{stroke:var(--ink);stroke-width:1.6}
 .n{color:var(--ink);cursor:pointer}
@@ -1061,6 +1062,18 @@ html.csOpen select:focus{outline:none}
 .slyRow input{flex:1;min-width:0;border:0;background:var(--line);border-radius:10px;padding:8px 10px;font:inherit;font-size:16px;color:var(--ink);outline:none}
 .slyRow input:focus{box-shadow:0 0 0 2px var(--brass) inset;background:var(--panel)}
 .slyRow .chip{flex:none;padding:7px 11px}
+.schQuick{gap:6px;margin:0 0 6px;flex-wrap:nowrap}
+.schQuick .chip{flex:1 1 0;min-width:0;padding:7px 4px;font-weight:800}
+/* fretboard gitar virtual: 6 senar (atas = senar 1 E tinggi) × fret 0–12 */
+.skb .sgtSw{grid-column:1/-1;justify-self:start;padding:7px 12px;margin-bottom:2px}
+.fretb{display:grid;grid-template-columns:34px repeat(12,minmax(0,1fr));grid-template-rows:16px repeat(6,minmax(0,1fr));height:168px;background:var(--track);border-radius:16px;padding:4px 6px 6px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.fretb .fh{font-size:11px;font-weight:700;color:var(--muted);text-align:center;line-height:16px}
+.fretb .fh.mk{color:var(--brass);font-weight:900}
+.fretb .fc{position:relative;border:0;padding:0;margin:0;cursor:pointer;background:linear-gradient(var(--ink),var(--ink)) center/100% var(--sw,1.4px) no-repeat;border-right:2.5px solid var(--muted);font:inherit;color:var(--ink);min-width:0}
+.fretb .fc[data-f="0"]{border-right:6px solid var(--ink);background-size:0 0;font-size:13px;font-weight:900;color:var(--muted)}
+.fretb .fc:hover{background-color:var(--pLilac)}
+.fretb .fc.on::after,.fretb .fc.hit::after{content:attr(data-f);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--brass);color:var(--brassText);font-size:12px;font-weight:900;line-height:22px;text-align:center;box-shadow:0 2px 0 var(--brassDeep)}
+.fretb .fc.hit::after{background:var(--ok,#3cb371);box-shadow:none}
 .slyHint{font-size:11.5px;color:var(--muted);margin:-2px 6px 8px;line-height:1.35}
 svg text.lyr{fill:currentColor;font-weight:600}
 /* jendela "Masukkan gambar" ala unggah di WA: seret-lepas / tempel / pilih file */
@@ -1586,13 +1599,15 @@ body.mob #tab-score[data-mph="edit"] #mscBar{order:-5}
 body.mob #tab-score[data-mph="edit"] #sfree{order:-4}
 body.mob #tab-score[data-mph="edit"] #mscMode{order:-3}
 body.mob #tab-score[data-mph="edit"] #simgpanel{order:-2}
-body.mob #tab-score[data-mph="edit"] :is(#slyRow,#slyHint){order:-1}
+body.mob #tab-score[data-mph="edit"] :is(#slyRow,#slyHint,#schRow,#schQuick){order:-1}
 body.mob #tab-score[data-mph="edit"] #srecCard{order:10}
 body.mob #tab-score[data-mph="edit"] #mscMore{order:11}
 body.mob #tab-score[data-mph="edit"] .sside>*{order:12}
 body.mob #tab-score[data-mph="edit"] .spanel>*{order:13}
 body.mob #tab-score[data-mph="edit"] .spanel>#srecCard{order:10}
 body.mob #tab-score .slyRow{margin:0}
+body.mob #tab-score .schQuick{margin:0}
+body.mob .fretb{height:150px;grid-template-columns:28px repeat(12,minmax(0,1fr))}
 body.mob #tab-score:not(.mly) #slyRow,body.mob #tab-score:not(.mly) #slyHint,body.mob #tab-score:not(.mlyi) #slyHint{display:none !important}
 body.mob #tab-score .slyHint{margin:-4px 6px 0}
 /* kertas partitur: paling banyak ±3 baris, sisanya digulir di dalam kertas; tombol kursor menempel di bawahnya */
@@ -2017,6 +2032,7 @@ body.mob #snewOv .instList b{font-size:20px}
       <button type="button" data-mm="rec" aria-pressed="false">⏺ Rekam</button>
     </div>
     <button class="chip" id="mscLy" type="button" aria-pressed="false" hidden>📝 Lirik</button>
+    <button class="chip" id="mscCh" type="button" aria-pressed="false">🎸 Cord</button>
   </div>
 
   <div class="card sinfo" id="sinfo">
@@ -2112,6 +2128,7 @@ body.mob #snewOv .instList b{font-size:20px}
       <button class="chip" type="button" data-sec="Outro">Outro</button>
       <button class="chip" type="button" data-sec="*" id="sseccustom">✏️ Lainnya…</button>
     </div>
+    <div class="chips" style="margin-top:6px"><button class="chip" type="button" id="schBtn" style="flex:1" aria-pressed="false" title="Tulis cord/akor (C, Am, G7…) di atas not">🎸 Tulis cord: Mati</button></div>
     <div class="stl">Edit</div>
     <div class="chips" style="margin-top:6px"><button class="chip" type="button" id="sauto" style="flex:1" aria-pressed="false">Maju otomatis: mati</button></div>
     <div class="chips skbdRow" style="margin-top:6px"><button class="chip" type="button" id="skbd" style="flex:1" title="Tulis not lewat keyboard laptop/PC">⌨️ Pintasan keyboard: Mati</button></div>
@@ -2149,6 +2166,15 @@ body.mob #snewOv .instList b{font-size:20px}
     <button class="chip" id="slyNext" type="button" aria-label="Not berikutnya">▶</button>
     <button class="chip mOnly" id="slyInfo" type="button" aria-label="Keterangan cara menulis lirik" aria-pressed="false">ⓘ</button>
   </div>
+  <!-- cord/akor (diminta Ferdi, Nov 2026): pilih not/rehat, ketik cord atau ketuk cord cepat -->
+  <div class="slyRow" id="schRow" hidden>
+    <label class="slyLbl" for="schIn">🎸 Cord</label>
+    <input id="schIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" maxlength="12" placeholder="Pilih not, lalu ketik cord (C, Am, G7)…">
+    <button class="chip" id="schPrev" type="button" aria-label="Not sebelumnya">◀</button>
+    <button class="chip" id="schNext" type="button" aria-label="Not berikutnya">▶</button>
+    <button class="chip" id="schDel" type="button" aria-label="Hapus cord not ini">✕</button>
+  </div>
+  <div class="chips schQuick" id="schQuick" hidden></div>
   <p class="slyHint" id="slyHint" hidden>Spasi / Enter = not berikutnya · akhiri dengan "-" untuk suku kata bersambung (mis. "Tu-") · hapus semua lalu Backspace = kembali</p>
   <div class="chips" id="snav" role="group" aria-label="Pindah kursor" style="margin:0">
     <button class="chip" type="button" id="sleft" style="flex:1" aria-label="Kursor ke kiri">◀ Kiri</button>
@@ -2156,7 +2182,9 @@ body.mob #snewOv .instList b{font-size:20px}
     <button class="chip" type="button" id="sdown" style="flex:1" aria-label="Pilih nada di bawahnya dalam akor">▼ Turun</button>
     <button class="chip" type="button" id="sright" style="flex:1" aria-label="Kursor ke kanan">Kanan ▶</button>
   </div>
-  <div class="card skb"><div class="kb" id="kb"></div>
+  <div class="card skb"><button class="chip sgtSw" id="sgtSw" type="button" hidden></button>
+    <div class="fretb" id="sfret" hidden role="group" aria-label="Fretboard gitar: ketuk senar & fret untuk menulis not"></div>
+    <div class="kb" id="kb"></div>
     <div class="mOnly mNotePanel" id="mscPanel"></div>
     <div class="row skbOct">
       <div class="stepper" style="flex:1;justify-content:space-between">
@@ -2340,6 +2368,8 @@ body.mob #snewOv .instList b{font-size:20px}
         <li><b>Pintasan keyboard (laptop/PC)</b>: tekan <b>⌨️ Pintasan keyboard</b> di bagian Edit, lalu pilih gaya: <b>Gaya piano</b> (A S D F G H J K L = tuts putih, W E T Y U O P = tuts hitam), <b>Nama nada</b> (huruf C D E F G A B) atau <b>Not angka</b> (angka 1–7 = do re mi fa sol la si). Shift + tombol = ♯, Alt + tombol = ♭, Z / X = oktaf turun / naik, R = rehat, titik = bertitik, angka 1/2/4/8/6 = nilai not (gaya piano &amp; nama nada). Tekan beberapa tombol bersamaan = akor. Panah ↑ / ↓ = nilai not lebih panjang / lebih pendek (Shift + ↑ / ↓ = pilih nada di dalam akor). Esc = tutup / lepas sorotan / berhenti memutar. Huruf/angka kecil di tuts layar menunjukkan tombolnya.</li>
         <li><b>Piano asli (MIDI)</b>: colok keyboard MIDI (HP: kabel OTG), tekan <b>🎹 Sambungkan</b> (di kartu di bawah tuts piano, di samping <b>▶ Putar</b> dan <b>⏺ Rekam</b>). Setelah tersambung, tombol <b>MIDI OFF / MIDI ON</b> menentukan apakah tuts menulis not: <b>OFF</b> = piano hanya berbunyi, bebas berlatih dulu tanpa mengubah partitur; <b>ON</b> = setiap tuts langsung menulis not seperti tuts di layar (tekan bersamaan = akor). Tombol <b>Rekam</b> tetap merekam walau MIDI OFF.</li>
         <li><b>📝 Lirik</b> (partitur vokal): ketuk kotak <b>Lirik</b> di bawah partitur, lalu ketik suku kata untuk not yang disorot. Tekan <b>Spasi</b> atau <b>Enter</b> untuk pindah ke not berikutnya. Akhiri dengan tanda <b>-</b> kalau katanya bersambung ke not berikutnya (mis. <i>Tu-</i> lalu <i>han</i>). Kotak kosong + <b>Backspace</b> = kembali ke not sebelumnya. Lirik ikut tampil di Latihan dan di hasil ekspor PDF/gambar.</li>
+        <li><b>🎸 Cord</b>: nyalakan <b>Tulis cord</b> (di HP: tombol <b>🎸 Cord</b> di atas partitur), ketuk not atau rehat, lalu ketik cordnya (mis. <i>C</i>, <i>Am</i>, <i>G7</i>, <i>C/G</i>) atau ketuk tombol cord cepat sesuai tangga nada lagu. <b>Spasi</b>/<b>Enter</b> = not berikutnya, <b>✕</b> = hapus cord. Cord tampil di atas not, juga di Latihan dan PDF.</li>
+        <li><b>🎸 Gitar: fretboard &amp; TAB</b>: partitur Gitar ditulis lewat <b>fretboard</b> (6 senar × fret 0–12; ketuk senar &amp; fret = not balok + angka TAB sekaligus; ketuk beberapa senar berturut = akor). Tombol <b>🎹 Ganti ke tuts piano</b> / <b>🎸 Ganti ke fretboard</b> untuk berganti. Tombol <b>🎸 TAB</b> menampilkan/menyembunyikan tablatur, <b>🎸 Senar lain</b> memindah not terpilih ke senar lain.</li>
         <li><b>Gambar partitur sebagai acuan</b>: tekan <b>🖼️ Masukkan gambar</b>: seret &amp; lepas gambar ke kotaknya, tekan <b>Ctrl+V</b> untuk menempel screenshot, <b>📋 Tempel gambar</b>, atau <b>📁 Pilih dari file</b>. Di laptop, Ctrl+V dan seret gambar ke halaman Partitur juga langsung bisa.</li>
         <li><b>⏺ Rekam</b>: metronom berbunyi 1 birama sebagai ketukan pembuka, lalu mainkan lagunya bebas. Tekan <b>■ Selesai rekam</b>; permainanmu langsung jadi not, ditambahkan di akhir partitur. Selama merekam, not yang kamu mainkan langsung tergambar di partitur dan kursor ikut berjalan mengikuti ketukan. <i>Rapikan rekaman ke</i> ¼ / ⅛ / 1/16 menentukan seberapa halus ritme dibaca (⅛ paling aman untuk pemula). Di piano 2 tangan, rekaman masuk ke tangan yang sedang dipilih saja (<i>Tulis &amp; rekam ke</i>: Kanan / Kiri), mulai di birama baru setelah not terakhir tangan itu, dan tangan yang sudah ada otomatis ikut berbunyi supaya bisa diikuti. Jadi rekam satu per satu: tangan kanan dulu, lalu pilih Kiri dan rekam tangan kiri dari awal lagu sambil mendengar tangan kanan. Kalau hasilnya kurang pas, tekan <b>Batalkan rekaman terakhir</b>.</li>
         <li><b>Kecepatan</b> (mis. 50%, 75%) memperlambat atau mempercepat <b>Putar</b> dan metronom <b>Rekam</b> tanpa mengubah tempo partitur. Contoh: tempo 90 di 50% = berjalan seperti 45 bpm, tapi partitur tetap tertulis 90. Cocok untuk merekam bagian yang cepat pelan-pelan.</li>
@@ -3736,6 +3766,9 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
     /* tablatur gitar: 6 garis senar di bawah paranada/not angka (lirik & dinamika tetap di antaranya) */
     P.tab = tabOn(score) ? tabFingering(notes) : null;
     if(P.tab){ P.tabY = P.botM+10; P.botM += 10+5*TAB_S+18; }
+    /* cord/akor (C, Am, G7…) di atas paranada/not angka */
+    P.hasCh = notes.some(function(n){ return !n.e && !!n.ch; });
+    if(P.hasCh) P.topM += 24;
     if(p===0 && hasSec) P.topM += 26;
     P.pos={};
   });
@@ -3965,6 +3998,8 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
           else ns=noteSvg(n,noteCX,y0,base,di,cls,key,grp[j]?{up:grp[j].up,yb:grp[j].yb}:null,selP,insX);
           /* angka fret TAB di dalam grup not yang sama */
           if(P.tab && P.tab[ni]) ns=ns.slice(0,-4)+tabSvg(P.tab[ni],noteCX,y0+staffH+P.tabY,tieFrom(notes,ni))+'</g>';
+          /* cord di atas not (di dalam grup not: bisa diketuk) */
+          if(n.ch && !n.e) ns=ns.slice(0,-4)+'<text class="chd" x="'+(noteCX-7)+'" y="'+(y0-P.topM+((p===0&&hasSec)?26:0)+18)+'" font-size="16" font-weight="800">'+String(n.ch).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; })+'</text></g>';
           out+=ns;
           if(grp[j]) grp[j].xs[j]=noteCX+(grp[j].up?5.4:-5.4);
           if(n.m!==null) pos[ni]={x:noteCX,y:(num?y0:y0+4*S-(diaOf(n)-base)*S/2),si:si,up:(num?false:(diaOf(n)-base)<4),xe:W-margin};
@@ -4255,7 +4290,7 @@ function spellIn(m,key){
 }
 function curScoreCopy(){
   var s=curScore();
-  function cp(N){ return N.map(function(n){ var o={m:n.m,d:n.d,a:n.a||''}; if(n.x) o.x=n.x.map(function(p){ return {m:p.m,a:p.a}; }); if(n.tie) o.tie=true; if(n.e) o.e=true; if(n.bl) o.bl=n.bl; if(n.sec) o.sec=n.sec; if(n.ly) o.ly=n.ly; if(n.str) o.str=n.str.slice(); return o; }); }
+  function cp(N){ return N.map(function(n){ var o={m:n.m,d:n.d,a:n.a||''}; if(n.x) o.x=n.x.map(function(p){ return {m:p.m,a:p.a}; }); if(n.tie) o.tie=true; if(n.e) o.e=true; if(n.bl) o.bl=n.bl; if(n.sec) o.sec=n.sec; if(n.ly) o.ly=n.ly; if(n.str) o.str=n.str.slice(); if(n.ch) o.ch=n.ch; return o; }); }
   var o={title:s.title,ts:s.ts.slice(),clef:s.clef,key:s.key||0,notes:cp(s.notes)};
   /* gitar: tablatur ikut tampil di Latihan */
   if(s.inst==='guitar'){ o.inst='guitar'; if(s.tab===false) o.tab=false; }
@@ -5967,11 +6002,121 @@ function renderScoreView(){
   $('#splay0').disabled = !hasPitch(s.notes) && !(s.grand && hasPitch(s.lh));
   $('#splay').disabled = !hasPitch(s.notes) && !(s.grand && hasPitch(s.lh)) && !playing;
   $('#sprac').disabled = !s.notes.some(function(n){return n.m!==null;});
-  syncLyUI();
+  syncLyUI(); syncChUI(); syncFretUI();
   if(mob.on) mobScRender();
 }
 /* ===== Lirik (diminta Ferdi, Okt 2026): tiap not (bukan rehat / sambungan tie) bisa diberi satu suku kata, n.ly.
    Akhiran "-" = suku kata bersambung ke not berikutnya. Kotak #slyIn tampil untuk partitur vokal (atau yang sudah berlirik). */
+/* ===== Cord/akor (diminta Ferdi, Nov 2026): n.ch = nama cord (C, Am, G7, F#m, C/G…) di atas not ATAU rehat.
+   Baris #schRow tampil saat "Tulis cord" nyala (chOn, yg.chOn; tombol #schBtn di Struktur lagu / #mscCh di HP).
+   Cord cepat #schQuick = cord diatonis tangga nada partitur (I ii iii IV V vi + V7). ===== */
+var chOn=store.get('yg.chOn','0')==='1', chLast=-9;
+var CH_SH=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'], CH_FL=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+function chTarget(){ var N=edScore().notes; return (editing && sel>=0 && N[sel] && !N[sel].e) ? sel : -1; }
+function chStep(i,dir){ var N=edScore().notes, j; for(j=i+dir;j>=0 && j<N.length;j+=dir) if(!N[j].e && !tieFrom(N,j)) return j; return -1; }
+function chNorm(v){ v=String(v).replace(/\s+/g,'').slice(0,12); return v.replace(/^[a-g]/,function(c){ return c.toUpperCase(); }); }
+function chSet(v){
+  if(!guardEdit()) return;
+  var i=chTarget(); if(i<0){ showScoreAlert('Ketuk satu not / rehat di partitur dulu, lalu tulis cordnya.'); return; }
+  var n=edScore().notes[i]; v=chNorm(v);
+  if((n.ch||'')===v) return;
+  if(v) n.ch=v; else delete n.ch;
+  saveScores(); renderScoreView();
+}
+function chGo(dir){
+  var i=chTarget(), j = i<0 ? chStep(-1,1) : chStep(i,dir);
+  if(j>=0) selectAt(j); else if(i<0) return;
+  chLast=-9; syncChUI(); $('#schIn').focus();
+}
+function chQuickList(){
+  var k=curScore().key||0, t=((k*7)%12+12)%12, nm=k<0?CH_FL:CH_SH;
+  return [[0,''],[2,'m'],[4,'m'],[5,''],[7,''],[9,'m'],[7,'7']].map(function(d){ return nm[(t+d[0])%12]+d[1]; });
+}
+function setChOn(v){ chOn=v; store.set('yg.chOn',v?'1':'0'); chLast=-9; renderScoreView(); }
+function syncChUI(){
+  var row=$('#schRow'); if(!row) return;
+  var b=$('#schBtn'); if(b){ b.setAttribute('aria-pressed',chOn?'true':'false'); b.textContent='🎸 Tulis cord: '+(chOn?'Nyala':'Mati'); }
+  var mb=$('#mscCh'); if(mb) mb.setAttribute('aria-pressed',chOn?'true':'false');
+  row.hidden=!chOn; var q=$('#schQuick'); q.hidden=!chOn;
+  if(!chOn) return;
+  var ql=chQuickList(), key=ql.join(',');
+  if(q.getAttribute('data-k')!==key){ q.setAttribute('data-k',key); q.innerHTML=ql.map(function(c){ return '<button class="chip" type="button" data-ch="'+c+'">'+c+'</button>'; }).join(''); }
+  var i=chTarget(), inEl=$('#schIn'), cur = i>=0 ? (edScore().notes[i].ch||'') : '';
+  if(i!==chLast){ chLast=i; inEl.value=cur; }
+  $$('#schQuick [data-ch]').forEach(function(c){ c.setAttribute('aria-pressed', (cur && c.getAttribute('data-ch')===cur) ? 'true' : 'false'); });
+  inEl.placeholder = i>=0 ? 'Ketik cord untuk not ini (C, Am, G7…)' : 'Pilih not, lalu ketik cord (C, Am, G7)…';
+}
+function bindChords(){
+  var inEl=$('#schIn');
+  inEl.addEventListener('focus',function(){ if(chTarget()<0){ var j=chStep(-1,1); if(j>=0){ selectAt(j); chLast=-9; syncChUI(); } } });
+  inEl.addEventListener('input',function(){
+    var v=inEl.value;
+    if(/\s$/.test(v)){ chSet(v); chGo(1); return; }   /* spasi = not berikutnya (juga keyboard HP) */
+    chSet(v);
+  });
+  inEl.addEventListener('keydown',function(e){
+    if(e.key==='Enter' || (e.key==='Tab' && !e.shiftKey)){ e.preventDefault(); chSet(inEl.value); chGo(1); }
+    else if(e.key==='Tab' && e.shiftKey){ e.preventDefault(); chSet(inEl.value); chGo(-1); }
+    else if(e.key==='Backspace' && !inEl.value){ e.preventDefault(); chGo(-1); }
+    else if(e.key==='Escape'){ inEl.blur(); }
+  });
+  $('#schNext').addEventListener('click',function(){ chSet(inEl.value); chGo(1); });
+  $('#schPrev').addEventListener('click',function(){ chSet(inEl.value); chGo(-1); });
+  $('#schDel').addEventListener('click',function(){ chSet(''); chLast=-9; syncChUI(); });
+  $('#schQuick').addEventListener('click',function(e){
+    var c=e.target.closest('[data-ch]'); if(!c) return;
+    var i=chTarget(); if(i<0){ var j=chStep(-1,1); if(j<0) return; selectAt(j); }
+    var n=edScore().notes[chTarget()], v=c.getAttribute('data-ch');
+    chSet(n && n.ch===v ? '' : v); chLast=-9; syncChUI();
+  });
+  $('#schBtn').addEventListener('click',function(){ setChOn(!chOn); });
+  $('#mscCh').addEventListener('click',function(){ setChOn(!chOn); });
+}
+/* ===== Fretboard gitar virtual (diminta Ferdi, Nov 2026): partitur Gitar ditulis lewat 6 senar × fret 0–12.
+   Ketuk senar s fret f = nada tertulis TAB_OPEN[s]+f+12 (tulisan gitar 1 oktaf di atas bunyi), lewat addNote (aturan
+   Maju otomatis / akor sama dengan tuts piano), lalu senarnya disimpan di n.str supaya TAB memakai senar yang diketuk.
+   Tombol #sgtSw = ganti fretboard ↔ tuts piano (gtIn, yg.gtIn). Not terpilih ditandai titik di fretboard. ===== */
+var gtIn=store.get('yg.gtIn','fret')==='piano' ? 'piano' : 'fret', FRET_N=12;
+function fretOn(){ var s=curScore(); return s.inst==='guitar' && !s.grand && gtIn==='fret'; }
+function buildFret(){
+  var el=$('#sfret'); if(!el || el.childElementCount) return;
+  var h='<div class="fh"></div>', f, st, nm=['','e','B','G','D','A','E'];
+  for(f=1;f<=FRET_N;f++) h+='<div class="fh'+([3,5,7,9,12].indexOf(f)>=0?' mk':'')+'">'+f+'</div>';
+  for(st=1;st<=6;st++) for(f=0;f<=FRET_N;f++)
+    h+='<button type="button" class="fc" data-s="'+st+'" data-f="'+f+'" style="--sw:'+(0.9+st*0.35)+'px" aria-label="Senar '+st+' fret '+f+'">'+(f===0?nm[st]:'')+'</button>';
+  el.innerHTML=h;
+}
+/* not s (senar) untuk nada m pada not n: pilih cara main terbaik yang memakai senar itu */
+function tabForce(N,n,m,st){
+  var ps=tabPitches(n), idx=pitchList(n).map(function(p){ return p.m; }).indexOf(m); if(idx<0) return;
+  var op=tabOptions(ps,0).filter(function(o){ return o.f[idx] && o.f[idx].s===st; });
+  if(op.length) n.str=op[0].f.map(function(x){ return x ? x.s : null; });
+}
+function fretTap(st,f){
+  var m=TAB_OPEN[st]+f+12, N=edScore().notes;
+  addNote(m);
+  N=edScore().notes;
+  var cand=[lastIns, (editing && sel>=0) ? N[sel] : null].filter(function(n){ return n && N.indexOf(n)>=0 && n.m!==null && pitchList(n).some(function(p){ return p.m===m; }); });
+  if(cand.length){ tabForce(N,cand[0],m,st); saveScores(); renderScoreView(); }
+  var b=document.querySelector('#sfret [data-s="'+st+'"][data-f="'+f+'"]');
+  if(b){ b.classList.add('hit'); clearTimeout(b._t); b._t=setTimeout(function(){ b.classList.remove('hit'); },220); }
+}
+function syncFretUI(){
+  var s=curScore(), g=s.inst==='guitar' && !s.grand, on=fretOn(), sw=$('#sgtSw'), fb=$('#sfret');
+  if(!fb) return;
+  sw.hidden=!g; sw.textContent = on ? '🎹 Ganti ke tuts piano' : '🎸 Ganti ke fretboard gitar';
+  if(on) buildFret();
+  fb.hidden=!on; $('#kb').hidden=on;
+  var oc=document.querySelector('#tab-score .skbOct'); if(oc) oc.hidden=on;
+  if(!on) return;
+  $$('#sfret .fc.on').forEach(function(b){ b.classList.remove('on'); });
+  var N=s.notes, i=(editing && sel>=0) ? sel : -1;
+  if(i>=0 && N[i] && N[i].m!==null){
+    while(i>0 && tieFrom(N,i)) i--;
+    var fs=tabFingering(N)[i]||[];
+    fs.forEach(function(q){ if(q && q.f<=FRET_N){ var b=document.querySelector('#sfret [data-s="'+q.s+'"][data-f="'+q.f+'"]'); if(b) b.classList.add('on'); } });
+  }
+}
 var lyLast=-9;
 function lyTarget(){ var N=edScore().notes; return (editing && sel>=0 && N[sel] && N[sel].m!==null) ? sel : -1; }
 function lyStep(i,dir){ var N=edScore().notes, j; for(j=i+dir;j>=0 && j<N.length;j+=dir) if(N[j].m!==null && !tieFrom(N,j)) return j; return -1; }
@@ -6616,11 +6761,12 @@ function delNote(){
   saveScores(); renderScoreView();
 }
 /* Garis birama ganda/akhir (n.bl di not terakhir birama) & nama bagian lagu (n.sec) ikut pindah kalau not/rehatnya dihapus */
-function keepMarks(from,to){ if(from.bl) to.bl=from.bl; if(from.sec) to.sec=from.sec; return to; }
+function keepMarks(from,to){ if(from.bl) to.bl=from.bl; if(from.sec) to.sec=from.sec; if(from.ch) to.ch=from.ch; return to; }
 function passMarks(N,at){
   var it=N[at]; if(!it) return;
   if(it.bl && at>0 && !N[at-1].bl) N[at-1].bl=it.bl;
   if(it.sec && N[at+1] && !N[at+1].sec) N[at+1].sec=it.sec;
+  if(it.ch && N[at+1] && !N[at+1].ch) N[at+1].ch=it.ch;
 }
 function measureRange(N,i,bb){
   var t=0, k, st; for(k=0;k<i;k++) t+=N[k].d;
@@ -7105,6 +7251,11 @@ function bindScore(){
   $('#skbdOk').addEventListener('click',function(){ $('#skbdOv').hidden=true; });
   $('#skbdOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) e.currentTarget.hidden=true; });
   kbdSync();
+  $('#sfret').addEventListener('click',function(e){
+    var b=e.target.closest('[data-s]'); if(!b) return; fretTap(parseInt(b.getAttribute('data-s'),10),parseInt(b.getAttribute('data-f'),10));
+  });
+  $('#sgtSw').addEventListener('click',function(){ gtIn = gtIn==='fret' ? 'piano' : 'fret'; store.set('yg.gtIn',gtIn); renderScoreView(); });
+  bindChords();
   $('#kb').addEventListener('click',function(e){
     var b=e.target.closest('[data-m]'); if(!b) return; addNote(parseInt(b.getAttribute('data-m'),10));
   });
@@ -7460,7 +7611,7 @@ var WX_CSS='svg{color:#1d1b2b}text{fill:currentColor;font-family:"Bricolage Grot
   +'.tie{fill:none;stroke:#1d1b2b;stroke-width:1.6;stroke-linecap:round}.hl,.insl,.handbg,.caret,.inscur{display:none}'
   +'.secbox{fill:#fff3b8;stroke:#1d1b2b;stroke-width:1.4}text.sectxt{font-weight:800;font-size:14px}'
   +'text.dyn{font-family:"Times New Roman",Georgia,serif;font-style:italic;font-weight:700}text.shS,text.shC{font-style:italic}'
-  +'text.tabf{font-weight:800;stroke:#fff;stroke-width:4px;paint-order:stroke;stroke-linejoin:round}';
+  +'text.chd{fill:#1d1b2b}text.tabf{font-weight:800;stroke:#fff;stroke-width:4px;paint-order:stroke;stroke-linejoin:round}';
 function wxLoadFont(){
   if(wxFont!==null) return Promise.resolve(wxFont);
   return fetch('fonts/bricolage-grotesque-latin.woff2').then(function(r){ return r.arrayBuffer(); }).then(function(b){
