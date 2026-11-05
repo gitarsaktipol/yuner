@@ -2979,10 +2979,10 @@ function successChime(){
 }
 /* Tepuk tangan buatan: banyak "plok" derau singkat yang disaring + dengung penonton yang mengecil. */
 var noiseBuf=null;
-function applause(dur){
+function applause(dur,vol){
   var c=ac(), t0=c.currentTime+0.05, i;
   if(!noiseBuf){ noiseBuf=c.createBuffer(1,c.sampleRate*2,c.sampleRate); var d=noiseBuf.getChannelData(0); for(i=0;i<d.length;i++) d[i]=Math.random()*2-1; }
-  var master=c.createGain(); master.gain.value=0.9; master.connect(c.destination);
+  var master=c.createGain(); master.gain.value=vol||0.9; master.connect(c.destination);
   function burst(at,len,vol,f){
     var src=c.createBufferSource(), bp=c.createBiquadFilter(), g=c.createGain();
     src.buffer=noiseBuf; bp.type='bandpass'; bp.frequency.value=f; bp.Q.value=0.8;
@@ -3002,12 +3002,12 @@ function applause(dur){
 }
 /* Latihan selesai 100%: nada naik (rendah -> tinggi) + tepuk tangan + confetti. */
 function practiceWin(){
-  try{ var c=ac(), t=c.currentTime; [60,64,67,72,76,79,84].forEach(function(m,i){ pluck(m,t+i*0.08,0.6); }); ting(88,t+0.6,0.4); applause(1.7); }catch(e){}
+  try{ var c=ac(), t=c.currentTime; [60,64,67,72,76,79,84].forEach(function(m,i){ pluck(m,t+i*0.08,0.6,null,0.6); }); ting(88,t+0.6,0.25); applause(1.7,0.45);   /* dikecilkan (Nov 2026: jauh lebih keras dari ketukan/piano) */ }catch(e){}
   confetti();
 }
 /* Latihan selesai tapi belum 100%: nada turun (tinggi -> rendah). */
 function practiceMiss(){
-  try{ var c=ac(), t=c.currentTime; [79,76,72,67,60].forEach(function(m,i){ pluck(m,t+i*0.13,0.5); }); }catch(e){}
+  try{ var c=ac(), t=c.currentTime; [79,76,72,67,60].forEach(function(m,i){ pluck(m,t+i*0.13,0.5,null,0.7); }); }catch(e){}
 }
 /* Hujan confetti warna-warni saat berhasil (senar pas / soal 100% benar). */
 function confetti(){
@@ -3151,7 +3151,7 @@ function midiNoteOff(n){
 /* Synth sederhana polifonik: satu "suara" per tuts, bisa ditahan dengan pedal sustain. */
 function synthOn(n,v){
   synthOff(n,true);
-  var c=ac(), t=c.currentTime, f=freqOf(n), vel=0.08+0.22*(v/127);
+  var c=ac(), t=c.currentTime, f=freqOf(n), vel=0.14+0.32*(v/127);   /* dinaikkan (Nov 2026) supaya setara bunyi akhir permainan */
   var o1=c.createOscillator(), o2=c.createOscillator(), g=c.createGain(), g2=c.createGain();
   o1.type='triangle'; o1.frequency.value=f;
   o2.type='sine'; o2.frequency.value=f*2; g2.gain.value=0.25;
@@ -4454,7 +4454,7 @@ var tp={run:false,raf:0,t0:0,beatMs:857,beat:[],win:[],end:0,lastInt:0,geo:null,
 function inputReady(){ return mic.active || midiConnected(); }
 function tempoTick(accent){
   try{ var c=ac(), t=c.currentTime, o=c.createOscillator(), g=c.createGain(); o.type='square'; o.frequency.value=accent?1500:1050;
-    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.1,t+0.003); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(accent?0.4:0.28,t+0.003); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);   /* setara Metronome menu Tuner (Ferdi, Nov 2026: dulu 0,1 terlalu pelan) */
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.06); }catch(e){}
   pr.mute=performance.now()+90;   /* mikrofon jangan mendengar bunyi ketukan sendiri */
 }
@@ -5036,8 +5036,8 @@ function bumpScore(to){
 }
 function perfectBurst(){
   try{
-    var c=ac(), t=c.currentTime; [72,76,79,84,88,91,96].forEach(function(m,i){ pluck(m,t+i*0.07,0.7); }); [60,67,72].forEach(function(m){ pluck(m,t+0.55,1.2); });
-    applause(2.6);
+    var c=ac(), t=c.currentTime; [72,76,79,84,88,91,96].forEach(function(m,i){ pluck(m,t+i*0.07,0.7,null,0.6); }); [60,67,72].forEach(function(m){ pluck(m,t+0.55,1.2,null,0.6); });
+    applause(2.6,0.5);
   }catch(e){}
   var hp=$('#hperf'); hp.hidden=false; hp.style.animation='none'; void hp.offsetWidth; hp.style.animation='';
   if(!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) fireworks($('#hfw'),12,['#FF6FA8','#FFD23F','#4ED8A0','#4AB3FF','#A78BFA','#FF9248','#fff']);
