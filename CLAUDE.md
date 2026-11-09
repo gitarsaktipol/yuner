@@ -78,6 +78,15 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - Uji di HP: `?gating=1` (simulasi gratis) + Pengaturan > Langganan > ketuk judul 7x > "Mode uji". SEBELUM RILIS BERBAYAR: set `GATING_ON=true`, ganti `isPremium()` dengan verifikasi Play Billing, hapus "Mode uji".
 - Tuner harus tetap muat satu layar di 360x640: tombol Tuner|Metronome ada DI DALAM header (tidak menambah tinggi).
 
+## Langganan Google Play (Play Billing, Nov 2026)
+- Kode di `index.html` (`PLAY_SKUS`=['premium_bulanan','premium_tahunan'], `pbRefresh`, `pbBuy`, `pbRender`, `bindPlayBilling`): Digital Goods API (`getDigitalGoodsService('https://play.google.com/billing')` → `getDetails`/`listPurchases`) + `PaymentRequest` (supportedMethods = URL itu, `data:{sku}`). Hanya ada di aplikasi TWA dari PWABuilder dengan opsi **Play Billing** dicentang.
+- **Pembatasan otomatis**: `gatingOn()` = `GATING_ON` || `playSell()` (aplikasi Play Store `inPlayApp()` DAN Google Play mengembalikan harga produk, disimpan `yg.pbItems`) || simulasi web `?gating=1`. Jadi web & aplikasi tanpa produk aktif = semua terbuka; begitu produk langganan aktif di Play Console, aplikasi Play langsung mengunci fitur Premium & menampilkan harga. `GATING_ON` tetap false.
+- `isPremium()` = tidak dibatasi || `pbActive()` (langganan dari `listPurchases`, disimpan `yg.pbPrem` {sku,at}; offline dipercaya `PB_OFFLINE_DAYS`=7 hari) || Mode uji (HANYA di luar aplikasi Play; kotak Mode uji tidak muncul di aplikasi Play). Dicek ulang saat aplikasi dibuka & kembali terlihat (`visibilitychange`).
+- Kartu Langganan: harga & masa gratis dari Google Play (`pbFmtPrice`, `pbPeriod`), tombol per produk `#planBuys [data-sku]`, `#planRestore` ↻ Pulihkan, `#planManage` Kelola / batalkan (play.google.com/store/account/subscriptions), pesan `#planMsg`.
+- Server: Edge Function `fertune-play-verify` di repo website (verify_jwt=false; cek ke Google Play Developer API, acknowledge, catat `fertune_purchases`); dipanggil diam-diam `pbReport` (maks 1x/hari per token). Butuh secret `GOOGLE_PLAY_SERVICE_ACCOUNT`. Hak Premium TIDAK bergantung pada server.
+- Belum: notifikasi refund/pembatalan real-time (RTDN) ke server — status refund di admin belum otomatis.
+- Uji tiruan: scratch `e.js` (mock DGAPI/PaymentRequest + referrer android-app) — web biasa terbuka, Play tanpa produk terbuka, beli → Premium, batal, berakhir → terkunci, pulihkan.
+
 ## Ajakan pasang aplikasi (install)
 - Kartu "Pasang FerTune di HP" di atas halaman (script kecil terpisah di bawah `index.html`, sebelum registrasi service worker). Muncul saat browser mengirim event `beforeinstallprompt` (Chrome/Edge Android & PC); tombol "Pasang" memunculkan dialog install bawaan browser.
 - Di iPhone/iPad (tidak ada event itu) kartu berisi petunjuk: Bagikan → "Tambah ke Layar Utama".

@@ -57,6 +57,7 @@ Alamat lama `gitarsakti.com/fertune/` dialihkan ke sini.
    | Display mode | Standalone |
    | Orientation | **Default / Any** ⚠️ JANGAN "Portrait": layar berlatih & Arcade harus bisa mendatar |
    | Signing key | **Create new** (isi nama & organisasi) |
+   | **Play Billing** | ✅ **CENTANG / Enable** (wajib untuk langganan Premium; tanpa ini tombol beli tidak muncul) |
 
 4. Tekan **Download**. Kamu mendapat file ZIP berisi:
    - `*.aab` → file yang diupload ke Play Store
@@ -144,13 +145,39 @@ Setelah uji tertutup selesai: **Rilis → Produksi → Buat rilis baru** → pak
 | Arcade **stage A** (A1–A9) | Huruf B–Z (225 level) |
 | Partitur: lagu contoh dilihat & diputar, **Coba menulis 4 birama** | Menulis tanpa batas, simpan, cloud, impor/ekspor, rekam, akor |
 
-- Aturannya sudah ada di kode (`TRIAL_BARS`, `freeKeyOk`, `freeLetterOk` di `index.html`), tapi **belum aktif**
+- **Update 9 Nov 2026: pembayaran Google Play SUDAH dipasang di kode.** Pembatasan menyala otomatis di aplikasi Play Store
+  begitu produk langganan `premium_bulanan` & `premium_tahunan` aktif di Play Console (web tetap terbuka semua).
+  Langkah Ferdi: lihat bagian "Membuat produk langganan" di bawah.
+- (Catatan lama) Aturannya sudah ada di kode (`TRIAL_BARS`, `freeKeyOk`, `freeLetterOk` di `index.html`), tapi **belum aktif**
   (`GATING_ON=false`): selama pembayaran Google Play belum dipasang, semua fitur terbuka dan kartu harga
   disembunyikan. Uji tampilan versi gratis: buka `?gating=1`.
 - **Sebelum menyalakan:** (1) buat produk langganan di Play Console → Monetisasi → Langganan,
   (2) pasang Play Billing lewat Digital Goods API di TWA (PWABuilder: centang *Play Billing*),
   (3) verifikasi pembelian di server (Edge Function Supabase), (4) ganti `isPremium()`, set `GATING_ON=true`,
   hapus "Mode uji". Ini pekerjaan tersendiri setelah aplikasi ada di Play Console.
+
+## Membuat produk langganan (setelah .aab dengan Play Billing diupload)
+
+1. Play Console → **Setelan** → **Profil pembayaran**: buat/hubungkan profil pembayaran (rekening bank untuk menerima uang).
+2. Pilih aplikasi FerTune → **Monetisasi** → **Produk** → **Langganan** → **Buat langganan**:
+   - ID produk **`premium_bulanan`** (nama: Premium Bulanan) → tambah **paket dasar** (base plan): perpanjangan otomatis, periode **1 bulan**,
+     harga **Rp45.000**, centang **"kompatibel dengan versi lama" (backwards compatible)** → **Aktifkan**.
+     Tambah **penawaran** (offer): uji coba gratis **1 bulan**, kelayakan "Akuisisi pengguna baru" → **Aktifkan**.
+   - ID produk **`premium_tahunan`** (nama: Premium Tahunan) → paket dasar **1 tahun**, **Rp350.000**, backwards compatible, aktifkan;
+     penawaran gratis 1 bulan juga.
+   - ⚠️ ID produk harus PERSIS seperti itu (huruf kecil, garis bawah). Tidak bisa diganti setelah dibuat.
+3. **Setelan → Pengujian lisensi**: tambahkan email Google kamu (dan penguji) supaya bisa mencoba membeli tanpa ditagih.
+4. **Akun layanan** (supaya server bisa mencatat & mengakui pembelian):
+   1. Buka https://console.cloud.google.com → buat project (mis. "FerTune") → **APIs & Services → Library** → aktifkan **Google Play Android Developer API**.
+   2. **IAM & Admin → Service Accounts → Create**: nama `fertune-play`, tanpa peran → Done. Buka akun itu → **Keys → Add key → JSON** → file .json terunduh.
+   3. Play Console → **Pengguna dan izin → Undang pengguna baru** → isi email akun layanan (…@….iam.gserviceaccount.com) → izin aplikasi FerTune:
+      **Lihat data keuangan** dan **Kelola pesanan dan langganan** → Undang.
+   4. Supabase Dashboard → Project Settings → **Edge Functions → Secrets** → Add: nama `GOOGLE_PLAY_SERVICE_ACCOUNT`, nilai = SELURUH isi file .json tadi.
+      (JANGAN kirim isi file itu ke chat / GitHub.)
+5. Begitu produk aktif, aplikasi Play otomatis menampilkan harga & tombol berlangganan di Pengaturan → Langganan.
+   Uji beli dengan akun penguji lisensi, lalu cek Admin Gitar Sakti → Pengaturan → FerTune → Dari Play Store.
+6. Perbarui Play Console → **Konten aplikasi → Keamanan data**: tambah jenis data **Info keuangan → Riwayat pembelian**
+   (dikumpulkan, tujuan: fungsi aplikasi; tidak dibagikan).
 
 ## Memperbarui aplikasi setelah terbit
 
