@@ -299,6 +299,14 @@ header .sel select{max-width:100%;min-width:0}
 #planCard .plancol ul{margin:0;padding-left:16px}
 #planCard .price{font-size:13.5px;margin:6px 2px 10px;color:var(--ink)}
 #planCard .price small{color:var(--muted)}
+#planCard .planBuys{display:flex;flex-direction:column;gap:10px}
+#planCard .planBuys .start{width:100%;padding:12px 10px;font-size:16px;line-height:1.25}
+#planCard .planBuys .start small{display:block;font-size:12.5px;font-weight:600;opacity:.92}
+#planCard .planLinks{display:flex;gap:8px;margin-top:10px}
+#planCard .planLinks>*{flex:1;font-size:13.5px;padding:9px 6px;text-align:center;text-decoration:none;color:var(--ink)}
+#planCard .planMsg{font-size:13px;margin:8px 2px 0;color:var(--muted)}
+#planCard .planMsg.ok{color:var(--ok);font-weight:700}
+#planCard .planMsg.bad{color:var(--bad);font-weight:700}
 .sfree{font-size:13.5px;line-height:1.5}
 .sfree p{margin:0 0 8px}
 .sfree .row{gap:8px}
@@ -2275,8 +2283,11 @@ body.mob #snewOv .instList b{font-size:20px}
       <div class="plancol"><b>Gratis</b><ul><li>Tuner</li><li>Metronome</li><li>Latihan Acak (tangga nada C)</li><li>Arcade stage A</li><li>Lagu contoh di Partitur (lihat &amp; putar)</li><li>Coba menulis 4 birama</li></ul></div>
       <div class="plancol"><b>Premium ⭐</b><ul><li>Semua fitur Gratis</li><li>Arcade huruf B–Z</li><li>Semua tangga nada, Custom &amp; Partitur saya</li><li>Tulis, edit &amp; simpan partitur</li><li>Impor/ekspor MIDI, akor, gambar</li><li>Simpan di cloud</li></ul></div>
     </div>
-    <p class="price"><b>Rp45.000 / bulan</b> atau <b>Rp350.000 / tahun</b><br><small>Gratis 1 bulan pertama, bisa dibatalkan kapan saja. Harga final tampil di Google Play saat berlangganan.</small></p>
+    <p class="price" id="planPrice"><b>Rp45.000 / bulan</b> atau <b>Rp350.000 / tahun</b><br><small>Gratis 1 bulan pertama, bisa dibatalkan kapan saja. Harga final tampil di Google Play saat berlangganan.</small></p>
     <button class="start" id="planBuy" type="button" disabled>Segera tersedia di Google Play</button>
+    <div class="planBuys" id="planBuys" hidden></div>
+    <div class="planLinks" id="planLinks" hidden><button class="sound" id="planRestore" type="button">↻ Pulihkan</button><a class="sound" id="planManage" href="https://play.google.com/store/account/subscriptions?package=com.gitarsakti.fertune" target="_blank" rel="noopener">Kelola / batalkan</a></div>
+    <p class="planMsg" id="planMsg" hidden></p>
     <div id="premTestBox" hidden style="margin-top:12px;padding-top:10px;border-top:2px dashed var(--line)">
       <p class="ahint" style="margin:0 0 6px"><b>Mode uji (sementara, untuk pengembang)</b></p>
       <label class="chk"><input type="checkbox" id="gateTest"> Simulasikan pembatasan versi gratis</label>
@@ -2337,7 +2348,7 @@ body.mob #snewOv .instList b{font-size:20px}
     <details class="helpitem" id="helpPrem"><summary>Gratis dan Premium</summary><div class="hb">
       <p><b>Gratis:</b> Tuner, Metronome, Latihan mode Acak dengan tangga nada C, Arcade stage A (A1–A9), lagu contoh di Partitur (bisa dilihat dan diputar), dan mode <b>Coba menulis</b> (maksimal 4 birama 4/4, tidak bisa disimpan).</p>
       <p><b>Premium:</b> semua fitur lain, yaitu Arcade huruf B–Z, semua tangga nada, Latihan Custom dan Partitur saya, menulis dan menyimpan partitur, impor/ekspor MIDI, akor, impor gambar, dan simpan di cloud.</p>
-      <p>Lihat harga dan cara berlangganan di bagian <b>Langganan</b> (paling atas halaman Pengaturan ini).</p>
+      <p>Lihat harga dan cara berlangganan di bagian <b>Langganan</b> (paling atas halaman Pengaturan ini). Pembayaran diproses oleh <b>Google Play</b>; langganan diperpanjang otomatis dan bisa dibatalkan kapan saja lewat tombol <b>Kelola / batalkan</b> (atau Play Store › Profil › Pembayaran &amp; langganan). Ganti HP? Masuk dengan akun Google yang sama lalu tekan <b>↻ Pulihkan</b>.</p>
     </div></details>
     <details class="helpitem"><summary>Latihan baca not</summary><div class="hb">
       <ol>
@@ -5915,8 +5926,146 @@ var GATING_ON=false;
 var TRIAL_BARS=4;
 function freeKeyOk(k){ return isPremium() || (k|0)===0; }
 function freeLetterOk(L){ return isPremium() || (L|0)===0; }
-function gatingOn(){ return GATING_ON || store.get('yg.gating','0')==='1'; }
-function isPremium(){ return !gatingOn() || store.get('yg.premTest','0')==='1'; }
+function gatingOn(){ return GATING_ON || playSell() || (!inPlayApp() && store.get('yg.gating','0')==='1'); }
+function isPremium(){ return !gatingOn() || pbActive() || (!inPlayApp() && store.get('yg.premTest','0')==='1'); }
+/* =====================================================================
+   Langganan Google Play (Play Billing lewat Digital Goods API, hanya ada di aplikasi Play Store/TWA
+   yang dibuat PWABuilder dengan opsi "Play Billing").
+   - Produk langganan di Play Console: PLAY_SKUS (ID produk HARUS sama persis).
+   - Pembatasan Gratis/Premium otomatis menyala HANYA di aplikasi Play Store DAN bila Google Play mengembalikan
+     harga produk (produk sudah dibuat & aktif). Versi web & aplikasi tanpa produk = semua terbuka seperti dulu.
+   - Status Premium = listPurchases() dari Google Play di HP (langganan aktif). Disimpan `yg.pbPrem` supaya
+     tetap Premium saat offline (maks PB_OFFLINE_DAYS hari sejak terakhir dicek).
+   - Server (Edge Function `fertune-play-verify`, repo website) memeriksa token ke Google Play Developer API,
+     meng-acknowledge, dan mencatat ke tabel fertune_purchases (Admin > Pengaturan > FerTune > Dari Play Store).
+     Dipanggil diam-diam; gagal pun Premium tetap jalan.
+   ===================================================================== */
+var PLAY_SKUS=['premium_bulanan','premium_tahunan'];
+var PLAY_BILLING='https://play.google.com/billing';
+var PB_OFFLINE_DAYS=7;
+var PB={svc:null,items:null,busy:false,msg:'',msgKind:''};
+var pbInPlay=null;
+function inPlayApp(){ if(pbInPlay===null) pbInPlay=appSource()==='playstore'; return pbInPlay; }
+function pbItems(){
+  if(PB.items) return PB.items;
+  if(!PB.cached){ try{ var c=JSON.parse(store.get('yg.pbItems','[]')); PB.cached=Array.isArray(c)?c:[]; }catch(e){ PB.cached=[]; } }
+  return PB.cached;
+}
+function playSell(){ return inPlayApp() && pbItems().length>0; }
+function pbPrem(){ try{ return JSON.parse(store.get('yg.pbPrem','null')); }catch(e){ return null; } }
+function pbActive(){
+  var p=pbPrem(); if(!p||!p.sku) return false;
+  return Date.now()-(p.at||0) < PB_OFFLINE_DAYS*864e5;
+}
+function pbFmtPrice(pr){
+  if(!pr) return '';
+  var v=Number(pr.value); if(!isFinite(v)) return pr.value+' '+pr.currency;
+  try{ return new Intl.NumberFormat('id-ID',{style:'currency',currency:pr.currency,maximumFractionDigits:(pr.currency==='IDR'?0:2)}).format(v); }catch(e){ return v+' '+pr.currency; }
+}
+function pbPeriod(iso){
+  var m=/^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?$/.exec(iso||''); if(!m) return '';
+  var out=[]; if(m[1]) out.push(m[1]+' tahun'); if(m[2]) out.push(m[2]+' bulan'); if(m[3]) out.push(m[3]+' minggu'); if(m[4]) out.push(m[4]+' hari');
+  return out.join(' ');
+}
+function pbPer(iso){ var t=pbPeriod(iso); return t==='1 bulan'?'bulan':t==='1 tahun'?'tahun':t; }
+function pbEsc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function pbName(sku){ return sku==='premium_tahunan'?'Tahunan':sku==='premium_bulanan'?'Bulanan':sku; }
+function pbSetMsg(t,k){ PB.msg=t||''; PB.msgKind=k||''; pbRender(); }
+/* Kartu Langganan: harga dari Google Play, tombol beli per produk, Pulihkan, Kelola/batalkan. */
+function pbRender(){
+  var buys=$('#planBuys'), one=$('#planBuy'), links=$('#planLinks'), msg=$('#planMsg'), price=$('#planPrice');
+  if(!buys) return;
+  var sell=playSell(), items=pbItems(), p=pbPrem(), act=pbActive();
+  one.hidden=sell; buys.hidden=!sell; links.hidden=!sell;
+  if(sell){
+    if(act){
+      var it=items.filter(function(x){ return x.itemId===p.sku; })[0];
+      price.innerHTML='<b>⭐ Premium aktif</b> — langganan '+pbName(p.sku)+(it?' ('+pbFmtPrice(it.price)+' / '+pbPer(it.subscriptionPeriod)+')':'')
+        +'<br><small>Diperpanjang otomatis oleh Google Play. Batalkan kapan saja lewat tombol "Kelola / batalkan".</small>';
+      buys.innerHTML='';
+    } else {
+      var trial=items.filter(function(x){ return x.freeTrialPeriod; })[0];
+      price.innerHTML='Pilih langganan:'+(trial?'<br><small>Gratis '+pbPeriod(trial.freeTrialPeriod)+' pertama untuk pelanggan baru. Sesudah itu ditagih otomatis tiap periode; batalkan kapan saja di Google Play sebelum masa gratis habis supaya tidak ditagih.</small>'
+        :'<br><small>Ditagih otomatis tiap periode oleh Google Play; batalkan kapan saja.</small>');
+      buys.innerHTML=items.map(function(x){
+        var sub=x.freeTrialPeriod?'Gratis '+pbPeriod(x.freeTrialPeriod)+', lalu '+pbFmtPrice(x.price)+' / '+pbPer(x.subscriptionPeriod):pbFmtPrice(x.price)+' / '+pbPer(x.subscriptionPeriod);
+        return '<button class="start" type="button" data-sku="'+pbEsc(x.itemId)+'"'+(PB.busy?' disabled':'')+'>⭐ Premium '+pbEsc(pbName(x.itemId))+'<small>'+pbEsc(sub)+'</small></button>';
+      }).join('');
+    }
+    var man=$('#planManage'); man.href='https://play.google.com/store/account/subscriptions?package=com.gitarsakti.fertune'+(act&&p.sku?'&sku='+encodeURIComponent(p.sku):'');
+    $('#planRestore').disabled=PB.busy;
+  }
+  msg.hidden=!PB.msg; msg.textContent=PB.msg; msg.className='planMsg'+(PB.msgKind?' '+PB.msgKind:'');
+}
+/* Dipanggil saat status Premium/penjualan berubah: segarkan semua tampilan yang bergantung pada hak akses. */
+function pbChanged(){
+  try{ buildScoreList(); applyEntitlements(); renderScoreView(); if(app.tab==='arcade') renderArcade(); if(isPremium()&&sbUser) syncNow(); }catch(e){}
+  pbRender();
+}
+function pbReport(sku,token){
+  /* Catat & verifikasi di server (diam-diam). Satu token dilaporkan maks 1x sehari (perpanjangan = pesanan baru). */
+  try{
+    var key=sku+'|'+token, last=JSON.parse(store.get('yg.pbSent','{}'))||{};
+    if(last.k===key && Date.now()-(last.at||0)<864e5) return;
+    loadSb().then(function(c){
+      return c.functions.invoke('fertune-play-verify',{body:{sku:sku,purchaseToken:token}});
+    }).then(function(r){
+      if(r && !r.error && r.data && r.data.ok) store.set('yg.pbSent',JSON.stringify({k:key,at:Date.now()}));
+    },function(){});
+  }catch(e){}
+}
+async function pbRefresh(manual){
+  if(!inPlayApp() || !('getDigitalGoodsService' in window)){ if(manual) pbSetMsg('Pembayaran Google Play hanya tersedia di aplikasi FerTune dari Play Store.','bad'); return; }
+  var before=isPremium()+'|'+playSell();
+  try{
+    if(!PB.svc) PB.svc=await window.getDigitalGoodsService(PLAY_BILLING);
+    if(!PB.svc) throw new Error('no service');
+    var det=await PB.svc.getDetails(PLAY_SKUS);
+    PB.items=(det||[]).filter(function(x){ return x && PLAY_SKUS.indexOf(x.itemId)>=0; })
+      .map(function(x){ return {itemId:x.itemId,title:x.title,price:x.price,subscriptionPeriod:x.subscriptionPeriod||'',freeTrialPeriod:x.freeTrialPeriod||''}; })
+      .sort(function(a,b){ return PLAY_SKUS.indexOf(a.itemId)-PLAY_SKUS.indexOf(b.itemId); });
+    store.set('yg.pbItems',JSON.stringify(PB.items));
+    var own=(await PB.svc.listPurchases())||[], got=own.filter(function(x){ return PLAY_SKUS.indexOf(x.itemId)>=0; })[0];
+    if(got){ store.set('yg.pbPrem',JSON.stringify({sku:got.itemId,at:Date.now()})); pbReport(got.itemId,got.purchaseToken); }
+    else store.set('yg.pbPrem','null');
+    if(manual) pbSetMsg(got?'Langganan ditemukan. Premium aktif! ⭐':'Tidak ada langganan aktif di akun Google Play ini.',got?'ok':'');
+  }catch(e){
+    if(manual) pbSetMsg('Tidak bisa menghubungi Google Play. Cek internet lalu coba lagi.','bad');
+  }
+  if(isPremium()+'|'+playSell()!==before) pbChanged(); else pbRender();
+}
+async function pbBuy(sku){
+  if(PB.busy) return;
+  if(!PB.svc || typeof PaymentRequest==='undefined'){ pbSetMsg('Pembayaran Google Play hanya tersedia di aplikasi FerTune dari Play Store.','bad'); return; }
+  PB.busy=true; pbSetMsg('Membuka Google Play…');
+  try{
+    var req=new PaymentRequest([{supportedMethods:PLAY_BILLING,data:{sku:sku}}],{total:{label:'Total',amount:{currency:'IDR',value:'0'}}});
+    var res=await req.show();
+    var token=res && res.details && res.details.purchaseToken;
+    try{ await res.complete('success'); }catch(e){}
+    if(token){
+      store.set('yg.pbPrem',JSON.stringify({sku:sku,at:Date.now()}));
+      pbReport(sku,token);
+      PB.busy=false; pbSetMsg('Terima kasih! Premium sudah aktif. ⭐','ok'); pbChanged();
+      try{ confetti(); }catch(e){}
+      return;
+    }
+    PB.busy=false; await pbRefresh(false); pbSetMsg(pbActive()?'Premium sudah aktif. ⭐':'Pembelian belum selesai.',pbActive()?'ok':'');
+  }catch(e){
+    PB.busy=false;
+    var n=e&&e.name;
+    if(n==='AbortError') pbSetMsg('Pembelian dibatalkan.');
+    else pbSetMsg('Pembelian tidak berhasil. Coba lagi'+(n?' ('+n+')':'')+'.','bad');
+    pbRefresh(false);
+  }
+}
+function bindPlayBilling(){
+  $('#planBuys').addEventListener('click',function(e){ var b=e.target.closest('[data-sku]'); if(b) pbBuy(b.getAttribute('data-sku')); });
+  $('#planRestore').addEventListener('click',function(){ pbSetMsg('Memeriksa langganan…'); pbRefresh(true); });
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) pbRefresh(false); });   /* kembali dari Google Play (batal/perpanjang) */
+  pbRender();
+  pbRefresh(false);
+}
 var trialScore=null, lastRealId=null;
 function curIsTrial(){ return curId==='trial' && !!trialScore; }
 function canEditNow(){ return isPremium() || curIsTrial(); }
@@ -8666,6 +8815,7 @@ function applyEntitlements(){
   syncScoreFields();
   /* Langganan */
   var chip=$('#planChip'); chip.textContent=prem?(gatingOn()?'Premium':'Terbuka (uji)'):'Gratis'; chip.classList.toggle('pro',prem);
+  pbRender();
   $('#gateTest').checked=store.get('yg.gating','0')==='1'; $('#premTest').checked=store.get('yg.premTest','0')==='1';
   renderAcct();
 }
@@ -8686,7 +8836,7 @@ function bindPremium(){
   var taps=0, tapT=0;
   $('#planTitle').addEventListener('click',function(){
     taps++; clearTimeout(tapT); tapT=setTimeout(function(){ taps=0; },4000);
-    if(taps>=7){ $('#premTestBox').hidden=false; }
+    if(taps>=7 && !inPlayApp()){ $('#premTestBox').hidden=false; }   /* Mode uji tidak ada di aplikasi Play Store */
   });
   $('#gateTest').addEventListener('change',function(e){ store.set('yg.gating',e.target.checked?'1':'0'); stopPlay(); if(!isPremium()&&curIsTrial()===false){} buildScoreList(); applyEntitlements(); renderScoreView(); if(app.tab==='arcade') renderArcade(); if(isPremium()&&sbUser) syncNow(); });
   $('#premTest').addEventListener('change',function(e){ store.set('yg.premTest',e.target.checked?'1':'0'); buildScoreList(); applyEntitlements(); renderScoreView(); if(app.tab==='arcade') renderArcade(); if(isPremium()&&sbUser) syncNow(); });
@@ -9068,6 +9218,7 @@ bindMidi();
 bindSettings();
 bindMetro();
 bindPremium();
+bindPlayBilling();
 setMode(app.mode);
 bindMobile(); mobApply();
 try{
