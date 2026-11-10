@@ -4157,7 +4157,7 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
     if(P.hasDyn) Object.keys(pos).forEach(function(kk){
       var ni2=parseInt(kk,10), n=notes[ni2], a=pos[kk]; if(!n.dyn && !n.hp) return;
       var dy=head+a.si*sysH+P.yOff+staffH+P.dynB-10, x0=a.x;
-      if(n.dyn) out+='<text class="dyn" x="'+x0+'" y="'+dy+'" text-anchor="middle" font-size="16">'+n.dyn+'</text>';
+      if(n.dyn && DYN_VOL[n.dyn]) out+='<text class="dyn" x="'+x0+'" y="'+dy+'" text-anchor="middle" font-size="16">'+n.dyn+'</text>';
       if(n.hp){
         var nx=null, j;
         for(j=ni2+1;j<notes.length;j++) if(pos[j]){ if(pos[j].si===a.si) nx=pos[j].x; break; }
@@ -4986,6 +4986,12 @@ var CHARS=[
 ];
 function loadPlayers(){
   var l; try{ l=JSON.parse(store.get('yg.arcPlayers','null')); }catch(e){ l=null; }
+  if(Array.isArray(l)) l=l.filter(function(x){ return x && typeof x==='object' && typeof x.id==='number'; }).map(function(x){
+    x.letter=clamp(parseInt(x.letter,10)||0,0,25); x.sub=clamp(parseInt(x.sub,10)||1,1,9);
+    if(!x.res || typeof x.res!=='object') x.res={};
+    if(x.name!==undefined && typeof x.name!=='string') x.name='';
+    return x;
+  });
   if(!Array.isArray(l)||!l.length){
     var c=CHARS[clamp(parseInt(store.get('yg.arcChar','0'),10)||0,0,CHARS.length-1)], res;
     try{ res=JSON.parse(store.get('yg.arcRes','{}')); }catch(e){ res={}; }
@@ -5698,8 +5704,40 @@ var scores=[], curId=null, sel=-1, playing=false, playIdx=-1, playTimers=[], pla
 var smet = store.get('yg.smet','1')!=='0';   /* metronom saat Putar & Rekam (ketukan pembuka rekam selalu bunyi) */
 /* Piano 2 tangan: tangan yang sedang ditulis ('rh' = paranada atas, 'lh' = paranada bawah); playIdxL = not tangan kiri yang sedang diputar */
 var hand='rh', playIdxL=-1;
+/* Pengaman data: partitur dari penyimpanan HP / cloud diperiksa dulu. Data yang rusak (bukan partitur, tanpa daftar not,
+   not bukan objek) dibuang/dirapikan supaya aplikasi tidak macet saat dibuka, dan teks yang nanti digambar sebagai HTML
+   (id, dinamika) dipastikan aman. Partitur yang sehat tidak diubah sama sekali. */
+function cleanNotes(a){
+  if(!Array.isArray(a)) return [];
+  var bad=false, i, n;
+  for(i=0;i<a.length;i++){
+    n=a[i];
+    if(!n || typeof n!=='object' || typeof n.d!=='number' || !(n.d>0) || !isFinite(n.d) || (n.m!==null && n.m!==undefined && typeof n.m!=='number')){ bad=true; continue; }
+    if(n.dyn!==undefined && !Object.prototype.hasOwnProperty.call(DYN_VOL,n.dyn)) delete n.dyn;
+    if(n.hp!==undefined && n.hp!=='<' && n.hp!=='>') delete n.hp;
+    if(n.a!==undefined && n.a!=='' && n.a!=='#' && n.a!=='b') n.a='';
+    if(n.ly!==undefined && typeof n.ly!=='string') delete n.ly;
+    if(n.ch!==undefined && typeof n.ch!=='string') delete n.ch;
+    if(n.sec!==undefined && typeof n.sec!=='string') delete n.sec;
+    if(n.x!==undefined && !(Array.isArray(n.x) && n.x.every(function(q){ return q && typeof q==='object' && typeof q.m==='number'; }))) delete n.x;
+  }
+  return bad ? a.filter(function(n){ return n && typeof n==='object' && typeof n.d==='number' && n.d>0 && isFinite(n.d) && (n.m===null || n.m===undefined || typeof n.m==='number'); }) : a;
+}
+function cleanScore(s){
+  if(!s || typeof s!=='object' || Array.isArray(s) || typeof s.id!=='string' || !/^[\w-]{1,64}$/.test(s.id)) return null;
+  s.notes=cleanNotes(s.notes);
+  if(s.lh!==undefined) s.lh=cleanNotes(s.lh);
+  if(!(Array.isArray(s.ts) && s.ts.length===2 && s.ts[0]>0 && s.ts[1]>0)) s.ts=[4,4];
+  if(typeof s.bpm!=='number' || !isFinite(s.bpm)) s.bpm=90;
+  if(s.clef!=='treble' && s.clef!=='bass') s.clef='treble';
+  if(s.title!==undefined && typeof s.title!=='string') s.title=String(s.title==null?'':s.title);
+  ['sub','comp','tempoTxt'].forEach(function(k){ if(s[k]!==undefined && typeof s[k]!=='string') delete s[k]; });
+  if(s.key!==undefined && typeof s.key!=='number') s.key=0;
+  return s;
+}
 function loadScores(){
   try{ scores=JSON.parse(store.get('yg.scores','[]')); }catch(e){ scores=[]; }
+  if(Array.isArray(scores)) scores=scores.map(function(x){ try{ return cleanScore(x); }catch(e){ return null; } }).filter(Boolean);
   if(!Array.isArray(scores)||!scores.length) scores=[twinkle()];
   /* Lagu contoh kedua: ditambahkan sekali ke daftar (di paling atas). */
   if(!scores.some(function(x){return x.id==='b-mary';}) && store.get('yg.seedMary','')!=='1'){ scores.unshift(maryLamb()); store.set('yg.seedMary','1'); store.set('yg.scores',JSON.stringify(scores)); }
@@ -5868,6 +5906,7 @@ function mergeCloud(rows,synced){
       tomb[r.id]=ts; synced[r.id]=ts; return;
     }
     var d=r.data; if(!d||d.id!==r.id) return;
+    try{ if(!cleanScore(d)) return; }catch(e){ return; }   /* baris cloud yang rusak: lewati, jangan sampai aplikasi macet */
     d.updatedAt=ts;
     if(loc){ if(scoreJson(loc)!==scoreJson(d)){ scores[i]=d; changed=true; } else loc.updatedAt=ts; }
     else { scores.push(d); changed=true; }
@@ -9421,6 +9460,8 @@ try{
   else if(history.state && history.state.tab && history.state.tab!=='tuner') showTab(history.state.tab);
 }catch(e){}
 initAI();
+/* Dipakai pemuat versi baru (di bawah): true = jangan muat ulang sekarang */
+window.FT_busy=function(){ try{ if(trialScore || rec.on) return 2; return (pr.playing || playing || document.body.classList.contains('on-arcade') || document.querySelector('.pwOv:not([hidden])')) ? 1 : 0; }catch(e){ return 0; } };
 
 })();
 </script>
@@ -9624,10 +9665,28 @@ if('serviceWorker' in navigator){
   /* Versi baru sudah terpasang: muat ulang halaman sekali supaya langsung tampil
      (tanpa ini, versi baru baru terlihat setelah aplikasi dibuka 2-3 kali). */
   var hadSW=!!navigator.serviceWorker.controller, reloaded=false;
+  /* Jangan memuat ulang di tengah permainan, rekaman, atau saat mengetik: tunggu sampai aplikasi sedang santai
+     atau ditinggal ke latar (dulu permainan Arcade / "Coba menulis" bisa terputus tiba-tiba saat ada versi baru). */
+  var swPending=false;
+  var swBusy=function(){   /* 0 = santai, 1 = sedang dipakai (tunggu / muat ulang saat ditinggal), 2 = ada tulisan yang belum tersimpan (jangan) */
+    try{
+      var lvl=window.FT_busy ? window.FT_busy() : 0;
+      var a=document.activeElement, tag=a&&a.tagName;
+      if(!lvl && (tag==='INPUT'||tag==='TEXTAREA')) lvl=1;
+      return lvl;
+    }catch(e){ return 0; }
+  };
+  var swTry=function(){
+    if(reloaded || !swPending) return;
+    var lvl=swBusy();
+    if(lvl===2 || (lvl===1 && !document.hidden)){ setTimeout(swTry,4000); return; }
+    reloaded=true; window.location.reload();
+  };
   navigator.serviceWorker.addEventListener('controllerchange',function(){
     if(!hadSW || reloaded) return;
-    reloaded=true; window.location.reload();
+    swPending=true; swTry();
   });
+  document.addEventListener('visibilitychange',function(){ if(document.hidden) swTry(); });
 }
 </script>
 </body>

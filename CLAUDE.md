@@ -236,6 +236,10 @@ Tema **ceria, lucu, pastel** (dulu ditujukan untuk anak-anak; sekarang sasaran 1
 
 Semua warna didefinisikan sebagai CSS custom properties di `:root` — kalau mau ubah palet warna, ubah di situ, jangan hardcode warna baru di tempat lain.
 
+## Pengaman data & pembaruan (audit pra-rilis, Nov 2026)
+- `cleanScore`/`cleanNotes` (dipanggil `loadScores` & `mergeCloud`): partitur dari penyimpanan HP / cloud diperiksa; data rusak dibuang/dirapikan (dulu satu partitur rusak membuat aplikasi macet permanen saat dibuka), id harus `[\w-]{1,64}`, dinamika hanya pp–ff (dulu `n.dyn`/`id` bisa menyisipkan HTML). Partitur sehat tidak diubah (diuji sama persis). Kalau menambah field baru di partitur, pastikan lolos fungsi ini. `loadPlayers` juga merapikan data pemain Arcade.
+- Versi baru (service worker `controllerchange`): halaman TIDAK lagi dimuat ulang di tengah permainan/pemutaran/dialog (`window.FT_busy()` 1 = tunggu sampai santai atau aplikasi ditinggal; 2 = ada "Coba menulis"/rekaman → jangan muat ulang).
+
 ## Gaya kerja & preferensi Ferdi
 
 - Selalu jelaskan perubahan dalam bahasa yang mudah dipahami orang non-teknis (Ferdi bukan programmer, belajar sambil jalan).
