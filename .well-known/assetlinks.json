@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.gitarsakti.fertune",
+      "sha256_cert_fingerprints": [
+        "1E:87:A0:11:81:5E:43:28:8E:4A:43:79:8E:1C:13:57:44:80:F6:74:DD:B4:1C:EC:F1:DB:12:ED:D2:ED:11:54",
+        "09:68:C8:A8:EE:48:88:39:5B:69:EB:F8:F5:5C:A1:A0:30:2F:31:9B:A2:00:10:5C:5E:7B:D4:CC:7F:7A:6B:95"
+      ]
+    }
+  }
+]
