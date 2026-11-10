@@ -69,7 +69,7 @@ Selamat bermain musik! 🎶
 
 ## Kontak
 
-- **Email:** `leslesku@gmail.com`
+- **Email:** `fertune.support@gmail.com`
 - **Situs web:** `https://fertune.gitarsakti.com/`
 - **Kebijakan privasi:** `https://fertune.gitarsakti.com/privacy.html`
 
