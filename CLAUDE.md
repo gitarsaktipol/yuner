@@ -94,6 +94,14 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 - Belum: notifikasi refund/pembatalan real-time (RTDN) ke server — status refund di admin belum otomatis.
 - Uji tiruan: scratch `e.js` (mock DGAPI/PaymentRequest + referrer android-app) — web biasa terbuka, Play tanpa produk terbuka, beli → Premium, batal, berakhir → terkunci, pulihkan.
 
+## Premium di WEB & Premium menempel di akun (Nov 2026, diputuskan Ferdi — MENGGANTI keputusan lama "web gratis semua")
+- `gatingOn()` = `GATING_ON || playSell() || !inPlayApp()` → **web SELALU dibatasi** (Gratis/Premium); aplikasi Play tetap baru dibatasi saat produk langganan aktif. `isPremium()` = tidak dibatasi || `pbActive()` || `grantActive()`. **"Mode uji" (`yg.gating`/`yg.premTest`, `?gating=1`, ketuk judul 7x) DIHAPUS**; menguji Premium = masuk dengan akun yang punya baris `fertune_grants` (akun admin selamanya).
+- Web: Premium = **paket sekali bayar** 1 bulan (Rp45.000) / 1 tahun (Rp350.000) yang dibeli di toko gitarsakti.com (produk `fertune-premium-1-bulan` / `-1-tahun`, `products.fertune_days`); pesanan lunas menambah `fertune_grants.until` akun pembeli (kode di repo website). Kartu Langganan versi web: `#planWeb` (tautan `WEB_SHOP` `?produk=…`, `#planLogin`, `#planCheck` → `grantCheck`), status "Premium aktif sampai …". `grantRefresh(c,u,cb)` juga dipanggil saat kembali ke aplikasi (maks 1x/20 dtk).
+- Play: langganan yang dibeli/terdeteksi saat MASUK AKUN ikut dicatat ke akun oleh `fertune-play-verify` (→ Premium juga di web). Satu langganan Play = satu akun.
+- **Harga perkenalan** (`promoOn`/`promoHtml`, `.planPromo`): "hanya sampai 31 Maret 2027, sesudahnya Rp99.000/bulan & Rp999.000/tahun" — tampil di kartu Langganan web & Play, hilang sendiri 1 Apr 2027. Saat itu harga di Play Console & produk toko harus dinaikkan (pekerjaan manual) dan teks harga di `pbRender`/`#planWeb` diperbarui.
+- **Aturan Play**: tautan/ajakan beli di web TIDAK boleh tampil di aplikasi Play → semua bagian web berkelas `.webOnly` / `#planWeb` (tersembunyi saat `body.in-play`), bagian Play `.playOnly`.
+- Akun yang sudah terdaftar sebelum web dikunci diberi Premium 30 hari (masa peralihan, sampai ±10 Des 2026).
+
 ## Ajakan pasang aplikasi (install)
 - Kartu "Pasang FerTune di HP" di atas halaman (script kecil terpisah di bawah `index.html`, sebelum registrasi service worker). Muncul saat browser mengirim event `beforeinstallprompt` (Chrome/Edge Android & PC); tombol "Pasang" memunculkan dialog install bawaan browser.
 - Di iPhone/iPad (tidak ada event itu) kartu berisi petunjuk: Bagikan → "Tambah ke Layar Utama".

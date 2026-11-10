@@ -322,6 +322,9 @@ header .sel select{max-width:100%;min-width:0}
 #planCard .planLinks{display:flex;gap:8px;margin-top:10px}
 #planCard .planLinks>*{flex:1;font-size:13.5px;padding:9px 6px;text-align:center;text-decoration:none;color:var(--ink)}
 #planCard .planMsg{font-size:13px;margin:8px 2px 0;color:var(--muted)}
+#planCard .planPromo{display:block;margin-top:8px;padding:9px 12px;border-radius:14px;background:var(--pLemon);color:var(--ink);font-size:13px;line-height:1.45}
+#planCard a.start{display:block;text-align:center;text-decoration:none}
+body.in-play .webOnly, body:not(.in-play) .playOnly{display:none !important}
 #planCard .planMsg.ok{color:var(--ok);font-weight:700}
 #planCard .planMsg.bad{color:var(--bad);font-weight:700}
 .sfree{font-size:13.5px;line-height:1.5}
@@ -2361,14 +2364,17 @@ body.mob #snewOv .instList b{font-size:20px}
     <p class="price" id="planPrice"><b>Rp45.000 / bulan</b> atau <b>Rp350.000 / tahun</b><br><small>Gratis 1 bulan pertama, bisa dibatalkan kapan saja. Harga final tampil di Google Play saat berlangganan.</small></p>
     <button class="start" id="planBuy" type="button" disabled>Segera tersedia di Google Play</button>
     <div class="planBuys" id="planBuys" hidden></div>
+    <div id="planWeb" hidden>
+      <div class="planBuys" id="planWebBuys">
+        <a class="start" href="https://gitarsakti.com/?produk=fertune-premium-1-tahun" target="_blank" rel="noopener">⭐ Premium 1 Tahun<small>Rp350.000 · paling hemat, setara Rp29.000 per bulan</small></a>
+        <a class="start" href="https://gitarsakti.com/?produk=fertune-premium-1-bulan" target="_blank" rel="noopener">⭐ Premium 1 Bulan<small>Rp45.000</small></a>
+      </div>
+      <p class="planMsg" id="planWebHint"></p>
+      <div class="planLinks"><button class="sound" id="planLogin" type="button">👤 Masuk akun</button><button class="sound" id="planCheck" type="button">↻ Sudah bayar? Periksa</button></div>
+    </div>
     <div class="planLinks" id="planLinks" hidden><button class="sound" id="planRestore" type="button">↻ Pulihkan</button><a class="sound" id="planManage" href="https://play.google.com/store/account/subscriptions?package=com.gitarsakti.fertune" target="_blank" rel="noopener">Kelola / batalkan</a></div>
     <p class="planMsg" id="planMsg" hidden></p>
     <p class="planMsg" style="text-align:center"><a href="syarat.html">Syarat &amp; Ketentuan</a> · <a href="privacy.html">Kebijakan Privasi</a></p>
-    <div id="premTestBox" hidden style="margin-top:12px;padding-top:10px;border-top:2px dashed var(--line)">
-      <p class="ahint" style="margin:0 0 6px"><b>Mode uji (sementara, untuk pengembang)</b></p>
-      <label class="chk"><input type="checkbox" id="gateTest"> Simulasikan pembatasan versi gratis</label>
-      <label class="chk"><input type="checkbox" id="premTest"> Anggap saya Premium (saat simulasi aktif)</label>
-    </div>
   </div>
 
   <div class="card acct" id="acct" data-sp="acct">
@@ -2425,7 +2431,8 @@ body.mob #snewOv .instList b{font-size:20px}
     <details class="helpitem" id="helpPrem"><summary>Gratis dan Premium</summary><div class="hb">
       <p><b>Gratis:</b> Tuner, Metronome, Latihan mode Acak dengan tangga nada C, Arcade stage A (A1–A9), lagu contoh di Partitur (bisa dilihat dan diputar), dan mode <b>Coba menulis</b> (maksimal 4 birama 4/4, tidak bisa disimpan).</p>
       <p><b>Premium:</b> semua fitur lain, yaitu Arcade huruf B–Z, semua tangga nada, Latihan Custom dan Partitur saya, menulis dan menyimpan partitur, impor/ekspor MIDI, akor, impor gambar, dan simpan di cloud.</p>
-      <p>Lihat harga dan cara berlangganan di <b>Pengaturan › Langganan</b>. Pembayaran diproses oleh <b>Google Play</b>; langganan diperpanjang otomatis dan bisa dibatalkan kapan saja lewat tombol <b>Kelola / batalkan</b> (atau Play Store › Profil › Pembayaran &amp; langganan). Ganti HP? Masuk dengan akun Google yang sama lalu tekan <b>↻ Pulihkan</b>.</p>
+      <p class="webOnly">Lihat harga di <b>Pengaturan › Langganan</b>. Di versi web, Premium dibeli sebagai <b>paket 1 bulan atau 1 tahun</b> di toko gitarsakti.com (sekali bayar, tidak diperpanjang otomatis). Premium menempel di <b>akunmu</b>: masuk dengan akun yang sama di web atau di aplikasi Android. Beli lagi sebelum habis, masa aktif ditambah.</p>
+      <p class="playOnly">Lihat harga dan cara berlangganan di <b>Pengaturan › Langganan</b>. Pembayaran diproses oleh <b>Google Play</b>; langganan diperpanjang otomatis dan bisa dibatalkan kapan saja lewat tombol <b>Kelola / batalkan</b> (atau Play Store › Profil › Pembayaran &amp; langganan). Ganti HP? Masuk dengan akun Google yang sama lalu tekan <b>↻ Pulihkan</b>.</p>
     </div></details>
     <details class="helpitem"><summary>Latihan baca not</summary><div class="hb">
       <ol>
@@ -6130,8 +6137,16 @@ var GATING_ON=false;
 var TRIAL_BARS=4;
 function freeKeyOk(k){ return isPremium() || (k|0)===0; }
 function freeLetterOk(L){ return isPremium() || (L|0)===0; }
-function gatingOn(){ return GATING_ON || playSell() || (!inPlayApp() && store.get('yg.gating','0')==='1'); }
-function isPremium(){ return !gatingOn() || pbActive() || grantActive() || (!inPlayApp() && store.get('yg.premTest','0')==='1'); }
+/* Nov 2026 (diputuskan Ferdi): versi WEB ikut dibatasi (Gratis/Premium). Premium di web = paket sekali bayar yang dibeli
+   di toko gitarsakti.com dan menempel di AKUN (fertune_grants); pembeli Play yang masuk akun juga Premium di web.
+   Aplikasi Play Store: dibatasi begitu produk langganan aktif (playSell). "Mode uji" sudah dihapus. */
+function gatingOn(){ return GATING_ON || playSell() || !inPlayApp(); }
+function isPremium(){ return !gatingOn() || pbActive() || grantActive(); }
+/* Harga perkenalan (diputuskan Ferdi): Rp45.000/bulan & Rp350.000/tahun sampai 31 Maret 2027, sesudahnya Rp99.000 & Rp999.000.
+   Kalimatnya hilang sendiri setelah tanggal itu. */
+var WEB_SHOP='https://gitarsakti.com/?produk=';
+function promoOn(){ return Date.now() < Date.parse('2027-04-01T00:00:00+07:00'); }
+function promoHtml(){ return promoOn() ? '<span class="planPromo">⏳ <b>Harga perkenalan, hanya sampai 31 Maret 2027.</b> Setelah itu kembali ke harga normal: Rp99.000 per bulan atau Rp999.000 per tahun.</span>' : ''; }
 /* =====================================================================
    Langganan Google Play (Play Billing lewat Digital Goods API, hanya ada di aplikasi Play Store/TWA
    yang dibuat PWABuilder dengan opsi "Play Billing").
@@ -6170,16 +6185,30 @@ function grantActive(){
   if(g.until && Date.parse(g.until)<=Date.now()) return false;
   return Date.now()-(g.at||0) < 30*864e5;
 }
-function grantRefresh(c,u){
+var grantAt=0;
+function grantRefresh(c,u,cb){
   var before=isPremium();
-  var done=function(){ if(isPremium()!==before) pbChanged(); else pbRender(); };
-  if(!u){ store.set('yg.grant','null'); done(); return; }
-  Promise.resolve(c.from('fertune_grants').select('until').limit(1)).then(function(r){
-    if(r.error) return;   /* gagal jaringan: biarkan catatan lama */
+  var done=function(ok){ if(isPremium()!==before) pbChanged(); else pbRender(); if(cb) cb(ok); };
+  if(!u){ store.set('yg.grant','null'); done(true); return; }
+  grantAt=Date.now();
+  Promise.resolve(c.from('fertune_grants').select('until').order('until',{ascending:false,nullsFirst:true}).limit(1)).then(function(r){
+    if(r.error){ if(cb) cb(false); return; }   /* gagal jaringan: biarkan catatan lama */
     var row=r.data&&r.data[0];
     store.set('yg.grant', row ? JSON.stringify({uid:u.id,until:row.until||null,at:Date.now()}) : 'null');
-    done();
-  },function(){});
+    done(true);
+  },function(){ if(cb) cb(false); });
+}
+/* "Sudah bayar? Periksa": cek ulang masa Premium akun (setelah membeli di gitarsakti.com) */
+function grantCheck(){
+  if(!sbUser){ pbSetMsg('Masuk dulu dengan akun Gitar Sakti yang kamu pakai membeli.','bad'); setTimeout(function(){ try{ setOpen('acct'); }catch(e){} },900); return; }
+  pbSetMsg('Memeriksa…');
+  watchAuth().then(function(c){
+    grantRefresh(c,sbUser,function(ok){
+      if(!ok) pbSetMsg('Tidak bisa terhubung. Cek internet lalu coba lagi.','bad');
+      else if(grantActive()){ pbSetMsg('Premium aktif! ⭐ Selamat berlatih.','ok'); try{ confetti(); }catch(e){} }
+      else pbSetMsg('Belum ada Premium di akun '+(sbUser.email||'ini')+'. Kalau baru saja membayar lewat transfer, tunggu pembayaranmu dikonfirmasi.');
+    });
+  },function(){ pbSetMsg('Tidak bisa terhubung. Cek internet lalu coba lagi.','bad'); });
 }
 function pbFmtPrice(pr){
   if(!pr) return '';
@@ -6200,8 +6229,22 @@ function pbRender(){
   var buys=$('#planBuys'), one=$('#planBuy'), links=$('#planLinks'), msg=$('#planMsg'), price=$('#planPrice');
   if(!buys) return;
   var sell=playSell(), items=pbItems(), p=pbPrem(), act=pbActive(), byAcct=!act&&grantActive();
-  one.hidden=sell; buys.hidden=!sell; links.hidden=!sell;
-  if(sell){
+  var web=!inPlayApp(), wb=$('#planWeb');
+  one.hidden=sell||web; buys.hidden=!sell; links.hidden=!sell; if(wb) wb.hidden=!web;
+  if(web){
+    /* Versi web: paket sekali bayar dari toko Gitar Sakti, menempel di akun */
+    var gw=grantGet(), on=grantActive();
+    if(on){
+      price.innerHTML='<b>⭐ Premium aktif</b>'+(gw&&gw.until?' sampai <b>'+new Date(gw.until).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})+'</b>':'')
+        +'<br><small>Berlaku di web dan aplikasi Android selama kamu masuk dengan akun ini.'+(gw&&gw.until?' Mau lanjut? Beli paket lagi, masa aktifmu ditambah.':'')+'</small>';
+    } else {
+      price.innerHTML='<b>Rp45.000</b> untuk 1 bulan atau <b>Rp350.000</b> untuk 1 tahun<br><small>Sekali bayar, tidak diperpanjang otomatis. Premium menempel di akunmu: bisa dipakai di web dan di aplikasi Android.</small>'
+        +(promoOn()?'<br>'+promoHtml():'');
+    }
+    $('#planWebHint').textContent = sbUser ? 'Beli dengan akun yang sama: '+(sbUser.email||'akun Gitar Sakti')+'.' : 'Langkahnya: masuk akun di sini → beli di gitarsakti.com dengan akun yang sama → Premium aktif otomatis.';
+    $('#planWebBuys').hidden = on && !(gw&&gw.until);
+    $('#planLogin').hidden = !!sbUser;
+  } else if(sell){
     if(byAcct){
       var g=grantGet();
       price.innerHTML='<b>⭐ Premium aktif</b> — lewat akun Gitar Sakti'+(g&&g.until?' sampai '+new Date(g.until).toLocaleDateString('id-ID'):'')+'<br><small>Semua fitur terbuka selama kamu masuk dengan akun ini.</small>';
@@ -6213,7 +6256,7 @@ function pbRender(){
       buys.innerHTML='';
     } else {
       var trial=items.filter(function(x){ return x.freeTrialPeriod; })[0];
-      price.innerHTML='Pilih langganan:'+(trial?'<br><small>Gratis '+pbPeriod(trial.freeTrialPeriod)+' pertama untuk pelanggan baru. Sesudah itu ditagih otomatis tiap periode; batalkan kapan saja di Google Play sebelum masa gratis habis supaya tidak ditagih.</small>'
+      price.innerHTML=(promoOn()?promoHtml()+'<br>':'')+'Pilih langganan:'+(trial?'<br><small>Gratis '+pbPeriod(trial.freeTrialPeriod)+' pertama untuk pelanggan baru. Sesudah itu ditagih otomatis tiap periode; batalkan kapan saja di Google Play sebelum masa gratis habis supaya tidak ditagih.</small>'
         :'<br><small>Ditagih otomatis tiap periode oleh Google Play; batalkan kapan saja.</small>');
       buys.innerHTML=items.map(function(x){
         var sub=x.freeTrialPeriod?'Gratis '+pbPeriod(x.freeTrialPeriod)+', lalu '+pbFmtPrice(x.price)+' / '+pbPer(x.subscriptionPeriod):pbFmtPrice(x.price)+' / '+pbPer(x.subscriptionPeriod);
@@ -9052,11 +9095,9 @@ function applyEntitlements(){
   /* Langganan */
   var chip=$('#planChip'); chip.textContent=prem?(gatingOn()?'Premium':'Terbuka (uji)'):'Gratis'; chip.classList.toggle('pro',prem);
   pbRender();
-  $('#gateTest').checked=store.get('yg.gating','0')==='1'; $('#premTest').checked=store.get('yg.premTest','0')==='1';
   renderAcct();
 }
 function bindPremium(){
-  var m=(location.search.match(/[?&]gating=(0|1)/)||[])[1]; if(m!==undefined) store.set('yg.gating',m);
   $('#sfree').addEventListener('click',function(e){
     var b=e.target.closest('[data-act]'); if(!b) return; var a=b.getAttribute('data-act');
     if(a==='try') startTrial();
@@ -9069,13 +9110,14 @@ function bindPremium(){
   $('#pwGo').addEventListener('click',openPlan);
   $('#paywall').addEventListener('click',function(e){ if(e.target===this) this.hidden=true; });
   $('#arcLockGo').addEventListener('click',openPlan);
-  var taps=0, tapT=0;
-  $('#planTitle').addEventListener('click',function(){
-    taps++; clearTimeout(tapT); tapT=setTimeout(function(){ taps=0; },4000);
-    if(taps>=7 && !inPlayApp()){ $('#premTestBox').hidden=false; }   /* Mode uji tidak ada di aplikasi Play Store */
+  $('#planCheck').addEventListener('click',grantCheck);
+  $('#planLogin').addEventListener('click',function(){ setOpen('acct'); });
+  document.body.classList.toggle('in-play',inPlayApp());
+  /* kembali dari toko Gitar Sakti (tab lain): cek ulang masa Premium akun, paling sering 1x per 20 detik */
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden || inPlayApp() || !sbUser || Date.now()-grantAt<20000) return;
+    watchAuth().then(function(c){ grantRefresh(c,sbUser); },function(){});
   });
-  $('#gateTest').addEventListener('change',function(e){ store.set('yg.gating',e.target.checked?'1':'0'); stopPlay(); if(!isPremium()&&curIsTrial()===false){} buildScoreList(); applyEntitlements(); renderScoreView(); if(app.tab==='arcade') renderArcade(); if(isPremium()&&sbUser) syncNow(); });
-  $('#premTest').addEventListener('change',function(e){ store.set('yg.premTest',e.target.checked?'1':'0'); buildScoreList(); applyEntitlements(); renderScoreView(); if(app.tab==='arcade') renderArcade(); if(isPremium()&&sbUser) syncNow(); });
   applyEntitlements();
 }
 
