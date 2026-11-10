@@ -5751,9 +5751,28 @@ function watchAuth(){
     return c;
   });
 }
+/* Link verifikasi email (daftar akun) kembali ke FerTune: Supabase menaruh token di #access_token=…&refresh_token=…
+   (alur implicit). Sesi dipasang, alamat dibersihkan, lalu menu Pengaturan dibuka dengan pesan. Link kedaluwarsa → #error=… */
+var AUTH_BACK='https://fertune.gitarsakti.com/';
+function authFromUrl(){
+  var h=location.hash||''; if(h.length<2) return false;
+  var q={}; h.slice(1).split('&').forEach(function(kv){ var i=kv.indexOf('='); if(i>0) q[decodeURIComponent(kv.slice(0,i))]=decodeURIComponent(kv.slice(i+1).replace(/\+/g,' ')); });
+  if(!q.access_token && !q.error && !q.error_code) return false;
+  try{ history.replaceState(history.state,'',location.pathname+location.search); }catch(e){}
+  var show=function(t){ setTimeout(function(){ try{ goTab('set'); }catch(e){} $('#acctMsg').textContent=t; },300); };
+  if(q.access_token && q.refresh_token){
+    watchAuth().then(function(c){ return c.auth.setSession({access_token:q.access_token,refresh_token:q.refresh_token}); })
+      .then(function(r){ show(r&&r.error ? 'Email terverifikasi. Silakan tekan Masuk dengan email & kata sandimu.' : 'Email terverifikasi! Kamu sudah masuk. 🎉'); },
+            function(){ show('Email terverifikasi. Silakan tekan Masuk (cek internet).'); });
+  } else {
+    show(/expired/i.test(q.error_code||q.error_description||'') ? 'Link verifikasi sudah kedaluwarsa. Tekan Masuk → Daftar lagi untuk dikirimi link baru, atau coba Masuk.' : 'Link verifikasi tidak bisa dipakai. Coba Masuk dengan email & kata sandimu.');
+  }
+  return true;
+}
 function initCloud(){
   var has=false; try{ has=!!localStorage.getItem(CLOUD.storageKey); }catch(e){}
   renderAcct();
+  if(authFromUrl()) has=false;
   if(has) watchAuth().catch(function(){});
   window.addEventListener('online',function(){ syncNow(); });
   document.addEventListener('visibilitychange',function(){ if(!document.hidden&&Date.now()-lastSyncAt>30000) syncNow(); });
@@ -5903,11 +5922,11 @@ function bindAcct(){
     if(!email||!pass){ err.textContent='Isi email dan kata sandi.'; return; }
     err.textContent='Memproses…';
     watchAuth().then(function(c){
-      return up ? c.auth.signUp({email:email,password:pass,options:{data:{name:$('#acctName').value.trim()}}})
+      return up ? c.auth.signUp({email:email,password:pass,options:{data:{name:$('#acctName').value.trim()},emailRedirectTo:AUTH_BACK}})
                 : c.auth.signInWithPassword({email:email,password:pass});
     }).then(function(r){
       if(r.error){ err.textContent=authErr(r.error); return; }
-      if(up&&!r.data.session){ err.textContent='Akun dibuat. Cek email untuk verifikasi, lalu tekan Masuk.'; return; }
+      if(up&&!r.data.session){ err.textContent='Akun dibuat! Buka email dari Gitar Sakti dan tekan link verifikasinya — kamu akan kembali ke FerTune dan langsung masuk.'; return; }
       err.textContent=''; $('#acctPass').value=''; $('#acctForm').hidden=true;
     },function(e){ err.textContent=authErr(e); });
   }
