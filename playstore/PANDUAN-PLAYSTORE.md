@@ -14,7 +14,7 @@ dengan teknologi resmi Google bernama **Trusted Web Activity (TWA)**. Cara termu
 | Jalan tanpa internet (service worker) | ✅ Sudah |
 | Tidak menghubungi server pihak ketiga (font disimpan di aplikasi) | ✅ Sudah |
 | Tombol **kembali** Android berfungsi wajar (ke Tuner dulu, baru keluar) | ✅ Sudah |
-| Halaman **Kebijakan Privasi** + tautan di aplikasi | ✅ Sudah (`privacy.html`, kontak: leslesku@gmail.com) |
+| Halaman **Kebijakan Privasi** + tautan di aplikasi | ✅ Sudah (`privacy.html`, kontak: fertune.support@gmail.com) |
 | Screenshot HP, gambar fitur 1024×500, ikon 512×512 | ✅ Sudah (folder `playstore/`) |
 | Teks halaman toko (nama, deskripsi singkat & lengkap) | ✅ Sudah (`deskripsi-toko.md`) |
 | Jawaban formulir Keamanan Data & rating konten | ✅ Sudah (di bawah) |
@@ -27,7 +27,7 @@ dengan teknologi resmi Google bernama **Trusted Web Activity (TWA)**. Cara termu
 
 ## Langkah 1 — Email kontak ✅
 
-Sudah diisi di `privacy.html` dan `deskripsi-toko.md`: **leslesku@gmail.com**.
+Sudah diisi di `privacy.html` dan `deskripsi-toko.md`: **fertune.support@gmail.com**.
 Pakai email yang sama di Play Console (Listingan toko → Detail kontak).
 
 ## Langkah 2 — Pastikan versi terbaru sudah live
@@ -185,7 +185,7 @@ Setelah uji tertutup selesai: **Rilis → Produksi → Buat rilis baru** → pak
 ## Masuk dengan Google (opsional, tombol muncul otomatis setelah diaktifkan)
 
 1. https://console.cloud.google.com → pilih project **fertune** → **APIs & Services → OAuth consent screen**:
-   jenis **External**, nama aplikasi `FerTune`, email dukungan `leslesku@gmail.com`, logo (opsional),
+   jenis **External**, nama aplikasi `FerTune`, email dukungan `fertune.support@gmail.com`, logo (opsional),
    Authorized domains: `gitarsakti.com` dan `supabase.co`, email developer → Simpan → **Publish app** (Production).
 2. **APIs & Services → Credentials → Create credentials → OAuth client ID** → jenis **Web application**, nama `Supabase FerTune`.
    **Authorized redirect URIs**: `https://addtajuxfoxcaezmkice.supabase.co/auth/v1/callback` → Create.

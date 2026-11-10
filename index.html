@@ -5913,7 +5913,7 @@ function bindAcct(){
       return fb.then(function(){ return c.functions.invoke('delete-account',{body:{confirm:true}}); });
     }).then(function(r){
       var d=r&&r.data;
-      if(r.error||!d||!d.ok){ hint.textContent=(d&&d.error)||'Gagal menghapus akun. Coba lagi atau hubungi leslesku@gmail.com.'; return; }
+      if(r.error||!d||!d.ok){ hint.textContent=(d&&d.error)||'Gagal menghapus akun. Coba lagi atau hubungi fertune.support@gmail.com.'; return; }
       var msg=d.scope==='account' ? 'Akun dan semua data cloud sudah dihapus.' : 'Data FerTune di cloud sudah dihapus. Akun Gitar Sakti tetap ada karena punya riwayat pembelian.';
       try{ localStorage.removeItem(CLOUD.storageKey); }catch(e){}
       $('#delNote').value=''; if(rsel) rsel.checked=false;
