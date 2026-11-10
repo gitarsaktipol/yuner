@@ -132,9 +132,13 @@ Google mewajibkan **minimal 12 penguji** ikut uji tertutup **selama 14 hari bert
 mengajukan rilis produksi. Kalau LLK juga akan diupload dari akun yang sama, penguji yang sama bisa ikut
 menguji kedua aplikasi sekaligus. Akun organisasi/perusahaan tidak terkena aturan ini.
 
+**Catat setiap masukan penguji + perubahan yang dibuat** di `playstore/CATATAN-UJI-TERTUTUP.md` — isinya dipakai
+untuk menjawab pertanyaan Google saat mengajukan akses produksi (Langkah 8).
+
 ## Langkah 8 — Ajukan ke produksi
 
-Setelah uji tertutup selesai: **Rilis → Produksi → Buat rilis baru** → pakai `.aab` yang sama (atau versi baru)
+Setelah uji tertutup selesai, Google menanyakan masukan penguji & perubahan yang dibuat: salin dari
+`playstore/CATATAN-UJI-TERTUTUP.md` (ada draf bahasa Inggris). Lalu **Rilis → Produksi → Buat rilis baru** → pakai `.aab` yang sama (atau versi baru)
 → **Kirim untuk ditinjau**. Peninjauan bisa memakan beberapa hari.
 
 ---
