@@ -5,9 +5,10 @@ Catatan ini TIDAK berisi kata sandi, Client secret, atau kunci apa pun. Client I
 ## Ringkasan singkat
 
 - "Masuk dengan Google" SUDAH AKTIF dan sudah diuji berhasil (A0 sampai A5 selesai).
-- Play Console: penyiapan aplikasi 11 dari 12 selesai sebelum Status pedagang. Status pedagang sudah diisi Ferdi (dilaporkan "sudah", belum dicek ulang oleh Claude).
-- Menunggu: daftar penguji uji tertutup (minimal 12 email). Ferdi sedang mencari jasa penguji.
-- BELUM dikirim ke Google untuk ditinjau. Menunggu perintah "kirim" dari Ferdi.
+- Play Console: semua penyiapan selesai, termasuk Status pedagang (sudah disimpan Ferdi, masalah di Ringkasan publikasi hilang).
+- Pengujian tertutup (Alpha) sudah diatur: negara Indonesia, penguji daftar Tim LLK (8 email), email masukan fertune.support@gmail.com, rilis 1 (1.0.0).
+- 15 perubahan SUDAH DIKIRIM ke Google untuk ditinjau (10 Nov 2026, atas perintah "kirim" dari Ferdi). Status: "Perubahan yang sedang ditinjau". Biasanya sampai 7 hari.
+- Menunggu: (1) hasil tinjauan Google, (2) jawaban jasa uji tentang link atau email penguji, (3) tambahan email penguji agar total minimal 12. Sekarang baru 8.
 
 ## Bagian A: Masuk dengan Google
 
@@ -35,19 +36,20 @@ Catatan ini TIDAK berisi kata sandi, Client secret, atau kunci apa pun. Client I
 | B1 Detail login | Selesai, perlu dicek | "Ya", akses penuh; nama pengguna gitarsaktipol+review@gmail.com; instruksi bahasa Inggris dari Ferdi. Sandi diketik Ferdi sendiri. **PERHATIAN:** kolom sandi menampilkan nilai 10 karakter yang sama persis dengan isian otomatis Chrome sebelumnya, bahkan setelah diminta ketik ulang. Mohon Ferdi pastikan itu benar sandi akun gitarsaktipol+review@gmail.com, dan Claude Code diminta menguji login akun itu di aplikasi. |
 | B2 Audiens target | Selesai | Hanya 13–15, 16–17, 18+. Karena semua 13+, Play melewati pertanyaan "menarik bagi anak-anak". |
 | B3 Keamanan Data | Selesai | Nama, Alamat email, ID pengguna, Histori pembelian, File dan dokumen; terenkripsi saat dikirim; tidak dibagikan; URL hapus akun https://fertune.gitarsakti.com/hapus-akun.html . Atas permintaan Ferdi, metode akun kini mencakup "Nama pengguna dan sandi" + **OAuth**. |
-| B4 Status pedagang | Dikerjakan Ferdi | Default "Ya, status pedagang berlaku". URL Persyaratan Layanan opsional. Ferdi melaporkan sudah mengisi; belum dicek ulang. |
-| B5 Penguji uji tertutup | MENUNGGU | Butuh minimal 12 penguji. Daftar "Tim LLK" (8 email) sudah ada di akun. Perlu 4+ email Gmail tambahan dari Ferdi (disarankan 14–16 total sebagai cadangan). Daftar belum dibuat dan link ikut serta belum ada. |
+| B4 Status pedagang | Selesai | "Ya, status pedagang berlaku"; URL Persyaratan Layanan dikosongkan (opsional). Awalnya belum tersimpan, lalu disimpan ulang Ferdi dan terverifikasi. |
+| B5 Penguji uji tertutup | Sebagian | Negara Indonesia dan daftar Tim LLK (8 email) sudah dipilih; email masukan fertune.support@gmail.com. Masih butuh 4+ email Gmail lagi (disarankan 14 sampai 16 total). Email dari jasa uji nanti ditambahkan ke daftar Tim LLK. |
 | B6 Pengujian lisensi | Selesai | Daftar "Penguji Beli" kini 2 email: gitarsaktipol@gmail.com dan fertune.support@gmail.com. Respons RESPOND_NORMALLY. "Tim LLK" tidak dicentang. |
-| B7 Ringkasan publikasi | Dicatat, BELUM dikirim | Semua perubahan Konten aplikasi tercatat, belum dikirim. Tombol "Kirim aplikasi untuk ditinjau" nonaktif sampai langkah dasbor selesai. Pengujian tertutup baru 1 dari 5 langkah (rilis draf sudah dibuat; sisanya: pilih negara, pilih penguji, pratinjau rilis, kirim rilis). |
+| B7 Ringkasan publikasi | Dikirim | 15 perubahan dikirim untuk ditinjau pada 10 Nov 2026 setelah pemeriksaan cepat Google lolos. Menunggu hasil tinjauan. |
 
-Pengingat: tombol "Kirim untuk ditinjau" hanya ditekan setelah Ferdi mengetik "kirim".
+Pengiriman dilakukan hanya setelah Ferdi mengetik "kirim". Pengiriman berikutnya tetap harus menunggu perintah itu.
 
 ## Uji tertutup dan jadwal
 
-- Link ikut serta (opt-in): BELUM ADA, menunggu daftar penguji.
-- Tanggal mulai uji tertutup: BELUM, menunggu penguji. Hitungan 14 hari baru dimulai setelah minimal 12 penguji ikut serta, dan jumlahnya harus terus terjaga.
+- Link ikut serta (opt-in): BELUM tersedia. Muncul di tab Penguji (Pengujian tertutup - Alpha) setelah rilis disetujui dan aktif. Link tidak berubah saat email ditambahkan.
+- Jasa penguji: Ferdi sudah mendapat jasa uji. Ferdi diberi daftar pertanyaan (link opt-in atau email, jaminan 12+ penguji selama 14 hari, penggantian bila keluar, biaya). Jangan beri jasa itu sandi atau akses Play Console.
+- Tanggal mulai uji tertutup: BELUM. Hitungan 14 hari mulai setelah minimal 12 penguji ikut serta dan harus terjaga.
 - Perkiraan boleh ajukan produksi: tanggal mulai + 14 hari.
-- Syarat produksi: rilis uji tertutup dipublikasikan dan minimal 12 penguji ikut serta (sekarang 0).
+- Syarat produksi: rilis uji tertutup dipublikasikan dan minimal 12 penguji ikut serta (sekarang 0 yang ikut).
 
 ## Untuk Claude Code (pengembang FerTune)
 
@@ -60,3 +62,10 @@ Pengingat: tombol "Kirim untuk ditinjau" hanya ditekan setelah Ferdi mengetik "k
 ## Rahasia
 
 Tidak ada rahasia di catatan ini. File kunci tetap di D:\FerTune app\FerTune\FerTune-RAHASIA seperti catatan sebelumnya.
+
+## Tindak lanjut Claude Code (10 Nov 2026)
+
+1. Akun peninjau gitarsaktipol+review@gmail.com dicek di database: terdaftar, terverifikasi, pernah login, Premium (fertune_grants) aktif. Sandi dikonfirmasi benar oleh Ferdi.
+2. privacy.html sudah menyebut Masuk dengan Google (email & nama dari akun Google).
+3. Pesan "Berhasil masuk! 🎉" dulu tertimpa tulisan "Masuk sebagai …"; diperbaiki (PR #190): tampil hijau di atasnya 12 detik.
+4. Halaman Syarat & Ketentuan tersedia di https://fertune.gitarsakti.com/syarat.html (bisa diisikan ke kolom URL Persyaratan Layanan kapan saja; opsional).
