@@ -240,6 +240,7 @@ header .sel select{max-width:100%;min-width:0}
 .acct .arow{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .acct .amsg{color:var(--muted);flex:1;min-width:140px}
 .acct .amsg b{color:var(--ink)}
+.acct .amsg .anote{display:block;color:var(--ok);margin-bottom:2px}
 .acct .abtn{border:0;border-radius:14px;background:var(--pSky);color:var(--ink);padding:8px 14px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit}
 .acct form{display:grid;gap:8px;margin-top:10px}
 .acct .aerr{color:#C0392B;font-size:12.5px;min-height:1em}
@@ -5771,7 +5772,7 @@ function authFromUrl(){
   var q={}; h.slice(1).split('&').forEach(function(kv){ var i=kv.indexOf('='); if(i>0) q[decodeURIComponent(kv.slice(0,i))]=decodeURIComponent(kv.slice(i+1).replace(/\+/g,' ')); });
   if(!q.access_token && !q.error && !q.error_code) return false;
   try{ history.replaceState(history.state,'',location.pathname+location.search); }catch(e){}
-  var show=function(t){ setTimeout(function(){ try{ goTab('set'); }catch(e){} $('#acctMsg').textContent=t; },300); };
+  var show=function(t){ setTimeout(function(){ try{ goTab('set'); }catch(e){} acctNote={t:t,until:Date.now()+12000}; renderAcct(); setTimeout(renderAcct,12100); },300); };
   if(q.access_token && q.refresh_token){
     watchAuth().then(function(c){ return c.auth.setSession({access_token:q.access_token,refresh_token:q.refresh_token}); })
       .then(function(r){ show(r&&r.error ? (q.type==='signup'?'Email terverifikasi. Silakan tekan Masuk dengan email & kata sandimu.':'Belum berhasil masuk. Coba lagi.') : (q.type==='signup'?'Email terverifikasi! Kamu sudah masuk. 🎉':'Berhasil masuk! 🎉')); },
@@ -5863,6 +5864,9 @@ function schedulePush(){
     });
   },2000);
 }
+/* Pesan sesaat di kartu Akun (mis. "Berhasil masuk! 🎉" setelah kembali dari Google/link verifikasi).
+   Dulu ditulis langsung ke #acctMsg lalu langsung tertimpa renderAcct saat sesi terpasang. */
+var acctNote=null;
 function renderAcct(){
   /* keterangan di bawah tombol Simpan (menu Partitur): di mana partitur tersimpan */
   var si=$('#ssaveInfo');
@@ -5879,6 +5883,9 @@ function renderAcct(){
   } else {
     m.textContent='Partitur tersimpan di HP ini saja. Masuk dengan akun Gitar Sakti supaya tidak hilang saat ganti HP.';
     b.textContent=$('#acctForm').hidden?'Masuk':'Tutup'; $('#acctDelCard').hidden=true;
+  }
+  if(acctNote && Date.now()<acctNote.until){
+    var nt=document.createElement('b'); nt.className='anote'; nt.textContent=acctNote.t; m.insertBefore(nt,m.firstChild);
   }
 }
 function authErr(e){
