@@ -182,6 +182,18 @@ Setelah uji tertutup selesai: **Rilis → Produksi → Buat rilis baru** → pak
 6. Perbarui Play Console → **Konten aplikasi → Keamanan data**: tambah jenis data **Info keuangan → Riwayat pembelian**
    (dikumpulkan, tujuan: fungsi aplikasi; tidak dibagikan).
 
+## Masuk dengan Google (opsional, tombol muncul otomatis setelah diaktifkan)
+
+1. https://console.cloud.google.com → pilih project **fertune** → **APIs & Services → OAuth consent screen**:
+   jenis **External**, nama aplikasi `FerTune`, email dukungan `leslesku@gmail.com`, logo (opsional),
+   Authorized domains: `gitarsakti.com` dan `supabase.co`, email developer → Simpan → **Publish app** (Production).
+2. **APIs & Services → Credentials → Create credentials → OAuth client ID** → jenis **Web application**, nama `Supabase FerTune`.
+   **Authorized redirect URIs**: `https://addtajuxfoxcaezmkice.supabase.co/auth/v1/callback` → Create.
+   Salin **Client ID** dan **Client secret** (secret = rahasia, jangan dikirim ke chat).
+3. Supabase Dashboard → **Authentication → Sign In / Providers → Google** → aktifkan, tempel Client ID & Client secret → Save.
+4. Buka FerTune → Pengaturan → Masuk: tombol **Masuk dengan Google** muncul sendiri (tanpa update aplikasi).
+   Akun Google dengan email yang sama dengan akun Gitar Sakti yang sudah ada = akun yang sama.
+
 ## Memperbarui aplikasi setelah terbit
 
 - **Perubahan tampilan/fitur** (isi `index.html`, dll.): cukup push ke GitHub seperti biasa (dan naikkan `CACHE`).

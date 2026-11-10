@@ -244,6 +244,16 @@ header .sel select{max-width:100%;min-width:0}
 .acct form{display:grid;gap:8px;margin-top:10px}
 .acct .aerr{color:#C0392B;font-size:12.5px;min-height:1em}
 .acct .ahint{color:var(--muted);font-size:12px}
+.acct form[data-mode="in"] #acctName{display:none}
+.acct .amain{width:100%;padding:12px 14px;font-size:15px}
+.acct .aswitch{font-size:13px;color:var(--muted);text-align:center}
+.acct .linkbtn{border:0;background:none;padding:0;font:inherit;font-size:13px;font-weight:800;color:var(--brass);text-decoration:underline;cursor:pointer}
+.acct .agoogle{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:2px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);padding:10px 14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.acct .agoogle[hidden]{display:none}
+.acct .agoogle svg{width:22px;height:22px;flex:none}
+.acct .aor{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
+.acct .aor[hidden]{display:none}
+.acct .aor::before,.acct .aor::after{content:"";flex:1;height:1px;background:var(--line)}
 .gsback{display:inline-block;margin-right:8px}
 .delfb{margin:4px 0 12px}
 .delfb .q{font-weight:800;font-size:14px;color:var(--ink);margin:0 0 4px}
@@ -2301,16 +2311,17 @@ body.mob #snewOv .instList b{font-size:20px}
       <span class="amsg" id="acctMsg">Partitur tersimpan di HP ini saja. Masuk dengan akun Gitar Sakti supaya tidak hilang saat ganti HP.</span>
       <button class="abtn" id="acctBtn" type="button">Masuk</button>
     </div>
-    <form id="acctForm" hidden autocomplete="on">
-      <input class="txt" id="acctName" type="text" placeholder="Nama (khusus daftar baru)" autocomplete="name" maxlength="60">
+    <form id="acctForm" hidden autocomplete="on" data-mode="in" novalidate>
+      <button class="agoogle" id="acctGoogle" type="button" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Masuk dengan Google</span></button>
+      <div class="aor" id="acctOr" hidden><span>atau pakai email</span></div>
+      <input class="txt" id="acctName" type="text" placeholder="Nama (boleh dikosongkan)" autocomplete="name" maxlength="60">
       <input class="txt" id="acctEmail" type="email" placeholder="Email" autocomplete="email" required>
       <input class="txt" id="acctPass" type="password" placeholder="Kata sandi" autocomplete="current-password" minlength="6" required>
       <div class="aerr" id="acctErr" role="alert"></div>
-      <div class="arow">
-        <button class="abtn" id="acctIn" type="submit">Masuk</button>
-        <button class="abtn" id="acctUp" type="button">Daftar akun baru</button>
-      </div>
-      <div class="ahint">Akunnya sama dengan akun di gitarsakti.com. Lupa kata sandi? Reset lewat halaman Masuk di gitarsakti.com.</div>
+      <button class="abtn amain" id="acctIn" type="submit">Masuk</button>
+      <div class="aswitch"><span id="acctSwT">Belum punya akun?</span> <button class="linkbtn" id="acctSw" type="button">Daftar di sini</button></div>
+      <div class="aswitch" id="acctForgotRow"><button class="linkbtn" id="acctForgot" type="button">Lupa kata sandi?</button></div>
+      <div class="ahint">Akunnya sama dengan akun di gitarsakti.com.</div>
     </form>
   </div>
 
@@ -5762,7 +5773,7 @@ function authFromUrl(){
   var show=function(t){ setTimeout(function(){ try{ goTab('set'); }catch(e){} $('#acctMsg').textContent=t; },300); };
   if(q.access_token && q.refresh_token){
     watchAuth().then(function(c){ return c.auth.setSession({access_token:q.access_token,refresh_token:q.refresh_token}); })
-      .then(function(r){ show(r&&r.error ? 'Email terverifikasi. Silakan tekan Masuk dengan email & kata sandimu.' : 'Email terverifikasi! Kamu sudah masuk. 🎉'); },
+      .then(function(r){ show(r&&r.error ? (q.type==='signup'?'Email terverifikasi. Silakan tekan Masuk dengan email & kata sandimu.':'Belum berhasil masuk. Coba lagi.') : (q.type==='signup'?'Email terverifikasi! Kamu sudah masuk. 🎉':'Berhasil masuk! 🎉')); },
             function(){ show('Email terverifikasi. Silakan tekan Masuk (cek internet).'); });
   } else {
     show(/expired/i.test(q.error_code||q.error_description||'') ? 'Link verifikasi sudah kedaluwarsa. Tekan Masuk → Daftar lagi untuk dikirimi link baru, atau coba Masuk.' : 'Link verifikasi tidak bisa dipakai. Coba Masuk dengan email & kata sandimu.');
@@ -5917,9 +5928,47 @@ function bindAcct(){
     var f=$('#acctForm'); f.hidden=!f.hidden; renderAcct();
     if(!f.hidden){ watchAuth().catch(function(){ $('#acctErr').textContent='Tidak bisa terhubung. Cek internet.'; }); $('#acctEmail').focus(); }
   });
+  /* Form akun dua mode (diminta Ferdi, Nov 2026: mau masuk saja tidak perlu isi nama):
+     data-mode="in" = Masuk (email + kata sandi), "up" = Daftar (+ nama opsional). Google tampil bila provider aktif. */
+  var form=$('#acctForm');
+  function setMode(m){
+    form.setAttribute('data-mode',m); var up=m==='up';
+    $('#acctIn').textContent=up?'Daftar akun baru':'Masuk';
+    $('#acctSwT').textContent=up?'Sudah punya akun?':'Belum punya akun?';
+    $('#acctSw').textContent=up?'Masuk di sini':'Daftar di sini';
+    $('#acctForgotRow').hidden=up;
+    $('#acctPass').setAttribute('autocomplete',up?'new-password':'current-password');
+    $('#acctPass').setAttribute('placeholder',up?'Buat kata sandi (min. 8 karakter)':'Kata sandi');
+    $('#acctErr').textContent='';
+  }
+  $('#acctSw').addEventListener('click',function(){ setMode(form.getAttribute('data-mode')==='up'?'in':'up'); $('#acctEmail').focus(); });
+  $('#acctForgot').addEventListener('click',function(){
+    var email=$('#acctEmail').value.trim().toLowerCase(), err=$('#acctErr');
+    if(!email){ err.textContent='Tulis emailmu dulu di kotak Email, lalu tekan "Lupa kata sandi?" lagi.'; $('#acctEmail').focus(); return; }
+    err.textContent='Mengirim…';
+    watchAuth().then(function(c){ return c.auth.resetPasswordForEmail(email,{redirectTo:'https://gitarsakti.com/?resetpw=1'}); })
+      .then(function(r){ err.textContent=r&&r.error?authErr(r.error):'Link ganti kata sandi sudah dikirim ke '+email+'. Buka emailnya, buat kata sandi baru, lalu kembali ke sini dan Masuk.'; },
+            function(e){ err.textContent=authErr(e); });
+  });
+  /* Google: hanya tampil bila Supabase mengaktifkan provider google (dicek /auth/v1/settings). */
+  var gChecked=false;
+  function checkGoogle(){
+    if(gChecked) return; gChecked=true;
+    fetch(CLOUD.url+'/auth/v1/settings',{headers:{apikey:CLOUD.key}}).then(function(r){ return r.json(); }).then(function(j){
+      var on=!!(j&&j.external&&j.external.google); $('#acctGoogle').hidden=!on; $('#acctOr').hidden=!on;
+    },function(){ gChecked=false; });
+  }
+  $('#acctBtn').addEventListener('click',function(){ if(!form.hidden) checkGoogle(); });
+  $('#acctGoogle').addEventListener('click',function(){
+    var err=$('#acctErr'); err.textContent='Membuka Google…';
+    watchAuth().then(function(c){ return c.auth.signInWithOAuth({provider:'google',options:{redirectTo:AUTH_BACK}}); })
+      .then(function(r){ if(r&&r.error) err.textContent=authErr(r.error); },function(e){ err.textContent=authErr(e); });
+  });
   function go(up){
     var email=$('#acctEmail').value.trim().toLowerCase(), pass=$('#acctPass').value, err=$('#acctErr');
     if(!email||!pass){ err.textContent='Isi email dan kata sandi.'; return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ err.textContent='Alamat email belum benar.'; return; }
+    if(up&&pass.length<8){ err.textContent='Kata sandi minimal 8 karakter.'; return; }
     err.textContent='Memproses…';
     watchAuth().then(function(c){
       return up ? c.auth.signUp({email:email,password:pass,options:{data:{name:$('#acctName').value.trim()},emailRedirectTo:AUTH_BACK}})
@@ -5930,8 +5979,7 @@ function bindAcct(){
       err.textContent=''; $('#acctPass').value=''; $('#acctForm').hidden=true;
     },function(e){ err.textContent=authErr(e); });
   }
-  $('#acctForm').addEventListener('submit',function(e){ e.preventDefault(); go(false); });
-  $('#acctUp').addEventListener('click',function(){ go(true); });
+  form.addEventListener('submit',function(e){ e.preventDefault(); go(form.getAttribute('data-mode')==='up'); });
 }
 /* =====================================================================
    Hak akses: Gratis vs Premium.
