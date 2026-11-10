@@ -37,3 +37,27 @@ pisahkan Langganan jadi tombol/halaman sendiri; Akun & Bantuan dibuat ringkas.
 > (Android back also returns to the list). The subscription details moved to a dedicated page opened from a
 > compact "Plan: Free — Upgrade" banner, the sign-in form only appears on the Account page, account deletion
 > is collapsed, and Help topics are shown as expandable rows with only one open at a time.
+
+---
+
+## 2. Pemeriksaan menyeluruh sebelum produksi (10 Nov 2026)
+
+**Sumber:** audit internal (kestabilan, keamanan, tampilan) selama uji tertutup.
+
+**Perubahan (PR #194 `fertune-v201` dan PR berikutnya `fertune-v202`):**
+- Data partitur yang rusak tidak lagi membuat aplikasi macet; isian teks disaring.
+- Pembaruan aplikasi tidak lagi memuat ulang halaman di tengah permainan.
+- Aplikasi ditinggal ke latar: permainan dijeda dan mikrofon dimatikan otomatis.
+- HP dipakai bergantian: partitur satu akun tidak ikut terunggah ke akun lain.
+- Editor Partitur di HP: menu bawah disembunyikan supaya tuts piano tidak tertutup.
+- Latihan: tombol "Seperti terakhir" (langsung ke soal), teks lebih kontras, layar kecil 320×568 dirapikan.
+
+**Draf jawaban (Inggris):**
+> During closed testing we also ran an internal stability, security and usability review. We hardened loading of
+> saved data so a corrupted item can no longer prevent the app from starting, sanitized user-entered text, and made
+> app updates wait until the user is not in the middle of a game. The app now pauses the game and releases the
+> microphone when it goes to the background. On shared phones, one account's cloud-saved scores are no longer
+> uploaded to another account. On phones, the score editor hides the bottom navigation so the on-screen piano is
+> fully visible, the practice flow got a "same as last time" shortcut, text contrast was improved, and the tuner
+> layout was fixed for very small screens (320×568).
+
