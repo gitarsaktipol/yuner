@@ -2,6 +2,13 @@
 
 Dibuat Okt 2026 setelah diskusi dengan Ferdi. Dokumen ini = keputusan + status pengerjaan.
 
+## Pembaruan 10 Nov 2026 (menggantikan butir "Pembelian HANYA lewat Google Play" di bawah)
+- Premium **menempel di akun** dan bisa dibeli dari dua pintu: langganan Google Play (aplikasi Android) ATAU paket sekali bayar
+  1 bulan / 1 tahun di toko gitarsakti.com (web; Midtrans/transfer tidak bisa menagih otomatis). Versi web sekarang ikut dibatasi.
+- Harga sama di kedua tempat: Rp45.000/bulan, Rp350.000/tahun = **harga perkenalan sampai 31 Maret 2027**, sesudahnya Rp99.000 & Rp999.000.
+- Di dalam aplikasi Play tetap TIDAK ada tautan/ajakan membeli di web.
+- Belum: email pengingat sebelum masa paket web habis; pembatalan/refund pesanan web belum otomatis mengurangi masa Premium.
+
 ## Keputusan
 - Aplikasi Play Store **gratis diunduh**, fitur lengkap lewat **langganan Premium** (Google Play Billing). Aplikasi yang pernah terbit gratis TIDAK bisa diubah jadi berbayar, jadi model ini dipilih sebelum rilis pertama.
 - Harga: **Rp45.000 / bulan** atau **Rp350.000 / tahun**, **gratis 1 bulan pertama** (free trial Play). Pakai harga lokal Play (Indonesia dalam rupiah).
