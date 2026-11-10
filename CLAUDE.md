@@ -44,6 +44,7 @@ Semua logika JS ada langsung di dalam `index.html` (di dalam satu `<script>` IIF
 
 ## Google Play Store (TWA)
 - Rencana: dibungkus jadi aplikasi Android lewat PWABuilder (Trusted Web Activity), package ID **`com.gitarsakti.fertune`** (diputuskan Ferdi, Okt 2026; tidak bisa diganti setelah terbit), host **`fertune.gitarsakti.com`**, start URL `/` (dulu `gitarsakti.com` + `/fertune/`, diganti Nov 2026 sebelum terbit). Langkah lengkap & status di `playstore/PANDUAN-PLAYSTORE.md`.
+- **Catatan uji tertutup** `playstore/CATATAN-UJI-TERTUTUP.md` (diminta Ferdi, Nov 2026): SETIAP perubahan karena masukan penguji dicatat di sana (masukan, perubahan + PR, draf jawaban bahasa Inggris) — dipakai menjawab pertanyaan Google saat mengajukan akses produksi setelah uji tertutup.
 - Isi aplikasi tetap diambil dari GitHub Pages, jadi update biasa cukup push (tidak perlu upload .aab baru).
 - Verifikasi domain: `.well-known/assetlinks.json` di akar REPO INI (SUDAH dipasang 10 Nov 2026: SHA-256 kunci upload PWABuilder `1E:87:…:11:54` + kunci penandatanganan Play `09:68:…:6B:95`). Kalau kunci berubah, tambahkan SHA-256 baru di sini. Aplikasi dibuat pertama; Gitar Sakti sendiri BELUM dijadikan aplikasi Play Store (kelas video = produk digital → aturan Play Billing).
 - Hapus akun (syarat Play) SUDAH ada: tombol di kartu akun + `hapus-akun.html`, memanggil Edge Function `delete-account` di Supabase (kode di repo website `supabase/functions/delete-account`). Akun dengan pesanan tidak dihapus, hanya data `fertune_scores`.
