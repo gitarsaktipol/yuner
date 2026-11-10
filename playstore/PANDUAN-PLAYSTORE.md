@@ -99,7 +99,10 @@ Tanpa langkah ini aplikasi tetap jalan, tapi di bagian atas akan terlihat **bari
 
 **Kebijakan privasi:** `https://fertune.gitarsakti.com/privacy.html`
 
-**Akses aplikasi:** *Semua fungsi tersedia tanpa akses khusus.* Login akun Gitar Sakti bersifat opsional (hanya untuk simpan cloud); semua fitur bisa dipakai tanpa login.
+**Detail login (Akses aplikasi):** fitur Premium perlu langganan, jadi berikan akun uji ke peninjau Google:
+email **`gitarsaktipol+review@gmail.com`** + kata sandi yang kamu buat sendiri (daftar dulu di FerTune → Pengaturan → Akun → Daftar,
+lalu buka link verifikasi yang masuk ke kotak masuk gitarsaktipol@gmail.com). Akun ini sudah diberi Premium lewat tabel `fertune_grants`.
+Instruksi (Inggris): *"Open Settings (gear tab) > Account > Masuk, sign in with the account above. Premium is already active on this account, so all features are unlocked."*
 
 **Iklan:** *Tidak, aplikasi saya tidak berisi iklan.*
 

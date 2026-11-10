@@ -5746,6 +5746,7 @@ function watchAuth(){
       var u=(sess&&sess.user)||null, changed=(u&&u.id)!==(sbUser&&sbUser.id);
       sbUser=u; renderAcct();
       if(u&&changed) setTimeout(syncNow,0);   // jangan memanggil Supabase langsung di dalam callback ini
+      setTimeout(function(){ grantRefresh(c,u); },0);   /* Premium lewat akun (fertune_grants) */
     });
     return c;
   });
@@ -5927,7 +5928,7 @@ var TRIAL_BARS=4;
 function freeKeyOk(k){ return isPremium() || (k|0)===0; }
 function freeLetterOk(L){ return isPremium() || (L|0)===0; }
 function gatingOn(){ return GATING_ON || playSell() || (!inPlayApp() && store.get('yg.gating','0')==='1'); }
-function isPremium(){ return !gatingOn() || pbActive() || (!inPlayApp() && store.get('yg.premTest','0')==='1'); }
+function isPremium(){ return !gatingOn() || pbActive() || grantActive() || (!inPlayApp() && store.get('yg.premTest','0')==='1'); }
 /* =====================================================================
    Langganan Google Play (Play Billing lewat Digital Goods API, hanya ada di aplikasi Play Store/TWA
    yang dibuat PWABuilder dengan opsi "Play Billing").
@@ -5957,6 +5958,26 @@ function pbActive(){
   var p=pbPrem(); if(!p||!p.sku) return false;
   return Date.now()-(p.at||0) < PB_OFFLINE_DAYS*864e5;
 }
+/* Premium lewat AKUN (tabel fertune_grants di Supabase, diisi admin): untuk akun uji peninjau Google Play,
+   Ferdi sendiri, atau hadiah. Dicek saat login / aplikasi dibuka (`grantRefresh`), disimpan `yg.grant` {uid,until,at};
+   dibuang saat keluar akun. Offline dipercaya maks 30 hari sejak terakhir dicek. */
+function grantGet(){ try{ return JSON.parse(store.get('yg.grant','null')); }catch(e){ return null; } }
+function grantActive(){
+  var g=grantGet(); if(!g||!g.uid) return false;
+  if(g.until && Date.parse(g.until)<=Date.now()) return false;
+  return Date.now()-(g.at||0) < 30*864e5;
+}
+function grantRefresh(c,u){
+  var before=isPremium();
+  var done=function(){ if(isPremium()!==before) pbChanged(); else pbRender(); };
+  if(!u){ store.set('yg.grant','null'); done(); return; }
+  Promise.resolve(c.from('fertune_grants').select('until').limit(1)).then(function(r){
+    if(r.error) return;   /* gagal jaringan: biarkan catatan lama */
+    var row=r.data&&r.data[0];
+    store.set('yg.grant', row ? JSON.stringify({uid:u.id,until:row.until||null,at:Date.now()}) : 'null');
+    done();
+  },function(){});
+}
 function pbFmtPrice(pr){
   if(!pr) return '';
   var v=Number(pr.value); if(!isFinite(v)) return pr.value+' '+pr.currency;
@@ -5975,10 +5996,14 @@ function pbSetMsg(t,k){ PB.msg=t||''; PB.msgKind=k||''; pbRender(); }
 function pbRender(){
   var buys=$('#planBuys'), one=$('#planBuy'), links=$('#planLinks'), msg=$('#planMsg'), price=$('#planPrice');
   if(!buys) return;
-  var sell=playSell(), items=pbItems(), p=pbPrem(), act=pbActive();
+  var sell=playSell(), items=pbItems(), p=pbPrem(), act=pbActive(), byAcct=!act&&grantActive();
   one.hidden=sell; buys.hidden=!sell; links.hidden=!sell;
   if(sell){
-    if(act){
+    if(byAcct){
+      var g=grantGet();
+      price.innerHTML='<b>⭐ Premium aktif</b> — lewat akun Gitar Sakti'+(g&&g.until?' sampai '+new Date(g.until).toLocaleDateString('id-ID'):'')+'<br><small>Semua fitur terbuka selama kamu masuk dengan akun ini.</small>';
+      buys.innerHTML='';
+    } else if(act){
       var it=items.filter(function(x){ return x.itemId===p.sku; })[0];
       price.innerHTML='<b>⭐ Premium aktif</b> — langganan '+pbName(p.sku)+(it?' ('+pbFmtPrice(it.price)+' / '+pbPer(it.subscriptionPeriod)+')':'')
         +'<br><small>Diperpanjang otomatis oleh Google Play. Batalkan kapan saja lewat tombol "Kelola / batalkan".</small>';
