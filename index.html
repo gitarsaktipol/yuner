@@ -478,6 +478,37 @@ header .sel select{max-width:100%;min-width:0}
 @media (min-width:700px){ #tab-score .fields:not(.fields2){grid-template-columns:repeat(4,1fr)} }
 /* ---------- halaman Pengaturan ---------- */
 #tab-set h2.sh{margin:0 0 10px;font-size:16px;font-weight:800;color:var(--ink)}
+/* menu bertingkat: data-sp di #tab-set = halaman yang tampil; elemen [data-sp] lain disembunyikan */
+#tab-set[data-sp="home"] [data-sp]:not([data-sp="home"]),#tab-set[data-sp="plan"] [data-sp]:not([data-sp="plan"]),
+#tab-set[data-sp="acct"] [data-sp]:not([data-sp="acct"]),#tab-set[data-sp="perm"] [data-sp]:not([data-sp="perm"]),
+#tab-set[data-sp="theme"] [data-sp]:not([data-sp="theme"]),#tab-set[data-sp="help"] [data-sp]:not([data-sp="help"]),
+#tab-set[data-sp="home"] .setBar{display:none}
+#tab-set .setBar{margin:-6px 0 -2px}
+#tab-set .setBack{background:none;border:0;padding:6px 4px;font:inherit;font-size:16px;font-weight:800;color:var(--brass);cursor:pointer}
+#tab-set .setMenu{padding:2px 0;overflow:hidden}
+#tab-set .setRow,#tab-set .setPromo{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:none;border:0;border-top:2px solid var(--line);font:inherit;color:var(--ink);text-align:left;cursor:pointer;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:background .15s}
+#tab-set .setRow:first-child{border-top:0}
+#tab-set .setRow:active{background:var(--track)}
+#tab-set .setRow .ic,#tab-set .setPromo .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;flex:none;background:var(--pSky)}
+#tab-set .setMenu .setRow:nth-child(1) .ic{background:var(--pPink)} #tab-set .setMenu .setRow:nth-child(2) .ic{background:var(--pMint)}
+#tab-set .setMenu .setRow:nth-child(3) .ic{background:var(--pLilac)} #tab-set .setMenu .setRow:nth-child(4) .ic{background:var(--pLemon)}
+#tab-set .setRow .tx,#tab-set .setPromo .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+#tab-set .setRow b,#tab-set .setPromo b{font-size:15.5px;font-weight:800}
+#tab-set .setRow small,#tab-set .setPromo small{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tab-set .chev{flex:none;width:9px;height:9px;margin:0 4px 0 2px;border-top:3px solid var(--muted);border-right:3px solid var(--muted);border-radius:2px;transform:rotate(45deg);opacity:.8}
+#tab-set .setPromo{border:2px solid var(--brass);border-radius:22px;margin:0 0 12px;background:linear-gradient(120deg,var(--pPink),var(--pPeach));box-shadow:0 4px 0 var(--dPink)}
+#tab-set .setPromo .ic{background:var(--panel)}
+#tab-set .setPromo small{color:var(--ink);opacity:.8}
+#tab-set .setPromo:active{transform:translateY(3px);box-shadow:0 1px 0 var(--dPink)}
+#tab-set .helpitem summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
+#tab-set .helpitem summary::-webkit-details-marker{display:none}
+#tab-set .helpitem summary::after{content:'';flex:none;width:8px;height:8px;margin-right:6px;border-top:3px solid var(--muted);border-right:3px solid var(--muted);border-radius:2px;transform:rotate(45deg);transition:transform .2s}
+#tab-set .helpitem[open] summary::after{transform:rotate(135deg);border-color:var(--brass)}
+#tab-set .delWrap summary{cursor:pointer;font-weight:800;font-size:15px;color:var(--bad);padding:4px 2px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+#tab-set .delWrap summary::-webkit-details-marker{display:none}
+#tab-set .delWrap summary::after{content:'';flex:none;width:8px;height:8px;margin-right:6px;border-top:3px solid var(--muted);border-right:3px solid var(--muted);border-radius:2px;transform:rotate(45deg);transition:transform .2s}
+#tab-set .delWrap[open] summary::after{transform:rotate(135deg)}
+#tab-set .delWrap[open] summary{margin-bottom:8px}
 #tab-set .themes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 #tab-set .themeopt{border:2px solid var(--line);background:var(--track);border-radius:18px;padding:10px 6px 9px;display:flex;flex-direction:column;align-items:center;gap:7px;font-weight:800;font-size:13px;color:var(--ink);cursor:pointer}
 #tab-set .themeopt .sw{display:flex;border-radius:12px;overflow:hidden;width:100%;height:34px;border:2px solid rgba(0,0,0,.08)}
@@ -1021,9 +1052,10 @@ html.csOpen select:focus{outline:none}
   body.on-latih .pdock .dockfoot{order:-1}
 
   /* --- Pengaturan: kartu disusun 2 kolom --- */
-  body.on-set #tab-set{display:block;columns:2 440px;column-gap:22px}
-  body.on-set #tab-set > header{column-span:all;margin-bottom:22px;position:relative;top:0}
-  body.on-set #tab-set > :not(header){break-inside:avoid;margin:0 0 22px;display:block;width:100%;animation:sIn .5s var(--bounce) both}
+  body.on-set #tab-set{display:block}
+  body.on-set #tab-set > header{margin-bottom:22px;position:relative;top:0}
+  body.on-set #tab-set > :not(header){margin:0 auto 18px;width:100%;max-width:720px;animation:sIn .5s var(--bounce) both}
+  body.on-set #tab-set .setRow:hover,body.on-set #tab-set .setPromo:hover{filter:brightness(1.03)} body.on-set #tab-set .setMenu .setRow:hover{background:var(--track)}
   body.on-set #tab-set > :nth-child(3){animation-delay:.04s} body.on-set #tab-set > :nth-child(4){animation-delay:.08s}
   body.on-set #tab-set > :nth-child(5){animation-delay:.12s} body.on-set #tab-set > :nth-child(n+6){animation-delay:.16s}
   body.on-set #tab-set a.sound{text-align:center}
@@ -2285,10 +2317,24 @@ body.mob #snewOv .instList b{font-size:20px}
   </div>
 </section>
 
-<section class="tab" id="tab-set" hidden>
+<section class="tab" id="tab-set" data-sp="home" hidden>
   <header><h1><svg class="mascot" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:var(--brass);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>Pengaturan</h1></header>
 
-  <div class="card" id="planCard">
+  <!-- Menu utama Pengaturan (diminta penguji, Nov 2026: halaman panjang melelahkan) = daftar baris; tiap baris membuka halaman sendiri (setGo) -->
+  <div class="setBar" id="setBar"><button class="setBack" id="setBack" type="button">◀ Pengaturan</button></div>
+  <button class="setPromo" id="setRowPlan" type="button" data-sp="home" data-go="plan" hidden><span class="ic" aria-hidden="true">⭐</span><span class="tx"><b>Langganan: <span id="setPlanSt">Gratis</span></b><small id="setSubPlan">Upgrade ke Premium</small></span><span class="chev" aria-hidden="true"></span></button>
+  <nav class="card setMenu" id="setMenu" data-sp="home" aria-label="Menu pengaturan">
+    <button class="setRow" type="button" data-go="acct"><span class="ic" aria-hidden="true">👤</span><span class="tx"><b>Akun</b><small id="setSubAcct">Belum masuk</small></span><span class="chev" aria-hidden="true"></span></button>
+    <button class="setRow" type="button" data-go="perm"><span class="ic" aria-hidden="true">🔐</span><span class="tx"><b>Izin alat musik</b><small id="setSubPerm">Mikrofon &amp; keyboard MIDI</small></span><span class="chev" aria-hidden="true"></span></button>
+    <button class="setRow" type="button" data-go="theme"><span class="ic" aria-hidden="true">🎨</span><span class="tx"><b>Tampilan</b><small id="setSubTheme">Full Color</small></span><span class="chev" aria-hidden="true"></span></button>
+    <button class="setRow" type="button" data-go="help"><span class="ic" aria-hidden="true">❓</span><span class="tx"><b>Bantuan</b><small>Panduan tiap menu &amp; cara sambung alat musik</small></span><span class="chev" aria-hidden="true"></span></button>
+  </nav>
+  <nav class="card setMenu" data-sp="home" aria-label="Informasi">
+    <a class="setRow" href="privacy.html"><span class="ic" aria-hidden="true">📄</span><span class="tx"><b>Kebijakan Privasi</b></span><span class="chev" aria-hidden="true"></span></a>
+    <a class="setRow" href="syarat.html"><span class="ic" aria-hidden="true">📜</span><span class="tx"><b>Syarat &amp; Ketentuan</b></span><span class="chev" aria-hidden="true"></span></a>
+  </nav>
+
+  <div class="card" id="planCard" data-sp="plan">
     <h2 class="sh" id="planTitle">Langganan <span class="planChip" id="planChip">Gratis</span></h2>
     <div class="plancols">
       <div class="plancol"><b>Gratis</b><ul><li>Tuner</li><li>Metronome</li><li>Latihan Acak (tangga nada C)</li><li>Arcade stage A</li><li>Lagu contoh di Partitur (lihat &amp; putar)</li><li>Coba menulis 4 birama</li></ul></div>
@@ -2307,7 +2353,7 @@ body.mob #snewOv .instList b{font-size:20px}
     </div>
   </div>
 
-  <div class="card acct" id="acct">
+  <div class="card acct" id="acct" data-sp="acct">
     <h2 class="sh">Akun</h2>
     <div class="arow">
       <span class="amsg" id="acctMsg">Partitur tersimpan di HP ini saja. Masuk dengan akun Gitar Sakti supaya tidak hilang saat ganti HP.</span>
@@ -2328,14 +2374,14 @@ body.mob #snewOv .instList b{font-size:20px}
   </div>
 
 
-  <div class="card permCard" id="permCard">
+  <div class="card permCard" id="permCard" data-sp="perm">
     <h2 class="sh">🔐 Izin alat musik</h2>
     <p class="ahint">FerTune perlu izin Chrome untuk mendengar mikrofon dan membaca keyboard MIDI. Izin hanya ditanyakan sekali; kalau pernah terpilih <b>Blokir</b>, buka lagi di sini.</p>
     <div class="permRow" data-perm="midi"><span class="permIco" aria-hidden="true">🎹</span><span class="permTxt"><b>Keyboard MIDI</b><small class="permSt">Memeriksa…</small></span><button class="sound permBtn" type="button">Izinkan</button></div>
     <div class="permRow" data-perm="mic"><span class="permIco" aria-hidden="true">🎤</span><span class="permTxt"><b>Mikrofon</b><small class="permSt">Memeriksa…</small></span><button class="sound permBtn" type="button">Izinkan</button></div>
   </div>
 
-  <div class="card">
+  <div class="card" data-sp="theme">
     <h2 class="sh">Tampilan</h2>
     <div class="themes" id="themes">
       <button type="button" class="themeopt" data-theme="warna" aria-pressed="true"><span class="sw"><i style="background:#FFD9E8"></i><i style="background:#D3ECFF"></i><i style="background:#D2F5E6"></i><i style="background:#FFF1BA"></i></span>Full Color</button>
@@ -2344,7 +2390,7 @@ body.mob #snewOv .instList b{font-size:20px}
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" data-sp="help">
     <h2 class="sh">Bantuan</h2>
     <details class="helpitem"><summary>Tuner gitar dan Metronome</summary><div class="hb">
       <ol>
@@ -2361,7 +2407,7 @@ body.mob #snewOv .instList b{font-size:20px}
     <details class="helpitem" id="helpPrem"><summary>Gratis dan Premium</summary><div class="hb">
       <p><b>Gratis:</b> Tuner, Metronome, Latihan mode Acak dengan tangga nada C, Arcade stage A (A1–A9), lagu contoh di Partitur (bisa dilihat dan diputar), dan mode <b>Coba menulis</b> (maksimal 4 birama 4/4, tidak bisa disimpan).</p>
       <p><b>Premium:</b> semua fitur lain, yaitu Arcade huruf B–Z, semua tangga nada, Latihan Custom dan Partitur saya, menulis dan menyimpan partitur, impor/ekspor MIDI, akor, impor gambar, dan simpan di cloud.</p>
-      <p>Lihat harga dan cara berlangganan di bagian <b>Langganan</b> (paling atas halaman Pengaturan ini). Pembayaran diproses oleh <b>Google Play</b>; langganan diperpanjang otomatis dan bisa dibatalkan kapan saja lewat tombol <b>Kelola / batalkan</b> (atau Play Store › Profil › Pembayaran &amp; langganan). Ganti HP? Masuk dengan akun Google yang sama lalu tekan <b>↻ Pulihkan</b>.</p>
+      <p>Lihat harga dan cara berlangganan di <b>Pengaturan › Langganan</b>. Pembayaran diproses oleh <b>Google Play</b>; langganan diperpanjang otomatis dan bisa dibatalkan kapan saja lewat tombol <b>Kelola / batalkan</b> (atau Play Store › Profil › Pembayaran &amp; langganan). Ganti HP? Masuk dengan akun Google yang sama lalu tekan <b>↻ Pulihkan</b>.</p>
     </div></details>
     <details class="helpitem"><summary>Latihan baca not</summary><div class="hb">
       <ol>
@@ -2442,15 +2488,13 @@ body.mob #snewOv .instList b{font-size:20px}
       <div class="tip">Kabel audio membaca satu nada sekali. Kalau tidak terbaca, periksa volume alat musik dan pastikan input yang dipilih bukan mikrofon bawaan.</div>
     </div></details>
     <details class="helpitem"><summary>Akun dan penyimpanan cloud</summary><div class="hb">
-      <p>FerTune bisa dipakai tanpa akun. Partitur tersimpan di HP-mu. Kalau mau partitur aman saat ganti HP, tekan <b>Masuk</b> di bagian Akun dengan akun Gitar Sakti. Partitur akan tersinkron otomatis.</p>
-      <p>Untuk keluar, tekan <b>Keluar</b>. Partitur di HP tetap ada. Untuk menghapus akun dan data cloud, gunakan kartu <b>Hapus akun</b> di bawah (tampil setelah masuk).</p>
+      <p>FerTune bisa dipakai tanpa akun. Partitur tersimpan di HP-mu. Kalau mau partitur aman saat ganti HP, buka <b>Pengaturan › Akun</b> lalu masuk dengan akun Gitar Sakti. Partitur akan tersinkron otomatis.</p>
+      <p>Untuk keluar, tekan <b>Keluar</b>. Partitur di HP tetap ada. Untuk menghapus akun dan data cloud, buka <b>Pengaturan › Akun</b> lalu <b>🗑 Hapus akun</b> di bagian bawah (tampil setelah masuk).</p>
     </div></details>
   </div>
 
-  <a class="sound" href="privacy.html">Kebijakan Privasi</a>
-
-  <div class="card acct dangerCard" id="acctDelCard" hidden>
-    <h2 class="sh">Hapus akun</h2>
+  <div class="card acct dangerCard" id="acctDelCard" data-sp="acct" hidden>
+    <details class="delWrap"><summary>🗑 Hapus akun</summary>
     <div class="delfb" id="delFb">
       <p class="q">Boleh tahu kenapa kamu menghapus akun? <small>(opsional, membantu kami memperbaiki FerTune)</small></p>
       <label class="chk"><input type="radio" name="delReason" value="Tidak lagi memakai FerTune"> Tidak lagi memakai FerTune</label>
@@ -2466,6 +2510,7 @@ body.mob #snewOv .instList b{font-size:20px}
       <span class="ahint" id="acctDelHint">Hapus akun = semua partitur di cloud ikut terhapus; partitur di HP ini tetap ada. Akun ini sama dengan akun Gitar Sakti: bila belum pernah membeli kelas, akun dan progres belajar ikut terhapus; bila sudah pernah, akun tetap ada (riwayat pembelian) dan hanya data FerTune di cloud yang dihapus.</span>
       <button class="abtn danger" id="acctDel" type="button" >Hapus akun</button>
     </div>
+    </details>
   </div>
 </section>
 
@@ -2878,6 +2923,7 @@ function renderPerm(){
     b.textContent = st==='denied' ? 'Cara membuka' : (st==='granted' ? (k==='midi'?'Cari alat':'Tes') : 'Izinkan');
     b.hidden = st==='unsupported';
   });
+  try{ setMenuSync(); }catch(e){}
 }
 function permEnv(){
   var sa = window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches) || /android-app:/.test(document.referrer);
@@ -5772,7 +5818,7 @@ function authFromUrl(){
   var q={}; h.slice(1).split('&').forEach(function(kv){ var i=kv.indexOf('='); if(i>0) q[decodeURIComponent(kv.slice(0,i))]=decodeURIComponent(kv.slice(i+1).replace(/\+/g,' ')); });
   if(!q.access_token && !q.error && !q.error_code) return false;
   try{ history.replaceState(history.state,'',location.pathname+location.search); }catch(e){}
-  var show=function(t){ setTimeout(function(){ try{ goTab('set'); }catch(e){} acctNote={t:t,until:Date.now()+12000}; renderAcct(); setTimeout(renderAcct,12100); },300); };
+  var show=function(t){ setTimeout(function(){ try{ setOpen('acct'); }catch(e){} acctNote={t:t,until:Date.now()+12000}; renderAcct(); setTimeout(renderAcct,12100); },300); };
   if(q.access_token && q.refresh_token){
     watchAuth().then(function(c){ return c.auth.setSession({access_token:q.access_token,refresh_token:q.refresh_token}); })
       .then(function(r){ show(r&&r.error ? (q.type==='signup'?'Email terverifikasi. Silakan tekan Masuk dengan email & kata sandimu.':'Belum berhasil masuk. Coba lagi.') : (q.type==='signup'?'Email terverifikasi! Kamu sudah masuk. 🎉':'Berhasil masuk! 🎉')); },
@@ -5887,6 +5933,7 @@ function renderAcct(){
   if(acctNote && Date.now()<acctNote.until){
     var nt=document.createElement('b'); nt.className='anote'; nt.textContent=acctNote.t; m.insertBefore(nt,m.firstChild);
   }
+  try{ setMenuSync(); }catch(e){}
 }
 function authErr(e){
   var t=(e&&e.message)||'Gagal. Coba lagi.';
@@ -7644,7 +7691,7 @@ function bindScore(){
     }
   });
   function openLogin(){
-    $('#sloginOv').hidden=true; goTab('set');
+    $('#sloginOv').hidden=true; setOpen('acct');
     setTimeout(function(){
       var f=$('#acctForm'); if(!sbUser && f.hidden) $('#acctBtn').click();
       try{ $('#acct').scrollIntoView({block:'start',behavior:'smooth'}); }catch(e){}
@@ -8751,7 +8798,7 @@ window.addEventListener('popstate',function(e){
   if(pr.playing){ try{ history.pushState({tab:app.tab,play:1},''); }catch(e){} askQuit(); return; }
   if(mob.leave){ var nx=mob.leave; mob.leave=null; goTab(nx); return; }
   /* HP: Kembali = langkah / halaman sebelumnya di menu yang sama */
-  if(mob.on && e.state && e.state.tab===app.tab && !e.state.sub && mobDepth()>0){ mobBack(); if(mobDepth()>0) mobSubPush(); return; }
+  if((mob.on || app.tab==='set') && e.state && e.state.tab===app.tab && !e.state.sub && mobDepth()>0){ mobBack(); if(mobDepth()>0) mobSubPush(); return; }
   mob.toHome=false;
   showTab((e.state && e.state.tab) || 'tuner');
 });
@@ -8928,7 +8975,7 @@ function bindPremium(){
     else if(a==='reset'){ trialScore=null; startTrial(); }
     else if(a==='prem') openPlan();
   });
-  function openPlan(){ $('#paywall').hidden=true; goTab('set'); setTimeout(function(){ var c=$('#planCard'); if(c&&c.scrollIntoView) c.scrollIntoView({behavior:'smooth',block:'start'}); },80); }
+  function openPlan(){ $('#paywall').hidden=true; setOpen('plan'); }
   $('#pwClose').addEventListener('click',function(){ $('#paywall').hidden=true; });
   $('#pwGo').addEventListener('click',openPlan);
   $('#paywall').addEventListener('click',function(e){ if(e.target===this) this.hidden=true; });
@@ -9056,9 +9103,53 @@ function applyTheme(t){
   var m=document.querySelector('meta[name="theme-color"]');
   if(m) m.setAttribute('content', t==='dark'?'#15162A':t==='laut'?'#EAF6FB':'#FFF7FB');
   $$('#themes [data-theme]').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-theme')===t?'true':'false'); });
+  try{ setMenuSync(); }catch(e){}
+}
+/* ===== Pengaturan: menu bertingkat (diminta penguji, Nov 2026) =====
+   #tab-set[data-sp] = halaman: home (daftar menu) | plan | acct | perm | theme | help.
+   Halaman selain home memasang satu state history {tab:'set',sub:1} supaya tombol Kembali Android = kembali ke daftar menu. */
+var setPg='home', setWant=null, SET_PAGES={plan:1,acct:1,perm:1,theme:1,help:1};
+function setGo(pg,noHist){
+  if(!SET_PAGES[pg]) pg='home';
+  var t=$('#tab-set'), from=setPg; setPg=pg; t.setAttribute('data-sp',pg);
+  if(pg!=='home' && !noHist){ try{ if(!(history.state && history.state.sub)) history.pushState({tab:'set',sub:1},''); }catch(e){} }
+  if(pg==='perm') refreshPerm();
+  if(pg==='acct' && !sbUser && $('#acctForm').hidden) $('#acctBtn').click();
+  if(pg!=='help') $$('#tab-set .helpitem[open]').forEach(function(d){ d.open=false; });
+  setMenuSync();
+  if(from!==pg && app.tab==='set'){ window.scrollTo(0,0); t.classList.remove('tabIn'); void t.offsetWidth; t.classList.add('tabIn'); }
+}
+/* buka halaman Pengaturan tertentu dari menu lain (mis. paywall → Langganan, Simpan → Akun) */
+function setOpen(pg){ if(app.tab==='set'){ setGo(pg); return; } setWant=pg; goTab('set'); }
+function setMenuSync(){
+  var a=$('#setSubAcct'); if(a) a.textContent = sbUser ? '☁ '+(sbUser.email||'Sudah masuk') : 'Belum masuk · simpan partitur di cloud';
+  var ic=function(st){ return st==='granted'?'✅':st==='denied'?'⛔':st==='unsupported'?'✖':'❔'; };
+  var p=$('#setSubPerm'); if(p) p.textContent='Mikrofon '+ic(perm.mic)+' · Keyboard MIDI '+ic(perm.midi);
+  var th=$('#setSubTheme'); if(th) th.textContent={dark:'Dark',laut:'Biru Laut'}[store.get('yg.theme','warna')]||'Full Color';
+  var pr0=$('#setRowPlan'); if(pr0){
+    var prem=isPremium(); pr0.hidden=!gatingOn();
+    $('#setPlanSt').textContent=prem?'Premium ⭐':'Gratis';
+    $('#setSubPlan').textContent=prem?'Lihat status & kelola langganan':'Upgrade ke Premium — buka semua fitur';
+  }
+}
+function bindSetMenu(){
+  $$('#tab-set [data-go]').forEach(function(b){ b.addEventListener('click',function(){ setGo(b.getAttribute('data-go')); }); });
+  $('#setBack').addEventListener('click',mobBackBtn);
+  /* Bantuan: satu topik terbuka sekaligus, topik yang dibuka digulir ke atas */
+  $$('#tab-set .helpitem').forEach(function(d){ d.addEventListener('toggle',function(){
+    if(!d.open) return;
+    $$('#tab-set .helpitem[open]').forEach(function(o){ if(o!==d) o.open=false; });
+    setTimeout(function(){ try{ d.scrollIntoView({block:'start',behavior:'smooth'}); }catch(e){} },30);
+  }); });
+  /* menu bawah "Pengaturan" saat sudah di halaman dalam = kembali ke daftar menu */
+  var tb=$('.tabs button[data-tab="set"]'); if(tb) tb.addEventListener('click',function(){
+    if(app.tab!=='set' || setPg==='home') return;
+    if(history.state && history.state.sub){ try{ history.back(); return; }catch(e){} }
+    setGo('home',true);
+  });
 }
 function bindSettings(){
-  bindPerm();
+  bindPerm(); bindSetMenu();
   applyTheme(store.get('yg.theme','warna'));
   $$('#themes [data-theme]').forEach(function(b){ b.addEventListener('click',function(){
     var t=b.getAttribute('data-theme'); store.set('yg.theme',t); applyTheme(t);
@@ -9072,6 +9163,7 @@ function showTab(name){
   if(name!=='score'){ stopPlay(); recStop(); }
   if(name!=='tuner') metStop();
   if(name==='set') refreshPerm();
+  if(name==='set' && prevTab!=='set'){ var sw=setWant; setWant=null; setPg='home'; $('#tab-set').setAttribute('data-sp','home'); if(sw) setTimeout(function(){ setGo(sw); },0); }
   app.tab=name; document.body.classList.toggle('on-latih',name==='latih'); document.body.classList.toggle('on-score',name==='score'); document.body.classList.toggle('on-lib',name==='lib'); document.body.classList.toggle('on-tuner',name==='tuner'); document.body.classList.toggle('on-set',name==='set');
   var dk=$('#pdock'); if(dk) dk.hidden = !(name==='latih' && !pr.playing);
   $$('.tab').forEach(function(t){ t.hidden = (t.id!=='tab-'+name); });
@@ -9165,9 +9257,10 @@ function mobApply(){
   placeDock(); mobLatRender(); mobScRender();
   if(app.tab==='score') renderScoreView();
 }
-function mobDepth(){ return app.tab==='latih' ? mob.lst-1 : (app.tab==='score' ? (mob.ph==='home'?0:1) : 0); }
+function mobDepth(){ return app.tab==='set' ? (setPg==='home'?0:1) : !mob.on ? 0 : app.tab==='latih' ? mob.lst-1 : (app.tab==='score' ? (mob.ph==='home'?0:1) : 0); }
 function mobSubPush(){ if(!mob.on) return; try{ if(!(history.state && history.state.sub)) history.pushState({tab:app.tab,sub:1},''); }catch(e){} }
 function mobBack(){
+  if(app.tab==='set'){ setGo('home',true); return; }
   if(app.tab==='latih'){ if(mob.lst>1) mobLatGo(mob.lst-1,true); }
   else if(app.tab==='score'){
     if(mob.toHome){ mob.toHome=false; mobScGo('home',null,true); }
