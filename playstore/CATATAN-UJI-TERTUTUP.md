@@ -61,3 +61,19 @@ pisahkan Langganan jadi tombol/halaman sendiri; Akun & Bantuan dibuat ringkas.
 > fully visible, the practice flow got a "same as last time" shortcut, text contrast was improved, and the tuner
 > layout was fixed for very small screens (320×568).
 
+
+---
+
+## 3. Animasi "tahan" terpotong di not penuh akhir lagu (11 Nov 2026)
+
+**Masukan penguji:** di Arcade, animasi tekan-lama (tahan tuts) pada not penuh terpotong keluar layar — hanya terjadi
+bila not penuh itu berada di bagian akhir (ending).
+
+**Perubahan (`fertune-v206`):** bilah animasi tahan untuk not terakhir di sebuah baris sekarang berhenti di garis birama
+sesudahnya (tidak lagi memanjang melewati tepi partitur); bila ruangnya sempit, bilah dimulai sedikit lebih ke kiri dan
+angka hitungan yang terlalu rapat diringkas.
+
+**Draf jawaban (Inggris):**
+> A tester reported that the "hold the key" animation on a whole note was cut off at the edge of the screen when that
+> note was the last one of the piece. The hold-progress bar is now limited to the final bar line of the line it is on,
+> so it always stays fully visible; in tight spaces it starts slightly further left and the beat counters are simplified.

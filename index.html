@@ -4940,13 +4940,25 @@ function holdFx(q,ms,beats,pitches){
       if(o===g) return; var r=(o.querySelector('rect.hl')||o).getBBox();
       if(Math.abs(r.y-b.y)<10 && r.x>b.x+b.width-4 && (nx===null||r.x<nx)) nx=r.x;
     });
-    var x0=b.x+b.width*.5+10, x1=nx!==null ? nx-6 : b.x+b.width+Math.max(70,beats*36), w=Math.max(46,x1-x0), y=b.y+b.height-11, k;
+    /* batas kanan: not berikutnya di baris yang sama; kalau not ini yang terakhir di baris (mis. not penuh di akhir lagu),
+       berhenti di garis birama sesudahnya / tepi gambar — dulu bilah 144 px melewati layar sehingga animasinya terpotong */
+    var vb=sv.viewBox&&sv.viewBox.baseVal, lim=(vb&&vb.width ? vb.x+vb.width : b.x+b.width+150)-8, cy=b.y+b.height/2;
+    if(nx===null) Array.prototype.forEach.call(sv.querySelectorAll('line.bar'),function(l){
+      var lx=+l.getAttribute('x1'), ya=+l.getAttribute('y1'), yb=+l.getAttribute('y2');
+      if(lx>b.x+b.width-4 && cy>=Math.min(ya,yb)-14 && cy<=Math.max(ya,yb)+14 && lx-6<lim) lim=lx-6;
+    });
+    var x0=b.x+b.width*.5+10, x1=nx!==null ? nx-6 : Math.min(lim, b.x+b.width+Math.max(70,beats*36));
+    var want=Math.max(46,(beats-1)*24);
+    if(nx===null && x1-x0<want) x0=Math.max(b.x-6, x1-want);        /* ruang sempit: bilah mulai lebih ke kiri (di bawah not) */
+    var w=Math.max(nx===null?24:46,x1-x0), y=b.y+b.height-11, tc=Math.min(x0+w/2, (nx===null?x1:x0+w)-40), k;
     var fx=document.createElementNS(NS,'g'); fx.setAttribute('class','holdfx'); fx.style.setProperty('--holdMs',Math.round(ms)+'ms');
     var h='<rect class="hfTrack" x="'+x0+'" y="'+y+'" width="'+w+'" height="10" rx="5"/><rect class="hfFill" x="'+x0+'" y="'+y+'" width="'+w+'" height="10" rx="5"/>';
     /* garis & angka hitungan: not d ketuk ditahan sampai awal ketuk ke-d */
-    for(k=1;k<=beats-1;k++){ var tx=x0+w*(k/(beats-1)); h+='<text class="hfNum" x="'+(tx-(k===beats-1?8:0))+'" y="'+(y-4)+'" style="animation-delay:'+Math.round(ms*(k/(beats-1))-140)+'ms">'+(k+1)+'</text>'; }
+    var gapN=w/Math.max(1,beats-1);
+    for(k=1;k<=beats-1;k++){ if(gapN<17 && k<beats-1) continue;        /* terlalu rapat: hanya angka terakhir */
+      var tx=x0+w*(k/(beats-1)); h+='<text class="hfNum" x="'+(tx-(k===beats-1?Math.min(8,gapN/3):0))+'" y="'+(y-4)+'" style="animation-delay:'+Math.round(ms*(k/(beats-1))-140)+'ms">'+(k+1)+'</text>'; }
     h+='<g class="hfTip" style="--hfW:'+w+'px"><circle cx="'+x0+'" cy="'+(y+5)+'" r="11" class="hfGlow"/><circle cx="'+x0+'" cy="'+(y+5)+'" r="5.5" class="hfDot"/></g>';
-    h+='<text class="hfDone" x="'+(x0+w/2)+'" y="'+(y-5)+'">✓ Mantap!</text><text class="hfFail" x="'+(x0+w/2)+'" y="'+(y-5)+'">✕ Terlalu cepat</text>';
+    h+='<text class="hfDone" x="'+tc+'" y="'+(y-5)+'">✓ Mantap!</text><text class="hfFail" x="'+tc+'" y="'+(y-5)+'">✕ Terlalu cepat</text>';
     fx.innerHTML=h; sv.appendChild(fx);
     var keys=[]; (pitches||[]).forEach(function(m){ var kk=document.querySelector('#pkeys [data-m="'+m+'"]'); if(kk){ var em=document.createElement('em'); em.className='holdK'; em.style.setProperty('--holdMs',Math.round(ms)+'ms'); kk.appendChild(em); keys.push(em); } });
     holdFxEls[q]={g:fx,keys:keys,t:setTimeout(function(){
