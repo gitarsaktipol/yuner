@@ -1526,7 +1526,7 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 /* Animasi tahan not panjang (MIDI) */
 .holdfx{pointer-events:none}
 .holdfx .hfTrack{fill:var(--brass);opacity:.16}
-.holdfx .hfFill{fill:#FFB300;transform-box:fill-box;transform-origin:0 50%;transform:scaleX(0);animation:hfFill var(--holdMs) linear forwards;filter:drop-shadow(0 0 4px #FFB300)}
+.holdfx .hfFill{fill:url(#hfFire);transform-box:fill-box;transform-origin:0 50%;transform:scaleX(0);animation:hfFill var(--holdMs) linear forwards;filter:drop-shadow(0 0 4px #FFB300)}
 @keyframes hfFill{to{transform:scaleX(1)}}
 .holdfx .hfTip{animation:hfTip var(--holdMs) linear forwards}
 @keyframes hfTip{to{transform:translateX(var(--hfW))}}
@@ -1542,14 +1542,23 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 .holdfx.hfOk .hfNum,.holdfx.hfBad .hfNum,.holdfx.hfOk .hfTip,.holdfx.hfBad .hfTip{display:none}
 .holdfx.hfOk .hfDone{display:block;fill:var(--ok)} .holdfx.hfBad .hfFail{display:block;fill:var(--bad)}
 .holdfx.hfOk .hfFill{animation:none;transform:scaleX(1);fill:var(--ok);filter:drop-shadow(0 0 8px var(--ok))}
-.holdfx.hfOk{animation:hfOut .65s ease-out forwards}
-@keyframes hfOut{0%{opacity:1}60%{opacity:1}100%{opacity:0}}
+.holdfx.hfOk{animation:hfOut 1s ease-out forwards}
+@keyframes hfOut{0%{opacity:1}70%{opacity:1}100%{opacity:0}}
 .holdfx.hfBad .hfFill{animation-play-state:paused;fill:var(--bad);filter:none}
 .holdfx.hfBad{animation:hfShake .5s ease-in-out forwards}
 @keyframes hfShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px);opacity:1}100%{opacity:0}}
+/* kembang api (sparkler): percikan dari ujung bilah selama ditahan + ledakan kembang api saat berhasil */
+.holdfx .hfSp{stroke-linecap:round;fill:none;animation:hfSp var(--t,520ms) cubic-bezier(.2,.7,.4,1) forwards}
+@keyframes hfSp{0%{transform:translate(0,0);opacity:1}70%{opacity:1}100%{transform:translate(var(--dx),var(--dy));opacity:0}}
+.holdfx .hfStar{animation:hfStar var(--t,520ms) ease-out forwards}
+@keyframes hfStar{0%{opacity:1}100%{transform:translate(var(--dx),var(--dy));opacity:0}}
+.holdfx .hfRing{fill:none;stroke:#FFD23F;stroke-width:3;transform-box:fill-box;transform-origin:50% 50%;animation:hfRing .6s ease-out forwards}
+@keyframes hfRing{0%{transform:scale(.2);opacity:1}100%{transform:scale(3.2);opacity:0}}
+.holdfx .hfGlow{animation:hfPulse .5s ease-in-out infinite,hfFlick .12s steps(2) infinite}
+@keyframes hfFlick{50%{fill:#FF7A00}}
 .pkeys .holdK{position:absolute;left:0;right:0;bottom:0;height:0;border-radius:0 0 6px 6px;background:linear-gradient(0deg,#FF9A00,#FFD23F);box-shadow:0 0 10px #FFB300;animation:hfKey var(--holdMs) linear forwards;pointer-events:none;z-index:1}
 @keyframes hfKey{to{height:100%}}
-@media (prefers-reduced-motion:reduce){ .holdfx .hfGlow,.holdfx .hfLab,.holdfx .hfNum{animation:none} }
+@media (prefers-reduced-motion:reduce){ .holdfx .hfGlow,.holdfx .hfLab,.holdfx .hfNum{animation:none} .holdfx .hfSp,.holdfx .hfStar,.holdfx .hfRing{display:none} }
 /* penanda stage: muncul dengan lompatan kecil di tempatnya (papan besar STAGE tampil di tengah) */
 .play.arc .pstageLbl.stNew{animation:stPop .6s var(--bounce)}
 @keyframes stPop{0%{transform:translateX(-50%) scale(.6)}60%{transform:translateX(-50%) scale(1.18)}100%{transform:translateX(-50%) scale(1)}}
@@ -4921,12 +4930,13 @@ function holdBeatMs(){ return pr.tempoOn && tp.run ? tp.beatMs : 60000/(pr.bpm||
    partitur supaya ikut skala/rotasi layar. ===== */
 var holdFxEls={};
 function holdFxEnd(q,how){
-  var o=holdFxEls[q]; if(!o) return; delete holdFxEls[q]; clearTimeout(o.t);
+  var o=holdFxEls[q]; if(!o) return; delete holdFxEls[q]; clearTimeout(o.t); clearInterval(o.iv);
   (o.keys||[]).forEach(function(k){ if(k.parentNode) k.parentNode.removeChild(k); });
   if(!o.g || !o.g.parentNode) return;
   if(how==='ok' || how==='bad'){
     o.g.setAttribute('class','holdfx '+(how==='ok'?'hfOk':'hfBad'));
-    setTimeout(function(){ if(o.g.parentNode) o.g.parentNode.removeChild(o.g); }, how==='ok'?650:520);
+    if(how==='ok' && o.burst) o.burst();
+    setTimeout(function(){ if(o.g.parentNode) o.g.parentNode.removeChild(o.g); }, how==='ok'?1000:520);
   } else o.g.parentNode.removeChild(o.g);
 }
 function holdFxClear(){ Object.keys(holdFxEls).forEach(function(q){ holdFxEnd(q); }); }
@@ -4952,7 +4962,7 @@ function holdFx(q,ms,beats,pitches){
     if(nx===null && x1-x0<want) x0=Math.max(b.x-6, x1-want);        /* ruang sempit: bilah mulai lebih ke kiri (di bawah not) */
     var w=Math.max(nx===null?24:46,x1-x0), y=b.y+b.height-11, tc=Math.min(x0+w/2, (nx===null?x1:x0+w)-40), k;
     var fx=document.createElementNS(NS,'g'); fx.setAttribute('class','holdfx'); fx.style.setProperty('--holdMs',Math.round(ms)+'ms');
-    var h='<rect class="hfTrack" x="'+x0+'" y="'+y+'" width="'+w+'" height="10" rx="5"/><rect class="hfFill" x="'+x0+'" y="'+y+'" width="'+w+'" height="10" rx="5"/>';
+    var h='<defs><linearGradient id="hfFire" x1="0" x2="1"><stop offset="0" stop-color="#FF4D4D"/><stop offset=".55" stop-color="#FF9A00"/><stop offset="1" stop-color="#FFE14D"/></linearGradient></defs><rect class="hfTrack" x="'+x0+'" y="'+y+'" width="'+w+'" height="10" rx="5"/><rect class="hfFill" x="'+x0+'" y="'+y+'" width="'+w+'" height="10" rx="5"/>';
     /* garis & angka hitungan: not d ketuk ditahan sampai awal ketuk ke-d */
     var gapN=w/Math.max(1,beats-1);
     for(k=1;k<=beats-1;k++){ if(gapN<17 && k<beats-1) continue;        /* terlalu rapat: hanya angka terakhir */
@@ -4961,7 +4971,34 @@ function holdFx(q,ms,beats,pitches){
     h+='<text class="hfDone" x="'+tc+'" y="'+(y-5)+'">✓ Mantap!</text><text class="hfFail" x="'+tc+'" y="'+(y-5)+'">✕ Terlalu cepat</text>';
     fx.innerHTML=h; sv.appendChild(fx);
     var keys=[]; (pitches||[]).forEach(function(m){ var kk=document.querySelector('#pkeys [data-m="'+m+'"]'); if(kk){ var em=document.createElement('em'); em.className='holdK'; em.style.setProperty('--holdMs',Math.round(ms)+'ms'); kk.appendChild(em); keys.push(em); } });
-    holdFxEls[q]={g:fx,keys:keys,t:setTimeout(function(){
+    /* kembang api: percikan keluar dari ujung bilah yang sedang tumbuh (posisi dihitung dari waktu, sama dengan animasi CSS) */
+    var t0=performance.now(), calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, iv=0;
+    var SPC=['#FFE14D','#FFB300','#FF7A00','#fff','#FF6FA8'];
+    function spark(cx,cy,ang,len,dist,dur,col,wid,star){
+      var e=document.createElementNS(NS, star?'circle':'line'), dx=Math.cos(ang)*dist, dy=Math.sin(ang)*dist+(star?14:6);
+      if(star){ e.setAttribute('cx',cx); e.setAttribute('cy',cy); e.setAttribute('r',wid); e.setAttribute('fill',col); e.setAttribute('class','hfStar'); }
+      else{ e.setAttribute('x1',cx); e.setAttribute('y1',cy); e.setAttribute('x2',cx+Math.cos(ang)*len); e.setAttribute('y2',cy+Math.sin(ang)*len);
+        e.setAttribute('stroke',col); e.setAttribute('stroke-width',wid); e.setAttribute('class','hfSp'); }
+      e.style.setProperty('--dx',dx.toFixed(1)+'px'); e.style.setProperty('--dy',dy.toFixed(1)+'px'); e.style.setProperty('--t',dur+'ms');
+      fx.appendChild(e); setTimeout(function(){ if(e.parentNode) e.parentNode.removeChild(e); }, dur+40);
+    }
+    if(!calm) iv=setInterval(function(){
+      if(!fx.parentNode || pr.paused) return;
+      var p=Math.min(1,(performance.now()-t0)/ms), cx=x0+w*p, cy=y+5;
+      for(var j=0;j<3;j++){ var a=-Math.PI*(0.05+Math.random()*0.9)+(Math.random()<.2?Math.PI*0.9:0);   /* kebanyakan ke atas, sebagian jatuh */
+        spark(cx,cy,a,4+Math.random()*5,10+Math.random()*16,300+Math.random()*260,SPC[(Math.random()*SPC.length)|0],1.6+Math.random()*1.2,false); }
+    },50);
+    function burst(){
+      if(calm) return;
+      /* ledakan dibuat menyebar ke ATAS dan pusatnya dijauhkan dari tepi kanan supaya tidak terpotong (lihat keluhan penguji) */
+      var vR=vb&&vb.width ? vb.x+vb.width : x0+w+60, bx=Math.min(x0+w, vR-40), by=y+5, n=22, j, r=document.createElementNS(NS,'circle');
+      r.setAttribute('cx',bx); r.setAttribute('cy',by); r.setAttribute('r',8); r.setAttribute('class','hfRing'); fx.appendChild(r);
+      var BC=['#FFD23F','#FF6FA8','#4ED8A0','#4AB3FF','#A78BFA','#FF9248','#fff'];
+      for(j=0;j<n;j++){ var a=-Math.PI*(j+.5)/n*1.15+Math.PI*.075+Math.random()*.12, c=BC[j%BC.length];
+        spark(bx,by,a,6,26+Math.random()*14,650+Math.random()*200,c,2.4,false);
+        if(j%2) spark(bx,by,a+.15,0,18+Math.random()*10,750,c,2.2,true); }
+    }
+    holdFxEls[q]={g:fx,keys:keys,iv:iv,burst:burst,t:setTimeout(function(){
       /* waktu tahan tercapai dan not masih benar -> kilau sukses */
       holdFxEnd(q, pr.marks && pr.marks[q]==='ok' ? 'ok' : '');
     },ms)};
