@@ -77,3 +77,10 @@ angka hitungan yang terlalu rapat diringkas.
 > A tester reported that the "hold the key" animation on a whole note was cut off at the edge of the screen when that
 > note was the last one of the piece. The hold-progress bar is now limited to the final bar line of the line it is on,
 > so it always stays fully visible; in tight spaces it starts slightly further left and the beat counters are simplified.
+
+**Lanjutan (`fertune-v207`, permintaan Ferdi):** animasi tahan untuk not ½ dan not penuh dibuat seperti kembang api:
+bilah berwarna api, ujungnya memercikkan bunga api selama tuts ditahan, dan saat berhasil meledak kembang api kecil
+warna-warni (tetap di dalam layar).
+> We also made the hold animation more rewarding: while a half or whole note is held, the progress bar burns like a
+> sparkler, and a small firework bursts when the note is held long enough (kept fully on screen; disabled when the
+> system "reduce motion" setting is on).
