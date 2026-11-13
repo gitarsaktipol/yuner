@@ -4484,17 +4484,19 @@ var ARC_CUR=[
   {top:8,pat:'qwh',step:1,maxE:0,fn:1},  /* E: + 1 tinggi */
   {top:5,pat:'qwhe',step:1,maxE:1,fr:'e'}, /* F: perkenalan 1/8 bergandeng, kembali ke not 1–5 */
   {top:6,pat:'qwhe',step:1,maxE:1,fn:1}, /* G: + 6 */
-  {top:8,pat:'qwhes',step:1,maxE:1,fr:'s'}, /* H: perkenalan 1/4 bertitik + 1/8, not 1–7 & 1 tinggi */
-  {top:8,pat:'qwhes',step:2,maxE:2,fl:1}, /* I: + lompatan melewati 1 not (campur dengan melangkah) */
-  {top:8,pat:'qwhes',step:2,maxE:2}     /* J: sama dengan I */
+  /* H–J (diminta Ferdi, Nov 2026): sPer = jumlah not bertitik (1/4 bertitik + 1/8) TEPAT per birama */
+  {top:8,pat:'qhs',step:1,maxE:0,fr:'s',sPer:1}, /* H: perkenalan not bertitik: 1 per birama, sisanya hanya 1/4 & 1/2 */
+  {top:8,pat:'qhes',step:1,maxE:2,sPer:1,fe:1},  /* I: tetap 1 not bertitik per birama + 1/8 berjajar */
+  {top:8,pat:'qhes',step:1,maxE:0,sPer:2},       /* J: 2 not bertitik per birama */
+  {top:8,pat:'qwhes',step:2,maxE:2,fl:1}         /* K: + lompatan melewati 1 not (dulu materi I) */
 ];
 /* K–Z belum diatur Ferdi: lanjutan J (not 1–i, semua jenis not di atas), lompatan makin jauh sampai 1 oktaf di Z */
-function arcCur(L){ return L<ARC_CUR.length ? ARC_CUR[L] : {top:8,pat:'qwhes',step:Math.min(7,2+Math.ceil((L-9)*5/16)),maxE:3}; }
+function arcCur(L){ return L<ARC_CUR.length ? ARC_CUR[L] : {top:8,pat:'qwhes',step:Math.min(7,2+Math.ceil((L-10)*5/15)),maxE:3}; }
 /* keterangan level (menu Latihan) */
 function arcInfo(L,sub){
   var c=arcCur(L), nt={5:'not 1–5',6:'not 1–6',7:'not 1–7',8:'not 1–7 & 1 tinggi'}[c.top];
   var rh=[]; if(c.pat.indexOf('q')>=0) rh.push('1/4'); if(c.pat.indexOf('h')>=0) rh.push('1/2'); if(c.pat.indexOf('w')>=0) rh.push('penuh');
-  if(c.pat.indexOf('e')>=0) rh.push('1/8 bergandeng'); if(c.pat.indexOf('s')>=0) rh.push('1/4 bertitik + 1/8');
+  if(c.pat.indexOf('e')>=0) rh.push('1/8 bergandeng'); if(c.pat.indexOf('s')>=0) rh.push('1/4 bertitik + 1/8'+(c.sPer?' ('+c.sPer+' per birama)':''));
   return 'Level '+ARC_LETTERS[L]+sub+' • '+arcadeMeasures(L)+' birama • '+nt+' • '+rh.join(', ')+' • '+(c.step<=1?'melangkah':(c.step===2?'lompat lewati 1 not':'lompatan s.d. '+c.step+' langkah'));
 }
 function arcFocus(sub){ return sub<=3 ? 1 : (sub<=6 ? 0.5 : 0); }
@@ -4502,7 +4504,23 @@ function arcFocus(sub){ return sub<=3 ? 1 : (sub<=6 ? 0.5 : 0); }
    last = birama terakhir: ditutup not panjang (penuh, atau ½ di akhir) seperti akhir kalimat lagu.
    f = kekuatan fokus pola baru c.fr: birama dibuka pola baru (f=1 selalu, f=0,5 ±60%), bobotnya dinaikkan, pola lama dikurangi. */
 var ARC_FPAT={h:[2],e:[0.5,0.5],s:[1.5,0.5]};
+/* H–J: birama berisi TEPAT c.sPer not bertitik (birama terakhir 1, ditutup not 1/2). Sisa setengah birama diisi
+   1/4, 1/2 atau 1/8 berjajar (hanya bila pola mengizinkan); I (fe) = 1/8 berjajar dimunculkan di tiap birama saat fokus. */
+function arcRhythmS(c,last,f){
+  var S=[1.5,0.5], n=last ? 1 : c.sPer;
+  if(n>=2) return S.concat(S);
+  var has=function(k){ return c.pat.indexOf(k)>=0; };
+  var opts=[{p:[1,1],w:3}];
+  if(has('h')) opts.push({p:[2],w:2});
+  if(has('e') && c.maxE>0){ opts.push({p:[0.5,0.5,1],w:2.5,e:1},{p:[1,0.5,0.5],w:2.5,e:1}); if(c.maxE>=2) opts.push({p:[0.5,0.5,0.5,0.5],w:1.5,e:1}); }
+  if(c.fe && f>0 && (f>=1 || Math.random()<0.6)) opts=opts.filter(function(o){ return o.e; });
+  var tot=opts.reduce(function(x,o){ return x+o.w; },0), r=Math.random()*tot, pick=opts[0], i;
+  for(i=0;i<opts.length;i++){ r-=opts[i].w; if(r<0){ pick=opts[i]; break; } }
+  if(last) return S.concat([2]);                         /* akhir lagu: not bertitik lalu not 1/2 */
+  return Math.random()<0.5 ? S.concat(pick.p) : pick.p.concat(S);
+}
 function arcRhythm(c,last,f){
+  if(c.sPer) return arcRhythmS(c,last,f);
   var has=function(k){ return c.pat.indexOf(k)>=0; }, out=[], pos=0, ne=0, ns=0, end=4, fr=f>0 && c.fr;
   if(last && !(fr && f>=1)){ if(has('w') && (!has('h') || Math.random()<0.45)) return [4]; if(has('h')) end=2; }
   else if(last && has('h')) end=2;
