@@ -1578,6 +1578,14 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 #pboard.hbHot{box-shadow:0 0 var(--hbGlow,8px) var(--hbC,#FFD23F),inset 0 0 calc(var(--hbGlow,8px)*.6) var(--hbC,#FFD23F);transition:box-shadow .2s}
 @media (prefers-reduced-motion:reduce){ .hbLive .hbShk,.hbLive .hbAura,.hbLive.hbMax .hbN{animation:none} .hbLive .hfStar,.hbLive .hbRing2{display:none} }
 #ptop.hbBump{animation:hbTop .35s var(--bounce)}
+.pgrade .gx2{margin-top:8px;padding:6px 22px 8px;border-radius:24px;font-weight:900;font-size:clamp(22px,8vh,40px);color:#fff;
+  background:linear-gradient(90deg,#FF6FA8,#FFB300,#4ED8A0,#4AB3FF,#A78BFA);background-size:300% 100%;box-shadow:0 6px 0 rgba(0,0,0,.18);text-shadow:0 2px 0 rgba(0,0,0,.2)}
+.pgrade .gx2[hidden]{display:none}
+.pgrade .gx2 small{font-size:.6em}
+.pgrade .gx2.go{animation:gx2In .6s var(--bounce) .45s both,gx2Rb 1.2s linear infinite}
+@keyframes gx2In{0%{transform:scale(0) rotate(-12deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes gx2Rb{to{background-position:300% 0}}
+@media (prefers-reduced-motion:reduce){ .pgrade .gx2.go{animation:none} }
 @keyframes hbTop{50%{transform:scale(1.18)}}
 /* kembang api (sparkler): percikan dari ujung bilah selama ditahan + ledakan kembang api saat berhasil */
 .holdfx .hfSp{stroke-linecap:round;fill:none;animation:hfSp var(--t,520ms) cubic-bezier(.2,.7,.4,1) forwards}
@@ -2134,7 +2142,7 @@ body.mob #snewOv .instList b{font-size:20px}
   <div class="pstage" id="pstage"></div>
   <div class="phill" id="phill" hidden><svg id="phsvg" viewBox="0 0 800 340" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg><div class="hscore" id="hscore"><span aria-hidden="true">⭐</span> <b id="hscoreV">0</b><i class="hbonus" id="hbonus" hidden>BONUS ×2</i></div><canvas class="hfw" id="hfw"></canvas><div class="hperf" id="hperf" hidden>PERFECT!</div><div class="hcap" id="hcap"></div><button class="start hgo" id="hgo" type="button">Lanjut ▶</button></div>
   <div class="pquit" id="pquit" hidden role="alertdialog" aria-modal="true" aria-labelledby="pqT"><div class="pqbox"><h3 id="pqT">⏸ Permainan dijeda</h3><p>Lanjut main, ulang dari awal, atau keluar?</p><div class="row"><button class="sound" id="pqNo" type="button">▶ Lanjutkan</button><button class="sound" id="pqRe" type="button">↺ Mulai dari awal</button><button class="start" id="pqYes" type="button">Keluar</button></div></div></div>
-  <div class="pgrade" id="pgrade" hidden aria-hidden="true"><canvas id="pfw"></canvas><div class="gv" id="pgv"></div><div class="gm" id="pgm"></div></div>
+  <div class="pgrade" id="pgrade" hidden aria-hidden="true"><canvas id="pfw"></canvas><div class="gv" id="pgv"></div><div class="gm" id="pgm"></div><div class="gx2" id="pgx2" hidden></div></div>
   <div class="connSheet" id="pconnSheet" hidden>
     <button class="sound" id="pconnClose" type="button">✕ Tutup</button>
   <details class="card cfg conn" id="pconn" open>
@@ -4624,7 +4632,7 @@ function newRound(keep){
   arcStageUI(); holdFxClear();
   if(!keep) pr.retry=1;
   pr.failing=false; pr.pendFail=null; pr.sparked={};
-  clearTimeout(endT); pr.ending=false; pr.lastPct=null; pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0; pr.lateMiss=null; pr.holds=[]; pr.holdFail={}; pr.hbWait=0;
+  clearTimeout(endT); pr.ending=false; pr.lastPct=null; pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0; pr.lateMiss=null; pr.holds=[]; pr.holdFail={}; pr.hbWait=0; pr.hbRound=0; pr.hbMax=0;
   pr.lastAdvanceT=0; pr.fast=false;
   pr.drawn=null; pr.lo=undefined;   /* soal baru / ejaan not bisa berubah: gambar ulang partitur & hitung ulang rentang */
   pd.armed=false; pd.cand=null; pd.count=0; pd.last=null; pd.legCand=null; pd.legCount=0; pd.peak=0; pd.dip=0;
@@ -5110,7 +5118,9 @@ function holdRelease(n){
   if(arcStrict()){ arcFail(); return; }
   renderPractice();
 }
-var HB_PTS=10, HB_TOL=0.15, hbUntil=0;
+/* HB_TOL 0 = bonus penuh +10 baru tercapai TEPAT saat not berikutnya (diminta Ferdi, Nov 2026: dibuat mepet supaya ada
+   tantangan — mengejar +10 berisiko telat menekan not berikutnya). Ada +10 dalam satu soal -> skor soal itu ×2 (maks ×2). */
+var HB_PTS=10, HB_TOL=0, hbUntil=0;
 /* BONUS TAHAN LANGSUNG (diminta Ferdi, Nov 2026): sesudah "✓ Mantap!", selama tuts tetap ditahan angka bonus berjalan
    naik 1, 2, 3 … sampai HB_PTS (penuh = tepat saat not berikutnya). Tuts diangkat saat angka menunjukkan 5 -> bonus +5,
    saat 9 -> +9, ditahan sampai habis -> +10. Animasinya makin heboh setiap angka naik (aura, percikan, papan menyala). */
@@ -5128,6 +5138,7 @@ function hbAward(h,val){
   var o=h.fx; h.fx=null;
   if(!(val>0) || !pr.playing || pr.failing || pr.src!=='arcade'){ if(o) o.end(0); hbUntil=Math.min(hbUntil,performance.now()+200); return; }
   arcSetPl({hb:(activePlayer().hb|0)+val});
+  pr.hbRound=(pr.hbRound|0)+val; if(val>=HB_PTS) pr.hbMax=1;
   hbUntil=performance.now()+1100;
   if(!pr.done){ pr.lastMsg={t:(val>=HB_PTS?'MAKSIMAL! Bonus tahan +':'Bonus tahan +')+val+' ⭐',c:'ok'}; renderPractice(); }
   if(o) o.end(val);
@@ -5886,8 +5897,15 @@ function finishRound(){
   var perf={perfect:false,newBonus:false};
   var was100=false;
   if(pr.src==='arcade'){ was100=!!activePlayer().last100; arcSetPl({last100:pct>=100}); arcSetRes(played,pct); if(pct>=100 && played%9===8) perf=arcCheckPerfect(played); refreshTop(); }
+  /* SKOR ×2: ada bonus tahan sempurna (+10) di soal ini -> skor soal (nilai + bonus tahan soal ini) dihitung dua kali.
+     Maksimal ×2 walau banyak +10. Tambahan disimpan di hb pemain. */
+  var x2=0;
+  if(pr.src==='arcade' && pr.hbMax){ x2=pct+(pr.hbRound|0); arcSetPl({hb:(activePlayer().hb|0)+x2}); refreshTop(); $('#psumD').textContent+=' Bonus tahan sempurna: skor ×2 (+'+x2+')!'; }
   var board=$('#pboard');
   showGrade(pct, pct>=100?2200:1800);
+  var gx=$('#pgx2'); if(gx){ gx.hidden=!x2; if(x2){ gx.innerHTML='SKOR ×2! <small>+'+x2+' ⭐</small>'; gx.classList.remove('go'); void gx.offsetWidth; gx.classList.add('go');
+    try{ var c=ac(), t=c.currentTime; [76,79,84,88].forEach(function(m,i){ pluck(m,t+0.5+i*0.08,0.45,null,0.4); }); }catch(e){}
+    var te=$('#ptop'); if(te){ te.classList.remove('hbBump'); void te.offsetWidth; te.classList.add('hbBump'); } } }
   if(pct>=100){
     board.classList.add('glow'); practiceWin();
     setTimeout(function(){ board.classList.remove('glow'); },1400);
