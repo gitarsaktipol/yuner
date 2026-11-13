@@ -1559,6 +1559,24 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 .hbFx .hbL{font-size:11px;fill:#FF8A00;letter-spacing:.1em}
 .hbFx.out{animation:hbOut .7s ease-in forwards}
 @keyframes hbOut{to{opacity:0;transform:translateY(-14px)}}
+/* Bonus tahan LANGSUNG: makin lama ditahan makin heboh */
+.hbLive .hbShk{transform-box:fill-box;transform-origin:50% 100%;transform:scale(var(--hbS,1));transition:transform .15s var(--bounce)}
+.hbLive .hbN{fill:var(--hbC,#FFB300);font-size:26px;filter:drop-shadow(0 0 6px var(--hbC,#FFD23F))}
+.hbLive .hbL{fill:var(--hbC,#FF8A00);font-size:12px}
+.hbLive[data-lv="6"] .hbShk,.hbLive[data-lv="7"] .hbShk,.hbLive[data-lv="8"] .hbShk,.hbLive[data-lv="9"] .hbShk{animation:hbJit .12s linear infinite}
+@keyframes hbJit{0%{translate:0 0}25%{translate:-1.5px 1px}50%{translate:1.5px -1px}75%{translate:-1px -1px}100%{translate:0 0}}
+.hbLive .hbAura{fill:var(--hbC,#FFD23F);opacity:.22;transform-box:fill-box;transform-origin:50% 50%;animation:hbAur .45s ease-in-out infinite;transition:r .2s}
+@keyframes hbAur{50%{transform:scale(1.25);opacity:.08}}
+.hbLive .hbRing2{fill:none;stroke:var(--hbC,#FFD23F);stroke-width:3;opacity:0;transform-box:fill-box;transform-origin:50% 50%}
+.hbLive .hbRing2.go{animation:hbRg .5s ease-out}
+@keyframes hbRg{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(2.4)}}
+.hbLive .hfStar{animation:hfSp var(--t,520ms) cubic-bezier(.2,.7,.4,1) forwards}
+.hbLive.hbWin .hbShk{animation:hbWinA .5s var(--bounce) forwards}
+@keyframes hbWinA{0%{scale:1}40%{scale:1.6}100%{scale:1.3}}
+.hbLive.hbMax .hbN{animation:hbRainbow .35s linear infinite}
+@keyframes hbRainbow{0%{fill:#FFD23F}25%{fill:#FF6FA8}50%{fill:#4AB3FF}75%{fill:#4ED8A0}100%{fill:#FFD23F}}
+#pboard.hbHot{box-shadow:0 0 var(--hbGlow,8px) var(--hbC,#FFD23F),inset 0 0 calc(var(--hbGlow,8px)*.6) var(--hbC,#FFD23F);transition:box-shadow .2s}
+@media (prefers-reduced-motion:reduce){ .hbLive .hbShk,.hbLive .hbAura,.hbLive.hbMax .hbN{animation:none} .hbLive .hfStar,.hbLive .hbRing2{display:none} }
 #ptop.hbBump{animation:hbTop .35s var(--bounce)}
 @keyframes hbTop{50%{transform:scale(1.18)}}
 /* kembang api (sparkler): percikan dari ujung bilah selama ditahan + ledakan kembang api saat berhasil */
@@ -5060,7 +5078,8 @@ function holdStart(ni){
     var bonus = pr.src==='arcade' ? (tOn ? tp.t0+(tp.beat[q]+d-HB_TOL)*bm : now+(d-HB_TOL)*bm) : 0;
     var h={q:q, step:ni, ms:pitchList(n).map(function(p){ return p.m-sh; }), need:need, bonus:bonus};
     (pr.holds||(pr.holds=[])).push(h);
-    if(bonus) h.bt=setTimeout(function(){ holdBonus(h); }, Math.max(0,bonus-now));
+    if(bonus){ h.bt=setTimeout(function(){ holdBonus(h); }, Math.max(0,bonus-now));
+      h.lt=setTimeout(function(){ hbLiveStart(h); }, Math.max(0,need-now)); }
     holdFx(q, need-now, Math.round(d), pitchList(n).map(function(p){ return p.m; }), tOn ? {b0:tp.beat[q], b1:tp.beat[q]+d-1-HOLD_TOL} : null);   /* hanya animasi */
     any=true;
   });
@@ -5073,10 +5092,12 @@ function holdRelease(n){
     if(now>=h.need){                                     /* sudah ditahan cukup lama */
       if(!h.bonus || now>=h.bonus) return false;
       if(h.ms.indexOf(n)<0) return true;                 /* masih menunggu bonus */
-      clearTimeout(h.bt); return false;                  /* dilepas sebelum not berikutnya: tanpa bonus, tidak salah */
+      if(!h.live) hbLiveStart(h);                        /* timer belum jalan tepat waktunya */
+      hbAward(h, h.live ? hbVal(h,now) : 0);             /* dilepas: bonus = angka yang sedang tampil (tidak salah) */
+      return false;
     }
     if(h.ms.indexOf(n)<0) return true;
-    clearTimeout(h.bt);
+    clearTimeout(h.bt); clearTimeout(h.lt);
     if(pr.marks[h.q]==='ok'){ pr.marks[h.q]='bad'; fail=fail||h; }
     holdFxEnd(h.q,'bad');
     return false;
@@ -5090,39 +5111,96 @@ function holdRelease(n){
   renderPractice();
 }
 var HB_PTS=10, HB_TOL=0.15, hbUntil=0;
-function holdBonus(h){
-  if(!pr.holds || pr.holds.indexOf(h)<0) return;          /* sudah dilepas / soal berganti / dijeda */
-  pr.holds.splice(pr.holds.indexOf(h),1);
+/* BONUS TAHAN LANGSUNG (diminta Ferdi, Nov 2026): sesudah "✓ Mantap!", selama tuts tetap ditahan angka bonus berjalan
+   naik 1, 2, 3 … sampai HB_PTS (penuh = tepat saat not berikutnya). Tuts diangkat saat angka menunjukkan 5 -> bonus +5,
+   saat 9 -> +9, ditahan sampai habis -> +10. Animasinya makin heboh setiap angka naik (aura, percikan, papan menyala). */
+function hbLiveStart(h){
+  if(!pr.holds || pr.holds.indexOf(h)<0) return;
   if(!pr.playing || pr.paused || pr.failing || pr.src!=='arcade' || pr.marks[h.q]!=='ok') return;
-  arcSetPl({hb:(activePlayer().hb|0)+HB_PTS});
-  if(!pr.done){ pr.lastMsg={t:'Bonus tahan! +'+HB_PTS+' ⭐',c:'ok'}; renderPractice(); }
-  holdBonusFx(h.q);
+  h.live=1; h.val=0; h.t0=performance.now();
+  hbUntil=Math.max(hbUntil, h.bonus+900);                 /* not terakhir: nilai besar menunggu hitungan */
+  hbLiveFx(h);
 }
-/* +1, +2, ... +10 menghitung cepat (±1 dtk) di atas not; skor di pojok ikut naik */
-function holdBonusFx(q){
-  hbUntil=performance.now()+HB_PTS*95+250;
-  var top=$('#ptopV'), te=$('#ptop'), i=0, NS='http://www.w3.org/2000/svg', fx=null, num=null;
+function hbVal(h,now){ var span=Math.max(1,h.bonus-h.t0); return Math.max(0,Math.min(HB_PTS,Math.floor((now-h.t0)/span*HB_PTS+1e-6))); }
+/* dipanggil saat tuts diangkat (val = angka saat itu) atau saat waktunya habis (val = HB_PTS) */
+function hbAward(h,val){
+  if(h.awarded) return; h.awarded=1; clearTimeout(h.bt); clearTimeout(h.lt);
+  var o=h.fx; h.fx=null;
+  if(!(val>0) || !pr.playing || pr.failing || pr.src!=='arcade'){ if(o) o.end(0); hbUntil=Math.min(hbUntil,performance.now()+200); return; }
+  arcSetPl({hb:(activePlayer().hb|0)+val});
+  hbUntil=performance.now()+1100;
+  if(!pr.done){ pr.lastMsg={t:(val>=HB_PTS?'MAKSIMAL! Bonus tahan +':'Bonus tahan +')+val+' ⭐',c:'ok'}; renderPractice(); }
+  if(o) o.end(val);
+  var te=$('#ptop'); if(te){ te.classList.remove('hbBump'); void te.offsetWidth; te.classList.add('hbBump'); }
+  refreshTop();
+}
+function holdBonus(h){                                    /* waktu habis, tuts masih ditahan = bonus penuh */
+  if(!pr.holds || pr.holds.indexOf(h)<0) return;
+  pr.holds.splice(pr.holds.indexOf(h),1);
+  if(!pr.playing || pr.paused || pr.failing || pr.src!=='arcade' || pr.marks[h.q]!=='ok'){ if(h.fx) h.fx.end(0); return; }
+  if(!h.live){ h.live=1; h.t0=performance.now()-1; }
+  hbAward(h,HB_PTS);
+}
+var HB_LAB=['TAHAN! 🔥','TAHAN! 🔥','TAHAN! 🔥','TERUS! ⚡','TERUS! ⚡','KEREN! 💥','KEREN! 💥','LUAR BIASA! 🚀','LUAR BIASA! 🚀','DIKIT LAGI! 🌟','MAKSIMAL! 👑'];
+var HB_COL=['#FFD23F','#FFC233','#FFB300','#FF9A00','#FF7A00','#FF5A5A','#FF4D8D','#FF3DB8','#C04DFF','#7A5CFF','#36C9FF'];
+function hbLiveFx(h){
+  var NS='http://www.w3.org/2000/svg', calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var sv=$('#pscore') && $('#pscore').querySelector('svg'), g=sv && sv.querySelector('g[data-i="'+h.q+'"]');
+  var board=$('#pboard'), top=$('#ptopV'), fx=null, num=null, lab=null, aura=null, ring=null, cx=0, cy=0, nx=0, ny=0, raf=0, last=-1;
   try{
-    var sv=$('#pscore') && $('#pscore').querySelector('svg'), g=sv && sv.querySelector('g[data-i="'+q+'"]');
     if(g){
       var b=(g.querySelector('rect.hl')||g).getBBox(), vb=sv.viewBox&&sv.viewBox.baseVal;
-      var cx=Math.max((vb?vb.x:0)+30, Math.min(b.x+b.width/2, (vb&&vb.width?vb.x+vb.width:b.x+b.width+60)-30)), cy=Math.max((vb?vb.y:0)+38, b.y-6);
-      fx=document.createElementNS(NS,'g'); fx.setAttribute('class','hbFx');
-      fx.innerHTML='<text class="hbL" x="'+cx+'" y="'+(cy-24)+'">BONUS</text><text class="hbN" x="'+cx+'" y="'+cy+'">+0</text>';
-      sv.appendChild(fx); num=fx.querySelector('.hbN');
+      nx=b.x+b.width/2; ny=b.y+b.height/2;
+      cx=Math.max((vb?vb.x:0)+84, Math.min(nx, (vb&&vb.width?vb.x+vb.width:b.x+b.width+60)-84)); cy=Math.max((vb?vb.y:0)+74, b.y-8);
+      fx=document.createElementNS(NS,'g'); fx.setAttribute('class','hbFx hbLive');
+      fx.innerHTML='<circle class="hbAura" cx="'+nx+'" cy="'+ny+'" r="'+(Math.max(b.width,b.height)/2+6)+'"/>'+
+        '<circle class="hbRing2" cx="'+nx+'" cy="'+ny+'" r="'+(Math.max(b.width,b.height)/2+6)+'"/>'+
+        '<g class="hbShk"><text class="hbL" x="'+cx+'" y="'+(cy-30)+'">'+HB_LAB[0]+'</text><text class="hbN" x="'+cx+'" y="'+cy+'">+0</text></g>';
+      sv.appendChild(fx); num=fx.querySelector('.hbN'); lab=fx.querySelector('.hbL'); aura=fx.querySelector('.hbAura'); ring=fx.querySelector('.hbRing2');
     }
   }catch(e){}
-  (function step(){
-    i++;
-    if(num){ num.textContent='+'+i; num.classList.remove('pop'); void num.getBBox; num.classList.add('pop'); }
-    if(top) top.textContent=fmtScore(arcTotal()-HB_PTS+i);   /* dihitung dari skor terkini (soal bisa selesai di tengah hitungan) */
-    try{ var c=ac(); pluck(84+[0,2,4,5,7,9,11,12,14,16][(i-1)%10], c.currentTime, 0.12, null, 0.45); }catch(e){}
-    if(i<HB_PTS) setTimeout(step,95);
-    else{
-      if(te){ te.classList.remove('hbBump'); void te.offsetWidth; te.classList.add('hbBump'); }
-      if(fx) setTimeout(function(){ fx.classList.add('out'); setTimeout(function(){ if(fx.parentNode) fx.parentNode.removeChild(fx); },750); },350);
-      refreshTop();
-    }
+  if(board) board.classList.add('hbHot');
+  function spark(x,y,ang,dist,dur,col,r){
+    if(calm || !fx) return; var e=document.createElementNS(NS,'circle');
+    e.setAttribute('cx',x); e.setAttribute('cy',y); e.setAttribute('r',r); e.setAttribute('fill',col); e.setAttribute('class','hfStar');
+    e.style.setProperty('--dx',(Math.cos(ang)*dist).toFixed(1)+'px'); e.style.setProperty('--dy',(Math.sin(ang)*dist+10).toFixed(1)+'px'); e.style.setProperty('--t',dur+'ms');
+    fx.appendChild(e); setTimeout(function(){ if(e.parentNode) e.parentNode.removeChild(e); }, dur+40);
+  }
+  function level(v){                                      /* angka naik: makin besar, makin berwarna, makin ramai */
+    var col=HB_COL[v];
+    if(fx){ fx.style.setProperty('--hbC',col); fx.style.setProperty('--hbS',(1+v*0.055).toFixed(2)); fx.setAttribute('data-lv',v); }
+    if(num){ num.textContent='+'+v; num.classList.remove('pop'); void num.getBBox; num.classList.add('pop'); }
+    if(lab) lab.textContent=HB_LAB[v];
+    if(aura) aura.setAttribute('r',(+aura.getAttribute('r'))+2.2);
+    if(ring){ ring.classList.remove('go'); void ring.getBBox; ring.classList.add('go'); }
+    if(board) board.style.setProperty('--hbGlow',(6+v*2.6).toFixed(1)+'px'), board.style.setProperty('--hbC',col);
+    if(top) top.textContent=fmtScore(arcTotal()+v);
+    try{ var c=ac(); pluck(72+[0,2,4,5,7,9,11,12,14,16,19][v], c.currentTime, 0.16, null, 0.32+v*0.02);
+      if(v>=5) pluck(79+[0,2,4,5,7,9,11,12,14,16,19][v], c.currentTime+0.04, 0.12, null, 0.2); }catch(e){}
+    try{ if(navigator.vibrate) navigator.vibrate(12+v*3); }catch(e){}
+    for(var j=0;j<4+v*2;j++) spark(nx,ny,Math.PI*2*Math.random(),22+v*4+Math.random()*24,420+Math.random()*260,
+      j%3?col:['#fff','#FFE14D','#4ED8A0','#4AB3FF'][j%4],1.6+Math.random()*1.8);
+  }
+  h.fx={end:function(val){
+    cancelAnimationFrame(raf);
+    if(board){ board.classList.remove('hbHot'); board.style.removeProperty('--hbGlow'); }
+    if(!fx){ return; }
+    if(!(val>0)){ fx.classList.add('out'); setTimeout(function(){ if(fx.parentNode) fx.parentNode.removeChild(fx); },700); return; }
+    /* hasil akhir: angka membesar + ledakan, lalu terbang ke atas */
+    if(num) num.textContent='+'+val+(val>=HB_PTS?'!':'');
+    if(lab) lab.textContent=val>=HB_PTS?'MAKSIMAL! 👑':'BONUS ⭐';
+    fx.classList.add('hbWin'); if(val>=HB_PTS) fx.classList.add('hbMax');
+    var BC=['#FFD23F','#FF6FA8','#4ED8A0','#4AB3FF','#A78BFA','#FF9248','#fff'], n=val>=HB_PTS?36:14+val*2;
+    for(var j=0;j<n;j++) spark(cx,cy-8,Math.PI*2*j/n+Math.random()*.2,40+Math.random()*(val>=HB_PTS?60:30),600+Math.random()*300,BC[j%BC.length],2+Math.random()*1.6);
+    try{ var c=ac(), t=c.currentTime; if(val>=HB_PTS){ [72,76,79,84].forEach(function(m,i){ pluck(m,t+i*0.07,0.5,null,0.45); }); }
+      else pluck(84,t,0.3,null,0.4); }catch(e){}
+    setTimeout(function(){ fx.classList.add('out'); setTimeout(function(){ if(fx.parentNode) fx.parentNode.removeChild(fx); },750); }, val>=HB_PTS?700:450);
+  }};
+  (function loop(){
+    if(h.awarded || !h.fx) return;
+    if(!pr.holds || pr.holds.indexOf(h)<0){ hbAward(h,0); return; }   /* jeda / soal berganti / gagal: tanpa bonus */
+    if(!pr.paused){ var v=hbVal(h,performance.now()); if(v!==last){ last=v; h.val=v; if(v>0) level(v); } }
+    raf=requestAnimationFrame(loop);
   })();
 }
 function advanceArcadeLevel(){
