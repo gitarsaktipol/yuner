@@ -1562,6 +1562,7 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 /* Bonus tahan LANGSUNG (lapisan HTML; hanya transform/opacity supaya mulus di HP) */
 .hbX{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;z-index:6;transition:opacity .4s}
 .hbX.out{opacity:0}
+.hbX .hbMv{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
 .hbX.hbBk{z-index:0}
 .scorehost.hbOn>svg{position:relative;z-index:1}
 .scorehost.hbOn .holdfx .hfDone{display:none}
@@ -5101,7 +5102,7 @@ function holdFx(q,ms,beats,pitches,tb){
     h+='<g class="hfTip" style="--hfW:'+w+'px"><circle cx="'+x0+'" cy="'+(y+5)+'" r="11" class="hfGlow"/><circle cx="'+x0+'" cy="'+(y+5)+'" r="5.5" class="hfDot"/></g>';
     h+='<text class="hfDone" x="'+tc+'" y="'+(y-5)+'">✓ Mantap!</text><text class="hfFail" x="'+tc+'" y="'+(y-5)+'">✕ Terlalu cepat</text>';
     fx.innerHTML=h;
-    hfGeo[q]={x:x0+w/2, y:y, w:w};   /* letak bilah tahan: angka bonus tahan tampil di sini */
+    hfGeo[q]={x:x0+w/2, x1:x0+w, y:y, w:w, xe:Math.max(x0+w, nx!==null ? nx-6 : lim), row:(tj && pa ? pa.row : null)};   /* letak bilah tahan: animasi & angka bonus berjalan di sini */
     /* DI BELAKANG notasi (diminta Ferdi, Nov 2026: kembang api menutupi not sesudahnya): disisipkan sebelum not pertama,
        jadi garis paranada di bawahnya tapi semua not tetap di depan */
     var g0=sv.querySelector('g[data-i]'); if(g0 && g0.parentNode) g0.parentNode.insertBefore(fx,g0); else sv.insertBefore(fx,sv.firstChild);
@@ -5263,6 +5264,7 @@ function hbKeepClear(){ $$('#pscore .hbX.keep').forEach(function(e){ if(e.parent
 function hbLiveFx(h){
   var calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var host=$('#pscore'), sv=host && host.querySelector('svg'), g=sv && sv.querySelector('g[data-i="'+h.q+'"]');
+  var G=null, svgLoc=null, mvB=null, mvF=null, Wl=0;
   var board=$('#pboard'), top=$('#ptopV'), box=null, back=null, num=null, lab=null, wrap=null, ring=null, aura=null, glow=null, sp=[], raf=0, last=-1, snd=hbHiss(), spI=0;
   try{
     if(g){
@@ -5277,19 +5279,30 @@ function hbLiveFx(h){
       var hh=Math.abs(ax)>0.5 ? r.height/Math.abs(by||1) : r.width/Math.abs(bx||1);   /* tinggi not di koordinat wadah */
       var nx=c.x, ny=c.y, W=host.clientWidth+host.scrollLeft;
       var tx=Math.max(70, Math.min(nx, W-70)), ty=Math.max(64+host.scrollTop, ny-hh/2-6);
-      /* angka bonus di TEMPAT bonus didapat = bilah tahan sesudah not (diminta Ferdi, Nov 2026: jangan di atas notasi);
-         posisi bilah (koordinat SVG) diubah ke koordinat wadah lewat kotak uji sementara */
-      var G=hfGeo[h.q];
-      if(G){ var t=document.createElementNS('http://www.w3.org/2000/svg','rect'); t.setAttribute('x',G.x-1); t.setAttribute('y',G.y); t.setAttribute('width',2); t.setAttribute('height',10);
-        sv.appendChild(t); var tr=t.getBoundingClientRect(); sv.removeChild(t);
-        var gc=loc(tr.left+tr.width/2, tr.top+tr.height/2);
-        tx=Math.max(56, Math.min(gc.x, W-56)); ty=gc.y+2; }
+      /* animasi & angka bonus BERJALAN di tempat bonus sedang dikumpulkan (diminta Ferdi, Nov 2026, dengan screenshot):
+         Tempo = ikut garis pink (tempoXAt), tanpa Tempo = bergerak dari ujung bilah tahan ke not berikutnya sesuai waktu.
+         Koordinat SVG -> koordinat wadah lewat 3 kotak uji (tepat juga di layar yang diputar 90°). */
+      G=hfGeo[h.q];
+      if(G){
+        var svP=function(sx,sy){ var t=document.createElementNS('http://www.w3.org/2000/svg','rect'); t.setAttribute('x',sx-1); t.setAttribute('y',sy-1); t.setAttribute('width',2); t.setAttribute('height',2);
+          sv.appendChild(t); var tr=t.getBoundingClientRect(); sv.removeChild(t); return loc(tr.left+tr.width/2, tr.top+tr.height/2); };
+        var by0=G.y+5, L0=svP(G.x1,by0), LX=svP(G.x1+50,by0), LY=svP(G.x1,by0+50);
+        svgLoc=function(sx,sy){ var fx=(sx-G.x1)/50, fy=(sy-by0)/50; return {x:L0.x+fx*(LX.x-L0.x)+fy*(LY.x-L0.x), y:L0.y+fx*(LX.y-L0.y)+fy*(LY.y-L0.y)}; };
+        Wl=W;
+      }
       /* cahaya, cincin & percikan di lapisan BELAKANG partitur (svg z-index 1); angka bonus di depan */
       back=document.createElement('div'); back.className='hbX hbBk';
-      back.innerHTML='<div class="hbAur" style="left:'+nx+'px;top:'+ny+'px"></div><div class="hbRg" style="left:'+nx+'px;top:'+ny+'px"></div>'+
-        '<div class="hbSp" style="left:'+nx+'px;top:'+ny+'px">'+new Array(17).join('<i></i>')+'</div>';
       box=document.createElement('div'); box.className='hbX';
-      box.innerHTML='<div class="hbW" style="left:'+tx+'px;top:'+ty+'px"><b class="hbLb">'+HB_LAB[0]+'</b><b class="hbNm">+0</b></div>';
+      if(svgLoc){
+        back.innerHTML='<div class="hbMv"><div class="hbAur" style="left:0;top:0"></div><div class="hbRg" style="left:0;top:0"></div>'+
+          '<div class="hbSp" style="left:0;top:0">'+new Array(17).join('<i></i>')+'</div></div>';
+        box.innerHTML='<div class="hbMv"><div class="hbW" style="left:0;top:-10px"><b class="hbLb">'+HB_LAB[0]+'</b><b class="hbNm">+0</b></div></div>';
+        mvB=back.querySelector('.hbMv'); mvF=box.querySelector('.hbMv');
+      } else {
+        back.innerHTML='<div class="hbAur" style="left:'+nx+'px;top:'+ny+'px"></div><div class="hbRg" style="left:'+nx+'px;top:'+ny+'px"></div>'+
+          '<div class="hbSp" style="left:'+nx+'px;top:'+ny+'px">'+new Array(17).join('<i></i>')+'</div>';
+        box.innerHTML='<div class="hbW" style="left:'+tx+'px;top:'+ty+'px"><b class="hbLb">'+HB_LAB[0]+'</b><b class="hbNm">+0</b></div>';
+      }
       host.classList.add('hbOn'); host.insertBefore(back,host.firstChild); host.appendChild(box);
       num=box.querySelector('.hbNm'); lab=box.querySelector('.hbLb'); wrap=box.querySelector('.hbW'); ring=back.querySelector('.hbRg'); aura=back.querySelector('.hbAur');
       sp=back.querySelectorAll('.hbSp i');
@@ -5303,6 +5316,18 @@ function hbLiveFx(h){
       e.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+(Math.cos(a)*d).toFixed(0)+'px,'+(Math.sin(a)*d+10).toFixed(0)+'px) scale(.3)',opacity:0}],
         {duration:dur+Math.random()*200,easing:'cubic-bezier(.2,.7,.4,1)'}); }
   }
+  function mv(){                                          /* letak titik bonus sekarang */
+    if(!svgLoc || !mvB) return;
+    var sx=null, now=performance.now();
+    if(pr.tempoOn && tp.run && tp.t0 && typeof tempoXAt==='function'){
+      var tpx=tempoXAt((now-tp.t0)/tp.beatMs); if(tpx && (G.row==null || tpx.row===G.row)) sx=tpx.x; }
+    if(sx==null){ var pp=h.t0 ? Math.min(1,Math.max(0,(now-h.t0)/Math.max(1,h.bonus-h.t0))) : 0; sx=G.x1+(G.xe-G.x1)*pp; }
+    sx=Math.max(G.x1, Math.min(G.xe, sx));
+    var P=svgLoc(sx,G.y+5), fx=Math.max(64, Math.min(P.x-26, Wl-84));   /* angka sedikit di KIRI garis (seperti lingkaran Ferdi), tidak keluar tepi */
+    mvB.style.transform='translate('+P.x.toFixed(1)+'px,'+P.y.toFixed(1)+'px)';
+    mvF.style.transform='translate('+fx.toFixed(1)+'px,'+P.y.toFixed(1)+'px)';
+  }
+  mv();
   function level(v){                                      /* angka naik: makin besar, makin berwarna, desis makin keras */
     var col=HB_COL[v];
     if(num){ num.textContent='+'+v; num.style.color=col; if(num.animate && !calm) num.animate([{transform:'scale(1.45)'},{transform:'scale(1)'}],{duration:140,easing:'ease-out'}); }
@@ -5338,7 +5363,7 @@ function hbLiveFx(h){
   (function loop(){
     if(h.awarded || !h.fx) return;
     if(!pr.holds || pr.holds.indexOf(h)<0){ hbAward(h,0); return; }   /* jeda / soal berganti / gagal: tanpa bonus */
-    if(!pr.paused){ var v=hbVal(h,performance.now()); if(v!==last){ last=v; h.val=v; if(v>0) level(v); } }
+    if(!pr.paused){ mv(); var v=hbVal(h,performance.now()); if(v!==last){ last=v; h.val=v; if(v>0) level(v); } }
     raf=requestAnimationFrame(loop);
   })();
 }
