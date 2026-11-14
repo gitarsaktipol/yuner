@@ -1645,6 +1645,11 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 /* Tuts petunjuk (ala Simply Piano): tuts yang harus ditekan menyala biru, berkedip hijau/merah saat terdengar */
 .pkeys{position:relative;flex:none;height:clamp(52px,17vh,96px);margin:6px 4px 0;user-select:none}
 .pkeys[hidden]{display:none}
+/* Piano di layar: tuts lebih tinggi & bisa ditekan */
+.pkeys.vp{height:clamp(84px,30vmin,150px);touch-action:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:pointer}
+.pkeys.vp .w.dn{background:var(--pSky)!important;transform:translateY(2px);box-shadow:inset 0 -3px 0 var(--dSky)}
+.pkeys.vp .b.dn{background:var(--dSky)!important;transform:translateY(2px)}
+.prebtns .vpGo{background:var(--pMint);box-shadow:0 6px 0 var(--dMint)}
 .pkeys i{position:absolute;top:0;box-sizing:border-box;transition:background-color .12s ease}
 .pkeys .w{height:100%;background:var(--pkW);border:1.5px solid var(--pkLine);border-radius:0 0 8px 8px}
 .pkeys .b{height:60%;background:var(--pkB);border-radius:0 0 5px 5px;z-index:2}
@@ -2035,6 +2040,7 @@ body.mob #snewOv .instList b{font-size:20px}
     <div class="prebtns" id="pprebtns" hidden>
       <button class="start" id="pstart" type="button">Aktifkan mikrofon</button>
       <button class="start alt" id="pmidiGo" type="button">Sambungkan alat musik</button>
+      <button class="start alt vpGo" id="pvpGo" type="button">🎹 Piano di layar</button>
     </div>
     <div class="msg" id="pmsg" role="alert"></div>
     <div class="held" id="pheld" hidden></div>
@@ -4763,7 +4769,7 @@ function instShift(){ return pr.inst==='guitar' ? 12 : 0; }
 
 /* ===== Tempo: garis berjalan di partitur; not harus dibunyikan saat garis melewatinya ===== */
 var tp={run:false,raf:0,t0:0,beatMs:857,beat:[],win:[],end:0,lastInt:0,geo:null,first:true};
-function inputReady(){ return mic.active || midiConnected(); }
+function inputReady(){ return mic.active || midiConnected() || vp.on; }
 function tempoTick(accent){
   try{ var c=ac(), t=c.currentTime, o=c.createOscillator(), g=c.createGain(); o.type='square'; o.frequency.value=accent?1500:1050;
     g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(accent?0.4:0.28,t+0.003); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);   /* setara Metronome menu Tuner (Ferdi, Nov 2026: dulu 0,1 terlalu pelan) */
@@ -4888,6 +4894,41 @@ function bindTempoUI(){
   $$('.pkOn').forEach(function(c){ c.checked=pr.keysOn; c.addEventListener('change',function(e){ pr.keysOn=e.target.checked; store.set('yg.pkeys',pr.keysOn?'1':'0'); $$('.pkOn').forEach(function(x){ x.checked=pr.keysOn; }); renderPkeys(); }); });
   sync();
 }
+/* ===== PIANO DI LAYAR (diminta Ferdi, Nov 2026: untuk anak yang tidak punya piano) — tuts petunjuk bisa DITEKAN.
+   Ketukan dikirim lewat jalur yang SAMA dengan keyboard MIDI (midiNoteOn/midiNoteOff): penilaian, tahan not panjang, bonus
+   tahan, Tempo semuanya sama. Banyak jari sekaligus (akor) didukung; jari yang digeser pindah tuts (glissando). Bunyi selalu
+   dari synth. Pilihan berlaku sampai aplikasi ditutup (vp.on), tombol "🎹 Piano di layar" di depan partitur. ===== */
+var vp={on:false, ptr:{}, dn:{}};
+function vpKeyAt(x,y){ var e=document.elementFromPoint(x,y); return e && e.closest && e.closest('#pkeys i[data-m]'); }
+function vpDown(m){
+  if(vp.dn[m]) return; vp.dn[m]=1;
+  if(!vp.on){ vp.on=true; tempoMaybeStart(); }
+  midiNoteOn(m,100); if(!midi.synth) synthOn(m,100);
+  try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){}
+  renderPkeys();
+}
+function vpUp(m){ if(!vp.dn[m]) return; delete vp.dn[m]; midiNoteOff(m); if(!midi.synth) synthOff(m); renderPkeys(); }
+function vpStart(){ vp.on=true; try{ ac(); }catch(e){} tempoMaybeStart(); renderPractice(); }
+function vpAllUp(){ Object.keys(vp.ptr).forEach(function(id){ vpUp(vp.ptr[id]); }); vp.ptr={}; }
+function bindVp(){
+  var box=$('#pkeys'); if(!box || box._vp) return; box._vp=1;
+  box.addEventListener('pointerdown',function(e){
+    if(!pr.playing || pr.inst!=='piano') return;
+    var k=e.target.closest && e.target.closest('i[data-m]'); if(!k) return;
+    e.preventDefault(); try{ box.setPointerCapture(e.pointerId); }catch(er){}
+    var m=+k.getAttribute('data-m'); vp.ptr[e.pointerId]=m; vpDown(m);
+  });
+  box.addEventListener('pointermove',function(e){
+    var old=vp.ptr[e.pointerId]; if(old==null) return;
+    var k=vpKeyAt(e.clientX,e.clientY); if(!k) return;
+    var m=+k.getAttribute('data-m'); if(m===old) return;
+    vp.ptr[e.pointerId]=m; vpUp(old); vpDown(m);
+  });
+  function up(e){ var m=vp.ptr[e.pointerId]; if(m==null) return; delete vp.ptr[e.pointerId]; vpUp(m); }
+  box.addEventListener('pointerup',up); box.addEventListener('pointercancel',up); box.addEventListener('lostpointercapture',up);
+  box.addEventListener('contextmenu',function(e){ e.preventDefault(); });
+  $('#pvpGo').addEventListener('click',vpStart);
+}
 /* ===== Tuts petunjuk: keyboard kecil di bawah partitur (hanya untuk piano) ===== */
 function buildPkeys(box){
   var lo=1e9, hi=-1e9;
@@ -4912,14 +4953,15 @@ function buildPkeys(box){
 var pkT=0;
 function renderPkeys(){
   var box=$('#pkeys'); if(!box) return;
-  var on = pr.playing && pr.keysOn && pr.inst==='piano' && !!pr.score && pr.idx.length>0;
+  var on = pr.playing && (pr.keysOn || vp.on) && pr.inst==='piano' && !!pr.score && pr.idx.length>0;
+  box.classList.toggle('vp', vp.on);
   if(box.hidden===on) box.hidden=!on;
   if(!on) return;
   if(box._sc!==pr.score) buildPkeys(box);
   var tg={}, fl=(pr.flash && performance.now()-pr.flash.t<420) ? pr.flash : null;
   if(!pr.done && pr.pos<pr.idx.length) prPitches(pr.idx[pr.pos]).forEach(function(p){ if(!pr.got[p.m]) tg[p.m]=1; });
   box._keys.forEach(function(k){
-    var m=+k.getAttribute('data-m'), c=(isBlack(m)?'b':'w')+(tg[m]?' tgt':'')+(fl && fl.m===m ? (fl.ok?' hit':' miss') : '');
+    var m=+k.getAttribute('data-m'), c=(isBlack(m)?'b':'w')+(tg[m]?' tgt':'')+(fl && fl.m===m ? (fl.ok?' hit':' miss') : '')+(vp.dn[m]?' dn':'');
     if(k.className!==c) k.className=c;
   });
   if(fl){ clearTimeout(pkT); pkT=setTimeout(renderPkeys,430); }
@@ -6110,6 +6152,7 @@ function okDots(id){
 }
 function whenPlaying(fn){ return function(){ if(pr.paused) pr.deferred=fn; else fn(); }; }
 function pausePlay(){
+  vpAllUp();
   if(pr.paused) return;
   pr.paused=true; pr.pauseT=performance.now(); pr.holds=[]; holdFxClear();
   if(tp.run){ cancelAnimationFrame(tp.raf); tp.paused=true; }
@@ -6127,6 +6170,7 @@ function resumePlay(){
 }
 function askQuit(){ if(aiOpen()){ aiEnd(); return; } if(!pr.playing) return; pausePlay(); $('#pquit').hidden=false; try{ $('#pqNo').focus(); }catch(e){} }
 function closePractice(fromPop){
+  vpAllUp();   /* tuts piano di layar yang masih ditekan dilepas */
   if(aiOpen()){ ai.done=null; aiEnd(); } pr.intro=false; pr.failing=false; pr.pendFail=null;
   hideGrade(); hideHill(); tempoStop(); var tpp=$('#ptop'); if(tpp) tpp.hidden=true;
   if(!pr.playing) return;
@@ -6188,13 +6232,15 @@ function renderPractice(){
     });
     followCur(host, redrawn);
   }
-  $('#pprebtns').hidden = !(pr.playing && !(mic.active || midiConnected()));
+  $('#pprebtns').hidden = !(pr.playing && !inputReady());
+  $('#pvpGo').hidden = pr.inst!=='piano';
   var st=$('#pstatus'), t, c='';
   if(!pr.idx.length){ t = pr.src==='custom' ? 'Pilih minimal 2 nada dulu di atas.' : 'Partitur ini belum punya not. Tambahkan not di menu Partitur.'; }
   /* pesan akhir mengikuti nilai (diminta Ferdi, Okt 2026: nilai di bawah 50 jangan "Bagus sekali") */
   else if(pr.done){ var lp=pr.lastPct==null?100:pr.lastPct; t = lp>=100?'Sempurna!':lp>=80?'Bagus sekali!':lp>=50?'Lumayan, terus berlatih!':'Belum berhasil, ayo coba lagi!'; c = lp>=50?'ok':'bad'; }
   else if(pr.lastMsg){ t=pr.lastMsg.t; c=pr.lastMsg.c; }
   else if(midiConnected()){ t='Mainkan not yang disorot di keyboard MIDI.'; }
+  else if(vp.on && !mic.active){ t='Ketuk tuts piano di layar yang menyala biru 👇'; }
   else if(!mic.active){ t = pr.playing ? 'Pilih cara bermain 👇' : 'Ketuk Mulai berlatih untuk bermain.'; }
   else { t='Mainkan not yang disorot.'; }
   st.textContent=t; st.className='pstatus'+(c?' '+c:'');
@@ -6336,6 +6382,7 @@ function bindPracticeOpts(){
   $('#psharp').addEventListener('change',function(e){ pr.sharps=e.target.checked; newRound(); });
   $('#poct').addEventListener('change',function(e){ pr.anyOct=e.target.checked; });
   $('#pstart').addEventListener('click',micToggle);
+  bindVp();
   placeDock();
   window.addEventListener('resize',placeDock);
   window.addEventListener('orientationchange',function(){ setTimeout(placeDock,200); });
