@@ -1564,6 +1564,7 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 .hbX.out{opacity:0}
 .hbX.hbBk{z-index:0}
 .scorehost.hbOn>svg{position:relative;z-index:1}
+.scorehost.hbOn .holdfx .hfDone{display:none}
 .hbX .hbAur{position:absolute;width:90px;height:90px;margin:-45px 0 0 -45px;border-radius:50%;opacity:.35;will-change:transform;animation:hbAu .5s ease-in-out infinite alternate}
 @keyframes hbAu{to{transform:scale(1.3)}}
 .hbX .hbRg{position:absolute;width:44px;height:44px;border:3px solid #FFD23F;border-radius:50%;opacity:0;transform:translate(-50%,-50%);will-change:transform,opacity}
@@ -5038,7 +5039,7 @@ function holdBeatMs(){ return pr.tempoOn && tp.run ? tp.beatMs : 60000/(pr.bpm||
    tumbuh dari not itu ke kanan sampai batas waktu tahannya (dengan angka hitungan 2·3·4 dan bola cahaya di ujungnya),
    tuts petunjuk ikut terisi; selesai = kilau hijau "✓", dilepas terlalu cepat = bilah merah retak. Digambar di dalam SVG
    partitur supaya ikut skala/rotasi layar. ===== */
-var holdFxEls={};
+var holdFxEls={}, hfGeo={};
 function holdFxEnd(q,how){
   var o=holdFxEls[q]; if(!o) return; delete holdFxEls[q]; clearTimeout(o.t); clearInterval(o.iv);
   (o.keys||[]).forEach(function(k){ if(k.parentNode) k.parentNode.removeChild(k); });
@@ -5093,6 +5094,7 @@ function holdFx(q,ms,beats,pitches,tb){
     h+='<g class="hfTip" style="--hfW:'+w+'px"><circle cx="'+x0+'" cy="'+(y+5)+'" r="11" class="hfGlow"/><circle cx="'+x0+'" cy="'+(y+5)+'" r="5.5" class="hfDot"/></g>';
     h+='<text class="hfDone" x="'+tc+'" y="'+(y-5)+'">✓ Mantap!</text><text class="hfFail" x="'+tc+'" y="'+(y-5)+'">✕ Terlalu cepat</text>';
     fx.innerHTML=h;
+    hfGeo[q]={x:x0+w/2, y:y, w:w};   /* letak bilah tahan: angka bonus tahan tampil di sini */
     /* DI BELAKANG notasi (diminta Ferdi, Nov 2026: kembang api menutupi not sesudahnya): disisipkan sebelum not pertama,
        jadi garis paranada di bawahnya tapi semua not tetap di depan */
     var g0=sv.querySelector('g[data-i]'); if(g0 && g0.parentNode) g0.parentNode.insertBefore(fx,g0); else sv.insertBefore(fx,sv.firstChild);
@@ -5267,6 +5269,13 @@ function hbLiveFx(h){
       var hh=Math.abs(ax)>0.5 ? r.height/Math.abs(by||1) : r.width/Math.abs(bx||1);   /* tinggi not di koordinat wadah */
       var nx=c.x, ny=c.y, W=host.clientWidth+host.scrollLeft;
       var tx=Math.max(70, Math.min(nx, W-70)), ty=Math.max(64+host.scrollTop, ny-hh/2-6);
+      /* angka bonus di TEMPAT bonus didapat = bilah tahan sesudah not (diminta Ferdi, Nov 2026: jangan di atas notasi);
+         posisi bilah (koordinat SVG) diubah ke koordinat wadah lewat kotak uji sementara */
+      var G=hfGeo[h.q];
+      if(G){ var t=document.createElementNS('http://www.w3.org/2000/svg','rect'); t.setAttribute('x',G.x-1); t.setAttribute('y',G.y); t.setAttribute('width',2); t.setAttribute('height',10);
+        sv.appendChild(t); var tr=t.getBoundingClientRect(); sv.removeChild(t);
+        var gc=loc(tr.left+tr.width/2, tr.top+tr.height/2);
+        tx=Math.max(56, Math.min(gc.x, W-56)); ty=gc.y+2; }
       /* cahaya, cincin & percikan di lapisan BELAKANG partitur (svg z-index 1); angka bonus di depan */
       back=document.createElement('div'); back.className='hbX hbBk';
       back.innerHTML='<div class="hbAur" style="left:'+nx+'px;top:'+ny+'px"></div><div class="hbRg" style="left:'+nx+'px;top:'+ny+'px"></div>'+
