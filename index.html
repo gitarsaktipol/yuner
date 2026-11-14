@@ -1562,6 +1562,8 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 /* Bonus tahan LANGSUNG (lapisan HTML; hanya transform/opacity supaya mulus di HP) */
 .hbX{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;z-index:6;transition:opacity .4s}
 .hbX.out{opacity:0}
+.hbX.hbBk{z-index:0}
+.scorehost.hbOn>svg{position:relative;z-index:1}
 .hbX .hbAur{position:absolute;width:90px;height:90px;margin:-45px 0 0 -45px;border-radius:50%;opacity:.35;will-change:transform;animation:hbAu .5s ease-in-out infinite alternate}
 @keyframes hbAu{to{transform:scale(1.3)}}
 .hbX .hbRg{position:absolute;width:44px;height:44px;border:3px solid #FFD23F;border-radius:50%;opacity:0;transform:translate(-50%,-50%);will-change:transform,opacity}
@@ -5048,7 +5050,10 @@ function holdFx(q,ms,beats,pitches,tb){
       h+='<text class="hfNum" x="'+(tx-(k===beats-1?Math.min(8,gapN/3):0))+'" y="'+(y-4)+'" style="animation-delay:'+dl+'ms">'+(k+1)+'</text>'; }
     h+='<g class="hfTip" style="--hfW:'+w+'px"><circle cx="'+x0+'" cy="'+(y+5)+'" r="11" class="hfGlow"/><circle cx="'+x0+'" cy="'+(y+5)+'" r="5.5" class="hfDot"/></g>';
     h+='<text class="hfDone" x="'+tc+'" y="'+(y-5)+'">✓ Mantap!</text><text class="hfFail" x="'+tc+'" y="'+(y-5)+'">✕ Terlalu cepat</text>';
-    fx.innerHTML=h; sv.appendChild(fx);
+    fx.innerHTML=h;
+    /* DI BELAKANG notasi (diminta Ferdi, Nov 2026: kembang api menutupi not sesudahnya): disisipkan sebelum not pertama,
+       jadi garis paranada di bawahnya tapi semua not tetap di depan */
+    var g0=sv.querySelector('g[data-i]'); if(g0 && g0.parentNode) g0.parentNode.insertBefore(fx,g0); else sv.insertBefore(fx,sv.firstChild);
     var fill=fx.querySelector('.hfFill'), tip=fx.querySelector('.hfTip'), raf=0;
     function prog(){ if(!tj) return Math.min(1,(performance.now()-t0)/ms);
       var px=tempoXAt((performance.now()-tp.t0)/tp.beatMs); return px ? Math.min(1,Math.max(0,(px.x-x0)/w)) : 0; }
@@ -5206,7 +5211,7 @@ function hbWhoosh(big,delay){
 function hbLiveFx(h){
   var calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var host=$('#pscore'), sv=host && host.querySelector('svg'), g=sv && sv.querySelector('g[data-i="'+h.q+'"]');
-  var board=$('#pboard'), top=$('#ptopV'), box=null, num=null, lab=null, wrap=null, ring=null, aura=null, glow=null, sp=[], raf=0, last=-1, snd=hbHiss(), spI=0;
+  var board=$('#pboard'), top=$('#ptopV'), box=null, back=null, num=null, lab=null, wrap=null, ring=null, aura=null, glow=null, sp=[], raf=0, last=-1, snd=hbHiss(), spI=0;
   try{
     if(g){
       if(getComputedStyle(host).position==='static') host.style.position='relative';
@@ -5220,13 +5225,15 @@ function hbLiveFx(h){
       var hh=Math.abs(ax)>0.5 ? r.height/Math.abs(by||1) : r.width/Math.abs(bx||1);   /* tinggi not di koordinat wadah */
       var nx=c.x, ny=c.y, W=host.clientWidth+host.scrollLeft;
       var tx=Math.max(70, Math.min(nx, W-70)), ty=Math.max(64+host.scrollTop, ny-hh/2-6);
+      /* cahaya, cincin & percikan di lapisan BELAKANG partitur (svg z-index 1); angka bonus di depan */
+      back=document.createElement('div'); back.className='hbX hbBk';
+      back.innerHTML='<div class="hbAur" style="left:'+nx+'px;top:'+ny+'px"></div><div class="hbRg" style="left:'+nx+'px;top:'+ny+'px"></div>'+
+        '<div class="hbSp" style="left:'+nx+'px;top:'+ny+'px">'+new Array(17).join('<i></i>')+'</div>';
       box=document.createElement('div'); box.className='hbX';
-      box.innerHTML='<div class="hbAur" style="left:'+nx+'px;top:'+ny+'px"></div><div class="hbRg" style="left:'+nx+'px;top:'+ny+'px"></div>'+
-        '<div class="hbSp" style="left:'+nx+'px;top:'+ny+'px">'+new Array(17).join('<i></i>')+'</div>'+
-        '<div class="hbW" style="left:'+tx+'px;top:'+ty+'px"><b class="hbLb">'+HB_LAB[0]+'</b><b class="hbNm">+0</b></div>';
-      host.appendChild(box);
-      num=box.querySelector('.hbNm'); lab=box.querySelector('.hbLb'); wrap=box.querySelector('.hbW'); ring=box.querySelector('.hbRg'); aura=box.querySelector('.hbAur');
-      sp=box.querySelectorAll('.hbSp i');
+      box.innerHTML='<div class="hbW" style="left:'+tx+'px;top:'+ty+'px"><b class="hbLb">'+HB_LAB[0]+'</b><b class="hbNm">+0</b></div>';
+      host.classList.add('hbOn'); host.insertBefore(back,host.firstChild); host.appendChild(box);
+      num=box.querySelector('.hbNm'); lab=box.querySelector('.hbLb'); wrap=box.querySelector('.hbW'); ring=back.querySelector('.hbRg'); aura=back.querySelector('.hbAur');
+      sp=back.querySelectorAll('.hbSp i');
     }
     if(board){ glow=document.createElement('div'); glow.className='hbGl'; board.appendChild(glow); }
   }catch(e){}
@@ -5254,7 +5261,9 @@ function hbLiveFx(h){
     cancelAnimationFrame(raf); snd.stop();
     if(glow){ glow.style.opacity='0'; setTimeout(function(){ if(glow.parentNode) glow.parentNode.removeChild(glow); },300); }
     if(!box) return;
-    if(!(val>0)){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },450); return; }
+    function rm(ms){ [box,back].forEach(function(e){ if(e) e.classList.add('out'); });
+      setTimeout(function(){ [box,back].forEach(function(e){ if(e && e.parentNode) e.parentNode.removeChild(e); }); if(host && !host.querySelector('.hbBk')) host.classList.remove('hbOn'); },ms); }
+    if(!(val>0)){ rm(450); return; }
     /* hasil akhir: angka membesar + ledakan, lalu memudar ke atas */
     if(num) num.textContent='+'+val+(val>=HB_PTS?'!':'');
     if(lab) lab.textContent=val>=HB_PTS?'MAKSIMAL! 👑':'BONUS ⭐';
@@ -5262,7 +5271,7 @@ function hbLiveFx(h){
     if(wrap){ wrap.classList.remove('jit'); wrap.style.transform='translate(-50%,-100%) scale('+(val>=HB_PTS?1.75:1.45)+')'; }
     burst(16,val>=HB_PTS?'#FF6FA8':'#FFD23F',val>=HB_PTS?90:60,620);
     hbWhoosh(val>=HB_PTS);
-    setTimeout(function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },500); }, val>=HB_PTS?750:500);
+    setTimeout(function(){ rm(500); }, val>=HB_PTS?750:500);
   }};
   (function loop(){
     if(h.awarded || !h.fx) return;
