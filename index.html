@@ -780,6 +780,138 @@ body.dock-inflow .app{padding-bottom:110px}
 .mgTips li span{font-size:clamp(22px,8vmin,40px);line-height:1}
 .mgTips li p{margin:0;font-size:clamp(15px,4.8vmin,24px);font-weight:700;text-align:left;line-height:1.25}
 @media (prefers-reduced-motion:reduce){ .mgIc,.mgBig,.mgSub,.mgLeft,.mgRight,.mgCmp .mgBar,.mgEq,.mgTips li,.mgAct.top{animation:none} }
+/* ===== Materi Arcade bersuara (Nov 2026): subtitle + adegan motion graphic yang muncul tepat saat kata diucapkan ===== */
+.aiCap{min-height:2.7em;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 6px}
+.aiCap span{display:inline-block;max-width:920px;font-size:clamp(14px,4.4vmin,21px);font-weight:800;line-height:1.25;background:rgba(20,16,40,.78);color:#fff;border-radius:14px;padding:5px 16px;animation:capIn .25s ease-out}
+.aiCap b{color:#FFD23F}
+@keyframes capIn{0%{transform:translateY(6px);opacity:0}100%{transform:none;opacity:1}}
+.mgGw,.mgEqn,.mgName,.mgZoom,.mgValC,.mgValC .mgKeyRow,.mgDots,.mgB2,.mgEq2,.mgTot,.mgCmpGl,.mgLg,.mgCN,.mg-tip .mgTips li,.mgGo,.mgPB.hid{opacity:0;transform:scale(.6);transition:opacity .35s,transform .55s var(--bounce)}
+.mgGw.in,.mgEqn.in,.mgName.in,.mgZoom.in,.mgValC.in,.mgValC .mgKeyRow.in,.mgDots.in,.mgB2.in,.mgEq2.in,.mgTot.in,.mgCmpGl.in,.mgLg.in,.mgCN.in,.mg-tip .mgTips li.in,.mgGo.in,.mgPB.hid.in{opacity:1;transform:none}
+.mg-tip .mgTips li{animation:none;transform:translateX(-40px)}
+.mgPBh.hid{visibility:hidden}
+.mgLoad{display:flex;gap:10px}.mgLoad i{width:16px;height:16px;border-radius:50%;background:var(--brass);animation:mgLd 1s ease-in-out infinite}
+.mgLoad i:nth-child(2){animation-delay:.15s}.mgLoad i:nth-child(3){animation-delay:.3s}
+@keyframes mgLd{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-12px);opacity:1}}
+.mgStage.mg-hook,.mgStage.mg-tip,.mgStage.mg-cmp,.mgStage.mg-rhy,.mgStage.mg-play,.mgStage.mg-dots{flex-direction:column;gap:clamp(4px,1.8vmin,12px)}
+/* gambar not & not angka */
+.mgGc{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--surf);border-radius:18px;padding:4px 14px 6px;box-shadow:0 4px 0 var(--line)}
+.mgGc small{font-size:clamp(11px,3.4vmin,15px);font-weight:900;color:var(--muted)}
+.mgGl{height:clamp(46px,17vmin,96px);width:auto;color:var(--ink);overflow:visible;flex:none}
+.mgNum{display:inline-flex;align-items:flex-end;gap:.3em;font-weight:900;font-size:clamp(20px,7vmin,38px);line-height:1.15;color:var(--ink);white-space:nowrap}
+.mgNum .nd{font-style:normal;transition:opacity .3s,color .3s}
+.mgNum .ov{display:inline-flex;gap:.3em;border-top:.09em solid currentColor;padding-top:.04em}
+.mgNum .nd.lo{padding:0 .12em}
+.mgGls{display:flex;gap:clamp(8px,3vmin,22px);align-items:flex-end;justify-content:center}
+.mgGw.new.in .mgGc{box-shadow:0 0 0 3px var(--brass),0 0 22px var(--brass);animation:mgGlow 1.4s ease-in-out infinite}
+@keyframes mgGlow{50%{box-shadow:0 0 0 4px var(--brass),0 0 34px var(--brass)}}
+.mgGw.dot .glDot,.mgCmpGl .glDot,.mgZoom .glDot{fill:var(--brass);animation:mgDotP 1s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes mgDotP{50%{transform:scale(1.7)}}
+/* detak = ketuk */
+.mgStage.mg-pulse{gap:clamp(14px,5vmin,40px)}
+.mgClock svg{width:clamp(100px,38vmin,200px);height:auto;display:block}
+.mgClock circle{fill:var(--surf);stroke:var(--ink);stroke-width:3}
+.mgClock line{stroke:var(--ink);stroke-width:2.4;stroke-linecap:round}
+.mgClock .hand{stroke:var(--brass);stroke-width:4;transition:transform .12s}
+.mgClock .pin{fill:var(--brass);stroke:none}
+.mgClock.beat{animation:mgBeat .35s ease-out}
+@keyframes mgBeat{30%{transform:scale(1.08)}}
+.mgPulseR{display:flex;flex-direction:column;gap:clamp(8px,3vmin,18px);align-items:center;min-width:clamp(200px,44vw,420px)}
+.mgBoxes.big{width:100%}.mgBoxes.big i{font-size:clamp(22px,8vmin,42px);border-radius:16px}
+.mgEqn{font-size:clamp(20px,7vmin,36px);font-weight:900}
+.mgEqn b{color:#fff;background:linear-gradient(135deg,var(--btnA,var(--brass)),var(--btnB,var(--peach)));border-radius:12px;padding:0 12px}
+/* not 1–5 */
+.mgStage.mg-pitch{gap:clamp(8px,3vmin,24px)}
+.mgPL{flex:1;align-self:stretch;display:flex;flex-direction:column;gap:6px;min-width:0;max-width:440px}
+.mgMini g.mgHid{opacity:0}
+.mgKb{position:relative;flex:1;max-width:420px;display:flex;height:clamp(96px,40vmin,190px)}
+.mgKb .w{flex:1;position:relative;background:#fff;border:2px solid var(--line);border-radius:0 0 10px 10px;margin-right:-2px;box-shadow:0 4px 0 var(--dLilac);display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:4px;transition:transform .1s,background .15s;font-style:normal}
+.mgKb .w b{font-size:clamp(16px,6vmin,28px);font-weight:900;color:#2b2140;opacity:0;transform:scale(.4);transition:opacity .25s,transform .4s var(--bounce)}
+.mgKb .w em{font-style:normal;font-size:clamp(11px,3.6vmin,16px);font-weight:800;color:#7a6a96;opacity:0;transition:opacity .25s}
+.mgKb .w.num b,.mgKb .w.sol b{opacity:1;transform:none}.mgKb .w.sol em{opacity:1}
+.mgKb .w.on{background:#FFD23F;transform:translateY(4px);box-shadow:0 0 0 var(--dLilac),0 0 18px #FFB300}
+.mgKb .bk{position:absolute;top:0;width:7%;height:58%;background:#2b2140;border-radius:0 0 6px 6px;z-index:1}
+/* nama not + zoom + nilai */
+.mgStage.mg-intro{gap:clamp(8px,2.6vmin,22px)}
+.mgNames{flex:0 0 clamp(120px,26%,240px);display:flex;flex-direction:column;gap:clamp(4px,1.6vmin,10px)}
+.mgName{background:var(--surf);border-radius:14px;padding:3px 12px 5px;box-shadow:0 3px 0 var(--line);text-align:left;transition:opacity .35s,transform .55s var(--bounce),background .3s}
+.mgName small{display:block;font-size:clamp(10px,3vmin,13px);font-weight:800;color:var(--muted)}
+.mgName b{display:block;font-size:clamp(15px,5vmin,26px);font-weight:900;line-height:1.1}
+.mgName.cur{background:var(--pLemon);transform:scale(1.07);box-shadow:0 3px 0 var(--dLemon)}
+.mgZoom{flex:1;display:flex;justify-content:center;min-width:0}
+.mgZoom.in{animation:mgZoomIn .9s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes mgZoomIn{0%{transform:scale(.15) rotate(-8deg);opacity:0}60%{transform:scale(1.12)}100%{transform:none;opacity:1}}
+.mgZoom .mgGc{padding:6px 22px 10px;box-shadow:0 0 0 4px var(--brass),0 8px 30px rgba(0,0,0,.18)}
+.mgZoom .mgGl{height:clamp(70px,30vmin,170px)}
+.mgZoom .mgNum{font-size:clamp(28px,11vmin,58px)}
+.mgValC{flex:0 0 clamp(120px,24%,230px);display:flex;flex-direction:column;align-items:center;gap:clamp(4px,1.6vmin,10px)}
+.mgVal{display:flex;flex-direction:column;align-items:center}
+.mgVal span{font-size:clamp(11px,3.4vmin,15px);font-weight:800;color:var(--muted)}
+.mgVal b{font-size:clamp(20px,7vmin,36px);font-weight:900;color:#fff;background:linear-gradient(135deg,var(--btnA,var(--brass)),var(--btnB,var(--peach)));border-radius:14px;padding:0 14px;box-shadow:0 4px 0 rgba(0,0,0,.14);white-space:nowrap}
+.mgVbx{display:flex;gap:5px}
+.mgVbx i{position:relative;width:clamp(28px,9vmin,44px);height:clamp(28px,9vmin,44px);border-radius:10px;background:var(--track);overflow:hidden;font-style:normal}
+.mgVbx.half i{width:clamp(70px,22vmin,110px)}
+.mgVbx em{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#FFB300,#FF7AA8);transition:width .45s ease-out}
+.mgVbx i.fill em{width:calc(var(--f) * 100%)}
+.mgVbx i.pop{animation:mgBeat .35s ease-out}
+.mgVbx s{position:absolute;left:50%;top:-10%;bottom:-10%;border-left:3px dashed var(--ink);z-index:1;transform:scaleY(0);transition:transform .5s var(--bounce)}
+.mgVbx.cut s{transform:none}
+.mgValC .mgKeyRow{min-height:0;gap:8px}
+/* titik not angka */
+.mgDots .mgNum{font-size:clamp(46px,22vmin,110px);gap:.45em}
+.mgDots .mgNum.dim{opacity:.3}
+.mgDots .nd{opacity:.2}.mgDots .nd.lit{opacity:1;color:var(--brass);animation:mgBeat .4s ease-out}
+.mgDotLab{min-height:1.4em;font-size:clamp(18px,6.4vmin,32px);font-weight:900;display:flex;gap:12px;align-items:center}
+.mgDotLab.pop{animation:popIn .35s var(--bounce)}
+.mgDotLab .plus{background:var(--pLemon);box-shadow:0 3px 0 var(--dLemon);border-radius:99px;padding:0 12px}
+/* perbandingan panjang */
+.mgCmp2{width:min(100%,820px);display:flex;flex-direction:column;gap:clamp(3px,1.2vmin,8px)}
+.mgRow2{display:flex;width:100%;min-height:clamp(34px,12vmin,56px)}
+.mgB2{flex:none;margin:0 3px;height:clamp(34px,12vmin,56px);border-radius:12px;display:flex;align-items:center;justify-content:center;gap:6px;overflow:hidden;color:#fff;background:linear-gradient(90deg,#FF6FA8,#FF9F6E);box-shadow:0 3px 0 rgba(0,0,0,.14);transform-origin:0 50%}
+.mgB2:not(.in){transform:scaleX(.15)}
+.mgRow2.r1 .mgB2{background:linear-gradient(90deg,#4AB3FF,#7C86F2)}
+.mgRow2.r2 .mgB2{background:linear-gradient(90deg,#34C38F,#7BD88F)}
+.mgB2.add{background:#FFD23F !important;color:#2b2140}
+.mgB2 .mgGl{height:92%;color:#fff}.mgB2.add .mgGl{color:#2b2140}
+.mgB2 b{font-size:clamp(12px,3.8vmin,18px);font-weight:900;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.mgEq2{text-align:center;font-size:clamp(16px,5vmin,26px);font-weight:900;color:var(--muted);line-height:1}
+.mgCmp2 .mgBoxes{margin:2px 3px 0}
+.mgTot{align-self:center;font-size:clamp(18px,6vmin,30px);font-weight:900;background:var(--pMint);box-shadow:0 3px 0 var(--dMint);border-radius:99px;padding:0 16px}
+.mgCmpGl{display:flex;justify-content:center}
+/* ta / ti-ti + blok contoh */
+.mgLeg{display:flex;gap:clamp(10px,4vmin,30px);justify-content:center}
+.mgLg{display:flex;align-items:center;gap:8px;background:var(--surf);border-radius:16px;padding:2px 14px;box-shadow:0 4px 0 var(--line)}
+.mgLg span{font-size:clamp(18px,6vmin,30px);font-weight:900;color:var(--muted)}
+.mgLg b{font-size:clamp(22px,8vmin,42px);font-weight:900}
+.mgLg.say b{color:var(--brass);animation:mgBeat .45s ease-out}
+.mg-rhy.shown .mgLg .mgGl{height:clamp(30px,10vmin,52px)}
+.mg-rhy.shown .mgLg b{font-size:clamp(16px,5.4vmin,26px)}
+.mgPB{width:min(100%,900px);display:flex;flex-direction:column;gap:clamp(3px,1.2vmin,8px);flex:0 1 auto;min-height:0}
+.mgPBs{display:flex;gap:8px;height:clamp(56px,22vmin,200px)}
+.mgPBs .mgCard{flex:1}
+.mgPBh{display:flex;align-items:center;justify-content:center;gap:12px}
+.mgPBh .mgPiano{height:clamp(24px,8vmin,40px)}
+.mgPBh .mgPiano i{width:clamp(16px,5vmin,24px)}
+.mgMid{position:absolute;top:-4px;height:calc(clamp(26px,9vmin,44px) + 8px);border-left:3px dashed var(--brass);margin-left:7px;z-index:2;animation:popIn .4s var(--bounce)}
+.mgMid span{position:absolute;bottom:100%;left:0;transform:translateX(-50%);white-space:nowrap;font-size:clamp(11px,3.4vmin,15px);font-weight:900;background:var(--pLemon);border-radius:99px;padding:0 10px;box-shadow:0 2px 0 var(--dLemon)}
+/* titik bergaris vs biasa */
+.mgCN{display:flex;gap:clamp(12px,5vmin,40px);justify-content:center}
+.mgCNc{background:var(--surf);border-radius:20px;padding:6px 22px 8px;box-shadow:0 4px 0 var(--line);text-align:center;transition:transform .4s var(--bounce),box-shadow .3s,opacity .3s;opacity:.55}
+.mgCNc.cur{opacity:1;transform:scale(1.08);box-shadow:0 0 0 4px var(--brass),0 8px 26px rgba(0,0,0,.16)}
+.mgCNc .mgNum{font-size:clamp(34px,15vmin,76px)}
+.mgCNc p{margin:2px 0 0;font-size:clamp(14px,4.4vmin,22px);font-weight:800;line-height:1.25}
+.mgCNc p span{color:var(--brass);font-weight:900}
+.mgCNc.a.cur .ov .nd,.mgCNc.b.cur .nd{color:var(--brass);animation:mgBeat .6s ease-in-out infinite;display:inline-block}
+.mg-tip .mgTips li span .mgGl{height:clamp(34px,11vmin,56px)}
+.mg-tip .mgBig.sm{font-size:clamp(18px,5.6vmin,32px)}
+.mg-tip .mgTips{gap:clamp(4px,1.4vmin,10px)}
+.mg-tip .mgTips li{padding:clamp(2px,1.2vmin,10px) 16px}
+.mg-tip .mgTips li p{font-size:clamp(14px,4.4vmin,24px)}
+.mgGo{font-size:clamp(20px,7vmin,42px) !important}
+.mgGo{font-size:clamp(24px,9vmin,48px);font-weight:900;color:#fff;background:linear-gradient(135deg,var(--btnA,var(--brass)),var(--btnB,var(--peach)));border-radius:18px;padding:0 22px;box-shadow:0 5px 0 rgba(0,0,0,.16)}
+@media (prefers-reduced-motion:reduce){
+  .mgZoom.in,.mgClock.beat,.mgVbx i.pop,.mgDots .nd.lit,.mgLg.say b,.mgGw.new.in .mgGc,.mgCNc.cur .nd,.glDot,.mgLoad i{animation:none !important}
+  .mgGw,.mgEqn,.mgName,.mgZoom,.mgValC,.mgDots,.mgB2,.mgEq2,.mgTot,.mgCmpGl,.mgLg,.mgCN,.mg-tip .mgTips li,.mgGo,.mgPB.hid{transform:none !important}
+}
 .aiRing{fill:none;stroke:var(--brass);stroke-width:3.2;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:aiRing .6s ease-out forwards,aiRingP 1.4s ease-in-out .6s infinite}
 @keyframes aiRing{ to{stroke-dashoffset:0} }
 @keyframes aiRingP{ 0%,100%{stroke-width:3.2} 50%{stroke-width:5} }
@@ -2144,15 +2276,9 @@ body.mob #snewOv .instList b{font-size:20px}
   <div class="aiTop"><span class="aiTag" id="aiTag">📖 Materi baru</span><button class="sound aiSkip" id="aiSkip" type="button">Lewati ⏭</button></div>
   <div class="aiProg" id="aiProg" aria-hidden="true"></div>
   <div class="aiBody">
-    <div class="mgStage" id="mgStage" hidden></div>
-    <h2 class="aiTitle" id="aiTitle"></h2>
-    <div class="aiScore" id="aiScore" hidden>
-      <div class="aiLab">Not balok</div><div class="aiHost" id="aiStaff"></div>
-      <div class="aiText" id="aiText"></div>
-      <div class="aiLab">Not angka</div><div class="aiHost" id="aiNum"></div>
-      <div class="aiDots" id="aiDots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-    </div>
+    <div class="mgStage" id="mgStage"></div>
   </div>
+  <div class="aiCap" id="aiCap" aria-live="polite"></div>
   <div class="aiBar"><button class="sound" id="aiAgain" type="button" hidden>↺ Ulangi</button><button class="start" id="aiGo" type="button">Lanjut ▶</button></div>
 </div>
 <div class="play" id="pplay" hidden role="dialog" aria-label="Berlatih baca not">
@@ -5398,194 +5524,402 @@ function advanceArcadeLevel(){
   if(pr.arcSub>9){ pr.arcSub=1; pr.arcLetter=Math.min(pr.arcLetter+1,ARC_LETTERS.length-1); }
   arcSave();
 }
-/* ===== Perkenalan materi baru Arcade (diminta Ferdi, Okt 2026): sebelum huruf A, B, F, H dimainkan PERTAMA kali (per
-   pemain, `intro` di data pemain) tampil teks, lalu contoh not balok (atas) + not angka (bawah) yang diputar otomatis
-   dengan metronom & penanda ketukan, baru permainan mulai (Tempo: "Siap? 4 3 2 1"). Bisa ditonton ulang lewat 📖 Materi. ===== */
+/* ===== Materi Arcade = VIDEO PENJELASAN BERSUARA (Nov 2026, diminta Ferdi: materi lama pesannya kurang sampai).
+   Sebelum huruf A, B, F, H dimainkan PERTAMA kali (per pemain, `intro` di data pemain) — atau lewat tombol 📖 Materi —
+   diputar rangkaian ADEGAN motion graphic yang mengikuti VOICE OVER Ferdi (vo/arc-A|B|F|H.mp3; satu file per materi,
+   naskah disusun Claude, suara dibuat Ferdi dengan AI suara). Tiap adegan:
+     vo   : [mulai, selesai] potongan suara di file materi (detik)
+     s    : kalimat subtitle [[detik sejak awal adegan, teks]] — waktu diukur dari jeda hening rekaman
+     t    : jenis gambar — hook | pulse (ketukan) | pitch (not 1–5) | intro (nama not + gambar not di-zoom + nilai) |
+            dots (titik not angka) | cmp (perbandingan panjang) | rhy (ta / ti-ti) | cmpNum (titik bergaris vs biasa) | tip
+     play : sesudah suara selesai, contoh diputar aplikasi (bunyi + metronom + kotak ketukan), 2x: dengarkan, lalu hitung
+   Semua waktu animasi dijadwalkan dari jam AudioContext yang sama dengan suara, jadi gambar muncul tepat saat kata
+   diucapkan. Suara gagal dimuat (offline pertama kali) → tetap jalan dengan subtitle saja. Nama Inggris not:
+   Crotchet/Quarter note, Semibreve/Whole note, Minim/Half note, Quaver/Eighth note, Dotted crotchet/Dotted quarter note. */
 function aiN(m,d){ return {m:m,d:d,a:''}; }
-/* Tiap materi: parts = langkah penjelasan (teks pendek + gambar not dalam birama, not yang dijelaskan DILINGKARI beranimasi
-   & dibunyikan; ring = daftar kelompok indeks not yang dilingkari), lalu demos = contoh diputar dengan metronom. */
-/* MATERI BARU (Nov 2026, diminta Ferdi setelah kesaksian siswa: materi lama terasa jadul & pesannya tidak sampai).
-   Tiap materi = rangkaian ADEGAN motion graphic:
-     hook  : judul besar + pertanyaan pembuka
-     beat  : inti — kotak ketukan 1·2·3·4, bilah not yang terisi selama not berbunyi, tuts piano yang ditekan & DITAHAN,
-             garis berjalan, bunyi + metronom; diputar 2x ("Dengarkan" lalu "Hitung bersama")
-     split : perbandingan panjang (1 not panjang = beberapa not pendek)
-     demo  : contoh di partitur (not balok + not angka) diputar dengan metronom  -> aiDemo
-     tip   : rangkuman "Ingat!" sebelum bermain
-   pat = panjang tiap not (ketuk); syl = suku kata hitung tiap not. */
 var ARC_INTRO={
-  0:{title:'Not 1/4 & not penuh',
-     scenes:[
-       {t:'hook',ic:'🎵',big:'Berapa lama not dibunyikan?',sub:'Bentuk not memberi tahu <b>berapa ketuk</b> tuts harus ditekan. Kenalan dulu dengan dua not pertama!'},
-       {t:'beat',name:'Not 1/4',eq:'1 ketuk',act:'Satu ketuk, satu tekan. Tekan lalu lepas.',pat:[1,1,1,1],syl:['ta','ta','ta','ta'],m:[60,62,64,65]},
-       {t:'beat',name:'Not penuh',eq:'4 ketuk',act:'Tekan, lalu <b>TAHAN</b> sambil menghitung 1 · 2 · 3 · 4.',pat:[4],syl:['ta - a - a - a'],m:[67]},
-       {t:'split',text:'Satu <b>not penuh</b> sama panjangnya dengan <b>empat not 1/4</b>.',big:[4,'Not penuh · 4 ketuk'],parts:[[1,'1'],[1,'1'],[1,'1'],[1,'1']],partLab:'empat not 1/4'},
-       {t:'demo',cap:'Di partitur terlihat seperti ini',notes:[aiN(60,1),aiN(62,1),aiN(64,1),aiN(65,1),aiN(67,4)]},
-       {t:'tip',items:[['👆','<b>Not 1/4</b> = tekan sekali, 1 ketuk'],['✋','<b>Not penuh</b> = tekan dan tahan 4 ketuk'],['🎯','Jangan lepas tuts sebelum hitungan ke-4!']]}
-     ]},
-  1:{title:'Not 1/2 (minim)',
-     scenes:[
-       {t:'hook',ic:'🎶',big:'Not baru: not 1/2',sub:'Lebih panjang dari not 1/4, lebih pendek dari not penuh. Panjangnya <b>2 ketuk</b>.'},
-       {t:'beat',name:'Not 1/2',eq:'2 ketuk',act:'Tekan, <b>tahan 2 hitungan</b>, baru pindah ke not berikutnya.',pat:[2,2],syl:['ta - a','ta - a'],m:[60,64]},
-       {t:'split',text:'Satu <b>not 1/2</b> sama panjangnya dengan <b>dua not 1/4</b>.',big:[2,'Not 1/2 · 2 ketuk'],parts:[[1,'1'],[1,'1']],partLab:'dua not 1/4'},
-       {t:'demo',cap:'Di not angka: angka diikuti satu titik',notes:[aiN(60,2),aiN(64,2),aiN(67,2),aiN(64,2)]},
-       {t:'tip',items:[['✌️','<b>Not 1/2</b> = 2 ketuk'],['✋','Tahan tuts sampai hitungan ke-2'],['🔢','Not angka: <b>5 ·</b> berarti angka 5 ditahan 2 ketuk']]}
-     ]},
-  5:{title:'Not 1/8 (quaver)',
-     scenes:[
-       {t:'hook',ic:'⚡',big:'Not baru: not 1/8',sub:'Not cepat! Dalam <b>satu ketuk</b> ada <b>dua not</b>.'},
-       {t:'beat',name:'Dua not 1/8',eq:'1 ketuk',act:'Dua tekan cepat dalam satu ketuk: <b>ti-ti</b>. Not 1/4 tetap <b>ta</b>.',pat:[.5,.5,1,.5,.5,1],syl:['ti','ti','ta','ti','ti','ta'],m:[60,62,64,64,62,60]},
-       {t:'split',text:'Satu <b>not 1/4</b> sama panjangnya dengan <b>dua not 1/8</b>.',big:[1,'Not 1/4 · 1 ketuk'],parts:[[.5,'½'],[.5,'½']],partLab:'dua not 1/8',wide:1},
-       {t:'demo',cap:'Dua not 1/8 digandeng dengan garis',notes:[aiN(60,1),aiN(62,1),aiN(64,0.5),aiN(65,0.5),aiN(67,1),aiN(67,0.5),aiN(65,0.5),aiN(64,0.5),aiN(62,0.5),aiN(60,2)]},
-       {t:'tip',items:[['⚡','<b>Not 1/8</b> = ½ ketuk, main lebih cepat'],['🔗','Dua not bergandeng = pas satu ketuk'],['🔢','Not angka: ada <b>garis di atas</b> angkanya']]}
-     ]},
-  7:{title:'Not 1/4 bertitik + 1/8',
-     scenes:[
-       {t:'hook',ic:'✨',big:'Not baru: not bertitik',sub:'<b>Titik</b> di samping not menambah <b>setengah</b> dari panjangnya.'},
-       {t:'split',text:'Not 1/4 = 1 ketuk. Titik menambah ½ ketuk. Jadi <b>1½ ketuk</b>.',big:[1.5,'Not 1/4 bertitik · 1½ ketuk'],parts:[[1,'1'],[.5,'+ ½']],partLab:'1 ketuk + ½ ketuk',wide:1},
-       {t:'beat',name:'1/4 bertitik + 1/8',eq:'2 ketuk',act:'<b>Panjang</b> dulu, lalu <b>pendek</b>: taa - ti. Not pendeknya jatuh di antara ketukan.',pat:[1.5,.5,2],syl:['ta - a','ti','ta - a'],m:[60,60,62]},
-       {t:'demo',cap:'1/4 bertitik + 1/8, lalu not 1/2',notes:[aiN(60,1.5),aiN(60,0.5),aiN(60,2),aiN(62,1.5),aiN(62,0.5),aiN(62,2)]},
-       {t:'tip',items:[['✨','<b>Titik</b> = tambah setengah panjang not'],['🎵','1/4 bertitik = 1½ ketuk, lalu 1/8 = ½ ketuk'],['👂','Bunyinya: <b>taa - ti</b>']]}
-     ]}
+  0:{title:'Not 1/4 & not penuh', vo:'A', scenes:[
+    {t:'hook',vo:[0.2,5.35],ic:'👋',big:'Kenalan dengan dua not pertama',gl:[['q',2.0,'Not 1/4'],['w',2.6,'Not penuh']],
+     s:[[0,'Halo! Sebelum main, kita kenalan dulu dengan <b>dua not pertama</b>.'],[4.05,'Tenang, gampang kok. 😊']]},
+    {t:'pulse',vo:[6.13,14.0],tik:[2.8,3.53,4.28,5.02],lab:5.81,
+     s:[[0,'Musik itu punya detak, seperti jarum jam.'],[2.8,'Tik… tik… tik… tik…'],[5.81,'Satu detak ini kita sebut <b>satu ketuk</b>.']]},
+    {t:'pitch',vo:[14.98,24.5],num:[2.26,3.29,4.06,4.85,5.65],sol:[6.57,7.22,7.88,8.58,9.25],
+     s:[[0,'Di level A, kamu memakai <b>lima not</b>.'],[2.26,'Satu, dua, tiga, empat, lima.'],[6.57,'Do, re, mi, fa, sol.']]},
+    {t:'intro',vo:[25.52,39.76],gl:'q',val:'1 ketuk',beats:1,names:['Crotchet','Quarter note','Not seperempat'],
+     keys:[[10.9,1],[12.1,0],[12.92,1],[13.3,0],[13.65,1],[14.05,0]],
+     s:[[0,'Ini adalah not <b>Crotchet</b>.'],[1.71,'Dalam bahasa Inggris disebut <b>Quarter note</b>.'],[3.92,'Dalam bahasa Indonesia, <b>not seperempat</b>.'],[6.51,'Notnya seperti ini. 👀'],[7.99,'Nilai not ini <b>satu ketuk</b>.'],[9.83,'Jadi caranya, <b>tekan</b> tuts, lalu <b>lepas</b>.'],[12.92,'Satu detak, satu tekan.']],
+     play:{n:[[60,1],[62,1],[64,1],[65,1]],syl:['ta','ta','ta','ta']}},
+    {t:'intro',vo:[41.02,54.51],gl:'w',val:'4 ketuk',beats:4,names:['Semibreve','Whole note','Not penuh'],
+     keys:[[10.3,1],[13.45,0]],boxAt:[11.7,12.25,12.8,13.3],
+     s:[[0,'Sekarang kenalan dengan not <b>Semibreve</b>.'],[2.37,'Dalam bahasa Inggris disebut <b>Whole note</b>.'],[4.6,'Dalam bahasa Indonesia, <b>not penuh</b>.'],[6.74,'Notnya seperti ini. 👀'],[8.22,'Nilai not ini <b>empat ketuk</b>.'],[9.97,'Jadi <b>tekan</b> sekali,'],[11.49,'lalu <b>tahan</b> sambil menghitung sampai empat.']],
+     play:{n:[[67,4]],syl:['ta - a - a - a']}},
+    {t:'dots',vo:[55.53,59.14],nm:'w',at:[1.55,2.1,2.55,3.0],
+     s:[[0,'Lihat <b>not angkanya</b>.'],[1.52,'Setiap <b>titik</b> artinya <b>tambah satu ketuk</b>.']]},
+    {t:'cmp',vo:[60.1,63.28],M:4,rows:[[[4,'w','Not penuh · 4 ketuk',0.7]],[[1,'q','1 ketuk',1.9],[1,'q','1 ketuk',2.2],[1,'q','1 ketuk',2.5],[1,'q','1 ketuk',2.8]]],
+     s:[[0,'Jadi, <b>satu not penuh</b> sama panjangnya dengan <b>empat not seperempat</b>.']]},
+    {t:'tip',vo:[64.25,71.82],items:[['q','<b>Not 1/4</b> → tekan, lalu lepas',0.95],['w','<b>Not penuh</b> → tahan sampai hitungan 4',3.44]],go:6.3,
+     s:[[0,'Ingat ya.'],[0.95,'Not seperempat, tekan lalu lepas.'],[3.44,'Not penuh, tahan sampai hitungan keempat.'],[6.3,'Siap? Ayo main! 🎮']]}
+  ]},
+  1:{title:'Not 1/2 (Minim)', vo:'B', scenes:[
+    {t:'hook',vo:[0.2,4.55],ic:'🎶',big:'Ada not baru!',gl:[['q',0.4,'Not 1/4'],['h',2.6,'Not baru',1],['w',0.7,'Not penuh']],
+     s:[[0,'Kamu sudah kenal not seperempat dan not penuh.'],[2.45,'Sekarang ada not baru <b>di tengah-tengahnya</b>.']]},
+    {t:'intro',vo:[5.49,20.35],gl:'h',val:'2 ketuk',beats:2,names:['Minim','Half note','Not setengah'],
+     keys:[[10.59,1],[14.4,0]],boxAt:[12.55,13.45],
+     s:[[0,'Ini adalah not <b>Minim</b>.'],[1.91,'Dalam bahasa Inggris disebut <b>Half note</b>.'],[4.21,'Dalam bahasa Indonesia, <b>not setengah</b>.'],[6.42,'Notnya seperti ini. 👀'],[8.13,'Nilai not ini <b>dua ketuk</b>.'],[9.94,'Jadi <b>tekan</b>, <b>tahan</b>, hitung satu, dua, baru <b>lepas</b>.']],
+     play:{n:[[60,2],[64,2]],syl:['ta - a','ta - a']}},
+    {t:'dots',vo:[21.05,23.98],nm:'h',at:[0.9,1.45],
+     s:[[0,'Lihat <b>not angkanya</b>.'],[1.36,'Satu titik,'],[2.32,'<b>tambah satu ketuk</b>.']]},
+    {t:'cmp',vo:[25.08,32.17],M:4,rows:[[[4,'w','Not penuh · 4 ketuk',0.96]],[[2,'h','Not 1/2 · 2 ketuk',2.4],[2,'h','Not 1/2 · 2 ketuk',2.8]],[[1,'q','1/4',5.7],[1,'q','1/4',6.0],[1,'q','1/4',6.3],[1,'q','1/4',6.6]]],
+     s:[[0,'Coba lihat.'],[0.96,'Satu <b>not penuh</b> sama dengan dua <b>not setengah</b>.'],[4.18,'Dan satu <b>not setengah</b> sama dengan dua <b>not seperempat</b>.']]},
+    {t:'tip',vo:[33.01,36.95],items:[['h','<b>Not 1/2</b> → tahan 2 ketuk',0],['⏳','Jangan buru-buru pindah',1.91]],go:3.3,
+     s:[[0,'Not setengah, tahan dua ketuk.'],[1.91,'Jangan buru-buru pindah.'],[3.3,'Ayo main! 🎮']]}
+  ]},
+  5:{title:'Not 1/8 (Quaver)', vo:'F', scenes:[
+    {t:'hook',vo:[0.2,2.26],ic:'⚡',big:'Main lebih cepat!',gl:[['e',0.9,'Not baru',1]],hold:500,
+     s:[[0,'Siap-siap, sekarang kita main <b>lebih cepat</b>!']]},
+    {t:'intro',vo:[3.31,17.09],gl:'e',val:'½ ketuk',beats:.5,split:9.93,names:['Quaver','Eighth note','Not seperdelapan'],
+     keys:[[12.95,1],[13.15,0],[13.4,1],[13.6,0]],
+     s:[[0,'Ini adalah not <b>Quaver</b>.'],[1.78,'Dalam bahasa Inggris disebut <b>Eighth note</b>.'],[4.02,'Dalam bahasa Indonesia, <b>not seperdelapan</b>.'],[6.65,'Notnya seperti ini. 👀'],[8.11,'Nilai not ini <b>setengah ketuk</b>.'],[9.93,'Jadi satu ketuk <b>dibagi dua</b>,'],[12.03,'dan dalam satu ketuk ada <b>dua tekan</b>.']],
+     play:{n:[[60,.5],[62,.5],[64,1],[64,.5],[62,.5],[60,1]],syl:['ti','ti','ta','ti','ti','ta']}},
+    {t:'rhy',vo:[17.76,27.67],n:[[60,1],[60,1],[62,.5],[62,.5],[64,1]],syl:['ta','ta','ti','ti','ta'],show:6.07,hit:[7.22,8.05,8.82,9.05,9.75],
+     leg:[['q','ta',1.85,2.96],['e','ti ti',3.73,5.2]],
+     s:[[0,'Supaya mudah, ucapkan.'],[1.85,'Not seperempat, <b>ta</b>.'],[3.73,'Dua not seperdelapan, <b>ti ti</b>.'],[6.07,'Dengarkan.'],[7.22,'Ta. Ta. Ti ti. Ta.']],
+     play:{n:[[60,1],[60,1],[62,.5],[62,.5],[64,1]],syl:['ta','ta','ti','ti','ta']}},
+    {t:'tip',vo:[28.54,32.57],items:[['e','<b>ti ti</b> = dua tekan cepat dalam 1 ketuk',0.72]],go:3.44,
+     s:[[0,'Ingat,'],[0.72,'<b>ti ti</b> itu dua tekan cepat dalam satu ketuk.'],[3.44,'Ayo main! 🎮']]}
+  ]},
+  7:{title:'Not bertitik', vo:'H', scenes:[
+    {t:'hook',vo:[0.2,4.11],ic:'✨',big:'Tanda kecil yang penting',gl:[['dq1',2.94,'Titik!',2]],
+     s:[[0,'Sekarang kenalan dengan tanda kecil yang penting.'],[2.94,'<b>Titik</b> di samping not.']]},
+    {t:'cmp',vo:[5.06,14.02],M:2,gl:['dq1',0.4],rows:[[[1,'q','Not 1/4 · 1 ketuk',3.98],[.5,'','+ ½',6.9,1]]],tot:[7.9,'= 1½ ketuk'],
+     s:[[0,'Titik menambah <b>setengah</b> dari nilai notnya.'],[3.98,'Not seperempat nilainya <b>satu ketuk</b>.'],[6.35,'Ditambah titik, jadi <b>satu setengah ketuk</b>.']]},
+    {t:'intro',vo:[14.56,28.63],gl:'dq1',val:'1½ ketuk',beats:1.5,names:['Dotted crotchet','Dotted quarter note','Not seperempat bertitik'],
+     s:[[0.47,'Ini adalah not <b>Dotted crotchet</b>.'],[3.24,'Dalam bahasa Inggris disebut <b>Dotted quarter note</b>.'],[6.48,'Dalam bahasa Indonesia, <b>not seperempat bertitik</b>.'],[10.28,'Notnya seperti ini. 👀'],[12.37,'Nilai not ini <b>satu setengah ketuk</b>.']],
+     play:{n:[[60,1.5],[60,.5],[62,2]],syl:['taa','ti','ta - a']}},
+    {t:'cmp',vo:[29.36,36.97],M:2,gl:['dqe',0.6],rows:[[[1.5,'dq1','1½ ketuk',4.87],[.5,'e1','½',5.77]]],tot:[6.77,'= pas 2 ketuk ✓'],
+     s:[[0.55,'Not seperempat bertitik biasanya ditemani satu <b>not seperdelapan</b>.'],[4.87,'Satu setengah'],[5.77,'tambah setengah,'],[6.77,'<b>pas dua ketuk</b>.']]},
+    {t:'rhy',vo:[37.73,45.55],n:[[60,1.5],[60,.5],[60,2]],syl:['taa','ti','ta - a'],show:0,hit:[2.26,3.52],mid:[4.56,1],
+     s:[[0.52,'Bunyinya <b>panjang</b> lalu <b>pendek</b>.'],[2.26,'Taa…'],[3.52,'Ti.'],[4.56,'Not pendeknya jatuh <b>di antara</b> dua ketukan.']],
+     play:{n:[[60,1.5],[60,.5],[60,2]],syl:['taa','ti','ta - a']}},
+    {t:'cmpNum',vo:[46.7,55.51],a:2.92,b:6.3,
+     s:[[0,'Lihat <b>not angkanya</b>, perhatikan bedanya.'],[2.92,'Titik <b>bergaris</b> artinya tambah <b>setengah ketuk</b>.'],[6.3,'Titik <b>tanpa garis</b> artinya tambah <b>satu ketuk</b>.']]},
+    {t:'tip',vo:[56.23,61.2],items:[['dq1','<b>Taa – ti</b>: panjang, lalu pendek',0.97],['🔢','Titik bergaris = +½ ketuk · titik biasa = +1 ketuk',2.74]],go:4.49,
+     s:[[0,'Ingat.'],[0.97,'Taa, ti!'],[2.74,'Panjang, lalu pendek.'],[4.49,'Ayo main! 🎮']]}
+  ]}
 };
 /* huruf materi terakhir yang sudah sampai (untuk tombol 📖 Materi) */
 function arcIntroAt(L){ for(var k=L;k>=0;k--) if(ARC_INTRO[k]) return k; return 0; }
-var ai={T:[],gain:null,steps:[],i:0,done:null,letter:0};
+var ai={T:[],gain:null,src:null,steps:[],i:0,done:null,letter:0,buf:null,seq:0};
+var aiVo={};
 function aiClear(){
   ai.T.forEach(clearTimeout); ai.T=[];
+  if(ai.src){ try{ ai.src.stop(); }catch(e){} try{ ai.src.disconnect(); }catch(e){} ai.src=null; }
   if(ai.gain){ try{ ai.gain.disconnect(); }catch(e){} ai.gain=null; }
 }
 function aiOpen(){ return !$('#aintro').hidden; }
+/* suara materi dimuat sekali (lalu disimpan service worker); gagal → null, dicoba lagi lain kali */
+function aiLoadVo(k){
+  if(!k) return Promise.resolve(null);
+  if(aiVo[k]) return aiVo[k];
+  var p=fetch('vo/arc-'+k+'.mp3').then(function(r){ if(!r.ok) throw new Error('vo'); return r.arrayBuffer(); })
+    .then(function(b){ return new Promise(function(res,rej){ ac().decodeAudioData(b,res,rej); }); })
+    .catch(function(){ delete aiVo[k]; return null; });
+  aiVo[k]=p; return p;
+}
 function aiShow(L,done,game){
   var I=ARC_INTRO[L]; if(!I){ if(done) done(); return; }
-  aiClear(); ai.letter=L; ai.done=done||null; ai.game=!!game; ai.i=-1;
+  aiClear(); ai.letter=L; ai.done=done||null; ai.game=!!game; ai.i=-1; ai.buf=null;
   ai.steps=I.scenes.map(function(sc){ return {sc:sc,title:I.title}; });
   $('#aintro').hidden=false;
-  aiNext();
+  $('#aiTag').textContent='📖 Materi '+ARC_LETTERS[L]+' · '+I.title;
+  $('#aiProg').innerHTML=''; $('#aiCap').innerHTML='';
+  var mg=$('#mgStage'); mg.className='mgStage mg-load'; mg.innerHTML='<div class="mgLoad"><i></i><i></i><i></i></div>';
+  $('#aiGo').textContent='Lanjut ▶'; $('#aiAgain').hidden=true;
+  var my=++ai.seq, go=function(buf){ if(my!==ai.seq || !aiOpen()) return; ai.buf=buf||null; aiNext(); };
+  try{ ac(); }catch(e){}
+  aiLoadVo(I.vo).then(go);
+  ai.T.push(setTimeout(function(){ go(null); },6000));   /* koneksi lambat: jalan dengan subtitle saja */
 }
 function aiNext(){
-  aiClear(); ai.i++;
+  aiClear(); ai.seq++; ai.i++;
   if(ai.i>=ai.steps.length){ aiEnd(); return; }
   var st=ai.steps[ai.i], sc=st.sc, last=ai.i===ai.steps.length-1, mg=$('#mgStage');
-  $('#aiTag').textContent = '📖 Materi '+ARC_LETTERS[ai.letter]+' · '+st.title;
   $('#aiProg').innerHTML=ai.steps.map(function(x,k){ return '<i class="'+(k<ai.i?'done':k===ai.i?'cur':'')+'"></i>'; }).join('');
-  var demo=sc.t==='demo';
-  $('#aiTitle').textContent = demo ? sc.cap : '';
-  $('#aiText').innerHTML='';
-  $('#aiScore').hidden = !demo; mg.hidden = demo; mg.innerHTML='';
-  $('#aiDots').style.display = demo ? '' : 'none';
-  $('#aiAgain').hidden = sc.t==='hook';
+  $('#aiAgain').hidden = ai.i===0;
   $('#aiGo').textContent = last ? (ai.game ? '▶ Mulai Stage '+ARC_LETTERS[ai.letter]+pr.arcSub : '✓ Selesai') : 'Lanjut ▶';
-  mg.className='mgStage mg-'+sc.t;
-  if(demo) aiDemo(sc, last);
-  else if(sc.t==='hook') aiHook(sc);
-  else if(sc.t==='beat') aiBeat(sc);
-  else if(sc.t==='split') aiSplit(sc);
-  else aiTip(sc, last);
-}
-function aiCalm(){ return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
-function aiHook(sc){
-  $('#mgStage').innerHTML='<div class="mgIc" aria-hidden="true">'+sc.ic+'</div><h2 class="mgBig">'+sc.big+'</h2><p class="mgSub">'+sc.sub+'</p>';
-  try{ var c=ac(), g=c.createGain(); g.connect(c.destination); ai.gain=g; [72,76,79].forEach(function(m,i){ pluck(m,c.currentTime+.15+i*.12,.5,g,.5); }); }catch(e){}
-  ai.T.push(setTimeout(aiNext,4200));
-}
-/* Adegan inti: kotak ketukan + bilah not yang terisi + tuts ditekan/ditahan, diputar dua kali */
-function aiBeat(sc){
-  var total=0, t=0, i, mg=$('#mgStage'); sc.pat.forEach(function(d){ total+=d; });
-  var bars='', boxes='', key='<div class="mgKeyRow"><div class="mgPiano"><span class="mgFinger" aria-hidden="true">👇</span><i></i><i class="mgK" id="mgK"></i><i></i></div><b class="mgKeyTxt" id="mgKeyTxt">siap…</b></div>';
-  sc.pat.forEach(function(d,k){ bars+='<span class="mgBar" style="left:'+(t/total*100)+'%;width:calc('+(d/total*100)+'% - 6px)"><em></em><b>'+sc.syl[k]+'</b></span>'; t+=d; });
-  for(i=0;i<total;i++) boxes+='<i>'+(i+1)+'</i>';
-  mg.innerHTML='<div class="mgLeft"><div class="mgCard"><small>Not balok</small><div class="mgMini" id="mgS"></div></div><div class="mgCard"><small>Not angka</small><div class="mgMini" id="mgN"></div></div></div>'+
-    '<div class="mgRight"><div class="mgHead"><b>'+sc.name+'</b><span>=</span><i>'+sc.eq+'</i></div><div class="mgPass" id="mgPass">👂 Dengarkan dulu</div>'+
-    '<div class="mgTrack"><div class="mgBars">'+bars+'</div><div class="mgBoxes" style="grid-template-columns:repeat('+total+',1fr)">'+boxes+'</div><div class="mgLine" id="mgLine"></div></div>'+key+
-    '<p class="mgAct">'+sc.act+'</p></div>';
-  var notes=sc.pat.map(function(d,k){ return aiN(sc.m[k],d); }), score=aiScoreOf(notes), none=function(){ return ''; };
-  try{ drawFit($('#mgS'),score,none,'staff'); drawFit($('#mgN'),score,none,'num'); }catch(e){}
+  mg.className='mgStage mg-'+sc.t; mg.innerHTML=''; $('#aiCap').innerHTML='';
   var c=ac(), g=c.createGain(); g.connect(c.destination); ai.gain=g;
-  var bpm=72, beat=60/bpm, now=c.currentTime, lead=0.9, passGap=1.1, bEls=mg.querySelectorAll('.mgBar'), xEls=mg.querySelectorAll('.mgBoxes i'), kEl=$('#mgK'), kt=$('#mgKeyTxt'), ln=$('#mgLine'), fg=mg.querySelector('.mgFinger');
-  function at(ms,fn){ ai.T.push(setTimeout(fn,Math.max(0,ms))); }
-  function pass(p){
-    var t0=now+lead+p*(total*beat+passGap), off=(t0-now)*1000;
-    at(off-500,function(){
-      $('#mgPass').textContent = p===0 ? '👂 Dengarkan dulu' : '🗣️ Sekarang hitung bersama!';
-      Array.prototype.forEach.call(bEls,function(b){ b.classList.remove('on','done'); b.firstChild.style.transition='none'; b.firstChild.style.width='0'; });
-      ln.style.transition='none'; ln.style.left='0%'; ln.style.opacity='1';
-    });
-    at(off,function(){ ln.style.transition='left '+(total*beat)+'s linear'; ln.style.left='100%'; });
-    for(var bb=0;bb<total;bb++){ metClick(t0+bb*beat, bb===0, g);
-      (function(k){ at(off+k*beat*1000,function(){ Array.prototype.forEach.call(xEls,function(x,j){ x.classList.toggle('on',j===k); x.classList.toggle('past',j<k); }); }); })(bb); }
-    var tt=0;
-    sc.pat.forEach(function(d,k){
-      var s0=off+tt*beat*1000, dur=d*beat*1000;
-      pluck(sc.m[k]-instShift(), t0+tt*beat, d*beat*0.95, g);
-      at(s0,function(){
-        var b=bEls[k]; b.classList.add('on'); b.firstChild.style.transition='width '+(dur-40)+'ms linear'; b.firstChild.style.width='100%';
-        kEl.classList.add('down'); fg.classList.add('down'); kt.textContent = d>=2 ? '✋ TAHAN…' : (d<1 ? '⚡ cepat' : '👆 tekan'); kt.className='mgKeyTxt'+(d>=2?' hold':'');
-      });
-      at(s0+dur-Math.min(110,dur*.3),function(){ bEls[k].classList.add('done'); kEl.classList.remove('down'); fg.classList.remove('down'); if(d>=2) kt.textContent='lepas'; });
-      tt+=d;
-    });
-    at(off+total*beat*1000,function(){ Array.prototype.forEach.call(xEls,function(x){ x.classList.remove('on'); x.classList.add('past'); }); ln.style.opacity='0'; kt.textContent='✓'; kt.className='mgKeyTxt'; });
-  }
-  pass(0); pass(1);
-  at((lead+2*(total*beat)+passGap)*1000+1500,aiNext);
+  var t0=c.currentTime+0.35, dur=sc.vo[1]-sc.vo[0], base=performance.now()+350;
+  if(ai.buf){ try{ var s=c.createBufferSource(); s.buffer=ai.buf; s.connect(g); s.start(t0,sc.vo[0],dur); ai.src=s; }catch(e){} }
+  /* fn dijalankan pada detik ke-t adegan (jam sama dengan suara) */
+  var at=function(t,fn){ ai.T.push(setTimeout(fn,Math.max(0,base+t*1000-performance.now()))); };
+  sc.s.forEach(function(x){ at(x[0],function(){ aiCap(x[1]); }); });
+  var h=(MG[sc.t]||MG.hook)(sc,mg,at,{c:c,g:g,t0:t0}) || {};
+  var next=function(){ ai.T.push(setTimeout(aiNext, last ? (ai.game?1600:2500) : (sc.hold||900))); };
+  at(dur+0.3,function(){ if(h.after) h.after(next); else next(); });
 }
-/* Perbandingan panjang: satu bilah panjang = beberapa bilah pendek (muncul satu per satu, dibunyikan) */
-function aiSplit(sc){
-  var mg=$('#mgStage'), unit=sc.wide?44:21, tot=sc.big[0], h='<p class="mgAct top">'+sc.text+'</p><div class="mgCmp"><div class="mgRow"><span class="mgBar big" style="width:'+(tot*unit)+'%"><em style="width:100%"></em><b>'+sc.big[1]+'</b></span></div><div class="mgEq" aria-hidden="true">=</div><div class="mgRow" style="width:'+(tot*unit)+'%">';
-  sc.parts.forEach(function(pp,k){ h+='<span class="mgBar pc" style="width:calc('+(pp[0]/tot*100)+'% - 6px);animation-delay:'+(1.3+k*.55)+'s"><em style="width:100%"></em><b>'+pp[1]+'</b></span>'; });
-  h+='</div><small class="mgCap">'+sc.partLab+'</small></div>';
-  mg.innerHTML=h;
-  try{ var c=ac(), g=c.createGain(); g.connect(c.destination); ai.gain=g, t=c.currentTime;
-    pluck(67-instShift(),t+.25,Math.min(1.1,tot*.5),g,.7);
-    sc.parts.forEach(function(pp,k){ pluck(67-instShift(),t+1.3+k*.55,.4,g,.7); });
-  }catch(e){}
-  ai.T.push(setTimeout(aiNext,1300+sc.parts.length*550+3600));
-}
-function aiTip(sc,last){
-  var h='<h2 class="mgBig sm">Ingat! 💡</h2><ul class="mgTips">';
-  sc.items.forEach(function(it,k){ h+='<li style="animation-delay:'+(.25+k*.45)+'s"><span aria-hidden="true">'+it[0]+'</span><p>'+it[1]+'</p></li>'; });
-  $('#mgStage').innerHTML=h+'</ul>';
-  try{ var c=ac(), g=c.createGain(); g.connect(c.destination); ai.gain=g; sc.items.forEach(function(it,k){ pluck(72+k*4,c.currentTime+.25+k*.45,.35,g,.4); }); }catch(e){}
-  ai.T.push(setTimeout(aiNext, last && ai.game ? 7000 : 6000));
-}
+function aiCap(html){ var e=$('#aiCap'); e.innerHTML='<span>'+html+'</span>'; }
+function aiCalm(){ return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
 function aiScoreOf(notes){
   var bass=pr.clef==='bass' && pr.inst!=='guitar', sh=bass?12:0;
   return {title:'',ts:[4,4],clef:bass?'bass':'treble',key:0,notes:notes.map(function(n){ return {m:n.m-sh,d:n.d,a:''}; })};
 }
 function aiEnd(){
-  aiClear(); $('#aintro').hidden=true;
+  aiClear(); ai.seq++; $('#aintro').hidden=true;
   var f=ai.done; ai.done=null; if(f) f();
-}
-function aiDemo(dm, last){
-  var sc=aiScoreOf(dm.notes);
-  var hs=$('#aiStaff'), hn=$('#aiNum'), none=function(){ return ''; };
-  drawFit(hs,sc,none,'staff'); drawFit(hn,sc,none,'num');
-  var dots=$$('#aiDots i');
-  function mark(i){
-    [hs,hn].forEach(function(h){ h.querySelectorAll('g[data-i]').forEach(function(g){ var c=+g.getAttribute('data-i')===i ? 'n st-cur' : 'n'; if(g.getAttribute('class')!==c) g.setAttribute('class',c); }); });
-  }
-  function dot(b){ dots.forEach(function(d,k){ d.classList.toggle('on',k===b); }); }
-  mark(-1); dot(-1);
-  var c=ac(), g=c.createGain(); g.connect(c.destination); ai.gain=g;
-  var bpm=80, beat=60/bpm, t0=c.currentTime+0.6, now=c.currentTime, t=0, total=0, b;
-  sc.notes.forEach(function(n){ total+=n.d; });
-  for(b=0;b<total-1e-6;b++){
-    metClick(t0+b*beat, b%4===0, g);
-    (function(bb){ ai.T.push(setTimeout(function(){ dot(bb%4); }, (t0-now+bb*beat)*1000)); })(b);
-  }
-  sc.notes.forEach(function(n,i){
-    pluck(n.m-instShift(), t0+t*beat, n.d*beat*0.95, g);
-    ai.T.push(setTimeout(function(){ mark(i); }, (t0-now+t*beat)*1000));
-    t+=n.d;
-  });
-  var endMs=(t0-now+total*beat)*1000;
-  ai.T.push(setTimeout(function(){ mark(-1); dot(-1); }, endMs));
-  /* contoh terakhir: permainan mulai sendiri setelah jeda sebentar (atau tekan tombol) */
-  ai.T.push(setTimeout(aiNext, endMs+(last?1800:1200)));
 }
 function aiReplay(){ if(ai.i>=0 && ai.steps[ai.i]){ ai.i--; aiNext(); } }
 function aiPrev(){ if(ai.i>0){ ai.i-=2; aiNext(); } }
+/* aplikasi ditinggal ke latar saat materi diputar: hentikan, putar ulang adegan itu saat kembali */
+function aiVis(){
+  if(!aiOpen()) return;
+  if(document.hidden){ if(ai.i>=0){ aiClear(); ai.seq++; ai.away=true; } }
+  else if(ai.away){ ai.away=false; aiReplay(); }
+}
+
+/* ---------- gambar not besar (digambar sendiri: paranada pendek + not, untuk di-zoom) ---------- */
+function mgHead(x,y,open,whole){
+  if(whole) return '<ellipse cx="'+x+'" cy="'+y+'" rx="9.6" ry="6.4" fill="currentColor"/><ellipse cx="'+x+'" cy="'+y+'" rx="4.4" ry="4" transform="rotate(-48 '+x+' '+y+')" fill="var(--surf)"/>';
+  var h='<ellipse cx="'+x+'" cy="'+y+'" rx="7.6" ry="5.5" transform="rotate(-22 '+x+' '+y+')" fill="currentColor"/>';
+  if(open) h+='<ellipse cx="'+x+'" cy="'+y+'" rx="5.4" ry="2.5" transform="rotate(-22 '+x+' '+y+')" fill="var(--surf)"/>';
+  return h;
+}
+function mgGl(k){
+  /* not: [y kepala, jenis] — G4 di garis ke-2 dari bawah (y 58), A4 di spasi atasnya (y 52) */
+  var spec={q:[[58,'q']],w:[[58,'w']],h:[[58,'h']],e:[[58,'b'],[52,'b']],e1:[[58,'f']],dq1:[[58,'d']],dqe:[[58,'d'],[58,'f']]}[k]||[[58,'q']];
+  var n=spec.length, gap=k==='e'?30:(k==='dqe'?40:0), W=46+gap*(n-1)+(k==='dq1'||k==='dqe'?14:0), x0=24, out='', i, xs=[];
+  for(i=0;i<5;i++) out+='<line x1="2" x2="'+(W-2)+'" y1="'+(22+i*12)+'" y2="'+(22+i*12)+'" stroke="currentColor" stroke-opacity=".45" stroke-width="1.3"/>';
+  spec.forEach(function(p,j){
+    var x=x0+j*gap, y=p[0], t=p[1], sx=x+6.6; xs.push(sx);
+    out+=mgHead(x,y,t==='h',t==='w');
+    if(t!=='w') out+='<line x1="'+sx+'" x2="'+sx+'" y1="'+(y-1.5)+'" y2="'+(t==='b'?20:y-40)+'" stroke="currentColor" stroke-width="2.2"/>';
+    if(t==='f') out+='<path d="M'+sx+' '+(y-40)+'c1.5 9 13 12 9.5 27c.5-10-5.5-14-9.5-15.5z" fill="currentColor"/>';
+    if(t==='d') out+='<circle class="glDot" cx="'+(x+15)+'" cy="'+(y-6)+'" r="3.2" fill="currentColor"/>';
+  });
+  if(k==='e') out+='<path d="M'+(xs[0]-1)+' 18L'+(xs[1]+1)+' 18L'+(xs[1]+1)+' 25L'+(xs[0]-1)+' 25z" fill="currentColor"/>';
+  return '<svg class="mgGl" viewBox="0 0 '+W+' 92" aria-hidden="true">'+out+'</svg>';
+}
+/* not angka besar: angka, titik (·) = +1 ketuk, garis di atas (.ov) = not 1/8 / titik bertitik */
+function mgNum(k){
+  var d='<i class="nd">·</i>', lo='<i class="nd lo">.</i>';   /* titik bertitik: di dasar angka, bergaris (seperti di permainan) */
+  return '<span class="mgNum">'+({q:'5',w:'5'+d+d+d,h:'5'+d,e:'<span class="ov">5 6</span>',e1:'<span class="ov">5</span>',
+    dq1:'5<span class="ov">'+lo+'</span>',dqe:'5<span class="ov">'+lo+'5</span>'}[k]||'5')+'</span>';
+}
+function mgCardGl(k,lab){ return '<div class="mgGc">'+mgGl(k)+mgNum(k)+(lab?'<small>'+lab+'</small>':'')+'</div>'; }
+function mgPress(c,g,m,t,d,vol){ try{ pluck(m-instShift(),t,d,g,vol||.6); }catch(e){} }
+function mgShow(el,on){ if(el) el.classList.toggle('in',on!==false); }
+
+/* ---------- blok contoh: not balok + not angka + bilah nilai + kotak ketukan; diputar dengan metronom ---------- */
+function mgPlayBlock(notes,syl){
+  var total=0, t=0, bars='', boxes='', i, el=document.createElement('div');
+  notes.forEach(function(n){ total+=n[1]; });
+  var nb=Math.ceil(total-1e-6);
+  notes.forEach(function(n,k){ bars+='<span class="mgBar" style="left:'+(t/nb*100)+'%;width:calc('+(n[1]/nb*100)+'% - 6px)"><em></em><b>'+(syl[k]||'')+'</b></span>'; t+=n[1]; });
+  for(i=0;i<nb;i++) boxes+='<i>'+(i+1)+'</i>';
+  el.className='mgPB';
+  el.innerHTML='<div class="mgPBs"><div class="mgCard"><small>Not balok</small><div class="mgMini"></div></div><div class="mgCard"><small>Not angka</small><div class="mgMini"></div></div></div>'+
+    '<div class="mgPBh"><span class="mgPass"></span><div class="mgPiano"><span class="mgFinger" aria-hidden="true">👇</span><i></i><i class="mgK"></i><i></i></div><b class="mgKeyTxt">siap…</b></div>'+
+    '<div class="mgTrack"><div class="mgBars">'+bars+'</div><div class="mgBoxes" style="grid-template-columns:repeat('+nb+',1fr)">'+boxes+'</div><div class="mgLine"></div></div>';
+  var o={el:el,total:total,nb:nb};
+  o.draw=function(){
+    var sc=aiScoreOf(notes.map(function(n){ return aiN(n[0],n[1]); })), none=function(){ return ''; }, h=el.querySelectorAll('.mgMini');
+    try{ drawFit(h[0],sc,none,'staff'); drawFit(h[1],sc,none,'num'); }catch(e){}
+  };
+  o.mark=function(i){
+    el.querySelectorAll('.mgMini g[data-i]').forEach(function(gg){ var cl=+gg.getAttribute('data-i')===i ? 'n st-cur' : 'n'; if(gg.getAttribute('class')!==cl) gg.setAttribute('class',cl); });
+  };
+  var bEls=el.querySelectorAll('.mgBar'), xEls=el.querySelectorAll('.mgBoxes i'), kEl=el.querySelector('.mgK'), fg=el.querySelector('.mgFinger'), kt=el.querySelector('.mgKeyTxt'), ln=el.querySelector('.mgLine');
+  o.reset=function(){
+    Array.prototype.forEach.call(bEls,function(b){ b.classList.remove('on','done'); b.firstChild.style.transition='none'; b.firstChild.style.width='0'; });
+    Array.prototype.forEach.call(xEls,function(x){ x.classList.remove('on','past'); });
+    ln.style.transition='none'; ln.style.left='0%'; ln.style.opacity='0'; o.mark(-1);
+  };
+  /* not k mulai berbunyi (durasi ms) */
+  o.hit=function(k,ms,d){
+    var b=bEls[k]; if(!b) return;
+    b.classList.add('on'); b.firstChild.style.transition='width '+Math.max(60,ms-40)+'ms linear'; b.firstChild.style.width='100%';
+    o.mark(k); kEl.classList.add('down'); fg.classList.add('down');
+    kt.textContent = d>=1.5 ? '✋ TAHAN…' : (d<1 ? '⚡ cepat' : '👆 tekan'); kt.className='mgKeyTxt'+(d>=1.5?' hold':'');
+    ai.T.push(setTimeout(function(){ b.classList.add('done'); kEl.classList.remove('down'); fg.classList.remove('down'); if(d>=1.5) kt.textContent='lepas'; }, Math.max(40,ms-Math.min(110,ms*.3))));
+  };
+  o.box=function(k){ Array.prototype.forEach.call(xEls,function(x,j){ x.classList.toggle('on',j===k); x.classList.toggle('past',j<k); }); };
+  /* putar `passes` kali (1 = dengarkan, 2 = hitung bersama), lalu done() */
+  o.run=function(passes,done){
+    var c=ac(), g=ai.gain||c.destination, bpm=76, beat=60/bpm, gap=1.0, lead=0.5, now=c.currentTime, p;
+    var at=function(ms,fn){ ai.T.push(setTimeout(fn,Math.max(0,ms))); };
+    for(p=0;p<passes;p++) (function(p){
+      var t0=now+lead+p*(nb*beat+gap), off=(t0-now)*1000;
+      at(off-450,function(){ o.reset(); el.querySelector('.mgPass').textContent = p===0 ? '👂 Dengarkan' : '🗣️ Ikut hitung!'; aiCap(p===0 ? 'Dengarkan contohnya… 👂' : 'Sekarang ikut hitung: '+syl.join(' · ')+' 🗣️'); });
+      at(off,function(){ ln.style.opacity='1'; ln.style.transition='left '+(nb*beat)+'s linear'; ln.style.left='100%'; });
+      for(var bb=0;bb<nb;bb++){ metClick(t0+bb*beat,bb===0,g); (function(k){ at(off+k*beat*1000,function(){ o.box(k); }); })(bb); }
+      var tt=0;
+      notes.forEach(function(n,k){
+        mgPress(c,g,n[0],t0+tt*beat,n[1]*beat*.95);
+        (function(st){ at(off+st*beat*1000,function(){ o.hit(k,n[1]*beat*1000,n[1]); }); })(tt);
+        tt+=n[1];
+      });
+      at(off+nb*beat*1000,function(){ Array.prototype.forEach.call(xEls,function(x){ x.classList.remove('on'); x.classList.add('past'); }); ln.style.opacity='0'; kt.textContent='✓'; kt.className='mgKeyTxt'; o.mark(-1); });
+    })(p);
+    at((lead+passes*(nb*beat+gap))*1000+300,done);
+  };
+  return o;
+}
+/* sesudah suara: ganti panggung dengan blok contoh lalu putar 2x */
+function mgAfterPlay(mg,pl){
+  return function(next){
+    var o=mgPlayBlock(pl.n,pl.syl);
+    mg.className='mgStage mg-play'; mg.innerHTML=''; mg.appendChild(o.el); o.draw(); o.reset();
+    o.run(pl.passes||2,next);
+  };
+}
+var MG={
+  hook:function(sc,mg,at,A){
+    var h='<div class="mgIc" aria-hidden="true">'+sc.ic+'</div><h2 class="mgBig">'+sc.big+'</h2>';
+    if(sc.gl) h+='<div class="mgGls">'+sc.gl.map(function(x){ return '<div class="mgGw'+(x[3]?' new':'')+(x[3]===2?' dot':'')+'">'+mgCardGl(x[0],x[2])+'</div>'; }).join('')+'</div>';
+    mg.innerHTML=h;
+    var ws=mg.querySelectorAll('.mgGw');
+    (sc.gl||[]).forEach(function(x,k){ at(x[1],function(){ mgShow(ws[k]); mgPress(A.c,A.g,67,A.c.currentTime,.5,.35); }); });
+    try{ [72,76,79].forEach(function(m,i){ pluck(m,A.t0+i*.12,.5,A.g,.3); }); }catch(e){}
+  },
+  /* detak = ketuk: jam berdetak bersama "tik" + kotak 1 2 3 4; sesudah suara: hitung bersama 2 birama */
+  pulse:function(sc,mg,at,A){
+    var ticks='', i; for(i=0;i<12;i++) ticks+='<line x1="50" y1="8" x2="50" y2="'+(i%3?13:17)+'" transform="rotate('+(i*30)+' 50 50)"/>';
+    mg.innerHTML='<div class="mgClock"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/>'+ticks+'<line class="hand" x1="50" y1="50" x2="50" y2="16"/><circle cx="50" cy="50" r="4.5" class="pin"/></svg></div>'+
+      '<div class="mgPulseR"><div class="mgBoxes big" style="grid-template-columns:repeat(4,1fr)"><i>1</i><i>2</i><i>3</i><i>4</i></div><div class="mgEqn">1 detak = <b>1 ketuk</b></div></div>';
+    var hand=mg.querySelector('.hand'), bx=mg.querySelectorAll('.mgBoxes i'), clk=mg.querySelector('.mgClock'), ang=0;
+    function tick(k,t){
+      ang+=30; hand.setAttribute('transform','rotate('+ang+' 50 50)');
+      clk.classList.remove('beat'); void clk.offsetWidth; clk.classList.add('beat');
+      Array.prototype.forEach.call(bx,function(x,j){ x.classList.toggle('on',j===k); x.classList.toggle('past',j<k); });
+    }
+    sc.tik.forEach(function(t,k){ metClick(A.t0+t,k===0,A.g); at(t,function(){ tick(k); }); });
+    at(sc.lab,function(){ mgShow(mg.querySelector('.mgEqn')); });
+    return {after:function(next){
+      var c=ac(), beat=60/76, t0=c.currentTime+.5, n, off;
+      aiCap('Ikut hitung dalam hati: 1 · 2 · 3 · 4 🗣️');
+      for(n=0;n<8;n++){ metClick(t0+n*beat,n%4===0,A.g); (function(n){ ai.T.push(setTimeout(function(){ tick(n%4); },(t0-c.currentTime+n*beat)*1000)); })(n); }
+      ai.T.push(setTimeout(next,(.5+8*beat)*1000+500));
+    }};
+  },
+  /* not 1–5: paranada + not angka + tuts piano; menyala satu per satu saat disebut */
+  pitch:function(sc,mg,at,A){
+    var ms=[60,62,64,65,67], keys='', sol=['do','re','mi','fa','sol'], i;
+    for(i=0;i<8;i++) keys+='<i class="w" data-k="'+i+'"><b>'+(i<5?i+1:'')+'</b><em>'+(i<5?sol[i]:'')+'</em></i>';
+    mg.innerHTML='<div class="mgPL"><div class="mgCard"><small>Not balok</small><div class="mgMini"></div></div><div class="mgCard"><small>Not angka</small><div class="mgMini"></div></div></div>'+
+      '<div class="mgKb">'+keys+'<span class="bk" style="left:9.4%"></span><span class="bk" style="left:21.9%"></span><span class="bk" style="left:46.9%"></span><span class="bk" style="left:59.4%"></span><span class="bk" style="left:71.9%"></span></div>';
+    var sc2=aiScoreOf(ms.map(function(m){ return aiN(m,1); })), none=function(){ return ''; }, hs=mg.querySelectorAll('.mgMini');
+    try{ drawFit(hs[0],sc2,none,'staff'); drawFit(hs[1],sc2,none,'num'); }catch(e){}
+    hs.forEach(function(h){ h.querySelectorAll('g[data-i]').forEach(function(gg){ gg.setAttribute('class','n mgHid'); }); });
+    var kk=mg.querySelectorAll('.mgKb .w'), seen=-1;
+    function lit(k,cls){
+      if(k>seen) seen=k;
+      kk.forEach(function(x,j){ x.classList.toggle('on',j===k); });
+      if(cls && kk[k]) kk[k].classList.add(cls);
+      hs.forEach(function(h){ h.querySelectorAll('g[data-i]').forEach(function(gg){ var j=+gg.getAttribute('data-i'); gg.setAttribute('class', j===k ? 'n st-cur' : (j<=seen ? 'n' : 'n mgHid')); }); });
+    }
+    sc.num.forEach(function(t,k){ mgPress(A.c,A.g,ms[k],A.t0+t,.45,.3); at(t,function(){ lit(k,'num'); }); });
+    sc.sol.forEach(function(t,k){ mgPress(A.c,A.g,ms[k],A.t0+t,.45,.3); at(t,function(){ lit(k,'sol'); }); });
+    return {after:function(next){
+      var c=ac(), t0=c.currentTime+.4;
+      aiCap('Dengarkan: 1 · 2 · 3 · 4 · 5 🎹');
+      ms.forEach(function(m,k){ mgPress(c,A.g,m,t0+k*.55,.5); ai.T.push(setTimeout(function(){ lit(k); },(.4+k*.55)*1000)); });
+      ai.T.push(setTimeout(function(){ lit(-1); next(); },(.4+5*.55)*1000+600));
+    }};
+  },
+  /* nama not (3 bahasa) → gambar not di-ZOOM → nilai ketuk → tuts ditekan/ditahan; sesudah suara: contoh diputar */
+  intro:function(sc,mg,at,A){
+    var labs=['Istilah musik','Bahasa Inggris','Bahasa Indonesia'], nb=Math.max(1,Math.ceil(sc.beats-1e-6)), bx='', i;
+    for(i=0;i<nb;i++){ var f=Math.min(1,sc.beats-i); bx+='<i style="--f:'+f+'">'+(sc.beats<1?'<s></s>':'')+'<em></em></i>'; }
+    mg.innerHTML='<div class="mgNames">'+sc.names.map(function(n,k){ return '<div class="mgName"><small>'+labs[k]+'</small><b>'+n+'</b></div>'; }).join('')+'</div>'+
+      '<div class="mgZoom">'+mgCardGl(sc.gl)+'</div>'+
+      '<div class="mgValC"><div class="mgVal"><span>Nilai</span><b>'+sc.val+'</b></div><div class="mgVbx'+(sc.beats<1?' half':'')+'">'+bx+'</div>'+
+      '<div class="mgKeyRow"><div class="mgPiano"><span class="mgFinger" aria-hidden="true">👇</span><i></i><i class="mgK"></i><i></i></div><b class="mgKeyTxt"></b></div></div>';
+    var nm=mg.querySelectorAll('.mgName'), z=mg.querySelector('.mgZoom'), v=mg.querySelector('.mgValC'), boxes=mg.querySelectorAll('.mgVbx i'),
+        kEl=mg.querySelector('.mgK'), fg=mg.querySelector('.mgFinger'), kt=mg.querySelector('.mgKeyTxt');
+    [0,1,2].forEach(function(k){ at(sc.s[k][0],function(){ nm.forEach(function(x,j){ x.classList.toggle('cur',j===k); }); mgShow(nm[k]); }); });
+    at(sc.s[3][0],function(){ nm.forEach(function(x){ x.classList.remove('cur'); }); mgShow(z); mg.classList.add('zoomed'); mgPress(A.c,A.g,67,A.c.currentTime,Math.min(1.6,sc.beats*.5),.4); });
+    at(sc.s[4][0],function(){ mgShow(v); mg.classList.add('val');
+      if(!sc.boxAt) boxes.forEach(function(b,k){ ai.T.push(setTimeout(function(){ b.classList.add('fill'); },400+k*450)); }); });
+    if(sc.split) at(sc.split,function(){ mg.querySelector('.mgVbx').classList.add('cut'); });
+    (sc.boxAt||[]).forEach(function(t,k){ at(t,function(){ boxes[k] && boxes[k].classList.add('fill','pop'); }); });
+    (sc.keys||[]).forEach(function(x,k){
+      var nx=sc.keys[k+1], long=x[1] && nx && nx[0]-x[0]>.9;
+      at(x[0],function(){ mgShow(mg.querySelector('.mgKeyRow'));
+        kEl.classList.toggle('down',!!x[1]); fg.classList.toggle('down',!!x[1]);
+        kt.textContent = x[1] ? (long?'✋ TAHAN…':'👆 tekan') : 'lepas'; kt.className='mgKeyTxt'+(long?' hold':''); });
+      if(x[1]) mgPress(A.c,A.g,67,A.t0+x[0],long&&nx?nx[0]-x[0]:.3,.3);
+    });
+    return {after:sc.play?mgAfterPlay(mg,sc.play):null};
+  },
+  /* not angka: angka menyala (1 ketuk) lalu tiap titik +1 ketuk */
+  dots:function(sc,mg,at,A){
+    mg.innerHTML='<div class="mgDots">'+mgNum(sc.nm)+'</div><div class="mgDotLab"></div>';
+    var parts=[mg.querySelector('.mgNum')].concat([].slice.call(mg.querySelectorAll('.mgNum .nd'))), lab=mg.querySelector('.mgDotLab'), tot=0;
+    mg.querySelector('.mgNum').classList.add('dim');
+    at(0,function(){ mgShow(mg.querySelector('.mgDots')); });
+    sc.at.forEach(function(t,k){
+      metClick(A.t0+t,k===0,A.g);
+      at(t,function(){ tot++; if(k===0) parts[0].classList.remove('dim'); else parts[k].classList.add('lit');
+        lab.innerHTML=(k?'<span class="plus">+1 ketuk</span>':'<span class="plus">1 ketuk</span>')+' <b>= '+tot+' ketuk</b>'; lab.classList.remove('pop'); void lab.offsetWidth; lab.classList.add('pop'); });
+    });
+  },
+  /* perbandingan panjang: baris-baris bilah (1 ketuk = lebar sama) + kotak ketukan di bawah */
+  cmp:function(sc,mg,at,A){
+    var h=sc.gl?'<div class="mgCmpGl">'+mgCardGl(sc.gl[0])+'</div>':'', M=sc.M, i;
+    h+='<div class="mgCmp2">';
+    sc.rows.forEach(function(r,ri){
+      if(ri) h+='<div class="mgEq2" data-r="'+ri+'">=</div>';
+      h+='<div class="mgRow2 r'+ri+'">'+r.map(function(b){ return '<span class="mgB2'+(b[4]?' add':'')+'" style="width:calc('+(b[0]/M*100)+'% - 6px)">'+(b[1]?mgGl(b[1]):'')+'<b>'+b[2]+'</b></span>'; }).join('')+'</div>';
+    });
+    h+='<div class="mgBoxes" style="grid-template-columns:repeat('+M+',1fr)">';
+    for(i=0;i<M;i++) h+='<i>'+(i+1)+'</i>';
+    h+='</div>'+(sc.tot?'<div class="mgTot">'+sc.tot[1]+'</div>':'')+'</div>';
+    mg.innerHTML=h;
+    if(sc.gl) at(sc.gl[1],function(){ mgShow(mg.querySelector('.mgCmpGl')); });
+    var rows=mg.querySelectorAll('.mgRow2');
+    sc.rows.forEach(function(r,ri){ r.forEach(function(b,bi){
+      mgPress(A.c,A.g,ri===0&&bi===0?60:67-ri*3,A.t0+b[3],Math.min(1.4,b[0]*.45),.32);
+      at(b[3],function(){ mgShow(rows[ri].children[bi]); if(bi===0 && ri) mgShow(mg.querySelector('.mgEq2[data-r="'+ri+'"]')); });
+    }); });
+    if(sc.tot) at(sc.tot[0],function(){ mgShow(mg.querySelector('.mgTot')); mg.querySelectorAll('.mgCmp2 .mgBoxes i').forEach(function(x){ x.classList.add('past'); }); });
+  },
+  /* ta / ti-ti: kartu suku kata, lalu contoh di partitur menyala tepat saat diucapkan */
+  rhy:function(sc,mg,at,A){
+    var o=mgPlayBlock(sc.n,sc.syl);
+    mg.innerHTML=(sc.leg?'<div class="mgLeg">'+sc.leg.map(function(l){ return '<div class="mgLg">'+mgGl(l[0])+'<span>=</span><b>'+l[1]+'</b></div>'; }).join('')+'</div>':'');
+    mg.appendChild(o.el); o.el.classList.add('hid'); o.el.querySelector('.mgPBh').classList.add('hid');
+    var lg=mg.querySelectorAll('.mgLg');
+    (sc.leg||[]).forEach(function(l,k){ at(l[2],function(){ mgShow(lg[k]); }); at(l[3],function(){ lg[k].classList.add('say'); }); });
+    at(sc.show,function(){ mg.classList.add('shown'); mgShow(o.el); o.draw(); o.reset(); });
+    var beat=60/76, st=[], tt=0; sc.n.forEach(function(n){ st.push(tt); tt+=n[1]; });
+    (sc.hit||[]).forEach(function(t,k){
+      var nx=sc.hit[k+1], ms=nx?(nx-t)*1000:sc.n[k][1]*beat*1000;
+      at(t,function(){ o.hit(k,ms,sc.n[k][1]); o.box(Math.floor(st[k]+1e-6)); });
+    });
+    if(sc.mid) at(sc.mid[0],function(){
+      var b=o.el.querySelectorAll('.mgBar')[sc.mid[1]], tr=o.el.querySelector('.mgTrack'), mk=document.createElement('div');
+      mk.className='mgMid'; mk.style.left=(st[sc.mid[1]]/o.nb*100)+'%'; mk.innerHTML='<span>di antara ketukan</span>'; tr.appendChild(mk);
+      if(b) b.classList.add('on'); o.box(-1);
+    });
+    return {after:function(next){ o.el.querySelector('.mgPBh').classList.remove('hid'); o.run(2,next); }};
+  },
+  /* titik bergaris (+½) vs titik biasa (+1) di not angka */
+  cmpNum:function(sc,mg,at,A){
+    mg.innerHTML='<div class="mgCN"><div class="mgCNc a">'+mgNum('dqe')+'<p>Titik <b>bergaris</b><br><span>+ ½ ketuk</span></p></div>'+
+      '<div class="mgCNc b">'+mgNum('h')+'<p>Titik <b>tanpa garis</b><br><span>+ 1 ketuk</span></p></div></div>';
+    at(0,function(){ mgShow(mg.querySelector('.mgCN')); });
+    at(sc.a,function(){ mg.querySelector('.a').classList.add('cur'); mgPress(A.c,A.g,67,A.c.currentTime,.4,.3); });
+    at(sc.b,function(){ mg.querySelector('.a').classList.remove('cur'); mg.querySelector('.b').classList.add('cur'); mgPress(A.c,A.g,67,A.c.currentTime,.4,.3); });
+  },
+  tip:function(sc,mg,at,A){
+    var h='<h2 class="mgBig sm">Ingat! 💡</h2><ul class="mgTips">';
+    sc.items.forEach(function(it){ h+='<li><span aria-hidden="true">'+(/^[a-z0-9]+$/.test(it[0])?mgGl(it[0]):it[0])+'</span><p>'+it[1]+'</p></li>'; });
+    mg.innerHTML=h+'</ul><div class="mgGo">Ayo main! 🎮</div>';
+    var li=mg.querySelectorAll('.mgTips li');
+    sc.items.forEach(function(it,k){ at(it[2],function(){ mgShow(li[k]); mgPress(A.c,A.g,72+k*4,A.c.currentTime,.35,.3); }); });
+    if(sc.go) at(sc.go,function(){ mgShow(mg.querySelector('.mgGo')); try{ [72,76,79,84].forEach(function(m,i){ pluck(m,A.c.currentTime+i*.08,.4,A.g,.3); }); }catch(e){} });
+  }
+};
 /* Dipanggil saat soal Arcade baru siap: huruf dengan materi baru yang belum pernah dilihat pemain ini -> perkenalan dulu */
 function arcMaybeIntro(){
   if(pr.src!=='arcade' || !pr.playing || aiOpen() || !ARC_INTRO[pr.arcLetter]) return false;
@@ -5601,6 +5935,7 @@ function bindIntro(){
   $('#aiSkip').addEventListener('click',aiEnd);
   $('#aiAgain').addEventListener('click',aiReplay);
   $('#agIntro').addEventListener('click',function(){ aiShow(arcIntroAt(activePlayer().letter)); });
+  document.addEventListener('visibilitychange',aiVis);
 }
 
 /* Nilai besar + kembang api saat satu soal selesai (animasi di atas partitur) */
