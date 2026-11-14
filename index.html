@@ -1565,6 +1565,13 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 .hbX.hbBk{z-index:0}
 .scorehost.hbOn>svg{position:relative;z-index:1}
 .scorehost.hbOn .holdfx .hfDone{display:none}
+/* +10 tetap tampil: berdenyut zoom in/out + bingkai bercahaya (hanya scale/opacity, ringan di HP) */
+.hbX.keep .hbW{animation:hbKz 0.9s ease-in-out infinite alternate}
+@keyframes hbKz{from{scale:.92}to{scale:1.12}}
+.hbX.keep .hbW::before{content:'';position:absolute;inset:-6px -12px -4px;z-index:-1;border-radius:16px;background:color-mix(in srgb,var(--panel) 82%,transparent);
+  border:3px solid #FFD23F;box-shadow:0 0 10px 2px #FFD23F,0 0 22px 4px rgba(255,111,168,.55),inset 0 0 8px rgba(255,210,63,.7);animation:hbKg 0.9s ease-in-out infinite alternate}
+@keyframes hbKg{from{opacity:.65}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){ .hbX.keep .hbW,.hbX.keep .hbW::before{animation:none} }
 .hbX .hbAur{position:absolute;width:90px;height:90px;margin:-45px 0 0 -45px;border-radius:50%;opacity:.35;will-change:transform;animation:hbAu .5s ease-in-out infinite alternate}
 @keyframes hbAu{to{transform:scale(1.3)}}
 .hbX .hbRg{position:absolute;width:44px;height:44px;border:3px solid #FFD23F;border-radius:50%;opacity:0;transform:translate(-50%,-50%);will-change:transform,opacity}
@@ -4655,7 +4662,7 @@ function newRound(keep){
       if(n.m!==null && tieFrom(N,i) && head!==null) pr.tieHead[id]=head; else head=id;
       t+=n.d; });
   });
-  arcStageUI(); holdFxClear();
+  arcStageUI(); holdFxClear(); hbKeepClear();
   if(!keep) pr.retry=1;
   pr.failing=false; pr.pendFail=null; pr.sparked={};
   clearTimeout(endT); pr.ending=false; pr.lastPct=null; pr.pos=0; pr.marks={}; pr.tries=0; pr.wrong=0; pr.t0=0; pr.done=false; pr.lastMsg=null; pr.missStreak=0; pr.lateMiss=null; pr.holds=[]; pr.holdFail={}; pr.hbWait=0; pr.hbRound=0; pr.hbMax=0;
@@ -5252,6 +5259,7 @@ function hbWhoosh(big,delay){
    filter/bayangan blur yang berubah dan tanpa menambah elemen ke SVG partitur — dulu (versi SVG) tiap angka naik membuat
    seluruh partitur digambar ulang sehingga patah-patah di HP (keluhan Ferdi, Nov 2026). Percikan memakai 16 butir tetap
    yang dipakai ulang (Web Animations). */
+function hbKeepClear(){ $$('#pscore .hbX.keep').forEach(function(e){ if(e.parentNode) e.parentNode.removeChild(e); }); }
 function hbLiveFx(h){
   var calm=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var host=$('#pscore'), sv=host && host.querySelector('svg'), g=sv && sv.querySelector('g[data-i="'+h.q+'"]');
@@ -5319,10 +5327,13 @@ function hbLiveFx(h){
     if(num) num.textContent='+'+val+(val>=HB_PTS?'!':'');
     if(lab) lab.textContent=val>=HB_PTS?'MAKSIMAL! 👑':'BONUS ⭐';
     box.classList.add('win'); if(val>=HB_PTS) box.classList.add('max');
-    if(wrap){ wrap.classList.remove('jit'); wrap.style.transform='translate(-50%,-100%) scale('+(val>=HB_PTS?1.75:1.45)+')'; }
+    if(wrap){ wrap.classList.remove('jit'); wrap.style.transform='translate(-50%,-100%) scale('+(val>=HB_PTS?1.3:1.45)+')'; }
     burst(16,val>=HB_PTS?'#FF6FA8':'#FFD23F',val>=HB_PTS?90:60,620);
     hbWhoosh(val>=HB_PTS);
-    setTimeout(function(){ rm(500); }, val>=HB_PTS?750:500);
+    /* +10 (sempurna): angka TETAP tampil sampai soal berganti, berdenyut zoom in/out dengan bingkai bercahaya (diminta Ferdi,
+       Nov 2026); cahaya & percikan di belakang tetap memudar */
+    if(val>=HB_PTS){ setTimeout(function(){ box.classList.add('keep'); if(back){ back.classList.add('out'); setTimeout(function(){ if(back.parentNode) back.parentNode.removeChild(back); if(host && !host.querySelector('.hbBk')) host.classList.remove('hbOn'); },500); } }, 650); return; }
+    setTimeout(function(){ rm(500); }, 500);
   }};
   (function loop(){
     if(h.awarded || !h.fx) return;
@@ -6179,6 +6190,7 @@ function resumePlay(){
 }
 function askQuit(){ if(aiOpen()){ aiEnd(); return; } if(!pr.playing) return; pausePlay(); $('#pquit').hidden=false; try{ $('#pqNo').focus(); }catch(e){} }
 function closePractice(fromPop){
+  hbKeepClear();
   vpAllUp();   /* tuts piano di layar yang masih ditekan dilepas */
   if(aiOpen()){ ai.done=null; aiEnd(); } pr.intro=false; pr.failing=false; pr.pendFail=null;
   hideGrade(); hideHill(); tempoStop(); var tpp=$('#ptop'); if(tpp) tpp.hidden=true;
@@ -6222,7 +6234,11 @@ function renderPractice(){
         if(g.getAttribute('class')!==c) g.setAttribute('class',c);
       });
     } else {
+      /* lapisan bonus tahan (+10 yang tetap tampil, angka yang sedang berjalan) ikut terhapus bila partitur digambar ulang;
+         disimpan dulu lalu dipasang lagi */
+      var keepFx=Array.prototype.slice.call(host.querySelectorAll(':scope > .hbX'));
       drawFit(host,sc,stFn);
+      keepFx.forEach(function(e){ if(e.classList.contains('hbBk')) host.insertBefore(e,host.firstChild); else host.appendChild(e); });
       pr.drawn={sc:sc,w:host.clientWidth,h:host.clientHeight,mode:app.mode};
       redrawn=true;
     }
