@@ -1356,6 +1356,7 @@ svg text.lyr{fill:currentColor;font-weight:600}
 @media (pointer:coarse){ .imgDrop .imgDropPc{display:none} .imgDrop .imgDropTouch{display:block} }
 /* saat jendela terbuka, kotak unggahnya sendiri yang menyala (bukan bingkai layar penuh) */
 body.imgDrag:has(#simgOv:not([hidden]))::after,body.imgDrag:has(#saudOv:not([hidden]))::after{display:none}
+.saudModeW{margin-top:12px;text-align:left}.saudModeW>b{display:block;font-size:14px;margin:0 0 6px 4px}#saudMode button{font-size:14px;padding:9px 6px}
 body.imgDrag #simgDrop,body.imgDrag #saudDrop{border-color:var(--brass);background:var(--hl);transform:scale(1.02)}
 .imgHead{display:flex;align-items:center;gap:8px;margin:0 2px 8px;font-size:14px;color:var(--ink)}
 .imgHead .imgHint{display:none;flex:1;font-size:11px;color:var(--muted)}
@@ -2823,7 +2824,7 @@ body.mob #snewOv .instList b{font-size:20px}
         <li><b>📂 Partitur Saya</b> (tombol di atas, samping "Bikin Partitur Baru"): halaman berisi semua partitur yang sudah kamu buat, yang terakhir diubah di paling atas, lengkap dengan pratinjau kecil. Tiap partitur punya tombol <b>✏️ Buka</b>, <b>▶ Latih</b>, dan <b>🗑 Hapus</b> (ada konfirmasi, dan bisa <b>↶ Batalkan</b> beberapa detik setelah dihapus). Ada juga kotak cari judul.</li>
         <li><b>💾 Simpan</b> menyimpan partitur (sebenarnya juga tersimpan otomatis tiap ada perubahan). Tanpa masuk akun, partitur <b>hanya ada di perangkat itu</b> — partitur dari laptop tidak muncul di HP. Supaya sama di semua perangkat, masuk akun Gitar Sakti di <b>Pengaturan › Akun</b> di setiap perangkat (laptop dan HP) dengan akun yang sama. <b>＋ Buat baru</b> membuat partitur kosong baru. Di bawahnya hanya ada 3 tombol berkas: <b>🖼️ Masukkan gambar</b>, <b>🎵 Masukkan audio / MIDI / XML</b> (lagu, file MIDI atau MusicXML) dan <b>📄 Ekspor PDF</b> (tombol <b>⬇️ Unduh</b> di dalamnya: PDF, JPG, PNG transparan, atau MIDI). Menghapus partitur lewat <b>📂 Partitur Saya</b>.</li>
         <li><b>📄 Ekspor PDF</b>: membuat file PDF siap cetak. Pilih kertas <b>A4</b> atau <b>F4</b>, tegak/mendatar, not balok/not angka, lalu atur <b>ukuran not</b>, <b>ukuran judul</b>, <b>margin</b>, dan <b>jarak antar baris</b> sambil melihat pratinjau halamannya. Baris partitur tidak pernah terpotong di antara dua halaman. Tekan <b>⬇️ Unduh</b> lalu pilih <b>PDF</b> (siap cetak — cetak dengan ukuran kertas yang sama, skala 100%), <b>JPG</b>, <b>PNG</b> (latar transparan) atau <b>MIDI</b>. JPG/PNG dibuat satu gambar per halaman.</li>
-        <li><b>🎵 Masukkan audio / MIDI / XML</b>: seret &amp; lepas atau pilih rekaman (mp3, wav, m4a), file MIDI (.mid), atau <b>MusicXML</b> (.xml / .musicxml / .mxl — dari MuseScore atau aplikasi AI musik) yang langsung jadi partitur. MusicXML paling rapi: nilai not, tangga nada, sukat, akor, tie, lirik, dinamika ikut; partitur piano (2 paranada) jadi Piano 2 tangan; kalau ada beberapa alat, yang diambil alat pertama. FerTune mendengarkannya langsung di HP, mengubahnya jadi not, lalu jadi partitur (maks. 2 menit pertama). Hasil terbaik dari rekaman satu alat musik atau nyanyian saja; lagu lengkap dengan band hasilnya kurang rapi. Setelah selesai ada tautan <b>Unduh MIDI lengkap</b> berisi semua nada yang terdengar.</li>
+        <li><b>🎵 Masukkan audio / MIDI / XML</b>: seret &amp; lepas atau pilih rekaman (mp3, wav, m4a), file MIDI (.mid), atau <b>MusicXML</b> (.xml / .musicxml / .mxl — dari MuseScore atau aplikasi AI musik) yang langsung jadi partitur. MusicXML paling rapi: nilai not, tangga nada, sukat, akor, tie, lirik, dinamika ikut; partitur piano (2 paranada) jadi Piano 2 tangan; kalau ada beberapa alat, yang diambil alat pertama. FerTune mendengarkannya langsung di HP, mengubahnya jadi not, lalu jadi partitur (maks. 2 menit pertama). Sebelum memilih rekaman, pilih <b>Isi rekaman audio</b>: <b>🎤 Nyanyian / 1 melodi</b> untuk suaramu bernyanyi (atau satu alat musik yang memainkan satu nada sekaligus) — vibrato, luncuran suara & suara yang sedikit fals dirapikan, tangga nadanya ditebak; atau <b>🎹 Alat musik (bisa akor)</b> untuk rekaman piano/gitar berakor. Lagu lengkap dengan band hasilnya kurang rapi. Setelah selesai ada tautan <b>Unduh MIDI</b>.</li>
       </ol>
       <div class="tip">Dengan keyboard MIDI tersambung, tuts yang kamu tekan langsung menjadi not di partitur.</div>
     </div></details>
@@ -3008,7 +3009,14 @@ body.mob #snewOv .instList b{font-size:20px}
       <div class="ic" aria-hidden="true">🎧</div>
       <b class="imgDropPc">Seret &amp; lepas lagu, file MIDI atau XML di sini</b>
       <b class="imgDropTouch">Ketuk untuk memilih lagu</b>
-      <span>Lagu (MP3 / WAV / M4A) diubah jadi not — paling bagus melodi satu alat. File MIDI (.mid) atau MusicXML (.xml / .musicxml / .mxl, dari MuseScore / aplikasi AI musik) langsung jadi partitur.</span>
+      <span>Lagu (MP3 / WAV / M4A) diubah jadi not — paling bagus nyanyian atau melodi satu alat tanpa iringan. File MIDI (.mid) atau MusicXML (.xml / .musicxml / .mxl, dari MuseScore / aplikasi AI musik) langsung jadi partitur.</span>
+    </div>
+    <div class="saudModeW">
+      <b id="saudModeL">Isi rekaman audio:</b>
+      <div class="seg" id="saudMode" role="group" aria-labelledby="saudModeL">
+        <button type="button" data-aud="voc" aria-pressed="true">🎤 Nyanyian / 1 melodi</button>
+        <button type="button" data-aud="poly" aria-pressed="false">🎹 Alat musik (bisa akor)</button>
+      </div>
     </div>
     <div class="row" style="margin-top:12px">
       <label class="sound" style="cursor:pointer">🎵 Pilih lagu (audio)
@@ -8974,6 +8982,9 @@ function bindScore(){
   $('#saudOpen').addEventListener('click',function(){ if(!isPremium()){ showPaywall('audio'); return; } $('#saudOv').hidden=false; try{ $('#saudDrop').focus({preventScroll:true}); }catch(e){} });
   $('#saudNo').addEventListener('click',function(){ $('#saudOv').hidden=true; });
   $('#saudOv').addEventListener('click',function(e){ if(e.target===e.currentTarget) e.currentTarget.hidden=true; });
+  function audModeSync(){ document.querySelectorAll('#saudMode [data-aud]').forEach(function(b){ b.setAttribute('aria-pressed',b.dataset.aud===audMode?'true':'false'); }); }
+  document.querySelectorAll('#saudMode [data-aud]').forEach(function(b){ b.addEventListener('click',function(){ audMode=b.dataset.aud; store.set('yg.audMode',audMode); audModeSync(); }); });
+  audModeSync();
   $('#saudDrop').addEventListener('click',function(){ $('#saudIn').click(); });
   $('#saudDrop').addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('#saudIn').click(); } });
   /* file dipilih -> jendela ditutup supaya kemajuan impor (di bawah tombol) terlihat */
@@ -9817,11 +9828,238 @@ function downloadAudMidi(){
   a.href=url; a.download=audMidi.name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(url); },4000);
 }
+/* ---------- jalur khusus SUARA NYANYIAN / satu melodi (Nov 2026, keluhan Ferdi: rekaman nyanyian jadi not yang jauh) ----------
+   Basic Pitch dilatih untuk alat musik: vibrato, "scoop" (naik ke nada di awal) & luncuran antar-nada membuat satu not yang
+   dinyanyikan pecah jadi 3-6 not (sebagian setengah nada meleset). Untuk suara satu melodi dipakai pendeteksi nada YIN
+   (sama dengan tuner) per 11 ms, lalu:
+   1) frame bersuara = cukup keras & periodik; salah oktaf sesaat dibetulkan; median 5 frame.
+   2) penyanyi yang sedikit fals/tidak pas A=440 diukur selisih sen rata-ratanya (rata-rata melingkar) lalu dikoreksi.
+   3) dipotong jadi not: hening/konsonan, volume turun lalu naik lagi (suku kata baru di nada sama), atau rata-rata nada
+      (±100 ms, meredam vibrato) bergeser >0,7 semitone selama ≥45 ms.
+   4) nada not = median bagian 25%..100% (awal "scoop" diabaikan); potongan pendek (luncuran) digabung ke tetangganya. */
+var VOC_SR=11025, VOC_W=256, VOC_HOP=128;
+function vocMono(ab){
+  return toMono22k(ab).then(function(b){
+    /* turunkan ke 11025 Hz sendiri dengan penyaring lolos-rendah (kalau langsung dirender di 11 kHz, harmonik tinggi suara
+       "terlipat" ke bawah dan pendeteksi nada sering salah) */
+    var x=b.getChannelData(0), n=x.length>>1, y=new Float32Array(n), K=[1,2,3,4,3,2,1], i, j, s, q;
+    for(i=0;i<n;i++){ s=0; for(j=-3;j<=3;j++){ q=2*i+j; if(q>=0 && q<x.length) s+=K[j+3]*x[q]; } y[i]=s/16; }
+    return y;
+  });
+}
+function vocMed(a){ var b=a.slice().sort(function(x,y){ return x-y; }); return b.length ? b[b.length>>1] : 0; }
+/* YIN satu frame: hasil periode (sampel, pecahan) & aperiodisitas (0 = berulang sempurna) */
+function vocYin(x,off,W,tMin,tMax,d){
+  var tau, j, s, df, run=0, found=-1, best=-1, bv=9;
+  d[0]=1;
+  for(tau=1;tau<=tMax;tau++){
+    s=0; for(j=0;j<W;j++){ df=x[off+j]-x[off+j+tau]; s+=df*df; }
+    run+=s; d[tau]=run ? s*tau/run : 1;
+    if(tau>tMin && d[tau]<bv){ bv=d[tau]; best=tau; }
+    if(tau>tMin+1 && d[tau-1]<0.15 && d[tau]>=d[tau-1]){ found=tau-1; break; }
+  }
+  if(found<0){ if(best<0 || bv>0.35 || best>=tMax) return null; found=best; }
+  if(found<=tMin) return null;
+  /* salah oktaf ke atas (lembah di setengah periode karena harmonik ke-2 kuat): kalau di 2x periode jauh lebih mirip, pakai itu */
+  var t2=Math.min(tMax,2*found+2);
+  for(tau=tau+1;tau<=t2;tau++){
+    s=0; for(j=0;j<W;j++){ df=x[off+j]-x[off+j+tau]; s+=df*df; }
+    run+=s; d[tau]=run ? s*tau/run : 1;
+  }
+  if(2*found+1<=t2){
+    var b2=2*found-1, q;
+    for(q=2*found-1;q<=Math.min(t2-1,2*found+1);q++) if(d[q]<d[b2]) b2=q;
+    if(d[found]>0.06 && d[b2]<0.25*d[found]) found=b2;
+  }
+  var a=d[found-1], b=d[found], c=d[found+1]===undefined ? b : d[found+1], den=a+c-2*b;
+  return {T:found+(den>0 ? (a-c)/(2*den) : 0), ap:b};
+}
+/* hasil: daftar not seperti Basic Pitch {startTimeSeconds,durationSeconds,pitchMidi,amplitude} + info */
+function vocalNotes(x,prog){
+  var sr=VOC_SR, W=VOC_W, H=VOC_HOP, tMin=Math.floor(sr/1100), tMax=Math.floor(sr/65);
+  var nF=Math.max(0,Math.floor((x.length-W-tMax-1)/H)), d=new Float32Array(tMax+2);
+  var P=new Float32Array(nF), AP=new Float32Array(nF), RMS=new Float32Array(nF), i=0;
+  return new Promise(function(res){
+    (function step(){
+      var lim=Math.min(nF,i+400);
+      for(;i<lim;i++){
+        var off=i*H, s=0, j; for(j=0;j<W;j++) s+=x[off+j]*x[off+j];
+        RMS[i]=Math.sqrt(s/W);
+        var r=RMS[i]>1e-4 ? vocYin(x,off,W,tMin,tMax,d) : null;
+        if(r){ P[i]=69+12*Math.log2(sr/r.T/440); AP[i]=r.ap; } else { P[i]=0; AP[i]=1; }
+      }
+      if(prog) prog(nF ? i/nF : 1);
+      if(i<nF) setTimeout(step,0); else res(vocSegment(P,AP,RMS,H/sr,(W/2)/sr));
+    })();
+  });
+}
+function vocSegment(P,AP,RMS,dt,t0){
+  var n=P.length, i, j, k;
+  if(!n) return {ev:[],voiced:0};
+  /* ambang volume: relatif terhadap bagian keras & lantai derau */
+  var srt=Array.prototype.slice.call(RMS).sort(function(a,b){ return a-b; });
+  var loud=srt[Math.floor(n*0.95)], floor=srt[Math.floor(n*0.03)], gate=Math.max(1e-3,Math.min(loud*0.2,Math.max(loud*0.06,floor*3)));
+  var V=new Uint8Array(n), loudN=0, vN=0;
+  for(i=0;i<n;i++){
+    if(RMS[i]>gate) loudN++;
+    V[i]=(P[i]>30 && P[i]<96 && AP[i]<0.3 && RMS[i]>gate) ? 1 : 0;
+    if(V[i]) vN++;
+  }
+  /* salah oktaf sesaat */
+  var Q=new Float32Array(n);
+  for(i=0;i<n;i++){
+    Q[i]=P[i]; if(!V[i]) continue;
+    var w=[]; for(j=Math.max(0,i-12);j<=Math.min(n-1,i+12);j++) if(V[j]) w.push(P[j]);
+    var md=vocMed(w), df=P[i]-md;
+    if(Math.abs(Math.abs(df)-12)<1.2) Q[i]=P[i]-12*Math.sign(df);
+  }
+  /* median 5 frame (hanya antar frame bersuara) */
+  var M=new Float32Array(n);
+  for(i=0;i<n;i++){
+    if(!V[i]) continue;
+    var w2=[]; for(j=i-2;j<=i+2;j++) if(j>=0 && j<n && V[j]) w2.push(Q[j]);
+    M[i]=vocMed(w2);
+  }
+  /* selisih sen penyanyi terhadap A=440 (rata-rata melingkar, ditimbang volume): untuk seluruh lagu, lalu disesuaikan per
+     ±6 detik (penyanyi tanpa iringan sering pelan-pelan makin tinggi/rendah sepanjang lagu) */
+  var CS=new Float64Array(n+1), SN=new Float64Array(n+1), cs=0, sn=0;
+  for(i=0;i<n;i++){
+    var ca=0, sa=0;
+    if(V[i]){ var ang=2*Math.PI*(M[i]-Math.round(M[i])); ca=RMS[i]*Math.cos(ang); sa=RMS[i]*Math.sin(ang); }
+    CS[i+1]=CS[i]+ca; SN[i+1]=SN[i]+sa;
+  }
+  cs=CS[n]; sn=SN[n];
+  var tune=(cs||sn) ? Math.atan2(sn,cs)/(2*Math.PI) : 0, TW=Math.round(6/dt);
+  for(i=0;i<n;i++) if(V[i]){
+    var lo=Math.max(0,i-TW), hi=Math.min(n,i+TW+1), lc=CS[hi]-CS[lo], ls=SN[hi]-SN[lo];
+    /* sebagian kecil ditarik ke nilai seluruh lagu supaya bagian pendek/sepi tidak melenceng */
+    lc+=0.25*cs*(hi-lo)/n; ls+=0.25*sn*(hi-lo)/n;
+    M[i]-=(lc||ls) ? Math.atan2(ls,lc)/(2*Math.PI) : tune;
+  }
+  /* rata-rata ±100 ms untuk meredam vibrato */
+  var A=new Float32Array(n);
+  for(i=0;i<n;i++){
+    if(!V[i]) continue;
+    var sm=0, c=0; for(j=i-4;j<=i+4;j++) if(j>=0 && j<n && V[j]){ sm+=M[j]; c++; }
+    A[i]=sm/c;
+  }
+  /* titik "suku kata baru": volume turun jelas lalu naik lagi */
+  var DIP=new Uint8Array(n), E=new Float32Array(n);
+  /* energi bagian yang BERNADA saja (konsonan berdesis "s/t/k" berisik tapi tidak bernada, jadi tetap terhitung lembah) */
+  var PE=new Float32Array(n);
+  for(i=0;i<n;i++) PE[i]=RMS[i]*Math.max(0,1-2.5*AP[i]);
+  for(i=0;i<n;i++) E[i]=(PE[Math.max(0,i-1)]+PE[i]+PE[Math.min(n-1,i+1)])/3;
+  for(i=3;i<n-3;i++){
+    if(!(E[i]<=E[i-1] && E[i]<=E[i+1])) continue;
+    var mb=0, ma=0; for(j=Math.max(0,i-12);j<i;j++) mb=Math.max(mb,E[j]); for(j=i+1;j<=Math.min(n-1,i+12);j++) ma=Math.max(ma,E[j]);
+    /* cukup dalam (bukan sekadar naik-turun volume karena vibrato) */
+    if(E[i]<0.5*mb && ma>1.7*E[i] && ma>gate*1.5) DIP[i]=1;
+  }
+  var segs=[], cur=null, gap=0, dev=0;
+  function close(endI){
+    if(cur){ cur.b=endI; if(cur.b>=cur.a) segs.push(cur); }
+    cur=null; dev=0;
+  }
+  function open(a,dip){ cur={a:a,b:a,k:a,dip:!!dip}; }
+  /* patokan nada potongan = median ±30 frame terakhir sebelum frame yang mulai menyimpang (mulai dari c.k) */
+  function center(c,upto){ var w=[]; for(var q=Math.max(c.k,upto-30);q<=upto;q++) if(V[q]) w.push(M[q]); return w.length ? vocMed(w) : M[c.k]; }
+  var pend=0;
+  for(i=0;i<n;i++){
+    /* lembah volume bisa jatuh di frame tak bersuara (konsonan pendek) -> dicatat dulu, dipotong di frame bersuara berikutnya */
+    if(DIP[i]) pend=1;
+    if(!V[i]){ gap++; if(cur && gap>=3){ close(i-gap); pend=0; } continue; }
+    gap=0;
+    if(!cur){ open(i,false); pend=0; continue; }
+    if(pend && i-cur.a>=6){ pend=0; close(i-1); open(i,true); continue; }
+    pend=0;
+    var ref=center(cur,Math.max(cur.k,i-9-dev));
+    if(Math.abs(A[i]-ref)>0.7){
+      dev++;
+      if(dev>=4){
+        var st=i-dev+1;
+        /* bagian sebelum penyimpangan cuma sisa luncuran (<3 frame): tidak dipotong, patokan nada pindah ke nada baru */
+        if(st-cur.k>=3){ close(st-1); open(st,false); } else cur.k=st;
+        dev=0;
+      }
+    } else dev=0;
+  }
+  close(n-1-gap);
+  /* nada & waktu tiap potongan */
+  var out=segs.map(function(sg){
+    var len=sg.b-sg.a+1, from=sg.a+Math.floor(len*0.25), w=[], amp=0, c=0;
+    for(var q=from;q<=sg.b;q++) if(V[q]) w.push(M[q]);
+    if(!w.length) for(q=sg.a;q<=sg.b;q++) if(V[q]) w.push(M[q]);
+    for(q=sg.a;q<=sg.b;q++){ amp+=RMS[q]; c++; }
+    return {a:sg.a,b:sg.b,m:Math.round(vocMed(w)),dip:sg.dip,amp:amp/c};
+  });
+  /* gabungkan: nada sama bersambung tanpa suku kata baru; potongan pendek (luncuran/scoop) ke tetangga */
+  var SHORT=Math.round(0.15/dt), changed=true, pass;
+  for(pass=0;pass<2;pass++){
+  if(pass){
+    /* nada "nyasar": not pendek yang melompat ≥10 semitone dari KEDUA tetangganya ke arah yang sama (biasanya salah oktaf
+       pendeteksi). Geser satu oktaf bila jadi dekat, kalau tidak dibuang (waktunya ikut not sebelumnya). */
+    for(k=1;k<out.length-1;k++){
+      var o=out[k], P0=out[k-1], P1=out[k+1];
+      if(o.b-o.a+1>Math.round(0.45/dt) || o.a-P0.b>25 || P1.a-o.b>25) continue;
+      var d0=o.m-P0.m, d1=o.m-P1.m;
+      if(Math.abs(d0)<10 || Math.abs(d1)<10 || (d0>0)!==(d1>0)) continue;
+      var sh=o.m-12*Math.sign(d0);
+      if(Math.abs(sh-P0.m)<=7 && Math.abs(sh-P1.m)<=7) o.m=sh;
+      else { P0.b=Math.max(P0.b,o.b); out.splice(k,1); k--; }
+    }
+    changed=true;
+  }
+  while(changed){
+    changed=false;
+    for(k=0;k<out.length-1;k++){
+      var a=out[k], b=out[k+1];
+      if(a.m===b.m && !b.dip && b.a-a.b<=4){ a.b=b.b; a.amp=Math.max(a.amp,b.amp); out.splice(k+1,1); changed=true; break; }
+    }
+    if(changed) continue;
+    for(k=0;k<out.length;k++){
+      var s=out[k], sl=s.b-s.a+1;
+      /* luncuran lebar (tetangga beda ≥3 semitone, nada di antaranya) boleh sedikit lebih panjang */
+      var wide=k>0 && k+1<out.length && Math.abs(out[k-1].m-out[k+1].m)>=3 && s.m>Math.min(out[k-1].m,out[k+1].m) && s.m<Math.max(out[k-1].m,out[k+1].m) && !s.dip;
+      if(sl>=(wide ? Math.round(0.21/dt) : SHORT)) continue;
+      var L=k>0 && s.a-out[k-1].b<=5 ? out[k-1] : null, R=k+1<out.length && out[k+1].a-s.b<=5 ? out[k+1] : null;
+      if(!L && !R){ if(s.b-s.a+1<Math.round(0.07/dt)){ out.splice(k,1); changed=true; break; } continue; }
+      /* not pendek ASLI (mis. 1/16 cepat) dibiarkan: hanya luncuran (nadanya di antara kedua tetangga) atau
+         "scoop"/sisa (±1 semitone dari tetangga) yang digabung */
+      var glide=L && R && s.m>=Math.min(L.m,R.m) && s.m<=Math.max(L.m,R.m);
+      var near=(L && Math.abs(L.m-s.m)<=1) || (R && Math.abs(R.m-s.m)<=1);
+      if(!glide && !near && s.b-s.a+1>=Math.round(0.08/dt)) continue;
+      /* luncuran menuju not berikutnya: ikut not berikutnya (awal not mulai di sini); selain itu ikut not sebelumnya */
+      var toR=R && (!L || Math.abs(R.m-s.m)<=Math.abs(L.m-s.m) || s.dip);
+      if(toR){ R.a=s.a; R.dip=R.dip||s.dip; } else L.b=s.b;
+      out.splice(k,1); changed=true; break;
+    }
+  }
+  }
+  var mx=0; out.forEach(function(o){ mx=Math.max(mx,o.amp); });
+  return {ev:out.map(function(o){ return {startTimeSeconds:t0+o.a*dt, durationSeconds:(o.b-o.a+1)*dt, pitchMidi:o.m, amplitude:mx ? Math.min(1,0.3+0.7*o.amp/mx) : 0.8}; }),
+          voiced:loudN ? vN/loudN : 0, tune:Math.round(tune*100)};
+}
+/* tebak tangga nada (Krumhansl) dari lama tiap nada; minor -> tanda kunci tangga nada mayor relatifnya.
+   hasil: jumlah ♯ (positif) / ♭ (negatif) */
+function guessKey(ev){
+  var MAJ=[6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88], MIN=[6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+  var FIFTHS=[0,-5,2,-3,4,-1,6,1,-4,3,-2,5], h=[0,0,0,0,0,0,0,0,0,0,0,0], i, t, best=0, bv=-9, tot=0;
+  ev.forEach(function(n){ h[((n.pitchMidi%12)+12)%12]+=n.durationSeconds; tot+=n.durationSeconds; });
+  if(!tot) return 0;
+  function corr(p,r){ var mh=tot/12, mp=0, a=0, b=0, c=0; for(i=0;i<12;i++) mp+=p[i]/12;
+    for(i=0;i<12;i++){ var x=h[(i+r)%12]-mh, y=p[i]-mp; a+=x*y; b+=x*x; c+=y*y; } return b&&c ? a/Math.sqrt(b*c) : 0; }
+  for(t=0;t<12;t++){
+    var v=corr(MAJ,t); if(v>bv){ bv=v; best=FIFTHS[t]; }
+    v=corr(MIN,t); if(v>bv){ bv=v; best=FIFTHS[(t+3)%12]; }
+  }
+  return best;
+}
+var audMode=store.get('yg.audMode','voc')==='poly'?'poly':'voc';
 function importAudio(e){
   var f=e.target.files && e.target.files[0], msg=$('#smidiMsg'); e.target.value='';
   if(!f || audBusy) return;
   audBusy=true; audMidi=null;
-  var base=(f.name||'Lagu').replace(/\.[^.]+$/,'').slice(0,60)||'Lagu', cut=false, BP;
+  var base=(f.name||'Lagu').replace(/\.[^.]+$/,'').slice(0,60)||'Lagu', cut=false, BP, voc=audMode==='voc', vinfo=null;
   function say(t){ msg.textContent=t; }
   say('Membuka lagu...');
   var rd=new FileReader();
@@ -9829,17 +10067,23 @@ function importAudio(e){
   rd.onload=function(){
     decodeAudioFile(rd.result).then(function(ab){
       cut=ab.duration>AUD_MAX+0.5;
+      if(voc){
+        say('Mendengarkan nyanyian...');
+        return vocMono(ab).then(function(mono){
+          var lastPct=-1;
+          return vocalNotes(mono,function(p){ var q=Math.floor(p*100); if(q!==lastPct){ lastPct=q; say('Mendengarkan nyanyian dan menulis not... '+q+'%'); } });
+        }).then(function(r){ vinfo=r; return r.ev; });
+      }
       say('Menyiapkan pengubah lagu jadi not (pertama kali butuh mengunduh ±1,7 MB)...');
-      return Promise.all([toMono22k(ab),loadBasicPitch()]);
-    }).then(function(r){
-      var mono=r[0]; BP=r[1];
-      var bp=new BP.BasicPitch('vendor/basic-pitch-model/model.json'), fr=[], on=[], ct=[], lastPct=-1;
-      return bp.evaluateModel(mono.getChannelData(0),function(a,b,c){ Array.prototype.push.apply(fr,a); Array.prototype.push.apply(on,b); Array.prototype.push.apply(ct,c); },
-        function(p){ var q=Math.floor(p*100); if(q!==lastPct){ lastPct=q; say('Mendengarkan lagu dan menulis not... '+q+'%'); } })
-        .then(function(){ return [fr,on,ct]; });
-    }).then(function(o){
-      var ev=BP.noteFramesToTime(BP.addPitchBendsToNoteEvents(o[2],BP.outputToNotesPoly(o[0],o[1],0.5,0.3,5)));
-      ev=cleanNotes(ev).sort(function(a,b){ return a.startTimeSeconds-b.startTimeSeconds; });
+      return Promise.all([toMono22k(ab),loadBasicPitch()]).then(function(r){
+        var mono=r[0]; BP=r[1];
+        var bp=new BP.BasicPitch('vendor/basic-pitch-model/model.json'), fr=[], on=[], ct=[], lastPct=-1;
+        return bp.evaluateModel(mono.getChannelData(0),function(a,b,c){ Array.prototype.push.apply(fr,a); Array.prototype.push.apply(on,b); Array.prototype.push.apply(ct,c); },
+          function(p){ var q=Math.floor(p*100); if(q!==lastPct){ lastPct=q; say('Mendengarkan lagu dan menulis not... '+q+'%'); } })
+          .then(function(){ return cleanNotes(BP.noteFramesToTime(BP.addPitchBendsToNoteEvents(ct,BP.outputToNotesPoly(fr,on,0.5,0.3,5)))); });
+      });
+    }).then(function(ev){
+      ev=ev.sort(function(a,b){ return a.startTimeSeconds-b.startTimeSeconds; });
       if(!ev.length){ audBusy=false; say('Tidak ada nada yang bisa dikenali di lagu ini. Coba rekaman yang lebih jelas (satu alat musik atau nyanyian saja).'); return; }
       var bpm=guessBpm(ev), bs=bpm/60;
       audMidi={bytes:notesToMidi(ev,bpm,base),name:(base.replace(/[^\w\- ]+/g,'').trim()||'lagu')+'.mid'};
@@ -9852,13 +10096,31 @@ function importAudio(e){
         if(nx!==Infinity && nx>e && (nx-e)*bs<=1) e=nx;
         return {s:(s-t0)*bs,e:(e-t0)*bs,m:n.pitchMidi,ch:0};
       }),bpm:bpm,ts:[4,4],title:base,format:0};
+      if(voc){
+        /* nyanyian: waktu orang menyanyi tidak setepat alat musik -> awal not dirapikan ke 1/8 ketuk (not pendek ke 1/16),
+           tidak boleh dua not jatuh di tempat sama (dulu not kedua hilang) */
+        var prevQ=-1;
+        pm.notes.forEach(function(n){
+          var g=(n.e-n.s)<0.4 ? 0.25 : 0.5, qs=Math.round(n.s/g)*g;
+          if(qs<=prevQ) qs=prevQ+0.25;
+          n.e=Math.max(qs+0.25,Math.round(n.e/g)*g); n.s=qs; prevQ=qs;
+        });
+      }
       var res=midiToScore(pm,base);
       audBusy=false;
       if(!res){ say('Tidak ada melodi yang bisa dibaca dari lagu ini.'); return; }
+      /* tangga nada ditebak dari nada-nada lagu; ejaan ♯/♭ mengikuti tanda kuncinya */
+      var key=guessKey(ev);
+      res.score.key=key;
+      res.score.notes.forEach(function(n){ if(n.m!==null) n.a=spellIn(n.m,key); });
+      if(voc) res.score.inst='vocal';
       var cnt=addImportedScore(res);
       msg.innerHTML='';
-      msg.appendChild(document.createTextNode('Lagu jadi partitur: '+cnt+' not, tempo ±'+bpm+' BPM'+(cut?', hanya '+Math.round(AUD_MAX/60)+' menit pertama':'')+(res.cut?', dipotong karena terlalu panjang':'')+'. Melodi diambil dari nada teratas; periksa & rapikan not yang kurang pas. '));
-      var a=document.createElement('a'); a.href='#'; a.textContent='Unduh MIDI lengkap (semua nada)';
+      var txt=(voc?'Nyanyian':'Lagu')+' jadi partitur: '+cnt+' not, tempo ±'+bpm+' BPM'+(cut?', hanya '+Math.round(AUD_MAX/60)+' menit pertama':'')+(res.cut?', dipotong karena terlalu panjang':'')+'. ';
+      if(voc) txt+=(vinfo && vinfo.voiced<0.45 ? 'Sepertinya ada iringan musik atau banyak suara sekaligus — kalau hasilnya kacau, coba pilihan "🎹 Alat musik". ' : '')+'Periksa & rapikan ritmenya bila perlu. ';
+      else txt+='Melodi diambil dari nada teratas; periksa & rapikan not yang kurang pas. ';
+      msg.appendChild(document.createTextNode(txt));
+      var a=document.createElement('a'); a.href='#'; a.textContent=voc?'Unduh MIDI':'Unduh MIDI lengkap (semua nada)';
       a.addEventListener('click',function(ev2){ ev2.preventDefault(); downloadAudMidi(); });
       msg.appendChild(a);
     }).catch(function(err){
