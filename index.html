@@ -6990,6 +6990,7 @@ function loadSb(){
   });
   return window._sbP;
 }
+var joinedUid=null;
 function watchAuth(){
   return loadSb().then(function(c){
     if(authWatched) return c; authWatched=true;
@@ -6998,6 +6999,10 @@ function watchAuth(){
       sbUser=u; renderAcct();
       if(u&&changed) setTimeout(syncNow,0);   // jangan memanggil Supabase langsung di dalam callback ini
       setTimeout(function(){ grantRefresh(c,u); },0);   /* Premium lewat akun (fertune_grants) */
+      if(u && joinedUid!==u.id && (ev==='SIGNED_IN'||ev==='INITIAL_SESSION')){   /* catat akun pernah memakai FerTune (sekali per sesi; gagal = diam) */
+        joinedUid=u.id;
+        setTimeout(function(){ try{ Promise.resolve(c.rpc('fertune_join',{p_source:appSource()})).then(function(r){ if(r&&r.error) joinedUid=null; },function(){ joinedUid=null; }); }catch(e){ joinedUid=null; } },0);
+      }
     });
     return c;
   });
