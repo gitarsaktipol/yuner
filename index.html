@@ -5382,7 +5382,7 @@ function holdBonus(h){                                    /* waktu habis, tuts m
 }
 var HB_LAB=['TAHAN! 🔥','TAHAN! 🔥','TAHAN! 🔥','TERUS! ⚡','TERUS! ⚡','KEREN! 💥','KEREN! 💥','LUAR BIASA! 🚀','LUAR BIASA! 🚀','DIKIT LAGI! 🌟','MAKSIMAL! 👑'];
 var HB_COL=['#FFD23F','#FFC233','#FFB300','#FF9A00','#FF7A00','#FF5A5A','#FF4D8D','#FF3DB8','#C04DFF','#7A5CFF','#36C9FF'];
-/* Bunyi bonus tahan = efek suara DESIS "sss…SSS" (derau putih yang disaring, makin keras & makin terang tiap angka naik; volume dikecilkan 50% atas permintaan Ferdi, Nov 2026),
+/* Bunyi bonus tahan = efek suara DESIS "sss…SSS" (derau putih yang disaring, makin keras & makin terang tiap angka naik; volume dikecilkan 2x masing-masing 50% atas permintaan Ferdi, Nov 2026; "pssh"/"wuusshh" juga 50%),
    BUKAN nada tinggi (diminta Ferdi, Nov 2026). Selesai = "pssh" pendek; +10 = "wuusshh" + dentum rendah. */
 function hbNoise(c){ if(!noiseBuf){ noiseBuf=c.createBuffer(1,c.sampleRate*2,c.sampleRate); var d=noiseBuf.getChannelData(0); for(var i=0;i<d.length;i++) d[i]=Math.random()*2-1; } return noiseBuf; }
 function hbHiss(){
@@ -5390,10 +5390,10 @@ function hbHiss(){
     var c=ac(), t=c.currentTime, src=c.createBufferSource(), hp=c.createBiquadFilter(), bp=c.createBiquadFilter(), g=c.createGain();
     src.buffer=hbNoise(c); src.loop=true;
     hp.type='highpass'; hp.frequency.value=2200; bp.type='bandpass'; bp.frequency.value=4200; bp.Q.value=0.5;
-    g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.015,t+0.08);
+    g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.0075,t+0.08);
     src.connect(hp); hp.connect(bp); bp.connect(g); g.connect(c.destination); src.start(t,Math.random()*1.5);
     return {
-      lv:function(v){ var n=c.currentTime; g.gain.setTargetAtTime(0.015+v*0.008,n,0.05); bp.frequency.setTargetAtTime(4200+v*260,n,0.08); },
+      lv:function(v){ var n=c.currentTime; g.gain.setTargetAtTime(0.0075+v*0.004,n,0.05); bp.frequency.setTargetAtTime(4200+v*260,n,0.08); },
       stop:function(){ var n=c.currentTime; g.gain.cancelScheduledValues(n); g.gain.setTargetAtTime(0.0001,n,0.03); try{ src.stop(n+0.2); }catch(e){} }
     };
   }catch(e){ return {lv:function(){},stop:function(){}}; }
@@ -5403,7 +5403,7 @@ function hbWhoosh(big,delay){
     var c=ac(), t=c.currentTime+(delay||0), len=big?0.6:0.28, src=c.createBufferSource(), bp=c.createBiquadFilter(), g=c.createGain();
     src.buffer=hbNoise(c); bp.type='bandpass'; bp.Q.value=0.7;
     bp.frequency.setValueAtTime(big?1200:2600,t); bp.frequency.exponentialRampToValueAtTime(big?5200:5600,t+len*0.6);
-    g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(big?0.42:0.28,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+len);
+    g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(big?0.21:0.14,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+len);
     src.connect(bp); bp.connect(g); g.connect(c.destination); src.start(t,Math.random()*1.2,len+0.05);
     if(big){ var o=c.createOscillator(), og=c.createGain(); o.type='sine'; o.frequency.setValueAtTime(110,t); o.frequency.exponentialRampToValueAtTime(45,t+0.25);
       og.gain.setValueAtTime(0.0001,t); og.gain.linearRampToValueAtTime(0.5,t+0.01); og.gain.exponentialRampToValueAtTime(0.0001,t+0.3);
