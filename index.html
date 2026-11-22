@@ -1746,6 +1746,9 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 .play.arc .pstageLbl.stNew{animation:stPop .6s var(--bounce)}
 @keyframes stPop{0%{transform:translateX(-50%) scale(.6)}60%{transform:translateX(-50%) scale(1.18)}100%{transform:translateX(-50%) scale(1)}}
 .play.hillOn .ptop,.play.hillOn .pstageLbl{visibility:hidden}
+/* halaman gunung menutup SELURUH layar (dulu mulai 46 px dari atas: latar #pscene dunia yang sama tampak di jalur atas → awan/matahari dobel & terpotong) */
+.play.hillOn .phill{top:0}
+.play.hillOn .pscene{visibility:hidden}
 .play.grading .pstatus{visibility:hidden}
 .scSnow{animation:scSnow 6s linear infinite}
 @keyframes scSnow{0%{transform:translate(0,-40px)}100%{transform:translate(-26px,360px)}}
@@ -5122,7 +5125,8 @@ function renderPkeys(){
   if(!on) return;
   if(box._sc!==pr.score) buildPkeys(box);
   var tg={}, fl=(pr.flash && performance.now()-pr.flash.t<420) ? pr.flash : null;
-  if(!pr.done && pr.pos<pr.idx.length) prPitches(pr.idx[pr.pos]).forEach(function(p){ if(!pr.got[p.m]) tg[p.m]=1; });
+  /* Piano di layar: tanpa tuts petunjuk berwarna (diminta Ferdi, Nov 2026: pemain harus membaca not sendiri) */
+  if(!vp.on && !pr.done && pr.pos<pr.idx.length) prPitches(pr.idx[pr.pos]).forEach(function(p){ if(!pr.got[p.m]) tg[p.m]=1; });
   box._keys.forEach(function(k){
     var m=+k.getAttribute('data-m'), c=(isBlack(m)?'b':'w')+(tg[m]?' tgt':'')+(fl && fl.m===m ? (fl.ok?' hit':' miss') : '')+(vp.dn[m]?' dn':'');
     if(k.className!==c) k.className=c;
@@ -6306,12 +6310,12 @@ function showHill(played,pct,cb,opt){
   /* gunung selalu naik ke kanan; tiap potongan diwarnai menurut huruf levelnya, makin tinggi makin gelap */
   /* gunung selalu naik ke kanan; langit, pegunungan jauh, dan warna tanah mengikuti DUNIA huruf ini (arcTheme) */
   var th=arcTheme(L0), scn=arcScene(th,'hs',true), sr=scRnd(L0*977+13);
-  h.style.background=th.sky[1]; cap.style.color=th.dark?'#fff':'#3B3355'; cap.style.textShadow= th.dark?'0 1px 6px rgba(0,0,0,.7)':'0 0 6px #fff,0 0 6px #fff';
+  h.style.background='linear-gradient('+th.sky[1]+' 50%,'+th.ground[1]+' 50%)';   /* sisa ruang di bawah gunung = warna tanah, bukan pita langit */ cap.style.color=th.dark?'#fff':'#3B3355'; cap.style.textShadow= th.dark?'0 1px 6px rgba(0,0,0,.7)':'0 0 6px #fff,0 0 6px #fff';
   var S=[{x:0,y:324}].concat(pts.map(function(q){ return {x:q.x,y:q.y+16}; })).concat([{x:800,y:top.y+4}]);
   var line=S.map(function(q){ return q.x+','+q.y; }).join(' ');
   var h1='<defs><linearGradient id="hrb" x1="0" x2="1"><stop offset="0" stop-color="#FF6FA8"/><stop offset=".33" stop-color="#FFB300"/><stop offset=".66" stop-color="#2FC58A"/><stop offset="1" stop-color="#4AB3FF"/></linearGradient>'+scn.defs+
     '<linearGradient id="hgG" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="'+(top.y)+'" y2="340"><stop offset="0" stop-color="'+th.ground[0]+'"/><stop offset="1" stop-color="'+th.ground[1]+'"/></linearGradient></defs>'+scn.body;
-  h1+='<path d="M0,340 L'+line+' L800,340Z" fill="url(#hgG)"/>';
+  h1+='<path d="M-80,420 L-80,324 L'+line+' L880,'+(top.y+4)+' L880,420Z" fill="url(#hgG)"/>';   /* tanah melebar ke luar viewBox: layar yang lebih tinggi/lebar tidak menampakkan pita langit di bawah */
   /* hiasan lereng: bebatuan/semak kecil supaya tidak polos */
   for(var di=0;di<14;di++){ var dx=40+sr()*720, dt=(dx-46)/(700-46), dy=316-Math.pow(Math.max(0,Math.min(1,dt)),.95)*170+18+sr()*(40*(1-dt)+6);
     if(dy<336) h1+='<ellipse cx="'+dx.toFixed(0)+'" cy="'+dy.toFixed(0)+'" rx="'+(8+sr()*10).toFixed(0)+'" ry="'+(3+sr()*3).toFixed(0)+'" fill="'+(th.dark?'rgba(255,255,255,.14)':'rgba(0,0,0,.09)')+'"/>'; }
