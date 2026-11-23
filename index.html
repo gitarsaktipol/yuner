@@ -3260,6 +3260,16 @@ async function micStart(go){
     /* panjang jendela latihan ±43 ms (2048 sampel di 44,1/48 kHz); minimal 30 ms supaya nada terendah gitar (E2) masih terbaca */
     mic.recent=Math.min(mic.buf.length, Math.max(1024, Math.pow(2,Math.ceil(Math.log2(mic.ctx.sampleRate*0.04)))));
     mic.active=true; requestWake(); micLoop();
+    /* Mikrofon terputus sendiri (headset dicabut, telepon masuk, aplikasi lain memakai mikrofon): dulu aplikasi
+       mengira mikrofon masih aktif, garis Tempo jalan terus dan semua not jadi "Terlewat". Sekarang dimatikan
+       dengan benar + permainan dijeda + pesan. */
+    var st0=mic.stream;
+    st0.getAudioTracks().forEach(function(t){ t.addEventListener('ended',function(){
+      if(mic.stream!==st0) return;
+      micStop();
+      setMicErr('Mikrofon terputus. Ketuk "Aktifkan mikrofon" untuk menyambung lagi.');
+      if(pr.playing && !pr.paused && !inputReady()) askQuit();
+    }); });
     listAudioInputs();
   }catch(e){
     micCleanup();
@@ -6487,7 +6497,7 @@ function startPractice(){
   $('#pplay').hidden=false;
   try{ history.pushState({tab:app.tab,play:1},''); }catch(e){}
   goLandscape();
-  newRound(true);
+  newRound(!!(pr.score && pr.idx));   /* belum ada soal (mis. baru keluar dari Arcade) -> buat soal baru, jangan galat */
 }
 /* JEDA (diminta Ferdi, Okt 2026: dulu tombol ✕ hanya memunculkan dialog, permainan tetap jalan — garis tempo terus
    berjalan & not jadi "Terlewat", soal berikutnya tetap muncul). Sekarang ✕ / tombol Kembali = permainan berhenti total
@@ -7056,6 +7066,7 @@ function pushDirty(uid,synced){
   });
   return p.then(function(){ saveSynced(uid,synced); return fails; });
 }
+function hasNotes(x){ function f(N){ return Array.isArray(N) && N.some(function(n){ return n && n.m!==null && n.m!==undefined; }); } return !!x && (f(x.notes) || f(x.lh)); }
 function mergeCloud(rows,synced){
   var changed=false;
   rows.forEach(function(r){
@@ -7070,6 +7081,11 @@ function mergeCloud(rows,synced){
     }
     var d=r.data; if(!d||d.id!==r.id) return;
     try{ if(!cleanScore(d)) return; }catch(e){ return; }   /* baris cloud yang rusak: lewati, jangan sampai aplikasi macet */
+    /* Bug 10–23 Nov 2026 (fertune-v203–v225) mengosongkan not partitur lalu ikut mengunggahnya. Kalau salinan cloud dari
+       masa itu kosong padahal salinan di HP ini masih berisi not, pakai salinan HP dan kirim ulang ke cloud. */
+    if(loc && ts>=Date.parse('2026-11-10T00:00:00Z') && ts<Date.parse('2026-11-25T00:00:00Z') && !hasNotes(d) && hasNotes(loc)){
+      loc.updatedAt=Date.now(); changed=true; return;
+    }
     d.updatedAt=ts;
     if(loc){ if(scoreJson(loc)!==scoreJson(d)){ scores[i]=d; changed=true; } else loc.updatedAt=ts; }
     else { scores.push(d); changed=true; }
@@ -9449,7 +9465,8 @@ function wxExport(fmt){
     var bt=$('#wxGo'), sc2=curScore(); bt.disabled=true; bt.textContent='Membuat gambar…';
     var base=((sc2.title||'partitur').replace(/[^\w\- ]+/g,'').trim()||'partitur')+' ('+wx.paper+')';
     wxLoadFont().then(function(){
-      var pages=wxLayout(), i=0, ext=fmt==='png'?'png':'jpg';
+      var pages, i=0, ext=fmt==='png'?'png':'jpg';
+      try{ pages=wxLayout(); }catch(e){ bt.disabled=false; bt.textContent='⬇️ Unduh'; $('#wxInfo').textContent='Maaf, gagal membuat gambar. Coba lagi.'; return; }
       (function next(){
         if(i>=pages.length){
           bt.disabled=false; bt.textContent='⬇️ Unduh';
@@ -9466,7 +9483,8 @@ function wxExport(fmt){
   }
   var btn=$('#wxGo'), sc=curScore(); btn.disabled=true; btn.textContent='Membuat file…';
   wxLoadFont().then(function(){
-    var pages=wxLayout(), pngs=[], i=0;
+    var pages, pngs=[], i=0;
+    try{ pages=wxLayout(); }catch(e){ btn.disabled=false; btn.textContent='⬇️ Unduh'; $('#wxInfo').textContent='Maaf, gagal membuat file. Coba lagi.'; return; }
     function next(){
       if(i>=pages.length){
         var blob=wxPdf(pngs,sc.title), fname=((sc.title||'partitur').replace(/[^\w\- ]+/g,'').trim()||'partitur')+' ('+wx.paper+').pdf';

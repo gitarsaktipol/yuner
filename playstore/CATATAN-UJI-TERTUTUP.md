@@ -107,3 +107,16 @@ A1–Z9. Partitur yang masih utuh di penyimpanan HP tampil lagi; yang sudah terl
 > and desktop, long Arcade sessions with a virtual MIDI keyboard, offline mode, simulated Play billing and corrupted local
 > data). We found and fixed a bug where saved scores could appear empty after reopening the app (two internal functions
 > had the same name), and made the app start safely even if stored game-progress data is corrupted.
+
+**Lanjutan (`fertune-v227`, pengaman tambahan dari pemeriksaan yang sama):**
+- Mikrofon terputus di tengah latihan (headset dicabut, telepon masuk, aplikasi lain memakai mikrofon): dulu aplikasi
+  mengira mikrofon masih aktif dan semua not jadi "Terlewat"; sekarang mikrofon dimatikan dengan benar, permainan dijeda,
+  dan muncul pesan untuk menyambung lagi.
+- Partitur di cloud yang terlanjur kosong karena bug di atas tidak lagi menimpa salinan yang masih utuh di HP lain;
+  salinan HP itu dikirim ulang ke cloud.
+- Pengaman kecil: "Mulai berlatih" tanpa soal yang siap membuat soal baru (bukan galat); ekspor PDF/gambar yang gagal
+  tidak membuat tombol Unduh macet.
+> Additional safeguards: if the microphone disconnects during practice (headset unplugged, incoming call), the app now
+> pauses and asks the user to reconnect instead of marking every note as missed; scores that were emptied in the cloud by
+> the bug above no longer overwrite intact copies on other devices; and a failed PDF/image export no longer leaves the
+> download button stuck.
