@@ -4567,7 +4567,7 @@ function loadCustNotes(){
   return [60,62,64,65,67,69,71,72];
 }
 var pr = { got:{}, grp:{}, playing:false, inst: store.get('yg.inst','piano')==='guitar' ? 'guitar' : 'piano', src:'random', clef:'treble', range:'mid', len:8, sharps:false, anyOct:false,
-           arcLetter: parseInt(store.get('yg.arcLetter','0'),10)||0, arcSub: parseInt(store.get('yg.arcSub','1'),10)||1,
+           arcLetter: Math.min(25,Math.max(0,parseInt(store.get('yg.arcLetter','0'),10)||0)), arcSub: Math.min(9,Math.max(1,parseInt(store.get('yg.arcSub','1'),10)||1)),
            custNotes: loadCustNotes(), custMeasures: parseInt(store.get('yg.custMeasures','2'),10)||2,
            key: clamp(parseInt(store.get('yg.key','0'),10)||0,-7,7),
            score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0, missStreak:0,
@@ -6018,7 +6018,7 @@ function loadPlayers(){
   if(!Array.isArray(l)||!l.length){
     var c=CHARS[clamp(parseInt(store.get('yg.arcChar','0'),10)||0,0,CHARS.length-1)], res;
     try{ res=JSON.parse(store.get('yg.arcRes','{}')); }catch(e){ res={}; }
-    l=[{id:1,name:(store.get('yg.arcName','')||'').trim()||c.name,look:c.id,letter:parseInt(store.get('yg.arcLetter','0'),10)||0,sub:parseInt(store.get('yg.arcSub','1'),10)||1,res:(res&&typeof res==='object')?res:{}}];
+    l=[{id:1,name:(store.get('yg.arcName','')||'').trim()||c.name,look:c.id,letter:clamp(parseInt(store.get('yg.arcLetter','0'),10)||0,0,25),sub:clamp(parseInt(store.get('yg.arcSub','1'),10)||1,1,9),res:(res&&typeof res==='object')?res:{}}];
     store.set('yg.arcPlayers',JSON.stringify(l)); store.set('yg.arcActive','1');
   }
   return l;
@@ -9790,7 +9790,9 @@ function toMono22k(ab){
   return (r && r.then) ? r : new Promise(function(res){ oc.oncomplete=function(e){ res(e.renderedBuffer); }; });
 }
 /* buang not "hantu": terlalu pendek, atau harmonik (oktaf/kuint di atas) dari nada lain yang berbunyi bersamaan & lebih kuat */
-function cleanNotes(ev){
+/* Nama sengaja beda dari cleanNotes (pengaman partitur): dua fungsi bernama sama saling menimpa —
+   sempat membuat semua not partitur terbuang saat aplikasi dibuka (Nov 2026). */
+function bpCleanNotes(ev){
   var H=[12,19,24,28,31,36];
   ev=ev.filter(function(n){ return n.durationSeconds>=0.09; });
   return ev.filter(function(n){
@@ -10089,7 +10091,7 @@ function importAudio(e){
         var bp=new BP.BasicPitch('vendor/basic-pitch-model/model.json'), fr=[], on=[], ct=[], lastPct=-1;
         return bp.evaluateModel(mono.getChannelData(0),function(a,b,c){ Array.prototype.push.apply(fr,a); Array.prototype.push.apply(on,b); Array.prototype.push.apply(ct,c); },
           function(p){ var q=Math.floor(p*100); if(q!==lastPct){ lastPct=q; say('Mendengarkan lagu dan menulis not... '+q+'%'); } })
-          .then(function(){ return cleanNotes(BP.noteFramesToTime(BP.addPitchBendsToNoteEvents(ct,BP.outputToNotesPoly(fr,on,0.5,0.3,5)))); });
+          .then(function(){ return bpCleanNotes(BP.noteFramesToTime(BP.addPitchBendsToNoteEvents(ct,BP.outputToNotesPoly(fr,on,0.5,0.3,5)))); });
       });
     }).then(function(ev){
       ev=ev.sort(function(a,b){ return a.startTimeSeconds-b.startTimeSeconds; });
