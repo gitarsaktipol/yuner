@@ -11037,9 +11037,10 @@ window.addEventListener('load',function(){
     if(e.button>0) return;
     var t=e.target&&e.target.closest?e.target.closest(GSEL):null;
     if(!t||t.disabled||t.closest('#pkeys')) return;   /* tuts Piano di layar (latihan) memakai pointer sendiri */
-    /* ukuran ASLI (tanpa efek mengecil :active yang di PC sudah berlaku saat pointerdown) */
-    var ot=t.style.transform; t.style.transform='none'; var r=t.getBoundingClientRect(); t.style.transform=ot;
-    gp={t:t,id:e.pointerId,x:e.clientX,y:e.clientY,l:r.left-4,r:r.right+4,tp:r.top-4,b:r.bottom+4,at:Date.now(),up:null,done:false};
+    /* ukuran ASLI: efek mengecil (:active di PC sudah berlaku saat pointerdown; animasi tekan sebelumnya bisa masih jalan)
+       mengecil dari tengah -> kotak = gabungan kotak tampak & ukuran tata letak (offsetWidth/Height) di titik tengah yang sama */
+    var r=t.getBoundingClientRect(), cx=(r.left+r.right)/2, cy=(r.top+r.bottom)/2, hw=(t.offsetWidth||r.width)/2, hh=(t.offsetHeight||r.height)/2;
+    gp={t:t,id:e.pointerId,x:e.clientX,y:e.clientY,l:Math.min(r.left,cx-hw)-4,r:Math.max(r.right,cx+hw)+4,tp:Math.min(r.top,cy-hh)-4,b:Math.max(r.bottom,cy+hh)+4,at:Date.now(),up:null,done:false};
   },true);
   document.addEventListener('pointermove',function(e){
     if(gp && e.pointerId===gp.id && (Math.abs(e.clientX-gp.x)>12 || Math.abs(e.clientY-gp.y)>12)) gp=null;   /* menggeser/menggulir: bukan ketukan */

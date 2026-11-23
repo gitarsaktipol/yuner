@@ -238,7 +238,7 @@ Mekanisme penilaian not yang dimainkan (fungsi `practiceHit`):
 - Tombol jelly MENGECIL saat ditekan (`tapPop` scale .9, `:active` scale .94/.95 + translateY) → ketukan dekat pinggir tombol
   diangkat di luar tombol yang mengecil → klik tidak sampai (±20% ketukan pinggir di semua layar). Di skrip "Animasi ketuk"
   (dekat akhir `index.html`): `pointerdown` mencatat kotak asli tombol (`GSEL`: button, role=button, summary, label.sw/chk,
-  .chip, .peg, a[href], tuts .key/.bk editor; BUKAN select & tuts `#pkeys`; ukuran dibaca dengan `transform:none` sementara), geser >12 px / `pointercancel` = batal, `pointerup` di dalam kotak asli
+  .chip, .peg, a[href], tuts .key/.bk editor; BUKAN select & tuts `#pkeys`; kotak = gabungan kotak tampak & `offsetWidth/Height` di titik tengahnya, supaya efek mengecil/animasi tekan yang sedang jalan tidak memperkecil kotak), geser >12 px / `pointercancel` = batal, `pointerup` di dalam kotak asli
   (+4 px) → 120 ms kemudian `t.click()` HANYA bila klik asli tidak sampai ke tombol (`gp.done`). Uji scratch `edge2.js`
   (ketuk pinggir semua tombol 10 layar, hitung 0/1/2 klik) & `dbl.js` (geser, dropdown, baris menu). Kalau mengubah animasi
   tekan tombol, jalankan ulang uji ini.
