@@ -234,6 +234,15 @@ Mekanisme penilaian not yang dimainkan (fungsi `practiceHit`):
 - Titik oktaf di not angka (di atas untuk oktaf tinggi, di bawah untuk oktaf rendah) posisinya menyesuaikan supaya tidak bertabrakan dengan garis beam.
 - Kursor/kotak penunjuk di editor Partitur digambar di **ruang kosong setelah** not/slot yang dituju, bukan menimpa langsung notnya — supaya jelas mana yang sudah diisi vs yang akan diisi berikutnya.
 
+## Penjaga ketukan (Nov 2026, keluhan penguji "tombol kadang sulit dipencet")
+- Tombol jelly MENGECIL saat ditekan (`tapPop` scale .9, `:active` scale .94/.95 + translateY) → ketukan dekat pinggir tombol
+  diangkat di luar tombol yang mengecil → klik tidak sampai (±20% ketukan pinggir di semua layar). Di skrip "Animasi ketuk"
+  (dekat akhir `index.html`): `pointerdown` mencatat kotak asli tombol (`GSEL`: button, role=button, summary, label.sw/chk,
+  .chip, .peg, a[href]; BUKAN tuts .key/.bk/select), geser >12 px / `pointercancel` = batal, `pointerup` di dalam kotak asli
+  (+4 px) → 120 ms kemudian `t.click()` HANYA bila klik asli tidak sampai ke tombol (`gp.done`). Uji scratch `edge2.js`
+  (ketuk pinggir semua tombol 10 layar, hitung 0/1/2 klik) & `dbl.js` (geser, dropdown, baris menu). Kalau mengubah animasi
+  tekan tombol, jalankan ulang uji ini.
+
 ## Desain visual
 
 Tema **ceria, lucu, pastel** (dulu ditujukan untuk anak-anak; sekarang sasaran 13+, tampilan dipertahankan). Sebelumnya tema cerah ala Apple, sebelumnya lagi gelap coklat kayu. Mode gelap otomatis mengikuti OS **sengaja dimatikan** supaya tema cerah ini selalu tampil.

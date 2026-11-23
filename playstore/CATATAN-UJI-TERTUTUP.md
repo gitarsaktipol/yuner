@@ -120,3 +120,23 @@ A1–Z9. Partitur yang masih utuh di penyimpanan HP tampil lagi; yang sudah terl
 > pauses and asks the user to reconnect instead of marking every note as missed; scores that were emptied in the cloud by
 > the bug above no longer overwrite intact copies on other devices; and a failed PDF/image export no longer leaves the
 > download button stuck.
+
+---
+
+## 5. Tombol kadang sulit dipencet (23 Nov 2026)
+
+**Masukan penguji:** tombol kadang sulit dipencet.
+
+**Penyebab:** tombol "jelly" mengecil saat ditekan (sampai 90%). Bila jari menekan dekat pinggir tombol, saat jari diangkat
+posisinya sudah di luar tombol yang sedang mengecil, sehingga browser tidak menganggapnya klik (animasi berjalan, tetapi
+jendela tidak terbuka). Uji otomatis mengetuk pinggir semua tombol di 10 layar: ±15–23% ketukan pinggir gagal di HP, ±20% di PC.
+
+**Perubahan (`fertune-v228`):** "penjaga ketukan": kotak tombol dicatat sebelum mengecil; kalau jari diangkat masih di dalam
+kotak asli itu (tanpa menggeser) tetapi klik tidak sampai, klik dikirim ke tombol itu. Tampilan & animasi tombol tidak
+berubah. Diuji ulang: ketukan pinggir yang gagal turun ke ±0, tanpa klik dobel, menggeser layar tidak dianggap klik.
+
+**Draf jawaban (Inggris):**
+> Testers reported that buttons were sometimes hard to press. Our buttons play a short "squeeze" animation when pressed;
+> when a finger landed near the edge, it ended up outside the shrinking button on release, so the tap was ignored. We now
+> remember each button's original area when it is pressed and accept the tap if the finger is released inside it. Automated
+> edge-tap tests on every screen went from roughly 1 in 5 missed edge taps to essentially none, with no double taps.
