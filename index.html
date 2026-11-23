@@ -11026,6 +11026,43 @@ window.addEventListener('load',function(){
       setTimeout(function(){ t.classList.remove('tapPop'); },400);
     }
   },{passive:true});
+  /* Penjaga ketukan (keluhan penguji, Nov 2026: "tombol kadang sulit dipencet"): saat ditekan tombol MENGECIL (animasi
+     jelly tapPop/:active, sampai 90%). Jari yang menekan dekat PINGGIR tombol, saat diangkat, sudah berada di luar tombol
+     yang sedang mengecil -> browser tidak menganggapnya klik (animasi jalan, jendela tidak terbuka; ±20% ketukan pinggir).
+     Sekarang: kotak tombol dicatat SEBELUM mengecil; kalau jari diangkat masih di dalam kotak asli itu (tanpa menggeser/
+     menggulir) tetapi klik tidak sampai ke tombol, klik dikirim ke tombol itu. */
+  var GSEL='button,[role=button],summary,label.sw,label.chk,.chip,.peg,a[href],.key,.bk', gp=null;
+  document.addEventListener('pointerdown',function(e){
+    gp=null;
+    if(e.button>0) return;
+    var t=e.target&&e.target.closest?e.target.closest(GSEL):null;
+    if(!t||t.disabled||t.closest('#pkeys')) return;   /* tuts Piano di layar (latihan) memakai pointer sendiri */
+    /* ukuran ASLI: efek mengecil (:active di PC sudah berlaku saat pointerdown; animasi tekan sebelumnya bisa masih jalan)
+       mengecil dari tengah -> kotak = gabungan kotak tampak & ukuran tata letak (offsetWidth/Height) di titik tengah yang sama */
+    var r=t.getBoundingClientRect(), cx=(r.left+r.right)/2, cy=(r.top+r.bottom)/2, hw=(t.offsetWidth||r.width)/2, hh=(t.offsetHeight||r.height)/2;
+    gp={t:t,id:e.pointerId,x:e.clientX,y:e.clientY,l:Math.min(r.left,cx-hw)-4,r:Math.max(r.right,cx+hw)+4,tp:Math.min(r.top,cy-hh)-4,b:Math.max(r.bottom,cy+hh)+4,at:Date.now(),up:null,done:false};
+  },true);
+  document.addEventListener('pointermove',function(e){
+    if(gp && e.pointerId===gp.id && (Math.abs(e.clientX-gp.x)>12 || Math.abs(e.clientY-gp.y)>12)) gp=null;   /* menggeser/menggulir: bukan ketukan */
+  },true);
+  document.addEventListener('pointercancel',function(e){ if(gp && e.pointerId===gp.id) gp=null; },true);
+  document.addEventListener('pointerup',function(e){
+    if(!gp || e.pointerId!==gp.id) return;
+    var q=gp, x=e.clientX, y=e.clientY;
+    if(Date.now()-q.at>1500 || x<q.l || x>q.r || y<q.tp || y>q.b){ gp=null; return; }
+    q.up=1;
+    /* klik asli datang tepat sesudah pointerup (antrean yang sama, sebelum timer ini); bila tidak sampai ke tombol, kirim sendiri */
+    setTimeout(function(){
+      if(gp!==q) return; gp=null;
+      if(q.done || !q.t.isConnected || q.t.disabled) return;
+      var cs=getComputedStyle(q.t); if(cs.display==='none' || cs.visibility==='hidden') return;
+      q.t.click();
+    },120);
+  },true);
+  document.addEventListener('click',function(e){
+    if(!gp || !gp.up) return;
+    if(e.target===gp.t || (gp.t.contains && gp.t.contains(e.target))) gp.done=true;   /* klik asli sampai: tidak perlu dibantu */
+  },true);
   ['gesturestart','gesturechange','gestureend'].forEach(function(n){
     document.addEventListener(n,function(e){ e.preventDefault(); });
   });
