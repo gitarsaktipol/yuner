@@ -11031,13 +11031,14 @@ window.addEventListener('load',function(){
      yang sedang mengecil -> browser tidak menganggapnya klik (animasi jalan, jendela tidak terbuka; ±20% ketukan pinggir).
      Sekarang: kotak tombol dicatat SEBELUM mengecil; kalau jari diangkat masih di dalam kotak asli itu (tanpa menggeser/
      menggulir) tetapi klik tidak sampai ke tombol, klik dikirim ke tombol itu. */
-  var GSEL='button,[role=button],summary,label.sw,label.chk,.chip,.peg,a[href]', gp=null;
+  var GSEL='button,[role=button],summary,label.sw,label.chk,.chip,.peg,a[href],.key,.bk', gp=null;
   document.addEventListener('pointerdown',function(e){
     gp=null;
     if(e.button>0) return;
     var t=e.target&&e.target.closest?e.target.closest(GSEL):null;
-    if(!t||t.disabled||t.matches('.key,.bk')) return;
-    var r=t.getBoundingClientRect();
+    if(!t||t.disabled||t.closest('#pkeys')) return;   /* tuts Piano di layar (latihan) memakai pointer sendiri */
+    /* ukuran ASLI (tanpa efek mengecil :active yang di PC sudah berlaku saat pointerdown) */
+    var ot=t.style.transform; t.style.transform='none'; var r=t.getBoundingClientRect(); t.style.transform=ot;
     gp={t:t,id:e.pointerId,x:e.clientX,y:e.clientY,l:r.left-4,r:r.right+4,tp:r.top-4,b:r.bottom+4,at:Date.now(),up:null,done:false};
   },true);
   document.addEventListener('pointermove',function(e){
