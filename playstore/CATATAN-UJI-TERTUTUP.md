@@ -84,3 +84,26 @@ warna-warni (tetap di dalam layar).
 > We also made the hold animation more rewarding: while a half or whole note is held, the progress bar burns like a
 > sparkler, and a small firework bursts when the note is held long enough (kept fully on screen; disabled when the
 > system "reduce motion" setting is on).
+
+---
+
+## 4. Laporan "sempat kres" → pemeriksaan menyeluruh (23 Nov 2026)
+
+**Masukan penguji:** aplikasi "sempat kres".
+
+**Pemeriksaan:** semua menu diuji otomatis sebagai pengguna (±25 sesi acak ±14.000 ketukan di HP/tablet/PC, mode gratis,
+Premium, aplikasi Play; Arcade 10 menit dengan keyboard MIDI tiruan; Partitur, ekspor, impor audio, offline, langganan Play
+tiruan, data penyimpanan rusak). Ditemukan:
+1. **Partitur kosong setelah aplikasi dibuka ulang** (sejak `fertune-v203`, 10 Nov): dua fungsi bernama sama `cleanNotes`
+   (pengaman partitur & pembersih not impor audio) saling menimpa, sehingga saat dibuka semua not partitur terbuang dari
+   memori dan terhapus permanen pada penyimpanan berikutnya (juga di cloud bila masuk akun).
+2. Data level Arcade yang rusak (angka negatif) membuat aplikasi gagal menyala.
+
+**Perubahan (`fertune-v226`):** fungsi impor audio diganti nama (`bpCleanNotes`), level Arcade dari penyimpanan dibatasi
+A1–Z9. Partitur yang masih utuh di penyimpanan HP tampil lagi; yang sudah terlanjur tersimpan kosong tidak bisa dipulihkan.
+
+**Draf jawaban (Inggris):**
+> A tester reported a crash. We ran a full automated review of every screen (thousands of simulated taps on phone, tablet
+> and desktop, long Arcade sessions with a virtual MIDI keyboard, offline mode, simulated Play billing and corrupted local
+> data). We found and fixed a bug where saved scores could appear empty after reopening the app (two internal functions
+> had the same name), and made the app start safely even if stored game-progress data is corrupted.
