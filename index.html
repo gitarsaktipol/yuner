@@ -243,6 +243,21 @@ header .sel select{max-width:100%;min-width:0}
 
 /* ---------- akun & cloud ---------- */
 .acct{margin-top:12px;font-size:13.5px}
+/* Wajib masuk akun (diputuskan Ferdi, Nov 2026): jendela menutup seluruh aplikasi sampai pengguna masuk */
+.lgate{position:fixed;inset:0;z-index:99000;overflow:auto;overscroll-behavior:contain;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))}
+.lgate[hidden]{display:none}
+.lgate::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(circle at 15% 10%,var(--pPink),transparent 45%),radial-gradient(circle at 90% 30%,var(--pSky),transparent 45%),radial-gradient(circle at 30% 95%,var(--pLemon),transparent 45%);opacity:.8}
+.lgBox{width:100%;max-width:400px;margin:auto 0;background:var(--panel);border:2px solid var(--line);border-radius:24px;padding:22px 18px 16px;box-shadow:0 10px 30px rgba(59,51,85,.12);text-align:center}
+.lgLogo{display:block;margin:0 auto 8px;border-radius:18px}
+.lgBox h2{margin:0 0 6px;font-size:21px;color:var(--ink)}
+.lgSub{margin:0 0 4px;color:var(--muted);font-size:13.5px}
+.lgNote{margin:8px 0 0;color:var(--ok);font-weight:700;font-size:13.5px}
+.lgSlot{margin-top:6px;text-align:left}
+.lgLinks{margin:12px 0 0;font-size:12.5px;color:var(--muted)}
+.lgLinks a{color:var(--muted)}
+body.lg-on{overflow:hidden}
+body.lg-on>:not(.lgate){visibility:hidden!important}
+.lgSlot .ahint{display:none}
 .acct .arow{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .acct .amsg{color:var(--muted);flex:1;min-width:140px}
 .acct .amsg b{color:var(--ink)}
@@ -2090,6 +2105,16 @@ body.mob #snewOv .instList b{font-size:20px}
 </style>
 </head>
 <body class="on-tuner">
+<div class="lgate" id="loginGate" hidden role="dialog" aria-modal="true" aria-labelledby="lgT">
+  <div class="lgBox">
+    <img class="lgLogo" src="icon-192.png" alt="" width="72" height="72">
+    <h2 id="lgT">Selamat datang di FerTune</h2>
+    <p class="lgSub">Masuk atau daftar dulu untuk mulai memakai FerTune. Akunnya sama dengan akun di gitarsakti.com.</p>
+    <p class="lgNote" id="lgNote" hidden></p>
+    <div class="acct lgSlot" id="lgSlot"></div>
+    <p class="lgLinks"><a href="privacy.html">Kebijakan Privasi</a> · <a href="syarat.html">Syarat &amp; Ketentuan</a></p>
+  </div>
+</div>
 <div class="sky" aria-hidden="true"><span>♪</span><span>♫</span><span>♩</span><span>♬</span><span>♪</span><span>♫</span></div>
 <main class="app">
 
@@ -7110,6 +7135,7 @@ function watchAuth(){
       var u=(sess&&sess.user)||null, changed=(u&&u.id)!==(sbUser&&sbUser.id);
       sbUser=u; renderAcct();
       try{ arcOwnerSwitch(u?u.id:''); }catch(e){}   /* karakter Arcade per akun */
+      try{ gateSet(!u); }catch(e){}   /* wajib masuk akun */
       if(u&&changed) setTimeout(syncNow,0);   // jangan memanggil Supabase langsung di dalam callback ini
       setTimeout(function(){ grantRefresh(c,u); },0);   /* Premium lewat akun (fertune_grants) */
       if(u && joinedUid!==u.id && (ev==='SIGNED_IN'||ev==='INITIAL_SESSION')){   /* catat akun pernah memakai FerTune (sekali per sesi; gagal = diam) */
@@ -7143,6 +7169,7 @@ function initCloud(){
   renderAcct();
   var fromUrl=authFromUrl(); if(fromUrl) has=false;
   if(has) watchAuth().catch(function(){});
+  if(!has) gateSet(true);
   else if(!fromUrl) { try{ arcOwnerSwitch(''); }catch(e){} }
   window.addEventListener('online',function(){ syncNow(); });
   document.addEventListener('visibilitychange',function(){ if(!document.hidden&&Date.now()-lastSyncAt>30000) syncNow(); });
@@ -7254,6 +7281,25 @@ function schedulePush(){
 /* Pesan sesaat di kartu Akun (mis. "Berhasil masuk! 🎉" setelah kembali dari Google/link verifikasi).
    Dulu ditulis langsung ke #acctMsg lalu langsung tertimpa renderAcct saat sesi terpasang. */
 var acctNote=null;
+/* Wajib masuk akun (diputuskan Ferdi, Nov 2026: pengguna tanpa akun tidak boleh memakai FerTune).
+   Belum ada sesi → jendela #loginGate menutup seluruh aplikasi; form akun #acctForm dipindah ke dalamnya.
+   Begitu masuk (onAuthStateChange dengan user) → jendela ditutup & form dikembalikan ke kartu Akun.
+   Keluar / hapus akun / sesi tidak berlaku → jendela muncul lagi. Sesi yang tersimpan di HP tetap jalan saat offline. */
+var gateCheck=null;
+function gateSet(on){
+  var g=$('#loginGate'), f=$('#acctForm'), slot=$('#lgSlot'), home=$('#acct'); if(!g||!f||!slot||!home) return;
+  if(on){
+    if(f.parentNode!==slot) slot.appendChild(f);
+    f.hidden=false; g.hidden=false; document.body.classList.add('lg-on');
+    try{ if(app.tab==='arcade') goTab('tuner'); }catch(e){}
+    try{ if(gateCheck) gateCheck(); }catch(e){}
+    watchAuth().catch(function(){});
+  } else if(!g.hidden || f.parentNode!==home){
+    if(f.parentNode!==home) home.appendChild(f);
+    f.hidden=true; g.hidden=true; document.body.classList.remove('lg-on');
+  }
+  renderAcct();
+}
 function renderAcct(){
   /* keterangan di bawah tombol Simpan (menu Partitur): di mana partitur tersimpan */
   var si=$('#ssaveInfo');
@@ -7274,6 +7320,8 @@ function renderAcct(){
   if(acctNote && Date.now()<acctNote.until){
     var nt=document.createElement('b'); nt.className='anote'; nt.textContent=acctNote.t; m.insertBefore(nt,m.firstChild);
   }
+  var ln=$('#lgNote');
+  if(ln){ var on=!!(acctNote && Date.now()<acctNote.until); ln.hidden=!on; ln.textContent=on?acctNote.t:''; }
   try{ setMenuSync(); }catch(e){}
 }
 function authErr(e){
@@ -7315,6 +7363,7 @@ function bindAcct(){
       $('#delNote').value=''; if(rsel) rsel.checked=false;
       store.set('yg.tomb','{}');
       sbUser=null; syncMsg='';
+      acctNote={t:msg,until:Date.now()+60000};
       var after=function(){ renderAcct(); $('#acctMsg').textContent=msg+' Partitur di HP ini tetap ada.'; };
       sb.auth.signOut({scope:'local'}).then(after,after);
     },function(){ hint.textContent='Tidak bisa terhubung. Cek internet lalu coba lagi.'; }).then(function(){ btn.disabled=false; btn.textContent='Hapus akun'; });
@@ -7355,6 +7404,7 @@ function bindAcct(){
     },function(){ gChecked=false; });
   }
   $('#acctBtn').addEventListener('click',function(){ if(!form.hidden) checkGoogle(); });
+  gateCheck=checkGoogle;
   $('#acctGoogle').addEventListener('click',function(){
     var err=$('#acctErr'); err.textContent='Membuka Google…';
     watchAuth().then(function(c){ return c.auth.signInWithOAuth({provider:'google',options:{redirectTo:AUTH_BACK}}); })

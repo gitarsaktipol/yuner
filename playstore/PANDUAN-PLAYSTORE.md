@@ -99,10 +99,10 @@ Tanpa langkah ini aplikasi tetap jalan, tapi di bagian atas akan terlihat **bari
 
 **Kebijakan privasi:** `https://fertune.gitarsakti.com/privacy.html`
 
-**Detail login (Akses aplikasi):** fitur Premium perlu langganan, jadi berikan akun uji ke peninjau Google:
+**Detail login (Akses aplikasi):** sejak 24 Nov 2026 SEMUA fitur butuh login (jendela masuk muncul saat aplikasi dibuka), jadi pilih *"Semua atau sebagian fungsi dibatasi"* dan berikan akun uji ke peninjau Google:
 email **`gitarsaktipol+review@gmail.com`** + kata sandi yang kamu buat sendiri (daftar dulu di FerTune → Pengaturan → Akun → Daftar,
 lalu buka link verifikasi yang masuk ke kotak masuk gitarsaktipol@gmail.com). Akun ini sudah diberi Premium lewat tabel `fertune_grants`.
-Instruksi (Inggris): *"Open Settings (gear tab) > Account > Masuk, sign in with the account above. Premium is already active on this account, so all features are unlocked."*
+Instruksi (Inggris): *"A sign-in screen appears when the app opens. Enter the email and password above and tap Masuk (Sign in). Premium is already active on this account, so all features are unlocked."*
 
 **Iklan:** *Tidak, aplikasi saya tidak berisi iklan.*
 
@@ -115,7 +115,7 @@ Instruksi (Inggris): *"Open Settings (gear tab) > Account > Masuk, sign in with 
 | Apakah aplikasi mengumpulkan atau membagikan jenis data pengguna yang diwajibkan? | **Ya, mengumpulkan** (tidak membagikan ke pihak ketiga) |
 | Jenis data yang dikumpulkan | **Info pribadi:** alamat email, nama (opsional), ID pengguna · **Konten buatan pengguna lain / File & dokumen:** partitur yang disimpan di cloud |
 | Tujuan | Fungsi aplikasi, manajemen akun |
-| Dikumpulkan secara opsional? | Ya, hanya jika pengguna memilih masuk (login opsional) |
+| Dikumpulkan secara opsional? | **Tidak — wajib** (sejak 24 Nov 2026 FerTune hanya bisa dipakai setelah masuk akun). Email & ID pengguna = wajib; nama = opsional |
 | Apakah semua data dienkripsi saat transit? | Ya (HTTPS) |
 | Apakah pengguna dapat meminta data dihapus? | **Ya** — wajib disediakan, lihat catatan di bawah |
 | Audio mikrofon | Diproses di perangkat, tidak dikumpulkan/dikirim → tidak dicantumkan sebagai data terkumpul |
