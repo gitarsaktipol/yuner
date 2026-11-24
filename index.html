@@ -1564,6 +1564,7 @@ body.on-arcade .tabs,body.on-arcade .instCard{display:none!important}   /* seper
 .agOpts{display:flex;flex-direction:column;gap:clamp(6px,2.2vmin,12px);min-height:0}
 .arcGame .tempoCard{margin:0;padding:8px 14px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:clamp(13px,4vmin,15px)}
 .arcGame .tempoCard label{margin:0}
+.arcGame .tempoCard label:not(.chk){flex-direction:row;align-items:center;gap:8px}   /* label sebaris dengan pilihannya: muat 360 px tinggi setelah ada "Matikan efek suara" */
 .agPlay{font-size:clamp(24px,9vmin,40px)!important;padding:clamp(10px,3.5vmin,18px)!important;border-radius:28px;animation:agGlow 1.6s ease-in-out infinite}
 @keyframes agGlow{ 0%,100%{box-shadow:0 6px 0 var(--brassDeep),0 0 0 0 var(--brass)} 50%{box-shadow:0 6px 0 var(--brassDeep),0 0 0 10px transparent} }
 /* pemilih level buatan sendiri (bukan <select> bawaan browser; diminta Ferdi, Okt 2026): warna tiap huruf = warna gunungnya */
@@ -2403,7 +2404,7 @@ body.mob #snewOv .instList b{font-size:20px}
     <div class="agReady">
       <div class="agHero"><div class="agHeroSvg" id="agHero"></div><div class="card asum" id="arcSum"></div><button class="sound agIntroBtn" id="agIntro" type="button">📖 Materi</button></div>
       <div class="agOpts">
-        <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo (garis berjalan)</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk</label><label>Kalau salah<select class="tpMiss" aria-label="Kalau salah"><option value="go">➡️ Lanjut, nilai berkurang</option><option value="restart">🔁 Ulang dari awal</option></select></label></div>
+        <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo (garis berjalan)</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk</label><label>Kalau salah<select class="tpMiss" aria-label="Kalau salah"><option value="go">➡️ Lanjut, nilai berkurang</option><option value="restart">🔁 Ulang dari awal</option></select></label><label class="chk"><input type="checkbox" class="sfxOff"> 🔇 Matikan efek suara</label></div>
         <div class="agRow">
           <button class="sound agBack" id="arcBack4" type="button">◀ Kembali</button>
           <button class="sound" id="agLvBtn" type="button">🎯 Ganti level</button>
@@ -3496,13 +3497,18 @@ function applause(dur,vol){
   g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(0.16,t0+0.25); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
   src.connect(lp); lp.connect(g); g.connect(master); src.start(t0,0,dur+0.1);
 }
+/* "🔇 Matikan efek suara" (Arcade langkah 4, .sfxOff, yg.arcSfxOff; diminta Ferdi, Nov 2026: ada pemain yang terganggu):
+   bunyi efek Arcade (tombol, menang/kalah, tepuk tangan, gunung, PERFECT, gagal, desis bonus tahan) dimatikan.
+   Bunyi not/synth MIDI, piano di layar, ketukan Tempo, dan suara Materi TETAP berbunyi. Hanya berlaku di Arcade. */
+function sfxMuted(){ return !!(typeof pr!=='undefined' && pr && pr.sfxOff && (pr.src==='arcade' || document.body.classList.contains('on-arcade'))); }
 /* Latihan selesai 100%: nada naik (rendah -> tinggi) + tepuk tangan + confetti. */
 function practiceWin(){
-  try{ var c=ac(), t=c.currentTime; [60,64,67,72,76,79,84].forEach(function(m,i){ pluck(m,t+i*0.08,0.6,null,0.6); }); ting(88,t+0.6,0.25); applause(1.7,0.45);   /* dikecilkan (Nov 2026: jauh lebih keras dari ketukan/piano) */ }catch(e){}
+  if(!sfxMuted()) try{ var c=ac(), t=c.currentTime; [60,64,67,72,76,79,84].forEach(function(m,i){ pluck(m,t+i*0.08,0.6,null,0.6); }); ting(88,t+0.6,0.25); applause(1.7,0.45);   /* dikecilkan (Nov 2026: jauh lebih keras dari ketukan/piano) */ }catch(e){}
   confetti();
 }
 /* Latihan selesai tapi belum 100%: nada turun (tinggi -> rendah). */
 function practiceMiss(){
+  if(sfxMuted()) return;
   try{ var c=ac(), t=c.currentTime; [79,76,72,67,60].forEach(function(m,i){ pluck(m,t+i*0.13,0.5,null,0.7); }); }catch(e){}
 }
 /* Hujan confetti warna-warni saat berhasil (senar pas / soal 100% benar). */
@@ -4647,6 +4653,7 @@ var pr = { got:{}, grp:{}, playing:false, inst: store.get('yg.inst','piano')==='
            score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0, missStreak:0,
            lastAdvanceT:0, fast:false, paused:false,
            missMode: store.get('yg.arcMiss','go')==='restart'?'restart':'go', retry:1,
+           sfxOff: store.get('yg.arcSfxOff','0')==='1',
            tempoOn: store.get('yg.tempoOn','0')==='1', bpm: clamp(parseInt(store.get('yg.bpm','70'),10)||70,30,160),
            keysOn: store.get('yg.pkeys','1')==='1', flash:null };
 var RANGES = {
@@ -5119,6 +5126,7 @@ function bindTempoUI(){
   $$('.tpOn').forEach(function(c){ c.addEventListener('change',function(e){ pr.tempoOn=e.target.checked; store.set('yg.tempoOn',pr.tempoOn?'1':'0'); sync(); }); });
   $$('.tpBpm').forEach(function(s){ s.addEventListener('change',function(e){ pr.bpm=clamp(parseInt(e.target.value,10)||70,30,160); store.set('yg.bpm',String(pr.bpm)); sync(); }); });
   $$('.tpMiss').forEach(function(s){ s.value=pr.missMode; s.addEventListener('change',function(e){ pr.missMode=e.target.value==='restart'?'restart':'go'; store.set('yg.arcMiss',pr.missMode); $$('.tpMiss').forEach(function(x){ x.value=pr.missMode; }); }); });
+  $$('.sfxOff').forEach(function(c){ c.checked=pr.sfxOff; c.addEventListener('change',function(e){ pr.sfxOff=e.target.checked; store.set('yg.arcSfxOff',pr.sfxOff?'1':'0'); $$('.sfxOff').forEach(function(x){ x.checked=pr.sfxOff; }); }); });
   $$('.pkOn').forEach(function(c){ c.checked=pr.keysOn; c.addEventListener('change',function(e){ pr.keysOn=e.target.checked; store.set('yg.pkeys',pr.keysOn?'1':'0'); $$('.pkOn').forEach(function(x){ x.checked=pr.keysOn; }); renderPkeys(); }); });
   sync();
 }
@@ -5464,6 +5472,7 @@ var HB_COL=['#FFD23F','#FFC233','#FFB300','#FF9A00','#FF7A00','#FF5A5A','#FF4D8D
    BUKAN nada tinggi (diminta Ferdi, Nov 2026). Selesai = "pssh" pendek; +10 = "wuusshh" + dentum rendah. */
 function hbNoise(c){ if(!noiseBuf){ noiseBuf=c.createBuffer(1,c.sampleRate*2,c.sampleRate); var d=noiseBuf.getChannelData(0); for(var i=0;i<d.length;i++) d[i]=Math.random()*2-1; } return noiseBuf; }
 function hbHiss(){
+  if(sfxMuted()) return {lv:function(){},stop:function(){}};
   try{
     var c=ac(), t=c.currentTime, src=c.createBufferSource(), hp=c.createBiquadFilter(), bp=c.createBiquadFilter(), g=c.createGain();
     src.buffer=hbNoise(c); src.loop=true;
@@ -5477,6 +5486,7 @@ function hbHiss(){
   }catch(e){ return {lv:function(){},stop:function(){}}; }
 }
 function hbWhoosh(big,delay){
+  if(sfxMuted()) return;
   try{
     var c=ac(), t=c.currentTime+(delay||0), len=big?0.6:0.28, src=c.createBufferSource(), bp=c.createBiquadFilter(), g=c.createGain();
     src.buffer=hbNoise(c); bp.type='bandpass'; bp.Q.value=0.7;
@@ -6330,6 +6340,7 @@ function arcStageUI(){
   }
 }
 function hillDing(i,p){
+  if(sfxMuted()) return;
   try{
     var c=ac(), t=c.currentTime, sc=[0,2,4,5,7,9,11,12], m=72+sc[i%8];
     if(p===undefined||p===null) return;
@@ -6345,7 +6356,7 @@ function bumpScore(to){
   (function f(now){ var k=Math.min(1,(now-t0)/500); el.textContent=fmtScore(Math.round(from+(to-from)*(1-Math.pow(1-k,3)))); if(k<1) scRaf=requestAnimationFrame(f); })(t0);
 }
 function perfectBurst(){
-  try{
+  if(!sfxMuted()) try{
     var c=ac(), t=c.currentTime; [72,76,79,84,88,91,96].forEach(function(m,i){ pluck(m,t+i*0.07,0.7,null,0.6); }); [60,67,72].forEach(function(m){ pluck(m,t+0.55,1.2,null,0.6); });
     applause(2.6,0.5);
   }catch(e){}
@@ -6572,6 +6583,7 @@ function startPractice(){
    Mode "➡️ Lanjut, nilai berkurang" (bawaan) = perilaku lama. Pilihan di kartu Tempo Arcade (.tpMiss, yg.arcMiss). ===== */
 function arcStrict(){ return pr.src==='arcade' && pr.missMode==='restart'; }
 function failSound(){
+  if(sfxMuted()) return;
   try{
     var c=ac(), t=c.currentTime, o=c.createOscillator(), g=c.createGain(), o2=c.createOscillator(), g2=c.createGain();
     o.type='sawtooth'; o.frequency.setValueAtTime(1500,t); o.frequency.exponentialRampToValueAtTime(70,t+0.75);
@@ -10655,6 +10667,7 @@ function arcLoading(){
 }
 /* efek suara tombol (dibuat langsung dengan AudioContext, tanpa file) */
 function arcSfx(kind){
+  if(sfxMuted()) return;
   try{
     var c=ac(), t=c.currentTime, seq;
     if(kind==='start') seq=[[523,0],[659,.09],[784,.18],[1047,.27]];
