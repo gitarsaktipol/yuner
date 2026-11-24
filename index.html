@@ -6192,6 +6192,28 @@ function bindPlayers(){
     buildChars(); syncPracticeOpts();
   });
 }
+/* Karakter Arcade milik AKUN (keluhan Ferdi, Nov 2026: ganti akun tapi karakter sama). Data pemain tetap di HP ini,
+   tapi disimpan terpisah per akun: yg.arcOwner = akun pemilik daftar yang sedang dipakai ('' = tanpa akun).
+   Ganti akun → daftar lama disimpan di yg.arcP.<pemilik>, daftar akun baru dimuat (belum ada = kosong, mulai A1).
+   Daftar tanpa akun yang ikut masuk ke akun yang BARU pertama kali masuk di HP ini (seperti partitur).
+   Pertama kali (yg.arcOwner belum ada, data lama) → pemilik dicatat tanpa mengubah daftar. */
+function arcFresh(){ return [{id:1,name:CHARS[0].name,look:0,letter:0,sub:1,res:{}}]; }
+function arcOwnerSwitch(uid){
+  uid=uid||'';
+  var prev=store.get('yg.arcOwner',null);
+  if(prev===uid) return;
+  store.set('yg.arcOwner',uid);
+  if(prev===null) return;
+  var key=function(o){ return 'yg.arcP.'+(o||'guest'); };
+  store.set(key(prev),JSON.stringify({players:loadPlayers(),active:store.get('yg.arcActive','1')}));
+  var st=null; try{ st=JSON.parse(store.get(key(uid),'null')); }catch(e){ st=null; }
+  var l=st&&Array.isArray(st.players)&&st.players.length?st.players:null, act=st?String(st.active||''):'';
+  if(!l && !prev && uid){ l=loadPlayers(); act=store.get('yg.arcActive','1'); store.set(key(''),JSON.stringify({players:arcFresh(),active:'1'})); }
+  if(!l){ l=arcFresh(); act='1'; }
+  savePlayers(l); store.set('yg.arcActive',act||String(l[0].id));
+  var a=activePlayer(); pr.arcLetter=a.letter; pr.arcSub=a.sub; arcSave();
+  try{ buildChars(); syncPracticeOpts(); if(app.tab==='arcade') renderArcade(); }catch(e){}
+}
 /* ===== Halaman bukit Arcade ===== */
 var hillT=[], hillRaf=0, hillDone=null;
 function hideHill(){
@@ -7087,6 +7109,7 @@ function watchAuth(){
     c.auth.onAuthStateChange(function(ev,sess){
       var u=(sess&&sess.user)||null, changed=(u&&u.id)!==(sbUser&&sbUser.id);
       sbUser=u; renderAcct();
+      try{ arcOwnerSwitch(u?u.id:''); }catch(e){}   /* karakter Arcade per akun */
       if(u&&changed) setTimeout(syncNow,0);   // jangan memanggil Supabase langsung di dalam callback ini
       setTimeout(function(){ grantRefresh(c,u); },0);   /* Premium lewat akun (fertune_grants) */
       if(u && joinedUid!==u.id && (ev==='SIGNED_IN'||ev==='INITIAL_SESSION')){   /* catat akun pernah memakai FerTune (sekali per sesi; gagal = diam) */
@@ -7118,8 +7141,9 @@ function authFromUrl(){
 function initCloud(){
   var has=false; try{ has=!!localStorage.getItem(CLOUD.storageKey); }catch(e){}
   renderAcct();
-  if(authFromUrl()) has=false;
+  var fromUrl=authFromUrl(); if(fromUrl) has=false;
   if(has) watchAuth().catch(function(){});
+  else if(!fromUrl) { try{ arcOwnerSwitch(''); }catch(e){} }
   window.addEventListener('online',function(){ syncNow(); });
   document.addEventListener('visibilitychange',function(){ if(!document.hidden&&Date.now()-lastSyncAt>30000) syncNow(); });
   if(/(^|\.)gitarsakti\.com$/.test(location.hostname) && appSource()!=='playstore') Array.prototype.forEach.call(document.querySelectorAll('.gsback'),function(a){ a.hidden=false; });
