@@ -2546,6 +2546,10 @@ body.mob #snewOv .instList b{font-size:20px}
       <button class="chip" type="button" data-bl="dbl" style="flex:1" title="Garis birama ganda: pergantian bagian lagu">‖ Garis ganda</button>
       <button class="chip" type="button" data-bl="end" style="flex:1" title="Garis akhir: ending / lagu selesai">┃▌ Garis akhir</button>
     </div>
+    <div class="chips" id="sbarr" role="group" aria-label="Tanda ulang" style="margin-top:6px">
+      <button class="chip" type="button" data-bl="rs" style="flex:1" title="Tanda ulang awal (‖:) di AWAL birama terpilih">‖: Awal ulang</button>
+      <button class="chip" type="button" data-bl="re" style="flex:1" title="Tanda ulang akhir (:‖) di AKHIR birama terpilih: kembali ke ‖: (atau ke awal lagu)">:‖ Akhir ulang</button>
+    </div>
     <div class="chips" id="ssec" role="group" aria-label="Nama bagian lagu di not terpilih" style="margin-top:6px">
       <button class="chip" type="button" data-sec="Intro">Intro</button>
       <button class="chip" type="button" data-sec="Verse">Verse</button>
@@ -4207,6 +4211,8 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
   parts.forEach(function(P){ P.ms = buildMeasures(P.notes,barBeats); });
   /* nama bagian lagu (Intro, Verse, Reff, ...) digambar di atas sistem; garis birama ganda/akhir per birama */
   var hasSec = parts.some(function(P){ return P.notes.some(function(n){ return !!n.sec; }); }), secs=[];
+  function barRS(mIdx){ return parts.some(function(P){ var m=P.ms[mIdx]; return m && m.length && P.notes[m[0]].rs; }); }
+  function barRE(mIdx){ return barMark(mIdx)==='re'; }
   function barMark(mIdx){ var t=''; parts.forEach(function(P){ (P.ms[mIdx]||[]).forEach(function(i){ var b=P.notes[i].bl; if(b==='end' || (b && !t)) t=b; }); }); return t; }
   var maxMs = Math.max.apply(null,parts.map(function(P){ return P.ms.length; }));
   parts.forEach(function(P,p){
@@ -4252,9 +4258,9 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
   function measureLayout(mIdx){
     var lay={w:0,pl:[]};
     if(!grand){
-      var P=parts[0], m=P.ms[mIdx], x0=10, list=[];
+      var P=parts[0], m=P.ms[mIdx], x0=10+(barRS(mIdx)?14:0), list=[];
       m.forEach(function(i){ var a=advOf(P.notes[i],mode,key); list.push({ni:i,off:x0,adv:a}); x0+=a; });
-      var w=10+list.reduce(function(s,e){ return s+e.adv; },0)+6, usedB=m.reduce(function(s,i){ return s+P.notes[i].d; },0);
+      var w=x0+(barRE(mIdx)?12:0)+6, usedB=m.reduce(function(s,i){ return s+P.notes[i].d; },0);
       /* birama terakhir yang belum penuh tetap diberi ruang untuk sisa ketuknya */
       if(mIdx===nM-1 && usedB<barBeats-1e-6) w+=(barBeats-usedB)*unit;
       lay.w=w; lay.pl=[list]; return lay;
@@ -4267,13 +4273,13 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
       maxUsed=Math.max(maxUsed,t);
     });
     starts.sort(function(a,b){ return a-b; });
-    var colW={}, xs={}, x=10;
+    var colW={}, xs={}, x=10+(barRS(mIdx)?14:0);
     starts.forEach(function(t,c){
       var nx = c+1<starts.length ? starts[c+1] : Math.max(maxUsed,t+1e-6), cw=num?24:18;
       parts.forEach(function(P,p){ ev[p].forEach(function(e){ if(Math.abs(e.t-t)<1e-6){ var n=P.notes[e.ni]; cw=Math.max(cw,advOf(n,mode,key)*Math.min(1,(nx-t)/n.d),lyW(n)); } }); });
       colW[c]=cw; xs[c]=x; x+=cw;
     });
-    var w=x+6;
+    var w=x+6+(barRE(mIdx)?12:0);
     if(mIdx===nM-1 && maxUsed<barBeats-1e-6) w+=(barBeats-maxUsed)*unit;
     lay.w=w;
     parts.forEach(function(P,p){
@@ -4490,8 +4496,10 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
         if(num || p===parts.length-1){
           var by1= num ? y0-22-P.maxLift : Y[0], by2 = num ? y0+22 : y0+4*S;
           var bmk=barMark(M.mIdx);
+          /* tanda ulang: ‖: di awal birama, :‖ di akhir birama (titik digambar per paranada di bawah) */
+          if(barRS(M.mIdx)) out+='<line class="bar" x1="'+(x+1)+'" x2="'+(x+1)+'" y1="'+by1+'" y2="'+by2+'" style="stroke-width:3.4"/><line class="bar" x1="'+(x+6)+'" x2="'+(x+6)+'" y1="'+by1+'" y2="'+by2+'"/>';
           if(bmk==='dbl') out+='<line class="bar" x1="'+(bx-4)+'" x2="'+(bx-4)+'" y1="'+by1+'" y2="'+by2+'"/>';
-          if(bmk==='end') out+='<line class="bar" x1="'+(bx-6)+'" x2="'+(bx-6)+'" y1="'+by1+'" y2="'+by2+'"/><line class="bar" x1="'+(bx-1)+'" x2="'+(bx-1)+'" y1="'+by1+'" y2="'+by2+'" style="stroke-width:3.4"/>';
+          if(bmk==='end' || bmk==='re') out+='<line class="bar" x1="'+(bx-6)+'" x2="'+(bx-6)+'" y1="'+by1+'" y2="'+by2+'"/><line class="bar" x1="'+(bx-1)+'" x2="'+(bx-1)+'" y1="'+by1+'" y2="'+by2+'" style="stroke-width:3.4"/>';
           else out+='<line class="bar" x1="'+bx+'" x2="'+bx+'" y1="'+by1+'" y2="'+by2+'"/>';
           var lastFull = parts.every(function(Q){ var lm=Q.ms[Q.ms.length-1]; return !Q.notes.length || lm.reduce(function(s,i){ return s+Q.notes[i].d; },0)>=barBeats-1e-6; }) && parts.some(function(Q){ return Q.notes.length; });
           if(num) lastFull = notes.length && m===P.ms[P.ms.length-1] && P.ms[P.ms.length-1].reduce(function(s,i){ return s+notes[i].d; },0)>=barBeats-1e-6;
@@ -4499,11 +4507,20 @@ function drawScore(host,score,mode,stateFn,cursorAfter,editor){
             out+='<line class="bar" x1="'+(bx+4)+'" x2="'+(bx+4)+'" y1="'+by1+'" y2="'+by2+'" style="stroke-width:3.2"/>';
           }
         }
+        /* titik tanda ulang (per paranada / per baris not angka) */
+        var rS=barRS(M.mIdx), rE=barMark(M.mIdx)==='re';
+        if(rS || rE){
+          var dY = num ? [y0-11, y0+1] : [y0+1.5*S, y0+2.5*S];
+          dY.forEach(function(dy){
+            if(rS) out+='<circle class="rpdot" cx="'+(x+11)+'" cy="'+dy+'" r="2.4" fill="currentColor"/>';
+            if(rE) out+='<circle class="rpdot" cx="'+(bx-11)+'" cy="'+dy+'" r="2.4" fill="currentColor"/>';
+          });
+        }
         /* garis birama baris TAB */
         if(P.tab){
           var t1=y0+staffH+P.tabY, t2=t1+5*TAB_S, tbm=barMark(M.mIdx);
           if(tbm==='dbl') out+='<line class="bar" x1="'+(bx-4)+'" x2="'+(bx-4)+'" y1="'+t1+'" y2="'+t2+'"/>';
-          if(tbm==='end') out+='<line class="bar" x1="'+(bx-6)+'" x2="'+(bx-6)+'" y1="'+t1+'" y2="'+t2+'"/><line class="bar" x1="'+(bx-1)+'" x2="'+(bx-1)+'" y1="'+t1+'" y2="'+t2+'" style="stroke-width:3.4"/>';
+          if(tbm==='end' || tbm==='re') out+='<line class="bar" x1="'+(bx-6)+'" x2="'+(bx-6)+'" y1="'+t1+'" y2="'+t2+'"/><line class="bar" x1="'+(bx-1)+'" x2="'+(bx-1)+'" y1="'+t1+'" y2="'+t2+'" style="stroke-width:3.4"/>';
           else out+='<line class="bar" x1="'+bx+'" x2="'+bx+'" y1="'+t1+'" y2="'+t2+'"/>';
           if(lastM && lastFull && !tbm) out+='<line class="bar" x1="'+(bx+4)+'" x2="'+(bx+4)+'" y1="'+t1+'" y2="'+t2+'" style="stroke-width:3.2"/>';
         }
@@ -4777,7 +4794,7 @@ function spellIn(m,key){
 }
 function curScoreCopy(){
   var s=curScore();
-  function cp(N){ return N.map(function(n){ var o={m:n.m,d:n.d,a:n.a||''}; if(n.x) o.x=n.x.map(function(p){ return {m:p.m,a:p.a}; }); if(n.tie) o.tie=true; if(n.e) o.e=true; if(n.bl) o.bl=n.bl; if(n.sec) o.sec=n.sec; if(n.ly) o.ly=n.ly; if(n.str) o.str=n.str.slice(); if(n.ch) o.ch=n.ch; return o; }); }
+  function cp(N){ return N.map(function(n){ var o={m:n.m,d:n.d,a:n.a||''}; if(n.x) o.x=n.x.map(function(p){ return {m:p.m,a:p.a}; }); if(n.tie) o.tie=true; if(n.e) o.e=true; if(n.bl) o.bl=n.bl; if(n.rs) o.rs=true; if(n.sec) o.sec=n.sec; if(n.ly) o.ly=n.ly; if(n.str) o.str=n.str.slice(); if(n.ch) o.ch=n.ch; return o; }); }
   var o={title:s.title,ts:s.ts.slice(),clef:s.clef,key:s.key||0,notes:cp(s.notes)};
   /* gitar: tablatur ikut tampil di Latihan */
   if(s.inst==='guitar'){ o.inst='guitar'; if(s.tab===false) o.tab=false; }
@@ -8274,7 +8291,8 @@ function syncTabUI(){
 function syncDynUI(){
   var s=edScore(), n=(editing && sel>=0 && sel<s.notes.length) ? s.notes[sel] : null;
   var blT=''; if(n){ var rr=measureRange(s.notes,sel,s.ts[0]*4/s.ts[1]); for(var q=rr[0];q<=rr[1];q++) if(s.notes[q].bl) blT=s.notes[q].bl; }
-  $$('#sbarl button').forEach(function(b){ b.setAttribute('aria-pressed', (blT && b.getAttribute('data-bl')===blT) ? 'true' : 'false'); });
+  var rsT=false; if(n){ var r3=measureRange(s.notes,sel,s.ts[0]*4/s.ts[1]); rsT=!!s.notes[r3[0]].rs; }
+  $$('#sbarl button, #sbarr button').forEach(function(b){ var d=b.getAttribute('data-bl'); b.setAttribute('aria-pressed', (d==='rs' ? rsT : (blT && d===blT)) ? 'true' : 'false'); });
   var known=false;
   $$('#ssec button').forEach(function(b){ var d=b.getAttribute('data-sec'), on=!!n && !!n.sec && (d===n.sec); if(on) known=true; if(d==='*') return; b.setAttribute('aria-pressed',on?'true':'false'); });
   var cu=$('#sseccustom'); if(cu){ var cust=!!n && !!n.sec && !known; cu.setAttribute('aria-pressed',cust?'true':'false'); cu.textContent = cust ? '✏️ '+n.sec : '✏️ Lainnya…'; }
@@ -8446,11 +8464,12 @@ function delNote(){
   saveScores(); renderScoreView();
 }
 /* Garis birama ganda/akhir (n.bl di not terakhir birama) & nama bagian lagu (n.sec) ikut pindah kalau not/rehatnya dihapus */
-function keepMarks(from,to){ if(from.bl) to.bl=from.bl; if(from.sec) to.sec=from.sec; if(from.ch) to.ch=from.ch; return to; }
+function keepMarks(from,to){ if(from.rs) to.rs=true; if(from.bl) to.bl=from.bl; if(from.sec) to.sec=from.sec; if(from.ch) to.ch=from.ch; return to; }
 function passMarks(N,at){
   var it=N[at]; if(!it) return;
   if(it.bl && at>0 && !N[at-1].bl) N[at-1].bl=it.bl;
   if(it.sec && N[at+1] && !N[at+1].sec) N[at+1].sec=it.sec;
+  if(it.rs && N[at+1]) N[at+1].rs=true;
   if(it.ch && N[at+1] && !N[at+1].ch) N[at+1].ch=it.ch;
 }
 function measureRange(N,i,bb){
@@ -8465,10 +8484,16 @@ function setBarLine(t){
   var s=edScore(), N=s.notes;
   if(!(editing && sel>=0 && N[sel])){ showScoreAlert('Ketuk satu not di birama yang mau diberi garis, lalu pilih garisnya.'); return; }
   var bb=s.ts[0]*4/s.ts[1], r=measureRange(N,sel,bb), had=null, k;
+  if(t==='rs'){
+    var on=!N[r[0]].rs; for(k=r[0];k<=r[1];k++) delete N[k].rs; if(on) N[r[0]].rs=true;
+    saveScores(); renderScoreView();
+    if(on) showScoreAlert('Tanda ulang awal ‖: dipasang di awal birama ini. Pasang juga :‖ Akhir ulang di birama terakhir yang diulang. Ketuk lagi untuk melepas.',true);
+    return;
+  }
   for(k=r[0];k<=r[1];k++){ if(N[k].bl) had=N[k].bl; delete N[k].bl; }
   if(had!==t) N[r[1]].bl=t;
   saveScores(); renderScoreView();
-  if(had!==t) showScoreAlert(t==='end' ? 'Garis akhir (ending) dipasang di akhir birama ini. Ketuk lagi untuk melepas.' : 'Garis birama ganda dipasang di akhir birama ini. Ketuk lagi untuk melepas.',true);
+  if(had!==t) showScoreAlert(t==='re' ? 'Tanda ulang akhir :‖ dipasang: lagu kembali ke ‖: (atau ke awal bila tidak ada). Ketuk lagi untuk melepas.' : t==='end' ? 'Garis akhir (ending) dipasang di akhir birama ini. Ketuk lagi untuk melepas.' : 'Garis birama ganda dipasang di akhir birama ini. Ketuk lagi untuk melepas.',true);
 }
 function setSection(t){
   if(!guardEdit()) return;
@@ -8558,25 +8583,62 @@ function playScore(fromStart){
   while(startIdx>0 && tieFrom(EN,startIdx)) startIdx--;
   for(k=0;k<startIdx;k++) startB+=EN[k].d;
   playing=true;
+  var bb=s.ts[0]*4/s.ts[1], segs=playSegs(s,parts,bb,startB), end=0;
   parts.forEach(function(N,p){
-    var vol=1, acc=0;   /* dinamika terakhir sebelum titik mulai tetap berlaku (tiap tangan punya dinamikanya sendiri) */
-    N.forEach(function(n,i){
-      if(n.dyn) vol=DYN_VOL[n.dyn]||vol;
-      var skip = p===eP ? i<startIdx : acc<startB-1e-6;
-      if(skip){ acc+=n.d; return; }
-      var at=(acc-startB)*spb;
-      if(n.m!==null && !tieFrom(N,i)) pitchList(n).forEach(function(pp){ pluck(pp.m,t+at,tieLen(N,i)*spb,playGain,vol); });
-      playTimers.push(setTimeout(function(){ if(p) playIdxL=i; else playIdx=i; renderScoreView(); },150+at*1000));
-      acc+=n.d;
+    var vol=1, acc=0, info=[];   /* dinamika terakhir sebelum titik mulai tetap berlaku (tiap tangan punya dinamikanya sendiri) */
+    N.forEach(function(n,i){ if(n.dyn) vol=DYN_VOL[n.dyn]||vol; info.push({b:acc,vol:vol}); acc+=n.d; });
+    /* tanda ulang: lagu diputar per potongan (segs: [awal, akhir) dalam ketukan partitur, off = waktu putar) */
+    segs.forEach(function(sg){
+      N.forEach(function(n,i){
+        var b=info[i].b;
+        if(b<sg.a-1e-6 || b>=sg.b-1e-6) return;
+        var at=(sg.off+b-sg.a)*spb;
+        if(n.m!==null && !tieFrom(N,i)) pitchList(n).forEach(function(pp){ pluck(pp.m,t+at,tieLen(N,i)*spb,playGain,info[i].vol); });
+        playTimers.push(setTimeout(function(){ if(p) playIdxL=i; else playIdx=i; renderScoreView(); },150+at*1000));
+        end=Math.max(end,sg.off+Math.min(b+n.d,sg.b)-sg.a);
+      });
     });
-    end=Math.max(end,acc-startB);
   });
   /* metronom saat Putar (saklar #smet; bisa dinyalakan/dimatikan sambil memutar): klik tiap ketuk, ketuk pertama birama lebih tinggi */
-  var bl = s.ts[1]>=8 ? 0.5 : 1, bb=s.ts[0]*4/s.ts[1], b0=Math.ceil(startB/bl-1e-6)*bl;
+  var bl = s.ts[1]>=8 ? 0.5 : 1;
   playMet=c.createGain(); playMet.gain.value=smet?1:0; playMet.connect(playGain);
-  for(var bt=b0; bt<startB+end-1e-6; bt+=bl) metClick(t+(bt-startB)*spb, Math.abs(bt/bb-Math.round(bt/bb))<1e-6, playMet);
+  segs.forEach(function(sg){
+    var b0=Math.ceil(sg.a/bl-1e-6)*bl;
+    for(var bt=b0; bt<sg.b-1e-6 && sg.off+bt-sg.a<end-1e-6; bt+=bl) metClick(t+(sg.off+bt-sg.a)*spb, Math.abs(bt/bb-Math.round(bt/bb))<1e-6, playMet);
+  });
   playTimers.push(setTimeout(stopPlay,150+end*spb*1000+200));
   renderScoreView();
+}
+/* Urutan putar dengan tanda ulang (‖: = n.rs di not pertama birama, :‖ = n.bl 're' di birama): sampai :‖ kembali ke ‖:
+   terdekat sebelumnya (atau awal lagu), tiap :‖ sekali saja. Hasil: potongan {a,b,off} dalam ketukan. Tanpa tanda = satu potongan. */
+function playSegs(s,parts,bb,startB){
+  var total=0, rs={}, re={};
+  parts.forEach(function(N){
+    var acc=0;
+    N.forEach(function(n){
+      var bar=Math.floor((acc+1e-6)/bb);
+      if(n.rs && Math.abs(acc-bar*bb)<1e-6) rs[bar]=1;
+      if(n.bl==='re') re[Math.floor((acc+n.d-1e-6)/bb)]=1;
+      acc+=n.d;
+    });
+    total=Math.max(total,acc);
+  });
+  var nB=Math.ceil(total/bb-1e-6), segs=[], done={}, a=0, i=0, guard=0, off=0;
+  while(i<nB && guard++<10000){
+    if(re[i] && !done[i]){
+      done[i]=1; segs.push({a:a,b:(i+1)*bb});
+      var j=i; while(j>0 && !rs[j]) j--;
+      a=j*bb; i=j; continue;
+    }
+    i++;
+  }
+  segs.push({a:a,b:Math.max(total,a)});
+  /* mulai dari not yang disorot: potongan pertama yang memuat titik itu */
+  var k=0; while(k<segs.length && !(startB>=segs[k].a-1e-6 && startB<segs[k].b-1e-6)) k++;
+  if(k>=segs.length) k=segs.length-1;
+  segs=segs.slice(k); segs[0].a=Math.max(segs[0].a,startB);
+  segs.forEach(function(g){ g.off=off; off+=g.b-g.a; });
+  return segs;
 }
 function newScore(inst){
   stopPlay(); recStop(true);
@@ -8699,7 +8761,7 @@ function bindScore(){
   $('#stitle').addEventListener('change',function(){ renderScoreView(); });
   /* Dinamika untuk not yang sedang dipilih: ketuk lagi untuk menghapus */
   $$('#sdyn button').forEach(function(b){ b.addEventListener('click',function(){ setDyn(b.getAttribute('data-dyn'),b.getAttribute('data-hp')); }); });
-  $$('#sbarl button').forEach(function(b){ b.addEventListener('click',function(){ setBarLine(b.getAttribute('data-bl')); }); });
+  $$('#sbarl button, #sbarr button').forEach(function(b){ b.addEventListener('click',function(){ setBarLine(b.getAttribute('data-bl')); }); });
   $$('#ssec button').forEach(function(b){ b.addEventListener('click',function(){ setSection(b.getAttribute('data-sec')); }); });
   $('#sts').addEventListener('change',function(e){
     var s=curScore(), p=e.target.value.split('/'); s.ts=[parseInt(p[0],10),parseInt(p[1],10)];
