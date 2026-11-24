@@ -54,7 +54,7 @@ Setem gitar, berlatih dengan metronom, latihan membaca not balok dan not angka, 
 
 🔒 PRIVASI TERJAGA
 • Tanpa iklan
-• Bisa dipakai tanpa akun; akun Gitar Sakti opsional untuk menyimpan partitur di cloud (hanya email dan partitur yang disimpan)
+• Masuk dengan akun Gitar Sakti (gratis, bisa lewat Google); partitur tersimpan di cloud (hanya email dan partitur yang disimpan)
 • Suara dari mikrofon hanya dianalisis di perangkat, tidak pernah direkam atau dikirim
 • Bisa dipakai tanpa internet
 
