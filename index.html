@@ -7738,11 +7738,14 @@ var INST={vocal:{name:'Vokal',max:1},guitar:{name:'Gitar',max:10},piano:{name:'P
 function maxVoices(s){ var i=INST[s && s.inst]; return i ? i.max : 10; }
 function hasPitch(N){ return !!N && N.some(function(n){ return n.m!==null; }); }
 /* Pindah tangan yang ditulis (piano 2 tangan): sorotan dilepas, tuts piano pindah ke oktaf yang cocok */
-function setHand(h){
+function setHand(h,quiet){
   if(h===hand || rec.on) return;
   hand=h; sel=-1; editing=false; pitchSel=0;
   inp.oct = h==='lh' ? 3 : 4;
-  syncHandUI(); buildKeyboard(); renderScoreView();
+  syncHandUI(); buildKeyboard();
+  /* quiet: pemanggil langsung memilih not (selectAt menggambar ulang). Dulu partitur digambar dulu dengan kursor di AKHIR
+     tangan itu -> tampilan melompat ke ujung lagu & klik mouse pada not tangan lain hilang (keluhan Ferdi, Nov 2026) */
+  if(!quiet) renderScoreView();
 }
 function syncHandUI(){
   var s=curScore();
@@ -7825,6 +7828,8 @@ function syncScoreFields(){
 /* PC studio (layar lebar & cukup tinggi): halaman tidak digulir, partitur dipaskan ke tinggi papan; ukuran bisa diperbesar/diperkecil (szoom, 0 = Pas) */
 var STUDIO_Q='(min-width:1280px) and (min-height:640px)', szoom=parseFloat(store.get('yg.szoom','0'))||0;
 function studioOn(){ return app.tab==='score' && !!(window.matchMedia && matchMedia(STUDIO_Q).matches); }
+/* scKeepView: gambar ulang berikutnya TIDAK menggulir ke kursor (mis. ketuk bagian kosong untuk melepas sorotan) */
+var scKeepView=false;
 function drawEditorScore(host,s,fn,cur,ed){
   if(studioOn() && host.id==='sscore') return drawStudioScore(host,s,fn,cur,ed);
   if(host.id==='sscore'){ if(mob.on) return mobDrawPaper(host,s,fn,cur,ed); if(host.style.maxHeight) host.style.maxHeight=''; }
@@ -7850,7 +7855,8 @@ function drawStudioScore(host,s,fn,cur,ed){
   drawStudioScore.sc=sc; drawStudioScore.h=host.clientHeight;
   var lab=$('#szFit'); if(lab) lab.textContent = szoom>0 ? Math.round(sc*100)+'%' : 'Pas';
   /* kursor / not terpilih tetap terlihat di dalam papan (bukan menggulir halaman) */
-  var c=host.querySelector('.caret, g.blink, g.cur');
+  var c=host.querySelector('.caret, g.st-blink, g.st-cur');
+  if(scKeepView){ scKeepView=false; c=null; }
   if(c && c.getBoundingClientRect && host.scrollHeight>host.clientHeight+2){
     var b=c.getBoundingClientRect(), r=host.getBoundingClientRect();
     if(b.top<r.top+10 || b.bottom>r.bottom-10) host.scrollTop+= (b.top+b.bottom)/2-(r.top+r.bottom)/2;
@@ -7877,7 +7883,7 @@ function renderScoreView(){
     /* Maju otomatis NYALA: garis merah di kanan not yang disorot = not baru disisipkan di situ */
     return flashIdx[i] ? 'bad' : ((!playing && editing && i===sel) ? 'sel blink'+((advOn() && EN[i] && !rec.on) ? ' ins' : '') : ((!playing && inRange(i)) ? 'sel' : ''));
   }, (playing || editing || ord.on) ? null : sel, !playing);
-  drawScore.ord=null;
+  drawScore.ord=null; scKeepView=false;
   ordSync();
   $('#sempty').hidden = s.notes.length>0 || !!(s.grand && s.lh && s.lh.length);
   syncDynUI(); syncTabUI();
@@ -9151,8 +9157,8 @@ function bindScore(){
     if(ord.on || e.pointerType!=='mouse' || e.button!==0 || rec.on || playing) return;
     var g=e.target.closest ? e.target.closest('.n') : null;
     sdrag = g ? {i:parseInt(g.getAttribute('data-i'),10),last:-1} : null;
-    /* piano 2 tangan: pindah tangan SEBELUM menyeret (gambar bisa bergeser sedikit saat ganti tangan) */
-    if(sdrag && curScore().grand){ var hh = sdrag.i>=LH_OFF ? 'lh' : 'rh'; if(hh!==hand) setHand(hh); }
+    /* JANGAN menggambar ulang di sini (dulu pindah tangan di pointerdown): elemen not yang ditekan hilang sebelum klik,
+       sehingga klik tidak sampai & tampilan melompat. Pindah tangan dilakukan saat mulai menyeret / saat klik. */
   });
   $('#sscore').addEventListener('pointermove',function(e){
     if(!sdrag || !(e.buttons&1)) return;
@@ -9162,6 +9168,7 @@ function bindScore(){
     if(j===sdrag.last || (sdrag.last<0 && j===sdrag.i) || (j>=LH_OFF)!==(sdrag.i>=LH_OFF)) return;
     e.preventDefault();
     if(sdrag.last<0){
+      if(curScore().grand) setHand(sdrag.i>=LH_OFF ? 'lh' : 'rh', true);
       selectAt(sdrag.i>=LH_OFF ? sdrag.i-LH_OFF : sdrag.i);
     }
     sdrag.last=j; selectAt(j>=LH_OFF ? j-LH_OFF : j, true);
@@ -9175,14 +9182,31 @@ function bindScore(){
       /* ketuk paranada (bukan not) di piano 2 tangan: pilih tangan itu, kursor ke akhir tangan itu */
       /* dicek dari posisi ketukan (bukan elemen yang diketuk), karena garis paranada/kunci menutupi latarnya */
       var hb=null; $$('#sscore .handbg').forEach(function(r){ var bx=r.getBoundingClientRect(); if(e.clientY>=bx.top && e.clientY<=bx.bottom && e.clientX>=bx.left && e.clientX<=bx.right) hb=r; });
-      if(hb && curScore().grand && !rec.on){ var hh=hb.getAttribute('data-hand'); if(hh!==hand) setHand(hh); else if(editing){ sel=-1; editing=false; renderScoreView(); } }
-      /* satu paranada: ketuk bagian kosong partitur = lepas sorotan, kursor ke akhir */
-      else if(!curScore().grand && editing && !rec.on && e.target.closest && e.target.closest('svg')){ sel=-1; editing=false; renderScoreView(); }
+      if(hb && curScore().grand && !rec.on){
+        var hh=hb.getAttribute('data-hand');
+        if(hh!==hand){
+          /* paranada tangan lain: pilih not tangan itu yang paling dekat dengan titik ketukan (dulu kursor melompat ke AKHIR
+             tangan itu dan tampilan ikut melompat ke ujung lagu — membingungkan, keluhan Ferdi Nov 2026) */
+          var hbx=hb.getBoundingClientRect(), best=-1, bd=1e9;
+          $$('#sscore g.n').forEach(function(gg){
+            var di=parseInt(gg.getAttribute('data-i'),10); if((di>=LH_OFF)!==(hh==='lh')) return;
+            var rr=(gg.querySelector('rect.hl')||gg).getBoundingClientRect();
+            if(rr.bottom<hbx.top || rr.top>hbx.bottom) return;
+            var dx = e.clientX<rr.left ? rr.left-e.clientX : (e.clientX>rr.right ? e.clientX-rr.right : 0);
+            if(dx<bd){ bd=dx; best=di; }
+          });
+          if(best>=0 && bd<60){ setHand(hh,true); selectAt(best>=LH_OFF ? best-LH_OFF : best); }
+          else setHand(hh);
+        }
+        else if(editing){ sel=-1; editing=false; scKeepView=true; renderScoreView(); }
+      }
+      /* satu paranada: ketuk bagian kosong partitur = lepas sorotan, kursor ke akhir (tampilan TIDAK ikut digulir ke akhir) */
+      else if(!curScore().grand && editing && !rec.on && e.target.closest && e.target.closest('svg')){ sel=-1; editing=false; scKeepView=true; renderScoreView(); }
       return;
     }
     var i=parseInt(g.getAttribute('data-i'),10);
     /* piano 2 tangan: mengetuk not di paranada lain sekaligus pindah tangan */
-    if(curScore().grand){ var h=i>=LH_OFF?'lh':'rh'; if(i>=LH_OFF) i-=LH_OFF; setHand(h); }
+    if(curScore().grand){ var h=i>=LH_OFF?'lh':'rh'; if(i>=LH_OFF) i-=LH_OFF; if(h!==hand){ setHand(h,true); multiFresh=false; selA=-1; } }
     /* ketuk not yang sudah disorot: tetap disorot (dulu sorotan lepas & kursor pindah ke BELAKANG not, sehingga
        Rehat/not baru masuk di belakang). Melepas sorotan: ketuk bagian kosong partitur atau ▶ sampai akhir. */
     /* "Pilih banyak": ketukan pertama = awal pilihan, ketukan berikutnya = ujung pilihan */
@@ -11293,6 +11317,7 @@ function mobDrawPaper(host,s,fn,cur,ed){
   }
   host.scrollTop=st;
   var c=host.querySelector('.caret, g.st-blink, g.st-cur, g.st-sel');
+  if(scKeepView){ scKeepView=false; c=null; }
   if(c && c.getBoundingClientRect && host.scrollHeight>host.clientHeight+2){
     var b=c.getBoundingClientRect(), r=host.getBoundingClientRect();
     if(b.top<r.top+4 || b.bottom>r.bottom-4) host.scrollTop+= (b.top+b.bottom)/2-(r.top+r.bottom)/2;
