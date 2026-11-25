@@ -1126,6 +1126,15 @@ select{cursor:pointer}
 html.csOpen select:focus{outline:none}
 /* tombol perbesar/perkecil partitur: hanya di layar studio PC */
 .szoom{display:none}
+/* bilah edit cepat di atas partitur (PC/laptop; HP memakai #mscPanel): Urungkan/Ulangi & Salin/Tempel selalu terlihat (Nov 2026) */
+.sqbar{display:none}
+body:not(.mob) .sqbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:0 0 8px;padding:3px;border-radius:14px;align-self:flex-start;max-width:100%;
+  background:var(--navbg);border:2px solid var(--line);position:relative;z-index:4}
+.sqbar button{border:0;background:transparent;color:var(--ink);font:inherit;font-weight:800;font-size:12.5px;height:30px;padding:0 7px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.sqbar button:hover:not(:disabled){background:var(--track)}
+.sqbar button:disabled{opacity:.4;cursor:default}
+.sqbar button[aria-pressed="true"]{background:var(--pPink);color:var(--ink)}
+.sqbar i{width:2px;height:20px;background:var(--line);border-radius:2px;margin:0 2px}
 /* ===== Halaman "Partitur Saya" versi PC ===== */
 @media (min-width:900px) and (min-height:601px){
   body.on-lib .app{max-width:1680px;padding:14px 22px 112px}
@@ -1184,6 +1193,7 @@ html.csOpen select:focus{outline:none}
   body.on-score .szoom{display:flex;position:absolute;right:14px;top:12px;z-index:4;gap:2px;padding:3px;border-radius:14px;background:var(--navbg);
     -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:2px solid var(--line);box-shadow:0 6px 16px -8px rgba(80,50,120,.35);opacity:.55;transition:opacity .2s ease}
   body.on-score .board:hover .szoom,body.on-score .szoom:focus-within{opacity:1}
+  body:not(.mob).on-score .sqbar{max-width:calc(100% - 170px)}
   body.on-score .szoom button{border:0;background:transparent;color:var(--ink);font-weight:800;font-size:17px;min-width:34px;height:30px;border-radius:10px;cursor:pointer;padding:0 8px}
   body.on-score .szoom #szFit{font-size:12.5px;min-width:52px;font-variant-numeric:tabular-nums}
   body.on-score .szoom button:hover{background:var(--track)}
@@ -2633,6 +2643,7 @@ body.mob #snewOv .instList b{font-size:20px}
     <p class="hint" id="saimsg" style="margin-top:10px"></p>
   </section>
   <section class="board">
+    <div class="sqbar" id="sqbar" role="toolbar" aria-label="Edit cepat"><button type="button" data-q="sundo" title="Urungkan (Ctrl+Z)" disabled>↶ Urungkan</button><button type="button" data-q="sredo" title="Ulangi (Ctrl+Y)" disabled>↷ Ulangi</button><i></i><button type="button" data-q="smulti" aria-pressed="false" title="Pilih banyak not (Shift+klik)">⬚ Pilih</button><button type="button" data-q="scopy" title="Salin (Ctrl+C)">📋 Salin</button><button type="button" data-q="scut" title="Potong (Ctrl+X)">✂️ Potong</button><button type="button" data-q="spaste" title="Tempel (Ctrl+V)">📥 Tempel</button></div>
     <div class="szoom" id="szoom" role="group" aria-label="Ukuran partitur"><button type="button" id="szOut" title="Perkecil (Ctrl + gulir mouse)" aria-label="Perkecil">−</button><button type="button" id="szFit" title="Pas satu layar">Pas</button><button type="button" id="szIn" title="Perbesar (Ctrl + gulir mouse)" aria-label="Perbesar">＋</button></div>
     <div class="scorehost" id="sscore"></div>
     <div class="pstatus bad" id="salert" role="alert" hidden style="font-size:15px;min-height:0;margin:8px 8px 2px"></div>
@@ -7094,6 +7105,12 @@ function doRedo(){
 function syncUndoUI(){
   var s=curScore(), u=$('#sundo'), r=$('#sredo'); if(!u||!s) return;
   u.disabled=!(undo.stk[s.id]&&undo.stk[s.id].length); r.disabled=!(undo.redo[s.id]&&undo.redo[s.id].length);
+  syncQbar();
+}
+/* bilah edit cepat #sqbar = cermin tombol asli (status aktif/nonaktif & Pilih banyak ikut) */
+function syncQbar(){
+  $$('#sqbar [data-q]').forEach(function(b){ var o=$('#'+b.getAttribute('data-q')); if(!o) return;
+    b.disabled=o.disabled; if(o.hasAttribute('aria-pressed')) b.setAttribute('aria-pressed',o.getAttribute('aria-pressed')); });
 }
 function saveScores(){ undoTrack(); trackChanges(); store.set('yg.scores',JSON.stringify(scores)); store.set('yg.curScore',curIsTrial()?lastRealId:curId); schedulePush(); }
 
@@ -8356,10 +8373,17 @@ function clipCopy(cut){
   if(cut && !guardEdit()) return;
   var N=edScore().notes, part=cloneNotes(N.slice(r[0],r[1]+1));
   if(part.length) delete part[part.length-1].tie;   /* tie ke not di luar salinan tidak ikut */
-  clip=part; store.set('yg.clip',JSON.stringify(clip));
+  clip=part; store.set('yg.clip',JSON.stringify(clip)); clipMark();
+  /* Pilih banyak dimatikan: ketukan berikutnya = memilih TEMPAT TUJUAN (dulu ketukan itu memperpanjang pilihan lama,
+     sehingga Tempel menimpa tempat asalnya sendiri dan tampak "tidak bisa", keluhan Ferdi Nov 2026) */
+  if(multiSel){ multiSel=false; multiFresh=false; $('#smulti').setAttribute('aria-pressed','false'); syncQbar(); }
   if(cut) cutRange(r);
-  showScoreAlert((cut?'Dipotong: ':'Disalin: ')+part.length+' not. Pilih tempat lalu tekan Tempel (Ctrl+V).',true);
+  showScoreAlert((cut?'Dipotong: ':'Disalin: ')+part.length+' not. Ketuk not tujuan, lalu tekan Tempel (Ctrl+V).',true);
 }
+/* Penanda di papan klip sistem: salinan not lebih baru daripada gambar/screenshot yang mungkin masih ada di papan klip.
+   Dulu Ctrl+V setelah Salin bisa membuka "gambar partitur" (screenshot lama) alih-alih menempel not. */
+var CLIP_MARK='FerTune: salinan not partitur';
+function clipMark(){ try{ if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(CLIP_MARK).catch(function(){}); }catch(e){} }
 function cutRange(r){
   /* MATI: not di rentang jadi rehat (ruang tetap); NYALA: dibuang, not sesudahnya maju */
   var s=edScore(), N=s.notes, bb=s.ts[0]*4/s.ts[1], k;
@@ -8814,7 +8838,7 @@ function ordStart(){
   if(!guardEdit()) return;
   stopPlay(); recStop(true);
   ord.on=true; ord.id=curScore().id; ord.a=ord.b=-1; ord.act=''; ord.hot=-1;
-  sel=-1; editing=false; selA=-1; multiSel=false;
+  sel=-1; editing=false; selA=-1; multiSel=false; $('#smulti').setAttribute('aria-pressed','false'); syncQbar();
   document.body.classList.add('ord-on');
   renderScoreView();
   var bar=$('#sordBar'); if(bar && bar.scrollIntoView && !mob.on) try{ bar.scrollIntoView({block:'nearest'}); }catch(e){}
@@ -9286,12 +9310,13 @@ function bindScore(){
   $('#smulti').addEventListener('click',function(){
     /* sudah ada not yang disorot: itulah awal pilihan, ketukan berikutnya = ujung pilihan (dulu ketukan berikutnya memulai pilihan baru) */
     var has=editing && sel>=0;
-    multiSel=!multiSel; multiFresh=multiSel && !has; this.setAttribute('aria-pressed',multiSel?'true':'false');
+    multiSel=!multiSel; multiFresh=multiSel && !has; this.setAttribute('aria-pressed',multiSel?'true':'false'); syncQbar();
     if(multiSel) showScoreAlert(has ? 'Pilih banyak NYALA: ketuk not terakhir. Lalu Hapus not / Salin / Potong.' : 'Pilih banyak NYALA: ketuk not pertama lalu not terakhir. Lalu Hapus not / Salin / Potong.',true); });
   $('#scopy').addEventListener('click',function(){ clipCopy(false); });
   $('#scut').addEventListener('click',function(){ clipCopy(true); });
   $('#spaste').addEventListener('click',clipPaste);
   $('#sredo').addEventListener('click',doRedo);
+  $$('#sqbar [data-q]').forEach(function(b){ b.addEventListener('click',function(){ var o=$('#'+b.getAttribute('data-q')); if(o && !o.disabled) o.click(); syncQbar(); }); });
   $('#srest').addEventListener('click',addRest);
   $('#sdelnote').addEventListener('click',delNote);
   $('#soctdn').addEventListener('click',function(){ inp.oct=clamp(inp.oct-1,1,7-KB_OCT); buildKeyboard(); });
@@ -10596,7 +10621,10 @@ function bindImageDrop(){
   /* Ctrl+V: kalau papan klip berisi gambar -> gambar partitur; kalau tidak -> tempel not seperti biasa (clipPaste) */
   document.addEventListener('paste',function(e){
     if(app.tab!=='score') return;
-    var cd=e.clipboardData, f=cd && (imgOf(cd.files) || imgOf(cd.items));
+    var cd=e.clipboardData, txt='';
+    try{ txt=cd ? cd.getData('text/plain') : ''; }catch(er){}
+    if(txt===CLIP_MARK){ e.preventDefault(); if(pasteWait){ clearTimeout(pasteWait); pasteWait=0; } clipPaste(); return; }
+    var f=cd && (imgOf(cd.files) || imgOf(cd.items));
     if(f){ e.preventDefault(); if(pasteWait){ clearTimeout(pasteWait); pasteWait=0; } loadImage(f); return; }
     if(pasteWait){ e.preventDefault(); clearTimeout(pasteWait); pasteWait=0; clipPaste(); }
   });
@@ -11138,7 +11166,7 @@ function mobQ(){ return !!(window.matchMedia && matchMedia(MOB_Q).matches); }
 function mobMove(on){
   if(on){
     if(mob.moved.length) return;
-    var panel=$('#mscPanel'), list=[$('#shand'),$('#sdur'),$('#sdot').parentNode,$('#sdelnote').parentNode,$('#sundo').parentNode,$('#tab-score .sside > .seg')];
+    var panel=$('#mscPanel'), list=[$('#shand'),$('#sdur'),$('#sdot').parentNode,$('#sdelnote').parentNode,$('#sundo').parentNode,$('#sclip'),$('#tab-score .sside > .seg')];
     list.forEach(function(el){ if(!el) return; mob.moved.push({el:el,p:el.parentNode,n:el.nextSibling}); panel.appendChild(el); });
     /* MIDI ON/OFF hanya di mode Rekam (diminta Ferdi, Nov 2026): pindah ke kartu rekam, di bawah baris Sambungkan/Putar/Rekam */
     var mw=$('#smidiW'), rc=$('#srecCard'), r1=rc && rc.querySelector('.row');
