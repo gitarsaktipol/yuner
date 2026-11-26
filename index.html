@@ -7191,6 +7191,7 @@ function authFromUrl(){
   var q={}; h.slice(1).split('&').forEach(function(kv){ var i=kv.indexOf('='); if(i>0) q[decodeURIComponent(kv.slice(0,i))]=decodeURIComponent(kv.slice(i+1).replace(/\+/g,' ')); });
   if(!q.access_token && !q.error && !q.error_code) return false;
   try{ history.replaceState(history.state,'',location.pathname+location.search); }catch(e){}
+  oaGuard();
   var show=function(t){ setTimeout(function(){ try{ setOpen('acct'); }catch(e){} acctNote={t:t,until:Date.now()+12000}; renderAcct(); setTimeout(renderAcct,12100); },300); };
   if(q.access_token && q.refresh_token){
     watchAuth().then(function(c){ return c.auth.setSession({access_token:q.access_token,refresh_token:q.refresh_token}); })
@@ -7201,6 +7202,18 @@ function authFromUrl(){
   }
   return true;
 }
+/* Kembali dari "Masuk dengan Google": halaman Google (pilih akun) masih ada di riwayat di belakang FerTune, jadi tombol
+   Kembali Android dulu membuka "pilih akun Google" lagi (keluhan Ferdi, Nov 2026). Saat kembali dari Google, entri ini
+   dijadikan penanda {oaRoot:n} (n = jumlah halaman Google+Supabase) lalu FerTune dibuka di entri baru di atasnya.
+   Kembali sampai penanda → history.go(-n) = langsung ke FerTune sebelum login (sudah masuk), Kembali sekali lagi = keluar. */
+function oaGuard(){
+  var pre=0; try{ pre=+sessionStorage.getItem('ft.oaLen')||0; sessionStorage.removeItem('ft.oaLen'); }catch(e){}
+  var n=history.length-pre;
+  if(!pre || n<1 || n>45) return;
+  try{ history.replaceState({oaRoot:n},''); history.pushState(null,''); }catch(e){}
+}
+/* halaman FerTune lama (sebelum login) dipulihkan dari cache Kembali/Maju browser masih menampilkan layar Masuk → muat ulang */
+window.addEventListener('pageshow',function(e){ if(e.persisted && document.body.classList.contains('lg-on') && storedUser()) location.reload(); });
 function initCloud(){
   var has=false; try{ has=!!localStorage.getItem(CLOUD.storageKey); }catch(e){}
   renderAcct();
@@ -7457,6 +7470,7 @@ function bindAcct(){
   gateCheck=checkGoogle;
   $('#acctGoogle').addEventListener('click',function(){
     var err=$('#acctErr'); err.textContent='Membuka Google…';
+    try{ sessionStorage.setItem('ft.oaLen',String(history.length)); }catch(e){}   /* untuk melompati halaman Google saat Kembali (oaGuard) */
     watchAuth().then(function(c){ return c.auth.signInWithOAuth({provider:'google',options:{redirectTo:AUTH_BACK}}); })
       .then(function(r){ if(r&&r.error) err.textContent=authErr(r.error); },function(e){ err.textContent=authErr(e); });
   });
@@ -10761,6 +10775,8 @@ async function readWithAI(){
 /* Tombol "kembali" Android: dari Latihan/Partitur kembali ke Tuner dulu, baru keluar aplikasi. */
 function goTab(name){
   if(name===app.tab) return;
+  /* Partitur Saya = halaman di dalam Partitur: Kembali → Partitur (dulu langsung ke Tuner) */
+  if(name==='lib' && app.tab==='score'){ try{ history.pushState({tab:'lib',sub:1},''); }catch(e){} showTab(name); return; }
   if(history.state && history.state.sub){ mob.leave=name; try{ history.back(); return; }catch(e){ mob.leave=null; } }
   try{
     if(name==='tuner'){ if(history.state && history.state.tab) { history.back(); return; } }
@@ -10769,11 +10785,20 @@ function goTab(name){
   }catch(e){}
   showTab(name);
 }
+/* state riwayat terakhir (untuk dikembalikan saat Kembali hanya menutup dialog) */
+var hsCur=history.state;
+['pushState','replaceState'].forEach(function(k){ var f=history[k]; history[k]=function(st){ hsCur=st; return f.apply(history,arguments); }; });
 window.addEventListener('popstate',function(e){
+  var prevHS=hsCur; hsCur=e.state;
+  if(e.state && e.state.oaRoot){ try{ history.go(-e.state.oaRoot); }catch(x){} return; }   /* lewati halaman Google (oaGuard) */
+  if(mob.skipPop){ mob.skipPop=false; return; }
   if(pr.playing){ try{ history.pushState({tab:app.tab,play:1},''); }catch(e){} askQuit(); return; }
+  /* dialog terbuka: Kembali = tutup dialognya saja, tetap di halaman yang sama (dulu dialog tertinggal di atas Tuner) */
+  var ov=$$('.pwOv').filter(function(o){ return !o.hidden; });
+  if(ov.length){ ov[ov.length-1].dispatchEvent(new MouseEvent('click',{bubbles:true})); try{ history.pushState(prevHS,''); }catch(x){} return; }
   if(mob.leave){ var nx=mob.leave; mob.leave=null; goTab(nx); return; }
   /* HP: Kembali = langkah / halaman sebelumnya di menu yang sama */
-  if((mob.on || app.tab==='set') && e.state && e.state.tab===app.tab && !e.state.sub && mobDepth()>0){ mobBack(); if(mobDepth()>0) mobSubPush(); return; }
+  if((mob.on || app.tab==='set' || app.tab==='arcade') && e.state && e.state.tab===app.tab && !e.state.sub && mobDepth()>0){ mobBack(); if(mobDepth()>0) mobSubPush(); return; }
   mob.toHome=false;
   showTab((e.state && e.state.tab) || 'tuner');
 });
@@ -10796,6 +10821,7 @@ function renderArcade(){
   $('#arcSum').innerHTML='<b>'+charName().replace(/[<&]/g,'')+'</b><span>Level '+ARC_LETTERS[a.letter]+a.sub+'</span><span>'+(pr.inst==='guitar'?'🎸 Gitar':'🎹 Piano')+' · '+(app.mode==='num'?'Not angka':'Not balok')+'</span>';
   $('#agHero').innerHTML='<svg viewBox="-24 -80 48 86" aria-hidden="true">'+charBody(c)+'</svg>';
   $('#agStar').textContent='⭐ '+fmtScore(arcTotal());
+  arcHist();
 }
 /* pemilih level Arcade (kotak huruf A–Z + stage 1–9) — pengganti <select> bawaan browser */
 function renderLvPick(){
@@ -10860,6 +10886,14 @@ function arcLeave(){
   if(!pr.playing){ try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){} }
 }
 function arcGo(n){ arc.step=n; renderArcade(); }
+/* Tombol Kembali Android di Arcade: langkah >1 / halaman pemain = satu state {tab:'arcade',sub:1} (seperti Latihan HP);
+   kembali ke langkah 1 lewat tombol di layar → state itu dibuang diam-diam (mob.skipPop) */
+function arcHist(){
+  if(typeof mob!=='object' || app.tab!=='arcade' || pr.playing || mob.skipPop) return;
+  var hs=history.state||{}; if(hs.play) return;
+  if(mobDepth()>0){ if(!hs.sub) mobSubPush(); }
+  else if(hs.sub && hs.tab==='arcade'){ mob.skipPop=true; try{ history.back(); }catch(e){ mob.skipPop=false; } }
+}
 function startArcade(){
   var a=activePlayer();
   if(!freeLetterOk(a.letter)){ showPaywall('arcade'); arcGo(5); return; }
@@ -11232,10 +11266,11 @@ function mobApply(){
   placeDock(); mobLatRender(); mobScRender();
   if(app.tab==='score') renderScoreView();
 }
-function mobDepth(){ return app.tab==='set' ? (setPg==='home'?0:1) : !mob.on ? 0 : app.tab==='latih' ? mob.lst-1 : (app.tab==='score' ? (mob.ph==='home'?0:1) : 0); }
-function mobSubPush(){ if(!mob.on) return; try{ if(!(history.state && history.state.sub)) history.pushState({tab:app.tab,sub:1},''); }catch(e){} }
+function mobDepth(){ return app.tab==='arcade' ? ((arc.sub||arc.step>1)?1:0) : app.tab==='set' ? (setPg==='home'?0:1) : !mob.on ? 0 : app.tab==='latih' ? mob.lst-1 : (app.tab==='score' ? (mob.ph==='home'?0:1) : 0); }
+function mobSubPush(){ if(!mob.on && app.tab!=='arcade') return; try{ if(!(history.state && history.state.sub)) history.pushState({tab:app.tab,sub:1},''); }catch(e){} }
 function mobBack(){
   if(app.tab==='set'){ setGo('home',true); return; }
+  if(app.tab==='arcade'){ if(arc.sub) arc.sub=null; else if(arc.step===5) arc.step=4; else if(arc.step>1) arc.step--; renderArcade(); return; }
   if(app.tab==='latih'){ if(mob.lst>1) mobLatGo(mob.lst-1,true); }
   else if(app.tab==='score'){
     if(mob.toHome){ mob.toHome=false; mobScGo('home',null,true); }
