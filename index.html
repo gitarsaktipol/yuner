@@ -2062,6 +2062,8 @@ body.mob #tab-score[data-mph="form"] .fields{gap:10px;margin-top:12px}
 .mModeBar .seg button{padding:8px 6px;font-size:15.5px}
 .mModeBar .seg button[data-mm="rec"][aria-pressed="true"]{color:#E0457F}
 .mModeBar>.chip{flex:none;min-width:0;padding:8px 12px}
+.mModeBar>#mscOrd[aria-pressed="true"]{background:var(--pPink);box-shadow:0 3px 0 var(--dPink)}
+@media (max-width:400px){ .mModeBar{gap:6px} .mModeBar>.chip{padding:8px 9px;font-size:14px} .mModeBar .seg button{font-size:14.5px;padding:8px 4px} }
 .mModeBar>.chip[aria-pressed="true"],#slyInfo[aria-pressed="true"]{background:var(--pLemon);color:var(--ink);box-shadow:0 3px 0 var(--dLemon)}
 .mModeBar .undoRow{display:flex;gap:6px;margin:0 !important;flex:none}
 .mModeBar .undoRow .chip{flex:none !important;min-width:0;padding:8px 11px;font-size:16px}
@@ -2518,6 +2520,7 @@ body.mob #snewOv .instList b{font-size:20px}
     </div>
     <button class="chip" id="mscLy" type="button" aria-pressed="false" hidden>📝 Lirik</button>
     <button class="chip" id="mscCh" type="button" aria-pressed="false">🎸 Cord</button>
+    <button class="chip" id="mscOrd" type="button" aria-pressed="false" title="Edit urutan birama: blok birama lalu Copy / Pindah / Hapus">🔀 Urutan</button>
   </div>
 
   <div class="card sinfo" id="sinfo">
@@ -2643,7 +2646,7 @@ body.mob #snewOv .instList b{font-size:20px}
     <p class="hint" id="saimsg" style="margin-top:10px"></p>
   </section>
   <section class="board">
-    <div class="sqbar" id="sqbar" role="toolbar" aria-label="Edit cepat"><button type="button" data-q="sundo" title="Urungkan (Ctrl+Z)" disabled>↶ Urungkan</button><button type="button" data-q="sredo" title="Ulangi (Ctrl+Y)" disabled>↷ Ulangi</button><i></i><button type="button" data-q="smulti" aria-pressed="false" title="Pilih banyak not (Shift+klik)">⬚ Pilih</button><button type="button" data-q="scopy" title="Salin (Ctrl+C)">📋 Salin</button><button type="button" data-q="scut" title="Potong (Ctrl+X)">✂️ Potong</button><button type="button" data-q="spaste" title="Tempel (Ctrl+V)">📥 Tempel</button></div>
+    <div class="sqbar" id="sqbar" role="toolbar" aria-label="Edit cepat"><button type="button" data-q="sundo" title="Urungkan (Ctrl+Z)" disabled>↶ Urungkan</button><button type="button" data-q="sredo" title="Ulangi (Ctrl+Y)" disabled>↷ Ulangi</button><i></i><button type="button" data-q="smulti" aria-pressed="false" title="Pilih banyak not (Shift+klik)">⬚ Pilih</button><button type="button" data-q="scopy" title="Salin (Ctrl+C)">📋 Salin</button><button type="button" data-q="scut" title="Potong (Ctrl+X)">✂️ Potong</button><button type="button" data-q="spaste" title="Tempel (Ctrl+V)">📥 Tempel</button><i></i><button type="button" data-q="sordBtn" aria-pressed="false" title="Edit urutan birama: blok birama lalu Copy / Pindah / Hapus">🔀 Urutan birama</button></div>
     <div class="szoom" id="szoom" role="group" aria-label="Ukuran partitur"><button type="button" id="szOut" title="Perkecil (Ctrl + gulir mouse)" aria-label="Perkecil">−</button><button type="button" id="szFit" title="Pas satu layar">Pas</button><button type="button" id="szIn" title="Perbesar (Ctrl + gulir mouse)" aria-label="Perbesar">＋</button></div>
     <div class="scorehost" id="sscore"></div>
     <div class="pstatus bad" id="salert" role="alert" hidden style="font-size:15px;min-height:0;margin:8px 8px 2px"></div>
@@ -7389,7 +7392,11 @@ function renderAcct(){
 }
 function authErr(e){
   var t=(e&&e.message)||'Gagal. Coba lagi.';
-  if(/invalid login/i.test(t)) return 'Email atau kata sandi salah.';
+  if(/invalid login|invalid_credentials/i.test(t)) return 'Email atau kata sandi salah. Lupa? Tekan "Lupa kata sandi?" di bawah.';
+  if(/not confirmed|email_not_confirmed/i.test(t)) return 'Email ini belum diverifikasi. Buka email dari Gitar Sakti (cek juga folder Spam/Promosi) dan tekan link verifikasinya, lalu Masuk lagi.';
+  if(/rate limit|too many|only request this after|over_email_send_rate/i.test(t)) return 'Terlalu banyak percobaan. Tunggu sekitar 1 menit, lalu coba lagi.';
+  if(/signups? not allowed|signup_disabled/i.test(t)) return 'Pendaftaran sedang ditutup. Hubungi fertune.support@gmail.com.';
+  if(/user not found/i.test(t)) return 'Akun dengan email ini belum ada. Tekan "Daftar di sini".';
   if(/already registered/i.test(t)) return 'Email ini sudah terdaftar. Silakan Masuk.';
   if(/password/i.test(t)&&/6|short|least/i.test(t)) return 'Kata sandi minimal 8 karakter.';
   if(/offline|fetch|network/i.test(t)) return 'Tidak bisa terhubung. Cek internet.';
@@ -7485,6 +7492,8 @@ function bindAcct(){
                 : c.auth.signInWithPassword({email:email,password:pass});
     }).then(function(r){
       if(r.error){ err.textContent=authErr(r.error); return; }
+      /* Supabase (verifikasi email aktif) TIDAK memberi error untuk email yang sudah terdaftar: user palsu tanpa identities. */
+      if(up&&r.data&&r.data.user&&Array.isArray(r.data.user.identities)&&r.data.user.identities.length===0){ err.textContent='Email ini sudah terdaftar. Tekan "Masuk di sini" lalu masuk dengan kata sandimu (atau "Masuk dengan Google" kalau dulu daftar pakai Google).'; return; }
       if(up&&!r.data.session){ err.textContent='Akun dibuat! Buka email dari Gitar Sakti dan tekan link verifikasinya — kamu akan kembali ke FerTune dan langsung masuk.'; return; }
       err.textContent=''; $('#acctPass').value=''; $('#acctForm').hidden=true;
     },function(e){ err.textContent=authErr(e); });
@@ -8872,6 +8881,8 @@ function ordSync(){
   var bar=$('#sordBar'), btn=$('#sordBtn'); if(!bar) return;
   bar.hidden=!ord.on;
   if(btn) btn.setAttribute('aria-pressed',ord.on?'true':'false');
+  var mb=$('#mscOrd'); if(mb) mb.setAttribute('aria-pressed',ord.on?'true':'false');
+  try{ syncQbar(); }catch(e){}
   if(!ord.on) return;
   var has=ord.a>=0, txt;
   var rng=has ? (ord.a===ord.b ? 'Birama '+(ord.a+1) : 'Birama '+(ord.a+1)+'–'+(ord.b+1)) : '';
@@ -11333,6 +11344,7 @@ function mobScRender(){
   $('#mscContT').textContent=ttl; $('#mscInfoT').textContent=ttl;
   $('#mscInfoS').textContent=[(INST[s.inst]&&INST[s.inst].name)||'', s.ts[0]+'/'+s.ts[1], 'tempo '+(s.bpm||90)].filter(Boolean).join(' · ');
   $$('#mscMode [data-mm]').forEach(function(b){ b.setAttribute('aria-pressed',(b.getAttribute('data-mm')==='rec')===mob.rec?'true':'false'); });
+  $('#mscOrd').hidden=mob.rec;
   var ly=$('#mscLy'); ly.hidden=$('#slyRow').hidden; ly.setAttribute('aria-pressed',mob.ly?'true':'false');
   $('#slyInfo').setAttribute('aria-pressed',mob.lyi?'true':'false');
   var mo=$('#mscMore'); mo.setAttribute('aria-expanded',mob.more?'true':'false');
@@ -11387,6 +11399,7 @@ function bindMobile(){
     mob.rec=r; mobScRender();
   }); });
   $('#mscLy').addEventListener('click',function(){ mob.ly=!mob.ly; mobScRender(); });
+  $('#mscOrd').addEventListener('click',function(){ $('#sordBtn').click(); });
   $('#slyInfo').addEventListener('click',function(){ mob.lyi=!mob.lyi; mobScRender(); });
   $('#mscMore').addEventListener('click',function(){ mob.more=!mob.more; mobScRender(); });
   /* Menu bawah "Partitur" saat sudah di Partitur = kembali ke halaman awal Partitur */
