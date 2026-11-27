@@ -140,3 +140,24 @@ berubah. Diuji ulang: ketukan pinggir yang gagal turun ke ±0, tanpa klik dobel,
 > when a finger landed near the edge, it ended up outside the shrinking button on release, so the tap was ignored. We now
 > remember each button's original area when it is pressed and accept the tap if the finger is released inside it. Automated
 > edge-tap tests on every screen went from roughly 1 in 5 missed edge taps to essentially none, with no double taps.
+
+---
+
+## 6. Tombol "Edit urutan" sulit dicari + pesan daftar akun menyesatkan (27 Nov 2026)
+
+**Masukan penguji:** tombol Edit urutan (memindah/menyalin birama) di Partitur tidak kelihatan, sulit dicari.
+
+**Penyebab:** di HP tombol itu tersembunyi di dalam "🧰 Alat lainnya" di bagian paling bawah halaman (di bawah tuts piano);
+di PC terselip di antara banyak tombol Struktur lagu.
+
+**Perubahan (`fertune-v239`, PR #232):** HP: tombol **🔀 Urutan** di baris atas editor (sebelah Tulis / Rekam / Cord);
+PC: tombol **🔀 Urutan birama** di bilah cepat tepat di atas partitur. Ditemukan saat pengujian ulang alur akun: daftar dengan
+email yang sudah terdaftar dulu menampilkan "Akun dibuat! Buka email…" padahal email tidak pernah datang; sekarang tampil
+"Email ini sudah terdaftar". Pesan galat masuk (email belum diverifikasi, terlalu banyak percobaan) kini bahasa Indonesia.
+
+**Draf jawaban (Inggris):**
+> Testers said the "reorder bars" tool in the score editor was hard to find: on phones it was hidden in a collapsed
+> "more tools" panel at the bottom of the screen. We added a clearly visible "Reorder" button to the editor's top bar on
+> phones and to the quick toolbar above the score on desktop. While re-testing the account flow we also fixed sign-up with
+> an already-registered email (it wrongly said a verification email had been sent) and translated the remaining English
+> sign-in error messages into Indonesian.
