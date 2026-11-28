@@ -650,6 +650,16 @@ body.in-play .webOnly, body:not(.in-play) .playOnly{display:none !important}
 #pCustomOpts>.noteGrid{margin-top:6px}
 #pCustomOpts .octLabel{margin:12px 0 4px;text-align:center;font-weight:800;font-size:13px;letter-spacing:.35em;word-spacing:.5em;padding-left:.35em;color:var(--ink)}
 #pCustomOpts>.hint{margin-top:10px}
+/* Custom: pilih jenis not (semibreve … semiquaver), diminta Ferdi Nov 2026 */
+.custDurT{font-weight:800;font-size:14px;color:var(--ink);text-align:center}
+#pCustomOpts>.custDurs{margin-top:6px}
+.custDurs{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.custDurs button{display:flex;flex-direction:column;align-items:center;gap:1px;background:var(--bg);border:0;border-radius:12px;padding:5px 1px 6px;color:var(--muted);cursor:pointer;box-shadow:0 2px 0 var(--line);font:inherit;min-width:0}
+.custDurs svg{width:22px;height:30px;display:block}
+.custDurs b{font-size:10.5px;font-weight:800;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.custDurs small{font-size:10px;font-weight:600;line-height:1.1}
+.custDurs button[aria-pressed="true"]{background:var(--pSky);color:var(--ink);box-shadow:0 2px 0 var(--dSky);animation:pop .35s var(--bounce)}
+@media (max-width:420px){ .custDurs{grid-template-columns:repeat(4,1fr)} }
 /* ---- Layar berlatih (overlay layar penuh, landscape) ---- */
 .play{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;gap:6px;background:var(--bg);
   padding:calc(6px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px))}
@@ -2026,6 +2036,8 @@ body.mob #pCustomOpts .row .sound{padding:7px 8px;font-size:14px}
 body.mob #pCustomOpts>label{flex-direction:row;align-items:center;gap:8px}
 body.mob #pCustomOpts>label select{flex:1;padding:6px 10px}
 body.mob #pCustomOpts>.hint{margin-top:4px;font-size:13px}
+body.mob .custDurT{font-size:12px}
+body.mob .custDurs svg{width:18px;height:24px}
 body.mob #pcfg label:has(#pkey){flex-direction:row;align-items:center;gap:8px}
 body.mob #pcfg label:has(#pkey) select{flex:1;padding:7px 10px}
 body.mob #tab-latih .pdock .dockfoot{display:none}
@@ -2279,7 +2291,7 @@ body.mob #snewOv .instList b{font-size:20px}
 
   <div class="mOnly mPick" id="mlatSrc" role="group" aria-label="Mode latihan">
     <button type="button" data-msrc="random" aria-pressed="false"><span class="ic" aria-hidden="true">🎲</span><b>Acak</b><small>Soal acak sesuai pengaturanmu</small></button>
-    <button type="button" data-msrc="custom" aria-pressed="false"><span class="ic" aria-hidden="true">🎯</span><b>Custom</b><small>Pilih sendiri nada yang boleh muncul</small></button>
+    <button type="button" data-msrc="custom" aria-pressed="false"><span class="ic" aria-hidden="true">🎯</span><b>Custom</b><small>Pilih sendiri nada &amp; jenis not yang muncul</small></button>
     <button type="button" data-msrc="score" aria-pressed="false"><span class="ic" aria-hidden="true">📄</span><b>Partitur saya</b><small>Berlatih dari partitur yang kamu tulis</small></button>
   </div>
   <label class="mOnly mScorePick" id="mlatScoreRow">Partitur yang dilatih<select id="mlatScore"></select></label>
@@ -2321,6 +2333,8 @@ body.mob #snewOv .instList b{font-size:20px}
         <button type="button" class="sound" id="custAll">Pilih semua</button>
         <button type="button" class="sound" id="custNone">Kosongkan</button>
       </div>
+      <div class="custDurT">Jenis not yang muncul</div>
+      <div class="custDurs" id="custDurs" role="group" aria-label="Jenis not yang muncul"></div>
       <label>Jumlah birama
         <select id="custMeasures"></select>
       </label>
@@ -2859,7 +2873,7 @@ body.mob #snewOv .instList b{font-size:20px}
     <details class="helpitem"><summary>Latihan baca not</summary><div class="hb">
       <ol>
         <li>Buka menu <b>Latihan</b>. Pilih <b>Piano</b> atau <b>Gitar</b>, lalu <b>Not balok</b> atau <b>Not angka</b>.</li>
-        <li>Pilih <b>Mode Latihan</b>: Acak, Arcade, Custom (pilih sendiri nada yang keluar; nada yang dipilih langsung berbunyi), atau Partitur saya (soal dari partitur buatanmu). Ketuk not di pratinjau soal untuk mendengar bunyinya.</li>
+        <li>Pilih <b>Mode Latihan</b>: Acak, Arcade, Custom (pilih sendiri nada yang keluar — nada yang dipilih langsung berbunyi — dan jenis not yang muncul: semibreve, minim, crotchet, quaver, semiquaver, juga yang bertitik), atau Partitur saya (soal dari partitur buatanmu). Ketuk not di pratinjau soal untuk mendengar bunyinya.</li>
         <li>Atur <b>Tangga nada</b> bila perlu, lalu tekan <b>Mulai berlatih</b>. Layar latihan terbuka penuh.</li>
         <li>Mainkan not yang disorot. Nada dibaca lewat <b>mikrofon</b>, <b>kabel audio</b>, atau <b>keyboard MIDI</b>.</li>
         <li>Selesai satu soal, aplikasi menunjukkan hasilnya lalu otomatis pindah ke soal berikutnya.</li>
@@ -4694,9 +4708,15 @@ function loadCustNotes(){
   try{ var v=JSON.parse(store.get('yg.custNotes','[]')); if(Array.isArray(v)&&v.length) return v; }catch(e){}
   return [60,62,64,65,67,69,71,72];
 }
+/* Jenis not Custom (ketukan; 1 = crotchet). Bawaan hanya crotchet = perilaku lama. */
+var CUST_DURS=[{d:4,n:'Semibreve',k:'4 ketuk'},{d:3,n:'Minim titik',k:'3 ketuk'},{d:2,n:'Minim',k:'2 ketuk'},{d:1.5,n:'Crotchet titik',k:'1½ ketuk'},{d:1,n:'Crotchet',k:'1 ketuk'},{d:0.5,n:'Quaver',k:'½ ketuk'},{d:0.25,n:'Semiquaver',k:'¼ ketuk'}];
+function loadCustDurs(){
+  try{ var v=JSON.parse(store.get('yg.custDurs','[]')); if(Array.isArray(v)){ v=v.filter(function(d){ return CUST_DURS.some(function(o){ return o.d===d; }); }); if(v.length) return v; } }catch(e){}
+  return [1];
+}
 var pr = { got:{}, grp:{}, playing:false, inst: store.get('yg.inst','piano')==='guitar' ? 'guitar' : 'piano', src:'random', clef:'treble', range:'mid', len:8, sharps:false, anyOct:false,
            arcLetter: Math.min(25,Math.max(0,parseInt(store.get('yg.arcLetter','0'),10)||0)), arcSub: Math.min(9,Math.max(1,parseInt(store.get('yg.arcSub','1'),10)||1)),
-           custNotes: loadCustNotes(), custMeasures: parseInt(store.get('yg.custMeasures','2'),10)||2,
+           custNotes: loadCustNotes(), custDurs: loadCustDurs(), custMeasures: parseInt(store.get('yg.custMeasures','2'),10)||2,
            key: clamp(parseInt(store.get('yg.key','0'),10)||0,-7,7),
            score:null, idx:[], pos:0, marks:{}, tries:0, wrong:0, t0:0, done:false, mute:0, missStreak:0,
            lastAdvanceT:0, fast:false, paused:false,
@@ -4875,12 +4895,57 @@ function genArcadeOnce(letterIdx,c,f){
    oktaf), dan berapa birama (maks 10).
    ===================================================================== */
 var CUST_LO=48, CUST_HI=83; /* C3 - B5, 3 oktaf */
+/* Ritme Custom: tiap birama 4/4 diisi HANYA jenis not yang dipilih (dalam satuan 1/16 = 0,25 ketuk).
+   Penempatan rapi dulu (semibreve di ketuk 1, minim di ketuk 1/3, crotchet di awal ketukan, quaver di setengah ketukan);
+   kalau pilihan itu tidak bisa memenuhi birama dengan rapi, boleh sinkop; kalau tetap tidak bisa (mis. hanya minim titik),
+   sisa birama diisi not terdekat (crotchet/quaver/semiquaver) — custFill() memberi tahu mana yang ditambahkan. */
+function custFits(set,strict){
+  var memo={};
+  function ok(u,p){ if(p+u>16) return false; if(!strict) return true;
+    if(u===16) return p===0; if(u===12) return p===0||p===4; if(u===8) return p===0||p===8;
+    if(u===6||u===4) return p%4===0; if(u===2) return p%2===0; return true; }
+  function can(p){ if(p===16) return true; if(memo[p]!==undefined) return memo[p];
+    return (memo[p]=set.some(function(u){ return ok(u,p) && can(p+u); })); }
+  /* jenis not mana saja yang benar-benar bisa dipakai di salah satu cara mengisi birama */
+  function usable(){ var seen={}, used={}, st=[0]; if(!can(0)) return used;
+    while(st.length){ var p=st.pop(); if(seen[p]) continue; seen[p]=1;
+      set.forEach(function(u){ if(ok(u,p) && can(p+u)){ used[u]=1; st.push(p+u); } }); }
+    return used; }
+  return {ok:ok,can:can,usable:usable};
+}
+function custFill(){
+  var set=(pr.custDurs&&pr.custDurs.length?pr.custDurs:[1]).map(function(d){ return Math.round(d*4); });
+  /* penempatan rapi hanya dipakai bila SEMUA jenis not pilihan tetap bisa muncul (mis. crotchet titik + crotchet tanpa quaver = harus sinkop) */
+  var F=custFits(set,true), us=F.usable(); if(F.can(0) && set.every(function(u){ return us[u]; })) return {set:set,F:F,add:[]};
+  var all=function(F){ var u=F.usable(); return F.can(0) && set.every(function(x){ return u[x]; }); };
+  F=custFits(set,false); if(all(F)) return {set:set,F:F,add:[]};
+  var extra=[4,2,1], add=[], s2=set.slice(), i;
+  for(i=0;i<extra.length;i++){ if(s2.indexOf(extra[i])<0){ s2.push(extra[i]); add.push(extra[i]/4); } F=custFits(s2,false); if(all(F)) break; }
+  return {set:s2,F:F,add:add,own:set};
+}
+function custRhythm(n){
+  var c=custFill(), out=[], b;
+  for(b=0;b<n;b++){
+    var p=0, own=c.own||c.set;
+    while(p<16){
+      var opts=c.set.filter(function(u){ return c.F.ok(u,p) && c.F.can(p+u); });
+      /* jenis not pilihan pemain diutamakan; not pengisi hanya bila perlu */
+      var mine=opts.filter(function(u){ return own.indexOf(u)>=0; }); if(mine.length) opts=mine;
+      var u=opts[Math.floor(Math.random()*opts.length)];
+      out.push(u/4); p+=u;
+    }
+  }
+  return out;
+}
 function genCustom(){
   var pool = (pr.custNotes && pr.custNotes.length>=2) ? pr.custNotes.slice() : [60,62,64,65,67,69,71,72];
-  var total=(pr.custMeasures||2)*4, notes=[], i;
-  for(i=0;i<total;i++){
+  var notes=[], i, best=null, bk=-1, own=(pr.custDurs&&pr.custDurs.length?pr.custDurs:[1]), durs;
+  /* usahakan semua jenis not yang dipilih benar-benar muncul di soal */
+  for(i=0;i<30;i++){ var r=custRhythm(pr.custMeasures||2), k=own.filter(function(d){ return r.indexOf(d)>=0; }).length; if(k>bk){ best=r; bk=k; } if(k===own.length) break; }
+  durs=best;
+  for(i=0;i<durs.length;i++){
     var m=pool[Math.floor(Math.random()*pool.length)];
-    notes.push({m:m,d:1,a:spellIn(m,pr.key)});
+    notes.push({m:m,d:durs[i],a:spellIn(m,pr.key)});
   }
   /* diakhiri "1" (do) kalau nada dasar ada di pilihan nada; pilih yang terdekat dari not sebelumnya */
   var tpc=KEY_TONIC[String(pr.key||0)], prev=notes.length>1?notes[notes.length-2].m:notes[0].m;
@@ -6861,7 +6926,9 @@ function syncPracticeOpts(){
     $$('#custGrid button').forEach(function(b){ b.setAttribute('aria-pressed', pr.custNotes.indexOf(parseInt(b.getAttribute('data-note'),10))>=0 ? 'true':'false'); });
     $('#custMeasures').value=String(pr.custMeasures);
     var n=pr.custNotes.length;
-    $('#custHint').textContent = n<2 ? 'Pilih minimal 2 nada.' : (n+' nada dipilih.');
+    $$('#custDurs button').forEach(function(b){ b.setAttribute('aria-pressed', pr.custDurs.indexOf(parseFloat(b.getAttribute('data-d')))>=0 ? 'true':'false'); });
+    var fx=custFill().add, nm=function(d){ var o=CUST_DURS.filter(function(x){ return x.d===d; })[0]; return o?o.n.toLowerCase():d; };
+    $('#custHint').textContent = n<2 ? 'Pilih minimal 2 nada.' : (n+' nada dipilih'+(fx.length?'. Supaya birama 4 ketuk penuh, ditambah '+fx.map(nm).join(' & ')+'.':'.'));
   }
   if(pr.inst==='guitar'){ pr.clef='treble'; $$('#pclefSeg button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-clef')==='treble'?'true':'false'); b.disabled=true; }); }
   $$('#pinst button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-inst')===pr.inst ? 'true':'false'); });
@@ -6896,7 +6963,29 @@ var NOTE_NAMES_UI=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B
 function buildArcadeSelects(){
   var mSel=$('#custMeasures'); mSel.innerHTML=[1,2,3,4,5,6,7,8,9,10].map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
 }
+function durIcon(d){
+  var hollow=d>=2, stem=d<4, fl=d<=0.25?2:(d<=0.5?1:0), dot=(d===3||d===1.5), o='<svg viewBox="0 0 26 34" aria-hidden="true">';
+  o+='<ellipse cx="9" cy="27" rx="6.2" ry="4.3" transform="rotate(-22 9 27)" '+(hollow?'fill="none" stroke="currentColor" stroke-width="2.2"':'fill="currentColor"')+'/>';
+  if(stem) o+='<line x1="14.6" y1="26" x2="14.6" y2="3" stroke="currentColor" stroke-width="2"/>';
+  for(var f=0;f<fl;f++) o+='<path d="M14.6 '+(3+f*6)+' q7 5 4.5 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>';
+  if(dot) o+='<circle cx="21.5" cy="26" r="2.2" fill="currentColor"/>';
+  return o+'</svg>';
+}
+function buildCustDurs(){
+  var g=$('#custDurs'); if(!g) return;
+  g.innerHTML=CUST_DURS.map(function(o){ return '<button type="button" data-d="'+o.d+'" aria-pressed="false" title="'+o.n+' ('+o.k+')">'+durIcon(o.d)+'<b>'+o.n+'</b><small>'+o.k+'</small></button>'; }).join('');
+  g.addEventListener('click',function(e){
+    var b=e.target.closest('button[data-d]'); if(!b) return;
+    var d=parseFloat(b.getAttribute('data-d')), i=pr.custDurs.indexOf(d);
+    if(i>=0){ if(pr.custDurs.length<=1) { var hh=$('#custHint'); hh.textContent='Minimal 1 jenis not harus dipilih.'; hh.classList.remove('tapPop'); void hh.offsetWidth; hh.classList.add('tapPop'); return; } pr.custDurs.splice(i,1); }
+    else pr.custDurs.push(d);
+    store.set('yg.custDurs',JSON.stringify(pr.custDurs));
+    syncPracticeOpts();
+    if(pr.custNotes.length>=2) newRound();
+  });
+}
 function buildCustGrid(){
+  buildCustDurs();
   var g=$('#custGrid'), html='', m;
   [3,4,5].forEach(function(oct){
     html+='<div class="octLabel">Oktaf '+oct+'</div>';
@@ -7728,7 +7817,7 @@ var PW={
   arcade:['Huruf B sampai Z khusus Premium','Stage A (A1–A9) gratis untuk dicoba. Berlangganan Premium untuk membuka 225 level berikutnya, huruf B sampai Z.'],
   arcadeDone:['Stage A selesai! 🎉','Hebat! Lanjutkan ke huruf B sampai Z (225 level lagi) dengan berlangganan Premium. Kamu tetap bisa mengulang stage A.'],
   tangga:['Tangga nada lain khusus Premium','Versi gratis berlatih dengan tangga nada C (1 = C). Berlangganan Premium untuk semua tangga nada ♯ dan ♭.'],
-  custom:['Latihan Custom khusus Premium','Pilih sendiri nada yang keluar di latihan. Berlangganan Premium untuk membukanya.'],
+  custom:['Latihan Custom khusus Premium','Pilih sendiri nada dan jenis not yang keluar di latihan. Berlangganan Premium untuk membukanya.'],
   score:['Partitur saya khusus Premium','Berlatih dari lagu yang kamu tulis sendiri. Berlangganan Premium untuk membukanya.'],
   simpan:['Menyimpan khusus Premium','Di mode coba, tulisanmu tidak disimpan. Berlangganan Premium untuk menyimpan dan menulis tanpa batas.'],
   trial4:['Batas mode coba: 4 birama','Berlangganan Premium untuk menulis tanpa batas, menyimpan, dan mengekspor.'],
@@ -11312,7 +11401,7 @@ function mobLatRender(){
     qk.hidden = store.get('yg.latDone','')!=='1' || pr.src==='arcade';
     qk.textContent='⚡ Seperti terakhir: '+(pr.inst==='guitar'?'Gitar':'Piano')+' · '+(app.mode==='num'?'Not angka':'Not balok')+' · '+({random:'Acak',custom:'Custom',score:'Partitur saya'}[pr.src]||'Acak');
   }
-  var t4={random:'⚙️ Atur soal acak',custom:'🎯 Pilih nada sendiri',score:'📄 Pilih partitur'}[pr.src]||'⚙️ Atur latihan';
+  var t4={random:'⚙️ Atur soal acak',custom:'🎯 Pilih nada & jenis not',score:'📄 Pilih partitur'}[pr.src]||'⚙️ Atur latihan';
   $('#mlatT').textContent=['','🎹 Pilih alat musik','🎼 Pilih jenis notasi','🎯 Pilih mode latihan',t4,'▶ Siap berlatih'][mob.lst];
   $('#mlatDots').innerHTML=[1,2,3,4,5].map(function(n){ return '<i class="'+(n<=mob.lst?'on':'')+(n===mob.lst?' cur':'')+'"></i>'; }).join('');
   $$('#mlatSrc [data-msrc]').forEach(function(b){
