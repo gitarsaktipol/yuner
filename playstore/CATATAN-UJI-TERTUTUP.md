@@ -161,3 +161,21 @@ email yang sudah terdaftar dulu menampilkan "Akun dibuat! Buka email…" padahal
 > phones and to the quick toolbar above the score on desktop. While re-testing the account flow we also fixed sign-up with
 > an already-registered email (it wrongly said a verification email had been sent) and translated the remaining English
 > sign-in error messages into Indonesian.
+
+---
+
+## 7. TAB gitar di Latihan & Arcade (28 Nov 2026)
+
+**Masukan:** permintaan supaya Latihan dan Arcade yang memakai Gitar juga menampilkan tablatur (TAB), tidak hanya not balok /
+not angka (sebelumnya TAB hanya ada di menu Partitur).
+
+**Perubahan (`fertune-v241`, PR #235):** saat pemain memilih Gitar, di bawah not muncul baris TAB (6 senar + nomor fret),
+di pratinjau soal maupun di layar berlatih, untuk Acak, Custom, Partitur saya, dan semua level Arcade. Ada saklar
+"🎸 TAB gitar" (bawaan menyala) di kartu Tempo Latihan & Arcade; saklar ini menggantikan "Tuts petunjuk" yang hanya berlaku
+untuk piano, sehingga layar Arcade tetap muat satu layar. Cara menilai nada tidak berubah.
+
+**Draf jawaban (Inggris):**
+> Guitar players asked for tablature in the practice and arcade modes, which previously showed only standard or numbered
+> notation (tablature existed only in the score editor). When Guitar is selected, every exercise and arcade level now shows a
+> TAB staff (string and fret numbers) under the notes, both in the preview and on the playing screen, with a "Guitar TAB"
+> toggle (on by default). Note detection and scoring were not changed.
