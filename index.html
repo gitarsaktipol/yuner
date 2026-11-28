@@ -2304,7 +2304,7 @@ body.mob #snewOv .instList b{font-size:20px}
     <label>Tangga nada
       <select id="pkey"></select>
     </label>
-    <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo: garis berjalan, not harus dibunyikan saat garis lewat</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk: tuts piano yang harus ditekan menyala</label></div>
+    <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo: garis berjalan, not harus dibunyikan saat garis lewat</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk: tuts piano yang harus ditekan menyala</label><label class="chk tabOpt" hidden><input type="checkbox" class="ptOn"> 🎸 TAB gitar: angka fret (senar &amp; fret) di bawah not</label></div>
     
     <label class="pclefLbl">Kunci</label>
     <div class="clefSeg" id="pclefSeg" role="group" aria-label="Kunci">
@@ -2464,7 +2464,7 @@ body.mob #snewOv .instList b{font-size:20px}
     <div class="agReady">
       <div class="agHero"><div class="agHeroSvg" id="agHero"></div><div class="card asum" id="arcSum"></div><button class="sound agIntroBtn" id="agIntro" type="button">📖 Materi</button></div>
       <div class="agOpts">
-        <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo (garis berjalan)</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk</label><label>Kalau salah<select class="tpMiss" aria-label="Kalau salah"><option value="go">➡️ Lanjut, nilai berkurang</option><option value="restart">🔁 Ulang dari awal</option></select></label><label class="chk"><input type="checkbox" class="sfxOff"> 🔇 Matikan efek suara</label></div>
+        <div class="card tempoCard"><label class="chk"><input type="checkbox" class="tpOn"> 🎵 Tempo (garis berjalan)</label><label>Kecepatan<select class="tpBpm" aria-label="Kecepatan tempo"></select></label><label class="chk pkOpt"><input type="checkbox" class="pkOn"> 🎹 Tuts petunjuk</label><label class="chk tabOpt" hidden><input type="checkbox" class="ptOn"> 🎸 TAB gitar</label><label>Kalau salah<select class="tpMiss" aria-label="Kalau salah"><option value="go">➡️ Lanjut, nilai berkurang</option><option value="restart">🔁 Ulang dari awal</option></select></label><label class="chk"><input type="checkbox" class="sfxOff"> 🔇 Matikan efek suara</label></div>
         <div class="agRow">
           <button class="sound agBack" id="arcBack4" type="button">◀ Kembali</button>
           <button class="sound" id="agLvBtn" type="button">🎯 Ganti level</button>
@@ -4723,7 +4723,7 @@ var pr = { got:{}, grp:{}, playing:false, inst: store.get('yg.inst','piano')==='
            missMode: store.get('yg.arcMiss','go')==='restart'?'restart':'go', retry:1,
            sfxOff: store.get('yg.arcSfxOff','0')==='1',
            tempoOn: store.get('yg.tempoOn','0')==='1', bpm: clamp(parseInt(store.get('yg.bpm','70'),10)||70,30,160),
-           keysOn: store.get('yg.pkeys','1')==='1', flash:null };
+           keysOn: store.get('yg.pkeys','1')==='1', tabOn: store.get('yg.ptab','1')==='1', flash:null };
 var RANGES = {
   treble:{narrow:[28,32], mid:[28,35], wide:[26,40]},
   bass:{narrow:[21,25], mid:[18,28], wide:[16,30]}
@@ -4974,6 +4974,14 @@ function curScoreCopy(){
 function prN(id){ return id>=LH_OFF ? pr.score.lh[id-LH_OFF] : pr.score.notes[id]; }
 function prIds(id){ return (pr.grp && pr.grp[id]) || [id]; }
 function prPitches(id){ var o=[]; prIds(id).forEach(function(q){ pitchList(prN(q)).forEach(function(p){ o.push(p); }); }); return o; }
+/* TAB gitar di Latihan & Arcade (diminta Ferdi, Nov 2026): pemain Gitar -> soal diberi inst 'guitar' sehingga drawScore
+   menggambar baris TAB (tabOn) di bawah not, sama dengan partitur Gitar di menu Partitur. Saklar .ptOn (yg.ptab, bawaan nyala). */
+function prTab(sc){
+  if(!sc || sc.grand) return;
+  if(pr.inst==='guitar'){ sc.inst='guitar'; sc.tab=pr.tabOn; }
+  else if(pr.src!=='score'){ sc.inst=undefined; sc.tab=undefined; }
+  else if(sc.inst==='guitar') sc.tab=pr.tabOn;
+}
 var autoT=0;
 function newRound(keep){
   clearTimeout(autoT); hideGrade(); hideHill(); tempoStop();
@@ -4983,6 +4991,7 @@ function newRound(keep){
     else if(pr.src==='custom') pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genCustom()};
     else pr.score={title:'',ts:[4,4],clef:pr.clef,key:pr.key,notes:genRandom()};
   }
+  prTab(pr.score);
   pr.idx=[]; pr.grp={}; pr.got={};
   if(pr.score.grand && pr.score.lh){
     var ev=[];
@@ -5240,6 +5249,7 @@ function bindTempoUI(){
   $$('.tpBpm').forEach(function(s){ s.addEventListener('change',function(e){ pr.bpm=clamp(parseInt(e.target.value,10)||70,30,160); store.set('yg.bpm',String(pr.bpm)); sync(); }); });
   $$('.tpMiss').forEach(function(s){ s.value=pr.missMode; s.addEventListener('change',function(e){ pr.missMode=e.target.value==='restart'?'restart':'go'; store.set('yg.arcMiss',pr.missMode); $$('.tpMiss').forEach(function(x){ x.value=pr.missMode; }); }); });
   $$('.sfxOff').forEach(function(c){ c.checked=pr.sfxOff; c.addEventListener('change',function(e){ pr.sfxOff=e.target.checked; store.set('yg.arcSfxOff',pr.sfxOff?'1':'0'); $$('.sfxOff').forEach(function(x){ x.checked=pr.sfxOff; }); }); });
+  $$('.ptOn').forEach(function(c){ c.checked=pr.tabOn; c.addEventListener('change',function(e){ pr.tabOn=e.target.checked; store.set('yg.ptab',pr.tabOn?'1':'0'); $$('.ptOn').forEach(function(x){ x.checked=pr.tabOn; }); if(pr.score){ prTab(pr.score); pr.drawn=null; renderPractice(); } }); });
   $$('.pkOn').forEach(function(c){ c.checked=pr.keysOn; c.addEventListener('change',function(e){ pr.keysOn=e.target.checked; store.set('yg.pkeys',pr.keysOn?'1':'0'); $$('.pkOn').forEach(function(x){ x.checked=pr.keysOn; }); renderPkeys(); }); });
   sync();
 }
@@ -6930,6 +6940,8 @@ function syncPracticeOpts(){
     var fx=custFill().add, nm=function(d){ var o=CUST_DURS.filter(function(x){ return x.d===d; })[0]; return o?o.n.toLowerCase():d; };
     $('#custHint').textContent = n<2 ? 'Pilih minimal 2 nada.' : (n+' nada dipilih'+(fx.length?'. Supaya birama 4 ketuk penuh, ditambah '+fx.map(nm).join(' & ')+'.':'.'));
   }
+  $$('.pkOpt').forEach(function(l){ l.hidden=pr.inst==='guitar'; });
+  $$('.tabOpt').forEach(function(l){ l.hidden=pr.inst!=='guitar'; });
   if(pr.inst==='guitar'){ pr.clef='treble'; $$('#pclefSeg button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-clef')==='treble'?'true':'false'); b.disabled=true; }); }
   $$('#pinst button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-inst')===pr.inst ? 'true':'false'); });
   var ih=$('#pinsthint');
